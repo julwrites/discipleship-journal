@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "995319008345",
+    "project_id": "discipleship-journal-52a2c",
+    "storage_bucket": "discipleship-journal-52a2c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:995319008345:android:2e924e9df13342c598f548",
+        "android_client_info": {
+          "package_name": "io.tehj.developer.discipleship_journal"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyALySLGfDfLcRihMZ0T8sLhqoGRfBDIjIk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
