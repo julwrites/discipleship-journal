@@ -28,6 +28,13 @@ A Personal Web App (PWA) for spiritual journaling, integrated with Bible AI, to 
 - **Backend Core**: Middleware, Database connection, User/Note CRUD.
 - **Frontend Core**: Dashboard, basic routing.
 
+### Phase 1.5: Engineering Excellence (Pre-Core)
+- **Testing Infrastructure**: Setup Vitest (Frontend), Go Test (Backend), and Playwright (E2E).
+- **CI/CD**: GitHub Actions for automated testing and linting.
+- **Observability**: Structured logging and basic error tracking.
+- **Database Migrations**: Setup versioned schema migrations (`golang-migrate`).
+- **API Documentation**: Setup Swagger/OpenAPI generation (`swaggo`).
+
 ### Phase 2: Core Features
 1.  **User Settings**:
     - Configure Preferred Bible Version.

@@ -34,3 +34,39 @@
 - **Security**: Handles complex flows (Google Sign-in, token refresh) securely.
 - **Integration**: Easy integration with Frontend (Client SDK) and Backend (Admin SDK).
 - **Cost**: Generous free tier.
+
+## Testing Strategy
+**Decision**: Implement a multi-layered testing strategy.
+- **Frontend**: Vitest + React Testing Library for unit/component tests. Playwright for End-to-End (E2E) testing.
+- **Backend**: Standard Go `testing` package for unit tests. `testcontainers-go` for integration tests with real database instances.
+**Rationale**:
+- **Confidence**: Comprehensive coverage ensures stability as the application grows.
+- **Speed**: Vitest is significantly faster than Jest.
+- **Realism**: Playwright and Testcontainers simulate real-world usage and infrastructure.
+
+## CI/CD: GitHub Actions
+**Decision**: Use GitHub Actions for Continuous Integration and Continuous Deployment.
+**Rationale**:
+- **Integration**: Native integration with the repository.
+- **Flexibility**: Large marketplace of actions for Go, Node.js, and Google Cloud.
+- **Cost**: Free tier for public/standard repositories is sufficient for start.
+
+## Database Migrations: golang-migrate
+**Decision**: Use `golang-migrate/migrate` for versioned database schema changes.
+**Rationale**:
+- **Control**: explicit SQL migration files (up/down).
+- **Compatibility**: Widely used in the Go ecosystem.
+- **Automation**: Can be run via CLI in CI/CD or embedded in the application binary.
+
+## Observability: Structured Logging & Metrics
+**Decision**: Use `log/slog` (Go 1.21+) for structured logging and prepare for OpenTelemetry.
+**Rationale**:
+- **Debuggability**: Structured logs are machine-readable and easier to query in tools like Google Cloud Logging.
+- **Standard**: `slog` is the new standard library solution, reducing external dependencies.
+
+## API Documentation: OpenAPI (Swagger)
+**Decision**: Generate OpenAPI v3 specifications from code comments using `swaggo/swag`.
+**Rationale**:
+- **Documentation**: Keeps documentation in sync with code.
+- **Client Generation**: Allows generating TypeScript clients for the frontend automatically.
+- **Testing**: Enables API contract testing.
