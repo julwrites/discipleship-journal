@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"discipleship_journal_api/database"
+	"discipleship_journal_api/validation"
 	"firebase.google.com/go/v4/auth"
 	"github.com/jackc/pgx/v5"
 )
@@ -36,7 +37,15 @@ func GetUserUUID(ctx context.Context, firebaseUID string) (string, error) {
 	return id, nil
 }
 
-// CreateOrUpdateUser is called after login to sync Firebase user to our DB
+// CreateOrUpdateUser godoc
+// @Summary Create or update user
+// @Description Sync Firebase user to database
+// @Tags users
+// @Accept json
+// @Produce json
+// @Success 200 {object} User
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /api/users/me [post]
 func CreateOrUpdateUser(w http.ResponseWriter, r *http.Request) {
 	token := r.Context().Value("user").(*auth.Token)
 	uid := token.UID
@@ -80,10 +89,22 @@ func CreateOrUpdateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 type UpdateUserRequest struct {
-	Username     *string `json:"username"`
-	BibleVersion *string `json:"bible_version"`
+	Username     *string `json:"username" validate:"omitempty,min=3,max=30"`
+	BibleVersion *string `json:"bible_version" validate:"omitempty,oneof=ESV NIV KJV"`
 }
 
+// UpdateUser godoc
+// @Summary Update user profile
+// @Description Update user settings like username and bible version
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param request body UpdateUserRequest true "Update User Request"
+// @Success 200
+// @Failure 400 {object} map[string]string
+// @Failure 404 {string} string "User not found"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /api/users/me [put]
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	token := r.Context().Value("user").(*auth.Token)
 	uid := token.UID
@@ -95,8 +116,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req UpdateUserRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+	if !validation.DecodeAndValidate(w, r, &req) {
 		return
 	}
 

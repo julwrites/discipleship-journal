@@ -7,20 +7,32 @@ import (
 	"os"
 
 	"discipleship_journal_api/database"
+	"discipleship_journal_api/validation"
 	"firebase.google.com/go/v4/auth"
 	"github.com/go-resty/resty/v2"
 )
 
 type ChatRequest struct {
-	Passage string   `json:"passage"`
+	Passage string   `json:"passage" validate:"required,min=5"`
 	Themes  []string `json:"themes"`
-	Prompt  string   `json:"prompt"`
+	Prompt  string   `json:"prompt" validate:"required,min=2"`
 }
 
 type ChatResponse struct {
 	Response string `json:"response"`
 }
 
+// ChatWithAI godoc
+// @Summary Chat with AI
+// @Description Chat with Bible AI using passage context
+// @Tags chat
+// @Accept json
+// @Produce json
+// @Param request body ChatRequest true "Chat Request"
+// @Success 200 {object} ChatResponse
+// @Failure 400 {object} map[string]string
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /api/chat [post]
 func ChatWithAI(w http.ResponseWriter, r *http.Request) {
 	// BibleAIAPI Endpoint
 	apiURL := os.Getenv("BIBLE_API_URL")
@@ -31,8 +43,7 @@ func ChatWithAI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req ChatRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+	if !validation.DecodeAndValidate(w, r, &req) {
 		return
 	}
 
@@ -110,17 +121,26 @@ func ChatWithAI(w http.ResponseWriter, r *http.Request) {
 }
 
 type AskAIRequest struct {
-	Context string `json:"context"`
-	Prompt  string `json:"prompt"`
+	Context string `json:"context" validate:"required"`
+	Prompt  string `json:"prompt" validate:"required"`
 }
 
+// AskAI godoc
+// @Summary Ask AI
+// @Description Ask AI a question based on general context
+// @Tags chat
+// @Accept json
+// @Produce json
+// @Param request body AskAIRequest true "Ask AI Request"
+// @Success 200 {object} ChatResponse
+// @Failure 400 {object} map[string]string
+// @Router /api/ai/ask [post]
 func AskAI(w http.ResponseWriter, r *http.Request) {
 	apiURL := os.Getenv("BIBLE_API_URL")
 	apiKey := os.Getenv("BIBLE_API_KEY")
 
 	var req AskAIRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+	if !validation.DecodeAndValidate(w, r, &req) {
 		return
 	}
 

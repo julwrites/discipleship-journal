@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"discipleship_journal_api/database"
+	"discipleship_journal_api/validation"
 	"firebase.google.com/go/v4/auth"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
@@ -21,10 +22,20 @@ type Note struct {
 }
 
 type CreateNoteRequest struct {
-	Title   string                 `json:"title"`
-	Content map[string]interface{} `json:"content"`
+	Title   string                 `json:"title" validate:"required,min=1,max=100"`
+	Content map[string]interface{} `json:"content" validate:"required"`
 }
 
+// GetNotes godoc
+// @Summary Get all notes for user
+// @Description Fetch all notes belonging to the authenticated user
+// @Tags notes
+// @Accept json
+// @Produce json
+// @Success 200 {array} Note
+// @Failure 404 {string} string "User not found"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /api/notes [get]
 func GetNotes(w http.ResponseWriter, r *http.Request) {
 	token := r.Context().Value("user").(*auth.Token)
 	uid := token.UID
@@ -58,6 +69,18 @@ func GetNotes(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(notes)
 }
 
+// CreateNote godoc
+// @Summary Create a new note
+// @Description Create a new journal note
+// @Tags notes
+// @Accept json
+// @Produce json
+// @Param request body CreateNoteRequest true "Create Note Request"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 404 {string} string "User not found"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /api/notes [post]
 func CreateNote(w http.ResponseWriter, r *http.Request) {
 	token := r.Context().Value("user").(*auth.Token)
 	uid := token.UID
@@ -69,8 +92,7 @@ func CreateNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req CreateNoteRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+	if !validation.DecodeAndValidate(w, r, &req) {
 		return
 	}
 
@@ -88,6 +110,20 @@ func CreateNote(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"id": noteID})
 }
 
+// UpdateNote godoc
+// @Summary Update a note
+// @Description Update an existing journal note
+// @Tags notes
+// @Accept json
+// @Produce json
+// @Param id path string true "Note ID"
+// @Param request body CreateNoteRequest true "Update Note Request"
+// @Success 200
+// @Failure 400 {object} map[string]string
+// @Failure 403 {string} string "Unauthorized"
+// @Failure 404 {string} string "Note not found"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /api/notes/{id} [put]
 func UpdateNote(w http.ResponseWriter, r *http.Request) {
 	token := r.Context().Value("user").(*auth.Token)
 	uid := token.UID
@@ -100,8 +136,7 @@ func UpdateNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req CreateNoteRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+	if !validation.DecodeAndValidate(w, r, &req) {
 		return
 	}
 
@@ -134,6 +169,17 @@ func UpdateNote(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// GetNote godoc
+// @Summary Get a single note
+// @Description Fetch a specific note by ID
+// @Tags notes
+// @Accept json
+// @Produce json
+// @Param id path string true "Note ID"
+// @Success 200 {object} Note
+// @Failure 403 {string} string "Unauthorized"
+// @Failure 404 {string} string "Note not found"
+// @Router /api/notes/{id} [get]
 func GetNote(w http.ResponseWriter, r *http.Request) {
 	token := r.Context().Value("user").(*auth.Token)
 	uid := token.UID

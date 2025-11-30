@@ -19,6 +19,17 @@ type PassageResponse struct {
 	// Add other fields from BibleAIAPI response if needed
 }
 
+// GetBiblePassage godoc
+// @Summary Get Bible Passage
+// @Description Fetch a bible passage from the external API
+// @Tags bible
+// @Accept json
+// @Produce json
+// @Param ref query string true "Bible Reference (e.g. John 3:16)"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {string} string "Reference is required"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /api/bible/passage [get]
 func GetBiblePassage(w http.ResponseWriter, r *http.Request) {
 	// BibleAIAPI Endpoint
 	apiURL := os.Getenv("BIBLE_API_URL")

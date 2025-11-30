@@ -18,8 +18,24 @@ import (
 	"discipleship_journal_api/database"
 	"discipleship_journal_api/handlers"
 	"discipleship_journal_api/middleware"
+
+	_ "discipleship_journal_api/docs"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
+// @title Discipleship Journal API
+// @version 1.0
+// @description API for the Discipleship Journal application.
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.email support@example.com
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:8080
+// @BasePath /
 func main() {
 	// Load .env file if it exists (local dev)
 	_ = godotenv.Load()
@@ -61,6 +77,8 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	})
+
+	r.Get("/swagger/*", httpSwagger.WrapHandler)
 
 	r.Group(func(r chi.Router) {
 		if authMiddleware != nil {
