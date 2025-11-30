@@ -1,24 +1,26 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- Users Table
 CREATE TABLE IF NOT EXISTS users (
-    id TEXT PRIMARY KEY, -- Firebase UID
-    email TEXT NOT NULL UNIQUE,
-    username TEXT UNIQUE,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    firebase_uid VARCHAR(128) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL,
+    username VARCHAR(50) UNIQUE,
     settings JSONB DEFAULT '{}'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Notes Table
+-- Notes Table (formerly journal_entries)
 CREATE TABLE IF NOT EXISTS notes (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    title TEXT,
-    content JSONB DEFAULT '{}'::jsonb, -- Flexible content (markdown text, bible refs, etc.)
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    content JSONB NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Indexes for performance
-CREATE INDEX IF NOT EXISTS idx_notes_user_id ON notes(user_id);
-CREATE INDEX IF NOT EXISTS idx_notes_created_at ON notes(created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+-- Indexes
+CREATE INDEX idx_notes_user_id ON notes(user_id);
+CREATE INDEX idx_notes_content ON notes USING gin (content);

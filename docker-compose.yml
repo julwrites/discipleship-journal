@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: discipleship_journal
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d discipleship_journal"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: ./api
+    environment:
+      DATABASE_URL: postgres://user:password@db:5432/discipleship_journal?sslmode=disable
+      PORT: 8080
+      # For local dev, we might need to handle Firebase Auth.
+      # If using an emulator or service account, mount it here.
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build: ./web
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+
+  migrator:
+    image: migrate/migrate
+    volumes:
+      - ./api/migrations:/migrations
+    command:
+      - -path=/migrations
+      - -database=postgres://user:password@db:5432/discipleship_journal?sslmode=disable
+      - up
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db_data:

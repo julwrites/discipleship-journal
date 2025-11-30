@@ -28,6 +28,8 @@ You are an expert Software Engineer working on this project. Your primary respon
 ## Code Style & Standards
 
 ### General
+*   **Testing Rigor**: Always update tests when modifying code. Ensure all tests pass before finishing a task.
+*   **Infrastructure Maintenance**: Keep local deployment scripts (e.g., `docker-compose.yml`) synchronized with production configuration changes.
 *   Follow the existing patterns in the codebase.
 *   Ensure all new code is covered by tests (if testing infrastructure exists).
 *   **Commit Messages**: Use descriptive commit messages. Format: `type(scope): description`.
