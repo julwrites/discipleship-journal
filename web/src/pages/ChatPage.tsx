@@ -1,0 +1,79 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { chatWithAI } from "@/services/api";
+import { useNavigate } from "react-router-dom";
+
+export default function ChatPage() {
+    const navigate = useNavigate();
+    const [passage, setPassage] = useState("");
+    const [themes, setThemes] = useState("");
+    const [prompt, setPrompt] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [response, setResponse] = useState<string | null>(null);
+
+    const handleChat = async () => {
+        setLoading(true);
+        try {
+            const themeList = themes.split(",").map(t => t.trim()).filter(Boolean);
+            const res = await chatWithAI(passage, themeList, prompt);
+            setResponse(res.response);
+
+            // Optionally redirect to dashboard to see the new note
+            // navigate("/");
+        } catch (e) {
+            console.error(e);
+            alert("Chat failed");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="p-8 max-w-2xl mx-auto space-y-6">
+            <h1 className="text-2xl font-bold">Chat with Bible AI</h1>
+
+            <div className="space-y-2">
+                <label className="text-sm font-medium">Bible Passage(s)</label>
+                <Input
+                    placeholder="e.g. Romans 8, Psalm 23"
+                    value={passage}
+                    onChange={(e) => setPassage(e.target.value)}
+                />
+            </div>
+
+            <div className="space-y-2">
+                <label className="text-sm font-medium">Themes / Keywords (Optional)</label>
+                <Input
+                    placeholder="e.g. grace, suffering, hope"
+                    value={themes}
+                    onChange={(e) => setThemes(e.target.value)}
+                />
+            </div>
+
+            <div className="space-y-2">
+                <label className="text-sm font-medium">Your Question / Prompt</label>
+                <Input
+                    placeholder="What does this say about..."
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                />
+            </div>
+
+            <Button onClick={handleChat} disabled={loading || !passage || !prompt} className="w-full">
+                {loading ? "Thinking..." : "Ask AI"}
+            </Button>
+
+            {response && (
+                <div className="p-4 bg-slate-100 rounded-lg border mt-6">
+                    <h3 className="font-semibold mb-2">AI Response:</h3>
+                    <p className="whitespace-pre-wrap">{response}</p>
+                    <div className="mt-4 text-sm text-gray-500">
+                        A journal note has been created with this conversation.
+                        <Button variant="link" className="p-0 h-auto ml-1" onClick={() => navigate("/")}>Go to Dashboard</Button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
