@@ -29,7 +29,13 @@ func GetNotes(w http.ResponseWriter, r *http.Request) {
 	token := r.Context().Value("user").(*auth.Token)
 	uid := token.UID
 
-	rows, err := database.DB.Query(r.Context(), "SELECT id, user_id, title, content, created_at, updated_at FROM notes WHERE user_id=$1 ORDER BY updated_at DESC", uid)
+	userUUID, err := GetUserUUID(r.Context(), uid)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	rows, err := database.DB.Query(r.Context(), "SELECT id, user_id, title, content, created_at, updated_at FROM notes WHERE user_id=$1 ORDER BY updated_at DESC", userUUID)
 	if err != nil {
 		http.Error(w, "Failed to fetch notes", http.StatusInternalServerError)
 		return
@@ -56,6 +62,12 @@ func CreateNote(w http.ResponseWriter, r *http.Request) {
 	token := r.Context().Value("user").(*auth.Token)
 	uid := token.UID
 
+	userUUID, err := GetUserUUID(r.Context(), uid)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
 	var req CreateNoteRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -63,9 +75,9 @@ func CreateNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var noteID string
-	err := database.DB.QueryRow(r.Context(),
+	err = database.DB.QueryRow(r.Context(),
 		"INSERT INTO notes (user_id, title, content) VALUES ($1, $2, $3) RETURNING id",
-		uid, req.Title, req.Content).Scan(&noteID)
+		userUUID, req.Title, req.Content).Scan(&noteID)
 
 	if err != nil {
 		http.Error(w, "Failed to create note", http.StatusInternalServerError)
@@ -81,6 +93,12 @@ func UpdateNote(w http.ResponseWriter, r *http.Request) {
 	uid := token.UID
 	noteID := chi.URLParam(r, "id")
 
+	userUUID, err := GetUserUUID(r.Context(), uid)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
 	var req CreateNoteRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -89,7 +107,7 @@ func UpdateNote(w http.ResponseWriter, r *http.Request) {
 
 	// Verify ownership
 	var ownerID string
-	err := database.DB.QueryRow(r.Context(), "SELECT user_id FROM notes WHERE id=$1", noteID).Scan(&ownerID)
+	err = database.DB.QueryRow(r.Context(), "SELECT user_id FROM notes WHERE id=$1", noteID).Scan(&ownerID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			http.Error(w, "Note not found", http.StatusNotFound)
@@ -99,7 +117,7 @@ func UpdateNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if ownerID != uid {
+	if ownerID != userUUID {
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
 	}
@@ -121,8 +139,14 @@ func GetNote(w http.ResponseWriter, r *http.Request) {
 	uid := token.UID
 	noteID := chi.URLParam(r, "id")
 
+	userUUID, err := GetUserUUID(r.Context(), uid)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
 	var n Note
-	err := database.DB.QueryRow(r.Context(), "SELECT id, user_id, title, content, created_at, updated_at FROM notes WHERE id=$1", noteID).Scan(&n.ID, &n.UserID, &n.Title, &n.Content, &n.CreatedAt, &n.UpdatedAt)
+	err = database.DB.QueryRow(r.Context(), "SELECT id, user_id, title, content, created_at, updated_at FROM notes WHERE id=$1", noteID).Scan(&n.ID, &n.UserID, &n.Title, &n.Content, &n.CreatedAt, &n.UpdatedAt)
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -133,7 +157,7 @@ func GetNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if n.UserID != uid {
+	if n.UserID != userUUID {
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
 	}
