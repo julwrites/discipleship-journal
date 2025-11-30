@@ -34,6 +34,7 @@ A Personal Web App (PWA) for spiritual journaling, integrated with Bible AI, to 
 - **Observability**: Structured logging and basic error tracking.
 - **Database Migrations**: Setup versioned schema migrations (`golang-migrate`).
 - **API Documentation**: Setup Swagger/OpenAPI generation (`swaggo`).
+- **Deployment Scripts**: Create scripts for deploying Frontend (Firebase) and Backend (Cloud Run).
 
 ### Phase 2: Core Features
 1.  **User Settings**:
