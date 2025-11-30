@@ -2,7 +2,7 @@
 
 ## Task Information
 - **Task ID**: FOUNDATION-004
-- **Status**: pending
+- **Status**: completed
 - **Priority**: medium
 - **Phase**: 1.5
 - **Estimated Effort**: 1 day
@@ -14,15 +14,15 @@
 Implement strict input validation for the API and automated documentation generation to ensure reliability and ease of frontend integration.
 
 ### Acceptance Criteria
-- [ ] **Input Validation**:
-    - [ ] Implement a validation library (e.g., `go-playground/validator`).
-    - [ ] Add validation struct tags to request models.
-    - [ ] Create a middleware or helper to validate requests and return structured errors.
-- [ ] **API Documentation**:
-    - [ ] Install `swaggo/swag`.
-    - [ ] Add Swagger comments to existing handlers (if any) or a sample handler.
-    - [ ] Generate `docs/swagger.json` (or similar).
-    - [ ] Expose Swagger UI at `/swagger/*` (dev environment only).
+- [x] **Input Validation**:
+    - [x] Implement a validation library (e.g., `go-playground/validator`).
+    - [x] Add validation struct tags to request models.
+    - [x] Create a middleware or helper to validate requests and return structured errors.
+- [x] **API Documentation**:
+    - [x] Install `swaggo/swag`.
+    - [x] Add Swagger comments to existing handlers (if any) or a sample handler.
+    - [x] Generate `docs/swagger.json` (or similar).
+    - [x] Expose Swagger UI at `/swagger/*` (dev environment only).
 
 ### Implementation Notes
 - Validation should check for required fields, formats (email, UUID), and constraints.
