@@ -75,7 +75,9 @@ func main() {
 	// Routes
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		if _, err := w.Write([]byte("OK")); err != nil {
+			log.Printf("Failed to write health check response: %v", err)
+		}
 	})
 
 	r.Get("/swagger/*", httpSwagger.WrapHandler)

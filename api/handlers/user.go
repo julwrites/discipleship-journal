@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"discipleship_journal_api/database"
+	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/validation"
 	"firebase.google.com/go/v4/auth"
 	"github.com/jackc/pgx/v5"
@@ -47,7 +48,7 @@ func GetUserUUID(ctx context.Context, firebaseUID string) (string, error) {
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /api/users/me [post]
 func CreateOrUpdateUser(w http.ResponseWriter, r *http.Request) {
-	token := r.Context().Value("user").(*auth.Token)
+	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
 	uid := token.UID
 	email := token.Claims["email"].(string)
 
@@ -85,7 +86,9 @@ func CreateOrUpdateUser(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	json.NewEncoder(w).Encode(user)
+	if err := json.NewEncoder(w).Encode(user); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	}
 }
 
 type UpdateUserRequest struct {
@@ -106,7 +109,7 @@ type UpdateUserRequest struct {
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /api/users/me [put]
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
-	token := r.Context().Value("user").(*auth.Token)
+	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
 	uid := token.UID
 
 	userUUID, err := GetUserUUID(r.Context(), uid)

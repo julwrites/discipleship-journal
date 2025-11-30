@@ -81,7 +81,7 @@ func (am *AuthMiddleware) VerifyToken(next http.Handler) http.Handler {
 		}
 
 		// Add user info to context
-		ctx := context.WithValue(r.Context(), "user", token)
+		ctx := context.WithValue(r.Context(), UserContextKey, token)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

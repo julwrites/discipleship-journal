@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"discipleship_journal_api/database"
+	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/validation"
 	"firebase.google.com/go/v4/auth"
 	"github.com/go-chi/chi/v5"
@@ -37,7 +38,7 @@ type CreateNoteRequest struct {
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /api/notes [get]
 func GetNotes(w http.ResponseWriter, r *http.Request) {
-	token := r.Context().Value("user").(*auth.Token)
+	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
 	uid := token.UID
 
 	userUUID, err := GetUserUUID(r.Context(), uid)
@@ -66,7 +67,9 @@ func GetNotes(w http.ResponseWriter, r *http.Request) {
 		notes = []Note{}
 	}
 
-	json.NewEncoder(w).Encode(notes)
+	if err := json.NewEncoder(w).Encode(notes); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	}
 }
 
 // CreateNote godoc
@@ -82,7 +85,7 @@ func GetNotes(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /api/notes [post]
 func CreateNote(w http.ResponseWriter, r *http.Request) {
-	token := r.Context().Value("user").(*auth.Token)
+	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
 	uid := token.UID
 
 	userUUID, err := GetUserUUID(r.Context(), uid)
@@ -107,7 +110,9 @@ func CreateNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"id": noteID})
+	if err := json.NewEncoder(w).Encode(map[string]string{"id": noteID}); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	}
 }
 
 // UpdateNote godoc
@@ -125,7 +130,7 @@ func CreateNote(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /api/notes/{id} [put]
 func UpdateNote(w http.ResponseWriter, r *http.Request) {
-	token := r.Context().Value("user").(*auth.Token)
+	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
 	uid := token.UID
 	noteID := chi.URLParam(r, "id")
 
@@ -181,7 +186,7 @@ func UpdateNote(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {string} string "Note not found"
 // @Router /api/notes/{id} [get]
 func GetNote(w http.ResponseWriter, r *http.Request) {
-	token := r.Context().Value("user").(*auth.Token)
+	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
 	uid := token.UID
 	noteID := chi.URLParam(r, "id")
 
@@ -208,5 +213,7 @@ func GetNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(n)
+	if err := json.NewEncoder(w).Encode(n); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	}
 }

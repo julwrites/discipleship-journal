@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"discipleship_journal_api/database"
+	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/validation"
 	"firebase.google.com/go/v4/auth"
 	"github.com/go-resty/resty/v2"
@@ -38,9 +39,9 @@ func ChatWithAI(w http.ResponseWriter, r *http.Request) {
 	apiURL := os.Getenv("BIBLE_API_URL")
 	apiKey := os.Getenv("BIBLE_API_KEY")
 
-	if apiURL == "" {
-		// Mock environment logic if needed, or error
-	}
+	// if apiURL == "" {
+	// 	// Mock environment logic if needed, or error
+	// }
 
 	var req ChatRequest
 	if !validation.DecodeAndValidate(w, r, &req) {
@@ -86,7 +87,7 @@ func ChatWithAI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create a new Journal Note with the conversation
-	token := r.Context().Value("user").(*auth.Token)
+	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
 	uid := token.UID
 
 	userUUID, err := GetUserUUID(r.Context(), uid)
@@ -117,7 +118,9 @@ func ChatWithAI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(ChatResponse{Response: answer})
+	if err := json.NewEncoder(w).Encode(ChatResponse{Response: answer}); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	}
 }
 
 type AskAIRequest struct {
@@ -179,7 +182,9 @@ func AskAI(w http.ResponseWriter, r *http.Request) {
     }
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(ChatResponse{Response: answer})
+	if err := json.NewEncoder(w).Encode(ChatResponse{Response: answer}); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	}
 }
 
 func min(a, b int) int {

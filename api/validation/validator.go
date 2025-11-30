@@ -48,7 +48,12 @@ func DecodeAndValidate(w http.ResponseWriter, r *http.Request, v interface{}) bo
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]interface{}{"errors": errors})
+		if err := json.NewEncoder(w).Encode(map[string]interface{}{"errors": errors}); err != nil {
+			// If we can't even encode the error response, there's not much else to do than perhaps log it.
+			// Since we don't have a logger passed in, we'll silently fail or rely on the http.Error logic above.
+			// But to satisfy the linter, we'll just ignore it explicitly or log if we had a logger.
+			_ = err
+		}
 		return false
 	}
 
