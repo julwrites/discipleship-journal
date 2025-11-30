@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
 import { useAuth } from './useAuth';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, User } from 'firebase/auth';
 
 // Mock firebase/auth
 vi.mock('firebase/auth', () => ({
@@ -20,15 +20,15 @@ describe('useAuth', () => {
   });
 
   it('should start with loading true and null user', () => {
-    (onAuthStateChanged as any).mockImplementation(() => () => {});
+    (onAuthStateChanged as Mock).mockImplementation(() => () => {});
     const { result } = renderHook(() => useAuth());
     expect(result.current.loading).toBe(true);
     expect(result.current.user).toBeNull();
   });
 
   it('should update user and loading when auth state changes', async () => {
-    const mockUser = { uid: '123', email: 'test@example.com' };
-    (onAuthStateChanged as any).mockImplementation((auth: any, callback: any) => {
+    const mockUser = { uid: '123', email: 'test@example.com' } as User;
+    (onAuthStateChanged as Mock).mockImplementation((_auth: unknown, callback: (user: User | null) => void) => {
       callback(mockUser);
       return () => {};
     });
