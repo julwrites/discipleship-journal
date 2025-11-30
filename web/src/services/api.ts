@@ -17,7 +17,7 @@ export async function fetchNotes() {
   return res.json();
 }
 
-export async function createNote(title: string, content: any) {
+export async function createNote(title: string, content: Record<string, unknown>) {
   const headers = await getHeaders();
   const res = await fetch(`${API_URL}/notes`, {
     method: "POST",

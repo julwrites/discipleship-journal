@@ -27,7 +27,7 @@ async function getNote(id: string) {
     return res.json();
 }
 
-async function updateNote(id: string, title: string, content: any) {
+async function updateNote(id: string, title: string, content: Record<string, unknown>) {
     const token = await auth.currentUser?.getIdToken();
     const res = await fetch(`${API_URL}/notes/${id}`, {
         method: "PUT",
