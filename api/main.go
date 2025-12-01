@@ -113,6 +113,13 @@ func main() {
 		r.Get("/api/bible/passage", handlers.GetBiblePassage)
 		r.Post("/api/chat", handlers.ChatWithAI)
 		r.Post("/api/ai/ask", handlers.AskAI)
+
+		// Connections
+		r.Get("/api/users/search", handlers.SearchUsers)
+		r.Post("/api/connections/request", handlers.SendConnectionRequest)
+		r.Get("/api/connections", handlers.ListConnections)
+		r.Put("/api/connections/{id}", handlers.RespondToConnectionRequest)
+		r.Delete("/api/connections/{id}", handlers.RespondToConnectionRequest) // Reject is a delete with a different param/logic or just delete
 	})
 
 	server := &http.Server{
