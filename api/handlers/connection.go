@@ -89,7 +89,7 @@ func SendConnectionRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if requesterUUID == receiverUUID {
+	if requesterUUID.String() == receiverUUID {
 		http.Error(w, "Cannot connect with yourself", http.StatusBadRequest)
 		return
 	}

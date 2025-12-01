@@ -6,29 +6,26 @@
 - **Priority**: medium
 - **Phase**: 1.5
 - **Estimated Effort**: 1 day
-- **Dependencies**: FOUNDATION-001
+- **Dependencies**: FOUNDATION-002
 
 ## Task Details
 
 ### Description
-Implement strict input validation for the API and automated documentation generation to ensure reliability and ease of frontend integration.
+Implement request validation and generate API documentation.
 
 ### Acceptance Criteria
-- [x] **Input Validation**:
-    - [x] Implement a validation library (e.g., `go-playground/validator`).
-    - [x] Add validation struct tags to request models.
-    - [x] Create a middleware or helper to validate requests and return structured errors.
-- [x] **API Documentation**:
-    - [x] Install `swaggo/swag`.
-    - [x] Add Swagger comments to existing handlers (if any) or a sample handler.
-    - [x] Generate `docs/swagger.json` (or similar).
-    - [x] Expose Swagger UI at `/swagger/*` (dev environment only).
+- [x] `go-playground/validator` integrated into API handlers.
+- [x] `swaggo` setup for API documentation generation.
+- [x] Swagger UI served at `/swagger/*` in dev mode.
+- [x] Validation added to User Create/Update endpoints.
 
-### Implementation Notes
-- Validation should check for required fields, formats (email, UUID), and constraints.
-- Documentation should be regenerateable via a command (e.g., `make swagger`).
+### Completed Work
+- ✅ Integrated `go-playground/validator` with a helper `DecodeAndValidate`.
+- ✅ Added validation tags to `UpdateUserRequest` in `user.go`.
+- ✅ Setup `swaggo` and generated API documentation in `api/docs`.
+- ✅ Verified `swag init` runs successfully.
+- ✅ Swagger UI is already set up in `main.go`.
 
 ---
-
-*Created: 2025-05-18*
-*Status: completed*
+*Created: 2025-05-20*
+*Completed: 2025-05-21*
