@@ -361,9 +361,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/users/me": {
+        "/users": {
             "put": {
-                "description": "Update user settings like username and bible version",
+                "description": "Update existing user details",
                 "consumes": [
                     "application/json"
                 ],
@@ -373,11 +373,11 @@ const docTemplate = `{
                 "tags": [
                     "users"
                 ],
-                "summary": "Update user profile",
+                "summary": "Update a user",
                 "parameters": [
                     {
-                        "description": "Update User Request",
-                        "name": "request",
+                        "description": "User details",
+                        "name": "user",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -387,25 +387,13 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.User"
+                        }
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "User not found",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
                         "schema": {
                             "type": "string"
                         }
@@ -413,7 +401,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Sync Firebase user to database",
+                "description": "Register a new user or update existing one based on Firebase UID",
                 "consumes": [
                     "application/json"
                 ],
@@ -423,7 +411,18 @@ const docTemplate = `{
                 "tags": [
                     "users"
                 ],
-                "summary": "Create or update user",
+                "summary": "Create or update a user",
+                "parameters": [
+                    {
+                        "description": "User details",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.UpdateUserRequest"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -431,10 +430,30 @@ const docTemplate = `{
                             "$ref": "#/definitions/handlers.User"
                         }
                     },
-                    "500": {
-                        "description": "Internal Server Error",
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/me": {
+            "get": {
+                "description": "Get the profile of the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get current user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handlers.User"
                         }
                     }
                 }
@@ -532,25 +551,26 @@ const docTemplate = `{
         },
         "handlers.UpdateUserRequest": {
             "type": "object",
+            "required": [
+                "full_name"
+            ],
             "properties": {
-                "bible_version": {
-                    "type": "string",
-                    "enum": [
-                        "ESV",
-                        "NIV",
-                        "KJV"
-                    ]
+                "avatar_url": {
+                    "type": "string"
                 },
-                "username": {
+                "full_name": {
                     "type": "string",
-                    "maxLength": 30,
-                    "minLength": 3
+                    "maxLength": 100,
+                    "minLength": 2
                 }
             }
         },
         "handlers.User": {
             "type": "object",
             "properties": {
+                "avatar_url": {
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -560,24 +580,13 @@ const docTemplate = `{
                 "firebase_uid": {
                     "type": "string"
                 },
+                "full_name": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
-                "settings": {
-                    "$ref": "#/definitions/handlers.UserSettings"
-                },
                 "updated_at": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "handlers.UserSettings": {
-            "type": "object",
-            "properties": {
-                "bible_version": {
                     "type": "string"
                 }
             }

@@ -157,7 +157,7 @@ func UpdateNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if ownerID != userUUID {
+	if ownerID != userUUID.String() {
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
 	}
@@ -208,7 +208,7 @@ func GetNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if n.UserID != userUUID {
+	if n.UserID != userUUID.String() {
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
 	}

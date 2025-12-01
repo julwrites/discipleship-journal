@@ -62,37 +62,30 @@ definitions:
     type: object
   handlers.UpdateUserRequest:
     properties:
-      bible_version:
-        enum:
-        - ESV
-        - NIV
-        - KJV
+      avatar_url:
         type: string
-      username:
-        maxLength: 30
-        minLength: 3
+      full_name:
+        maxLength: 100
+        minLength: 2
         type: string
+    required:
+    - full_name
     type: object
   handlers.User:
     properties:
+      avatar_url:
+        type: string
       created_at:
         type: string
       email:
         type: string
       firebase_uid:
         type: string
+      full_name:
+        type: string
       id:
         type: string
-      settings:
-        $ref: '#/definitions/handlers.UserSettings'
       updated_at:
-        type: string
-      username:
-        type: string
-    type: object
-  handlers.UserSettings:
-    properties:
-      bible_version:
         type: string
     type: object
 host: localhost:8080
@@ -331,33 +324,15 @@ paths:
       summary: Update a note
       tags:
       - notes
-  /api/users/me:
+  /users:
     post:
       consumes:
       - application/json
-      description: Sync Firebase user to database
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/handlers.User'
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      summary: Create or update user
-      tags:
-      - users
-    put:
-      consumes:
-      - application/json
-      description: Update user settings like username and bible version
+      description: Register a new user or update existing one based on Firebase UID
       parameters:
-      - description: Update User Request
+      - description: User details
         in: body
-        name: request
+        name: user
         required: true
         schema:
           $ref: '#/definitions/handlers.UpdateUserRequest'
@@ -366,21 +341,51 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/handlers.User'
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: User not found
+            type: string
+      summary: Create or update a user
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: Update existing user details
+      parameters:
+      - description: User details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.User'
+        "400":
+          description: Bad Request
           schema:
             type: string
-        "500":
-          description: Internal Server Error
+      summary: Update a user
+      tags:
+      - users
+  /users/me:
+    get:
+      description: Get the profile of the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
           schema:
-            type: string
-      summary: Update user profile
+            $ref: '#/definitions/handlers.User'
+      summary: Get current user
       tags:
       - users
 swagger: "2.0"
