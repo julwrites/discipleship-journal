@@ -44,7 +44,7 @@ func ChatWithAI(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	var req ChatRequest
-	if !validation.DecodeAndValidate(w, r, &req) {
+	if !DecodeAndValidate(w, r, &req) {
 		return
 	}
 
@@ -143,7 +143,7 @@ func AskAI(w http.ResponseWriter, r *http.Request) {
 	apiKey := os.Getenv("BIBLE_API_KEY")
 
 	var req AskAIRequest
-	if !validation.DecodeAndValidate(w, r, &req) {
+	if !DecodeAndValidate(w, r, &req) {
 		return
 	}
 

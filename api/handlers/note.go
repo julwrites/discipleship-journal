@@ -95,7 +95,7 @@ func CreateNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req CreateNoteRequest
-	if !validation.DecodeAndValidate(w, r, &req) {
+	if !DecodeAndValidate(w, r, &req) {
 		return
 	}
 
