@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 
 	"discipleship_journal_api/database"
@@ -108,10 +109,7 @@ func SendConnectionRequest(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(map[string]string{"id": connID, "status": "pending"}); err != nil {
-		// Log error but we can't write header again
-		// Use a better logger in production, here we assume middleware logs or we print
-		// However, standard library log is not imported.
-		// Since we already wrote status created, the client might get a partial response.
+		slog.Error("Failed to encode response", "error", err)
 	}
 }
 
