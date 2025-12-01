@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -40,8 +40,17 @@ func main() {
 	// Load .env file if it exists (local dev)
 	_ = godotenv.Load()
 
+	// Setup Logger
+	var logger *slog.Logger
+	if os.Getenv("APP_ENV") == "production" {
+		logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	} else {
+		logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
+	}
+	slog.SetDefault(logger)
+
 	if err := database.Connect(); err != nil {
-		log.Printf("Warning: Database connection failed: %v", err)
+		logger.Error("Database connection failed", "error", err)
 	}
 	defer database.Close()
 
@@ -50,7 +59,7 @@ func main() {
 	// Here we use default context.
 	authMiddleware, err := middleware.NewAuthMiddleware(context.Background())
 	if err != nil {
-		log.Printf("Warning: Firebase Auth init failed: %v", err)
+		logger.Error("Firebase Auth init failed", "error", err)
 	}
 
 	port := os.Getenv("PORT")
@@ -61,7 +70,8 @@ func main() {
 	r := chi.NewRouter()
 
 	// Middleware
-	r.Use(chimiddleware.Logger)
+	r.Use(chimiddleware.RequestID)
+	r.Use(middleware.RequestLogger(logger))
 	r.Use(chimiddleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"*"}, // Adjust for production
@@ -74,9 +84,15 @@ func main() {
 
 	// Routes
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		if err := database.DB.Ping(r.Context()); err != nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			logger.Error("Health check failed: DB not connected", "error", err)
+			return
+		}
+
 		w.WriteHeader(http.StatusOK)
 		if _, err := w.Write([]byte("OK")); err != nil {
-			log.Printf("Failed to write health check response: %v", err)
+			logger.Error("Failed to write health check response", "error", err)
 		}
 	})
 
@@ -106,23 +122,25 @@ func main() {
 
 	// Graceful shutdown
 	go func() {
-		fmt.Printf("Server listening on port %s\n", port)
+		logger.Info(fmt.Sprintf("Server listening on port %s", port))
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Listen: %s\n", err)
+			logger.Error("Listen failed", "error", err)
+			os.Exit(1)
 		}
 	}()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("Shutting down server...")
+	logger.Info("Shutting down server...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {
-		log.Fatal("Server forced to shutdown:", err)
+		logger.Error("Server forced to shutdown", "error", err)
+		os.Exit(1)
 	}
 
-	log.Println("Server exiting")
+	logger.Info("Server exiting")
 }
