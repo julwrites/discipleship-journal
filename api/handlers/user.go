@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"time"
 )
@@ -44,12 +45,14 @@ func CreateOrUpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	// Implementation placeholder
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(User{
+	if err := json.NewEncoder(w).Encode(User{
 		ID:        "123",
 		Email:     "test@example.com",
 		FullName:  req.FullName,
 		AvatarURL: req.AvatarURL,
-	})
+	}); err != nil {
+		slog.Error("Failed to encode response", "error", err)
+	}
 }
 
 // UpdateUser handles user updates
@@ -71,12 +74,14 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	// Implementation placeholder
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(User{
+	if err := json.NewEncoder(w).Encode(User{
 		ID:        "123",
 		Email:     "test@example.com",
 		FullName:  req.FullName,
 		AvatarURL: req.AvatarURL,
-	})
+	}); err != nil {
+		slog.Error("Failed to encode response", "error", err)
+	}
 }
 
 // GetMe returns the current user profile
@@ -89,8 +94,10 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 func GetMe(w http.ResponseWriter, r *http.Request) {
 	// Implementation placeholder
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(User{
+	if err := json.NewEncoder(w).Encode(User{
 		ID:    "123",
 		Email: "test@example.com",
-	})
+	}); err != nil {
+		slog.Error("Failed to encode response", "error", err)
+	}
 }
