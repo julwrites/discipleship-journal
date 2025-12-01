@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchNotes, syncUser } from "@/services/api";
 import { Link } from "react-router-dom";
-import { Settings } from "lucide-react";
+import { Settings, Users } from "lucide-react";
 
 interface Note {
   id: string;
@@ -30,8 +30,13 @@ export default function Dashboard() {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold">My Journal</h1>
         <div className="flex gap-2">
+          <Link to="/connections">
+            <Button variant="ghost" size="icon" title="Connections">
+              <Users className="w-5 h-5" />
+            </Button>
+          </Link>
           <Link to="/settings">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" title="Settings">
               <Settings className="w-5 h-5" />
             </Button>
           </Link>
