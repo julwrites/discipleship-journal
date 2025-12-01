@@ -346,7 +346,9 @@ paths:
         "400":
           description: Bad Request
           schema:
-            type: string
+            additionalProperties:
+              type: string
+            type: object
       summary: Create or update a user
       tags:
       - users
@@ -371,7 +373,9 @@ paths:
         "400":
           description: Bad Request
           schema:
-            type: string
+            additionalProperties:
+              type: string
+            type: object
       summary: Update a user
       tags:
       - users

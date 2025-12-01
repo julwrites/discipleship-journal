@@ -34,12 +34,11 @@ type UpdateUserRequest struct {
 // @Produce json
 // @Param user body UpdateUserRequest true "User details"
 // @Success 200 {object} User
-// @Failure 400 {string} string "Bad Request"
+// @Failure 400 {object} map[string]string
 // @Router /users [post]
 func CreateOrUpdateUser(w http.ResponseWriter, r *http.Request) {
 	var req UpdateUserRequest
-	if err := DecodeAndValidate(r, &req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if !DecodeAndValidate(w, r, &req) {
 		return
 	}
 
@@ -63,12 +62,11 @@ func CreateOrUpdateUser(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param user body UpdateUserRequest true "User details"
 // @Success 200 {object} User
-// @Failure 400 {string} string "Bad Request"
+// @Failure 400 {object} map[string]string
 // @Router /users [put]
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	var req UpdateUserRequest
-	if err := DecodeAndValidate(r, &req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if !DecodeAndValidate(w, r, &req) {
 		return
 	}
 
