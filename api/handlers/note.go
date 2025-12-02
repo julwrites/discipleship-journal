@@ -7,7 +7,6 @@ import (
 
 	"discipleship_journal_api/database"
 	"discipleship_journal_api/middleware"
-	"discipleship_journal_api/validation"
 	"firebase.google.com/go/v4/auth"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
@@ -80,7 +79,7 @@ func GetNotes(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param request body CreateNoteRequest true "Create Note Request"
 // @Success 200 {object} map[string]string
-// @Failure 400 {object} map[string]string
+// @Failure 400 {object} map[string]interface{}
 // @Failure 404 {string} string "User not found"
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /api/notes [post]
@@ -95,7 +94,7 @@ func CreateNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req CreateNoteRequest
-	if !validation.DecodeAndValidate(w, r, &req) {
+	if !DecodeAndValidate(w, r, &req) {
 		return
 	}
 
@@ -121,10 +120,9 @@ func CreateNote(w http.ResponseWriter, r *http.Request) {
 // @Tags notes
 // @Accept json
 // @Produce json
-// @Param id path string true "Note ID"
 // @Param request body CreateNoteRequest true "Update Note Request"
 // @Success 200
-// @Failure 400 {object} map[string]string
+// @Failure 400 {object} map[string]interface{}
 // @Failure 403 {string} string "Unauthorized"
 // @Failure 404 {string} string "Note not found"
 // @Failure 500 {string} string "Internal Server Error"
@@ -141,7 +139,7 @@ func UpdateNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req CreateNoteRequest
-	if !validation.DecodeAndValidate(w, r, &req) {
+	if !DecodeAndValidate(w, r, &req) {
 		return
 	}
 
