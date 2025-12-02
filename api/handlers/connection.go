@@ -7,7 +7,6 @@ import (
 
 	"discipleship_journal_api/database"
 	"discipleship_journal_api/middleware"
-	"discipleship_journal_api/validation"
 	"firebase.google.com/go/v4/auth"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
@@ -65,7 +64,7 @@ func SearchUsers(w http.ResponseWriter, r *http.Request) {
 // SendConnectionRequest sends a connection request to another user
 func SendConnectionRequest(w http.ResponseWriter, r *http.Request) {
 	var req ConnectionRequest
-	if !validation.DecodeAndValidate(w, r, &req) {
+	if !DecodeAndValidate(w, r, &req) {
 		return
 	}
 
