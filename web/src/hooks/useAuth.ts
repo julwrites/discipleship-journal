@@ -11,8 +11,12 @@ export function useAuth() {
     // or just timeout the loading state if onAuthStateChanged never fires.
     // However, onAuthStateChanged should still fire or we should catch the initialization error.
 
-    // As a fallback for tests where keys are invalid
-    if (import.meta.env.MODE === 'test' || import.meta.env.VITE_FIREBASE_API_KEY === 'mock-key') {
+    // Fallback for E2E testing with mock keys.
+    // This bypasses Firebase auth initialization which fails with invalid keys.
+    // We skip this for unit tests (MODE === 'test') as they mock onAuthStateChanged directly.
+    const shouldBypassAuth = import.meta.env.VITE_FIREBASE_API_KEY === 'mock-key' && import.meta.env.MODE !== 'test';
+
+    if (shouldBypassAuth) {
          console.warn("Using mock auth keys, bypassing auth check after timeout.");
          const timer = setTimeout(() => {
              setLoading(false);
