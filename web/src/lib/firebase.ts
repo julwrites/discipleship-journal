@@ -10,5 +10,29 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-export const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+// Conditional initialization to prevent crashes during mock testing if keys are invalid
+let appInstance;
+let authInstance;
+
+try {
+  appInstance = initializeApp(firebaseConfig);
+  authInstance = getAuth(appInstance);
+} catch (e) {
+  console.warn("Firebase initialization failed (expected during mock testing):", e);
+  // Provide a dummy auth object if needed, or rely on handling the error where it's used.
+  // However, most components import 'auth' directly.
+  // We can return a mock-like object or null, but type safety is key.
+  // For now, if we are in a mock environment (detected by check above), we might want to return a dummy.
+
+  if (import.meta.env.VITE_FIREBASE_API_KEY === 'mock-key') {
+      // Mocking minimal auth object to prevent crash on import
+      authInstance = {
+          currentUser: null,
+          onAuthStateChanged: () => () => {},
+          // Add other methods as needed or keep it minimal
+      } as any;
+  }
+}
+
+export const app = appInstance;
+export const auth = authInstance;

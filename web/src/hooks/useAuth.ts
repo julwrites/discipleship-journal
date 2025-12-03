@@ -18,6 +18,23 @@ export function useAuth() {
 
     if (shouldBypassAuth) {
          console.warn("Using mock auth keys, bypassing auth check after timeout.");
+
+         // Check for simulated user in localStorage for E2E tests
+         const mockUserJson = localStorage.getItem('E2E_TEST_USER');
+         if (mockUserJson) {
+             try {
+                 const mockUser = JSON.parse(mockUserJson) as User;
+                 // Mock the getIdToken method which is required by some components/logic
+                 mockUser.getIdToken = async () => "mock-token";
+
+                 setUser(mockUser);
+                 setLoading(false);
+                 return;
+             } catch (e) {
+                 console.error("Failed to parse E2E_TEST_USER", e);
+             }
+         }
+
          const timer = setTimeout(() => {
              setLoading(false);
          }, 1000);
