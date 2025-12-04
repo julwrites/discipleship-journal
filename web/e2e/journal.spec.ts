@@ -25,28 +25,32 @@ test.describe('Journaling (Mocked)', () => {
   });
 
   test('should create a new note', async ({ page }) => {
-    // Mock listing notes (initially empty)
-    await page.route('**/api/notes**', async route => {
-        if (route.request().method() === 'GET') {
-             await route.fulfill({ json: [] });
-        } else {
-            await route.continue();
-        }
-    });
+    // Mock Create Note Promise
+    let resolveRequest;
+    const createNoteRequestPromise = new Promise(resolve => { resolveRequest = resolve; });
 
-    // Mock Create Note
-    let createNoteRequestPromise;
-    await page.route('**/api/notes', async route => {
-        if (route.request().method() === 'POST') {
-            createNoteRequestPromise = Promise.resolve(route.request());
+    // Stateful mock
+    let notes = [];
+
+    // Single route handler for notes to avoid conflicts
+    await page.route(/.*\/api\/notes/, async route => {
+        const method = route.request().method();
+
+        if (method === 'GET') {
+             await route.fulfill({ json: notes });
+        } else if (method === 'POST') {
+            resolveRequest(route.request());
             const body = route.request().postDataJSON();
+            const newNote = {
+                id: 'note-new-1',
+                title: body.title,
+                content: body.content,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+            notes = [newNote]; // Update state
             await route.fulfill({
-                json: {
-                    id: 'note-new-1',
-                    content: body.content, // Should check structure
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                }
+                json: newNote
             });
         } else {
              await route.fallback();
@@ -56,31 +60,24 @@ test.describe('Journaling (Mocked)', () => {
     await page.goto('/');
 
     // Click New Note
-    await page.getByRole('button', { name: 'New Note' }).click();
+    await page.getByTitle('New Note').click();
 
     // Verify we are on the editor
-    await expect(page.getByPlaceholder('Write your reflection...')).toBeVisible();
+    await expect(page.getByPlaceholder('Write your thoughts...')).toBeVisible();
+
+    // Type Title
+    await page.getByPlaceholder('Title').fill('My Daily Journal');
 
     // Type content
-    await page.getByPlaceholder('Write your reflection...').fill('# My Daily Journal\n\nToday I learned about grace.');
+    await page.getByPlaceholder('Write your thoughts...').fill('# My Daily Journal\n\nToday I learned about grace.');
 
-    // Save (assuming auto-save or manual save, button might be "Save" or icon)
-    // Wait, the UI might auto-save or have a save button.
-    // Checking NoteEditor implementation or trying to find a save button.
-    // If it's auto-save, we might need to wait.
-    // Let's look for a Save button.
-    const saveButton = page.getByRole('button', { name: 'Save' });
-    if (await saveButton.isVisible()) {
-        await saveButton.click();
-    } else {
-        // Maybe it autosaves?
-        // Let's assume there is a Save button for now based on typical UI.
-    }
+    // Save
+    await page.getByRole('button', { name: 'Save' }).click();
 
     // Explicitly wait for the Create Request to be made
     const request = await createNoteRequestPromise;
     expect(request).toBeTruthy();
-    expect(request.postDataJSON().content).toContain('# My Daily Journal');
+    expect(request.postDataJSON().content.markdown).toContain('# My Daily Journal');
 
     // After save, we expect to be redirected or see a success message.
     // Or we go back to dashboard and see the note.
@@ -91,16 +88,7 @@ test.describe('Journaling (Mocked)', () => {
     // But since we mocked the POST, we want to see the effect on Dashboard.
     // Let's reload dashboard and mock the list again with one item.
 
-    await page.route('**/api/notes**', async route => {
-         if (route.request().method() === 'GET') {
-             await route.fulfill({ json: [{
-                 id: 'note-new-1',
-                 content: { type: 'doc', content: [{ type: 'heading', content: [{ type: 'text', text: 'My Daily Journal' }] }] }, // Simplified
-                 created_at: new Date().toISOString(),
-                 updated_at: new Date().toISOString()
-             }] });
-         }
-    });
+    // Removed duplicate route handler as the stateful one handles it.
 
     // Go back to dashboard
     await page.goto('/');

@@ -37,7 +37,7 @@ test.describe('Connections (Mocked)', () => {
     await page.goto('/connections');
 
     // Click "Find Users" tab if it exists
-    await page.getByRole('tab', { name: 'Find Users' }).click();
+    await page.getByRole('tab', { name: 'Find People' }).click();
 
     // Mock Search API
     await page.route('**/api/users/search?q=friend*', async route => {
@@ -54,21 +54,27 @@ test.describe('Connections (Mocked)', () => {
     // Mock Send Request API
     await page.route('**/api/connections/request', async route => {
         const body = route.request().postDataJSON();
-        expect(body.target_user_id).toBe('uuid-friend');
+        expect(body.receiver_email).toBe('friend@example.com');
         await route.fulfill({ status: 201 });
     });
 
     // Type in search box
-    await page.getByPlaceholder('Search by username or email').fill('friend');
+    await page.getByPlaceholder('Search by email or name...').fill('friend');
 
-    // Click Search (or it might be auto-search, but let's assume enter or button)
+    // Click Search
+    await page.getByRole('button', { name: 'Search' }).click();
+
     // Wait for results
     await expect(page.getByText('friend@example.com')).toBeVisible();
+
+    // Handle Alert
+    const dialogPromise = page.waitForEvent('dialog');
 
     // Click "Connect" button
     await page.getByRole('button', { name: 'Connect' }).click();
 
-    // Verify button changes to "Pending" or similar
-    await expect(page.getByText('Request Sent')).toBeVisible();
+    const dialog = await dialogPromise;
+    expect(dialog.message()).toBe('Request sent!');
+    await dialog.dismiss();
   });
 });

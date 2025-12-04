@@ -47,7 +47,7 @@ test.describe('Authentication Flow (Mocked)', () => {
     await expect(page).toHaveURL('/'); // Should stay on root (Dashboard)
 
     // Verify Dashboard elements
-    await expect(page.getByText('Journal Entries')).toBeVisible();
-    await expect(page.getByRole('button', { name: /New Note/i })).toBeVisible();
+    await expect(page.getByText('My Journal')).toBeVisible();
+    await expect(page.getByTitle('New Note')).toBeVisible();
   });
 });
