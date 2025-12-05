@@ -27,8 +27,11 @@ export function useAuth() {
                  // Mock the getIdToken method which is required by some components/logic
                  mockUser.getIdToken = async () => "mock-token";
 
-                 setUser(mockUser);
-                 setLoading(false);
+                 // Avoid synchronous setState in effect
+                 setTimeout(() => {
+                    setUser(mockUser);
+                    setLoading(false);
+                 }, 0);
                  return;
              } catch (e) {
                  console.error("Failed to parse E2E_TEST_USER", e);
