@@ -23,7 +23,6 @@ function App() {
 
           <Route path="/" element={user ? <Dashboard /> : <Navigate to="/login" />} />
           <Route path="/settings" element={user ? <Settings /> : <Navigate to="/login" />} />
-          <Route path="/notes/new" element={user ? <NoteEditor /> : <Navigate to="/login" />} />
           <Route path="/notes/:id" element={user ? <NoteEditor /> : <Navigate to="/login" />} />
           <Route path="/chat" element={user ? <ChatPage /> : <Navigate to="/login" />} />
           <Route path="/connections" element={user ? <ConnectionsPage /> : <Navigate to="/login" />} />
