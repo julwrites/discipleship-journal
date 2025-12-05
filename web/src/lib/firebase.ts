@@ -30,6 +30,7 @@ try {
           currentUser: null,
           onAuthStateChanged: () => () => {},
           // Add other methods as needed or keep it minimal
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any;
   }
 }
