@@ -22,13 +22,13 @@ A Personal Web App (PWA) for spiritual journaling, integrated with Bible AI, to 
 
 ## Roadmap
 
-### Phase 1: Foundation (MVP)
+### Phase 1: Foundation (MVP) [Completed]
 - **Repository Setup**: Monorepo structure (`web/`, `api/`).
 - **Authentication**: Google Sign-in via Firebase.
 - **Backend Core**: Middleware, Database connection, User/Note CRUD.
 - **Frontend Core**: Dashboard, basic routing.
 
-### Phase 1.5: Engineering Excellence (Pre-Core)
+### Phase 1.5: Engineering Excellence (Pre-Core) [Completed]
 - **Testing Infrastructure**: Setup Vitest (Frontend), Go Test (Backend), and Playwright (E2E).
 - **CI/CD**: GitHub Actions for automated testing and linting.
 - **Observability**: Structured logging and basic error tracking.
@@ -36,7 +36,7 @@ A Personal Web App (PWA) for spiritual journaling, integrated with Bible AI, to 
 - **API Documentation**: Setup Swagger/OpenAPI generation (`swaggo`).
 - **Deployment Scripts**: Create scripts for deploying Frontend (Firebase) and Backend (Cloud Run).
 
-### Phase 2: Core Features
+### Phase 2: Core Features [Completed]
 1.  **User Settings**:
     - Configure Preferred Bible Version.
     - Configure Globally Unique Username.
@@ -55,13 +55,20 @@ A Personal Web App (PWA) for spiritual journaling, integrated with Bible AI, to 
     - System Prompt (User input).
     - **Result**: Collated into a new Journal Note.
 
-### Phase 3: Polish & Deployment
+### Phase 3: Polish & Deployment [Completed]
 - **PWA Features**: Manifest, Service Workers, Offline capabilities.
 - **Deployment**: CI/CD pipeline to GCP.
 - **Domain**: `app.navteens.org`.
+- **Social Features (Part 1)**: User Connections & Sharing.
+
+### Phase 4: Social Groups [In Progress]
+- **Social Features**: Groups.
+- **Feature**:
+  - Create and Manage Groups.
+  - Join Groups.
+  - Group Discussions/Journal Sharing.
 
 ## Future Work (Post-MVP)
-- **Social Features**: Groups (Phase 4).
 - **Native Apps**: React Native (sharing logic with PWA).
 
 ## Infrastructure & Costs
