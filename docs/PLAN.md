@@ -61,7 +61,7 @@ A Personal Web App (PWA) for spiritual journaling, integrated with Bible AI, to 
 - **Domain**: `app.navteens.org`.
 
 ## Future Work (Post-MVP)
-- **Social Features**: Groups, Connections (currently out of scope).
+- **Social Features**: Groups (Phase 4).
 - **Native Apps**: React Native (sharing logic with PWA).
 
 ## Infrastructure & Costs

@@ -5,6 +5,7 @@ import Dashboard from "@/pages/Dashboard";
 import NoteEditor from "@/pages/NoteEditor";
 import ChatPage from "@/pages/ChatPage";
 import ConnectionsPage from "@/pages/ConnectionsPage";
+import GroupsPage from "@/pages/GroupsPage";
 import Settings from "@/pages/Settings";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
@@ -26,6 +27,7 @@ function App() {
           <Route path="/notes/:id" element={user ? <NoteEditor /> : <Navigate to="/login" />} />
           <Route path="/chat" element={user ? <ChatPage /> : <Navigate to="/login" />} />
           <Route path="/connections" element={user ? <ConnectionsPage /> : <Navigate to="/login" />} />
+          <Route path="/groups" element={user ? <GroupsPage /> : <Navigate to="/login" />} />
 
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
