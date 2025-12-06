@@ -53,7 +53,11 @@ func CreateGroup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
-	defer tx.Rollback(r.Context())
+	defer func() {
+		if err := tx.Rollback(r.Context()); err != nil && err != pgx.ErrTxClosed {
+			slog.Error("Failed to rollback transaction", "error", err)
+		}
+	}()
 
 	var groupID string
 	err = tx.QueryRow(r.Context(),
@@ -81,7 +85,9 @@ func CreateGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{"id": groupID})
+	if err := json.NewEncoder(w).Encode(map[string]string{"id": groupID}); err != nil {
+		slog.Error("Failed to encode response", "error", err)
+	}
 }
 
 // ListMyGroups lists groups the user belongs to
@@ -114,7 +120,9 @@ func ListMyGroups(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(groups)
+	if err := json.NewEncoder(w).Encode(groups); err != nil {
+		slog.Error("Failed to encode response", "error", err)
+	}
 }
 
 // SearchGroups searches for groups by name
@@ -154,7 +162,9 @@ func SearchGroups(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(groups)
+	if err := json.NewEncoder(w).Encode(groups); err != nil {
+		slog.Error("Failed to encode response", "error", err)
+	}
 }
 
 // JoinGroup allows a user to join a group
@@ -270,7 +280,9 @@ func GetGroupMembers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(members)
+	if err := json.NewEncoder(w).Encode(members); err != nil {
+		slog.Error("Failed to encode response", "error", err)
+	}
 }
 
 type AddMemberRequest struct {
