@@ -176,9 +176,9 @@ func AskAI(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	} else {
-        // Fallback/Mock
-        answer = "AI analysis of note context: " + req.Context[:min(len(req.Context), 20)] + "... -> " + req.Prompt
-    }
+		// Fallback/Mock
+		answer = "AI analysis of note context: " + req.Context[:min(len(req.Context), 20)] + "... -> " + req.Prompt
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(ChatResponse{Response: answer}); err != nil {
@@ -187,6 +187,8 @@ func AskAI(w http.ResponseWriter, r *http.Request) {
 }
 
 func min(a, b int) int {
-    if a < b { return a }
-    return b
+	if a < b {
+		return a
+	}
+	return b
 }

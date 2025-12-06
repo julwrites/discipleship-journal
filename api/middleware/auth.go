@@ -63,7 +63,6 @@ func InitAuthMiddleware(ctx context.Context, saKey string) (*AuthMiddleware, err
 	return &AuthMiddleware{AuthClient: client}, nil
 }
 
-
 func (am *AuthMiddleware) VerifyToken(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")

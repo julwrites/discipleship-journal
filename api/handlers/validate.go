@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/go-playground/validator/v10"
 	"discipleship_journal_api/validation"
+	"github.com/go-playground/validator/v10"
 )
 
 // DecodeAndValidate decodes the request body into v and validates it.

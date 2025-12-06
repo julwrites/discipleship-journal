@@ -34,7 +34,7 @@ func SearchUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rows, err := database.DB.Query(r.Context(),
-		"SELECT id, email, display_name FROM users WHERE email ILIKE $1 OR display_name ILIKE $1 LIMIT 10",
+		"SELECT id, email, display_name, username FROM users WHERE email ILIKE $1 OR display_name ILIKE $1 OR username ILIKE $1 LIMIT 10",
 		"%"+query+"%")
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
@@ -44,14 +44,20 @@ func SearchUsers(w http.ResponseWriter, r *http.Request) {
 
 	var users []map[string]string
 	for rows.Next() {
-		var id, email, displayName string
-		if err := rows.Scan(&id, &email, &displayName); err != nil {
+		var id, email, displayName, username string
+		// username might be null in DB if not set, so handle that
+		var usernameNull *string
+		if err := rows.Scan(&id, &email, &displayName, &usernameNull); err != nil {
 			continue
+		}
+		if usernameNull != nil {
+			username = *usernameNull
 		}
 		users = append(users, map[string]string{
 			"id":           id,
 			"email":        email,
 			"display_name": displayName,
+			"username":     username,
 		})
 	}
 

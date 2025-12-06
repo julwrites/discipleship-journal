@@ -120,6 +120,16 @@ func main() {
 		r.Get("/api/connections", handlers.ListConnections)
 		r.Put("/api/connections/{id}", handlers.RespondToConnectionRequest)
 		r.Delete("/api/connections/{id}", handlers.RespondToConnectionRequest) // Reject is a delete with a different param/logic or just delete
+
+		// Groups
+		r.Post("/api/groups", handlers.CreateGroup)
+		r.Get("/api/groups", handlers.ListMyGroups)
+		r.Get("/api/groups/search", handlers.SearchGroups)
+		r.Post("/api/groups/{id}/join", handlers.JoinGroup)
+		r.Delete("/api/groups/{id}/leave", handlers.LeaveGroup)
+		r.Get("/api/groups/{id}/members", handlers.GetGroupMembers)
+		r.Post("/api/groups/{id}/members", handlers.AddGroupMember)
+		r.Delete("/api/groups/{id}/members/{userId}", handlers.RemoveGroupMember)
 	})
 
 	server := &http.Server{

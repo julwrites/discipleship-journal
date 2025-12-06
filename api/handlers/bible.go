@@ -54,7 +54,7 @@ func GetBiblePassage(w http.ResponseWriter, r *http.Request) {
 	var result map[string]interface{}
 	resp, err := client.R().
 		SetHeader("Authorization", "Bearer "+apiKey). // Or whatever auth method it uses
-		SetQueryParam("q", ref). // Or "reference" or path param
+		SetQueryParam("q", ref).                      // Or "reference" or path param
 		SetResult(&result).
 		Get(apiURL + "/bible/passage") // Adjust path
 
