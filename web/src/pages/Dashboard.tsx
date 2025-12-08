@@ -35,6 +35,11 @@ export default function Dashboard() {
               <Users className="w-5 h-5" />
             </Button>
           </Link>
+          <Link to="/groups">
+            <Button variant="ghost" size="icon" title="Groups">
+              <Users className="w-5 h-5 text-blue-600" />
+            </Button>
+          </Link>
           <Link to="/settings">
             <Button variant="ghost" size="icon" title="Settings">
               <Settings className="w-5 h-5" />

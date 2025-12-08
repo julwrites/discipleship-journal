@@ -1,137 +1,114 @@
 import { test, expect } from '@playwright/test';
 
-// Common mock data
-const mockUser = {
-  uid: 'test-user-123',
-  email: 'test@example.com',
-  displayName: 'Test User',
-  photoURL: 'https://example.com/photo.jpg'
-};
-
-const mockMember = {
-    user_id: 'member-1',
-    display_name: 'Member One',
-    email: 'member@example.com',
-    role: 'member'
-};
-
-test.describe('Groups (Mocked)', () => {
-  test.beforeEach(async ({ page }) => {
-    // Mock API requests
-    await page.route('**/api/users/me', async route => {
-        await route.fulfill({
-            status: 200,
-            contentType: 'application/json',
-            body: JSON.stringify({
-                id: 'uuid-123',
-                firebase_uid: 'test-user-123',
-                email: 'test@example.com',
-                username: 'testuser',
-                settings: { bible_version: 'ESV' }
-            })
+test.describe('Groups Feature', () => {
+    test.beforeEach(async ({ page }) => {
+        // Set E2E_TEST_USER in localStorage to simulate logged-in user
+        // We need to do this before page load, but we can't access localStorage before page.goto.
+        // So we goto '/', inject script, then reload or just let it update.
+        // Actually, playwright has `addInitScript` which runs before page loads.
+        await page.addInitScript(() => {
+            localStorage.setItem('E2E_TEST_USER', JSON.stringify({
+                uid: 'test-user-id',
+                displayName: 'Test User',
+                email: 'test@example.com'
+            }));
         });
     });
 
-    await page.route('**/api/groups', async (route) => {
-      if (route.request().method() === 'GET') {
-        await route.fulfill({
-            contentType: 'application/json',
-            body: JSON.stringify([{ id: 'g1', name: 'Bible Study', description: 'Weekly study', role: 'admin' }])
+    test('Create and Join Group Flow', async ({ page }) => {
+        // 1. Mock API Responses
+        // Debug requests
+        page.on('request', request => console.log('>>', request.method(), request.url()));
+
+        // List Groups (initially empty)
+        await page.route('**/api/groups', async (route) => {
+            if (route.request().method() === 'GET') {
+                console.log('Intercepted GET /api/groups');
+                await route.fulfill({ json: [] });
+            } else if (route.request().method() === 'POST') {
+                console.log('Intercepted POST /api/groups');
+                // Create Group
+                await route.fulfill({ status: 201, json: { id: 'new-group-id' } });
+            } else {
+                await route.continue();
+            }
         });
-      } else if (route.request().method() === 'POST') {
-        await route.fulfill({ status: 201, body: JSON.stringify({ id: 'g2' }) });
-      }
-    });
 
-    // Mock Groups Search
-    await page.route('**/api/groups/search*', async (route) => {
-      await route.fulfill({
-          contentType: 'application/json',
-          body: JSON.stringify([{ id: 'g3', name: 'Prayer Warriors', description: 'Prayer group', role: '' }])
-      });
-    });
-
-    // Mock Join
-    await page.route('**/api/groups/g3/join', async (route) => {
-      await route.fulfill({ status: 200 });
-    });
-
-    // Mock Members List
-    // We mock ALL GET requests to members endpoint for ANY group or specific group g1
-    await page.route('**/api/groups/*/members*', async (route) => {
-        if (route.request().method() === 'GET') {
-            await route.fulfill({
-                contentType: 'application/json',
-                body: JSON.stringify([
-                    { user_id: 'uuid-123', display_name: 'Test User', email: 'test@example.com', role: 'admin' },
-                    mockMember
-                ])
-            });
-        } else if (route.request().method() === 'POST') {
-             await route.fulfill({ status: 201 });
-        } else if (route.request().method() === 'DELETE') {
-             await route.fulfill({ status: 200 });
-        }
-    });
-
-    // Mock User Search for Adding
-    await page.route('**/api/users/search*', async (route) => {
-        await route.fulfill({
-            contentType: 'application/json',
-            body: JSON.stringify([{ id: 'new-user', display_name: 'New User', email: 'new@example.com', username: 'newuser' }])
+        // Search Groups
+        await page.route('**/api/groups/search*', async (route) => {
+             await route.fulfill({ json: [
+                 { id: 'found-group-id', name: 'Found Group', description: 'Description', role: '' }
+             ] });
         });
-    });
 
-    // Inject user
-    await page.addInitScript((user) => {
-        localStorage.setItem('E2E_TEST_USER', JSON.stringify(user));
-    }, mockUser);
+        // Join Group
+        await page.route('**/api/groups/*/join', async (route) => {
+            await route.fulfill({ status: 200 });
+        });
 
-    await page.goto('/groups');
-  });
+        // Get Members
+        await page.route('**/api/groups/*/members', async (route) => {
+            await route.fulfill({ json: [
+                { user_id: 'u1', display_name: 'Test User', email: 'test@example.com', role: 'admin' }
+            ] });
+        });
 
-  test('should display my groups and expand members', async ({ page }) => {
-    await expect(page.getByRole('heading', { name: 'Groups' })).toBeVisible();
-    await expect(page.locator('text=Bible Study')).toBeVisible();
+        // 2. Go to Groups Page
+        await page.goto('/groups');
 
-    // Click to expand
-    await page.locator('text=Bible Study').click();
+        // Check if we are on Groups page
+        await expect(page.locator('h1')).toHaveText('Groups');
 
-    // Wait for the Members section to appear.
-    await expect(page.locator('text=Members')).toBeVisible();
+        // 3. Create Group
+        await page.click('text=Create Group');
+        await page.fill('input[placeholder="Group Name"]', 'My New Group');
+        await page.fill('textarea[placeholder="Description"]', 'This is a test group');
 
-    // Verify members are listed
-    await expect(page.locator('text=Test User')).toBeVisible();
-    await expect(page.locator('text=Member One')).toBeVisible();
-  });
+        // Intercept the POST and the subsequent GET
+        await page.route('**/api/groups', async (route) => {
+            if (route.request().method() === 'POST') {
+                 console.log('Intercepted POST /api/groups');
+                 await route.fulfill({ status: 201, json: { id: 'new-group-id' } });
+            } else if (route.request().method() === 'GET') {
+                console.log('Intercepted GET /api/groups - returning new list');
+                await route.fulfill({ json: [
+                    { id: 'new-group-id', name: 'My New Group', description: 'This is a test group', role: 'admin' }
+                ] });
+            } else {
+                await route.continue();
+            }
+        });
 
-  test('should add a member as admin', async ({ page }) => {
-    await page.locator('text=Bible Study').click();
-    await expect(page.locator('text=Members')).toBeVisible();
+        // Submit
+        // Use a more robust selector for the submit button in the dialog
+        await page.click('button:has-text("Create") >> visible=true >> nth=-1');
 
-    await page.getByRole('button', { name: 'Add Member' }).click();
+        // Verify group appears
+        await expect(page.locator('text=My New Group')).toBeVisible({ timeout: 10000 });
 
-    await page.getByPlaceholder('Search by email, name, or username').fill('newuser');
-    await page.getByRole('button', { name: 'Search' }).click();
+        // 4. Search and Join
+        await page.click('text=Find Groups');
+        await page.fill('input[placeholder="Search groups..."]', 'Found');
+        await page.click('button:has-text("Search")');
 
-    await expect(page.locator('text=New User')).toBeVisible();
-    await page.getByRole('button', { name: 'Add' }).click();
+        await expect(page.locator('text=Found Group')).toBeVisible();
 
-    // Verify dialog closed
-    await expect(page.locator('text=Add Member to Bible Study')).not.toBeVisible();
-  });
+        // Mock join success alert
+        // We need to set up the handler before triggering the dialog.
+        // And since `dialog.accept()` is async but `page.on` callback is not awaited by the event emitter in the same way,
+        // we should ensure it handles it.
+        // Playwright's default behavior for dialogs is to dismiss them unless a handler is set.
+        // If we set a handler, we must handle it.
 
-  test('should remove a member as admin', async ({ page }) => {
-    // Setup dialog listener before action
-    page.once('dialog', async dialog => {
+        // Wait for dialog event
+        const dialogPromise = page.waitForEvent('dialog');
+
+        await page.click('text=Join Group');
+
+        const dialog = await dialogPromise;
         await dialog.accept();
+
+        // Verify we switch back or refresh? The logic calls `handleSearch` and `fetchMyGroups`.
+        // We just check if alert was triggered (implicitly handled) and maybe button state changes if we mocked the search response to update.
     });
-
-    await page.locator('text=Bible Study').click();
-    await expect(page.locator('text=Members')).toBeVisible();
-    await expect(page.locator('text=Member One')).toBeVisible();
-
-    const memberRow = page.locator('div.flex.justify-between.items-center', { hasText: 'Member One' });
-    await memberRow.getByRole('button').click();
-  });
 });

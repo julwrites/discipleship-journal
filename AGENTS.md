@@ -34,6 +34,12 @@ You are an expert Software Engineer working on this project. Your primary respon
 *   Ensure all new code is covered by tests (if testing infrastructure exists).
 *   **Commit Messages**: Use descriptive commit messages. Format: `type(scope): description`.
 
+### Testing Strategy
+*   **Component Tests First**: Prioritize writing and passing unit/component tests (e.g., Vitest for Frontend). This allows for rapid local verification without relying on full environment setups.
+*   **E2E Tests Maintenance**: Maintain the E2E test suite (Playwright) to ensure critical flows are covered. These tests mock the backend to verify frontend integration in isolation.
+    *   **Note**: When running E2E tests locally or in CI, ensure the environment is correctly configured (e.g., `VITE_API_URL` pointing to the dev server or mock).
+*   **Backend Testing**: Write unit tests for business logic where possible, though full handler testing may require database mocking.
+
 ### Frontend (React/Vite)
 *   Use TypeScript for all new code.
 *   Use Functional Components and Hooks.

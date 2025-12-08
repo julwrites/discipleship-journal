@@ -112,7 +112,7 @@ export default function GroupsPage() {
             });
             if (res.ok) {
                 alert("Joined group!");
-                handleSearch(); // Refresh search results to show updated role
+                await handleSearch(); // Refresh search results to show updated role
                 fetchMyGroups();
             }
         } catch (error) {
