@@ -56,6 +56,14 @@ test.describe('Groups (Mocked)', () => {
       await route.fulfill({ status: 200 });
     });
 
+    // Mock Shares List
+    await page.route('**/api/groups/*/shares', async (route) => {
+        await route.fulfill({
+            contentType: 'application/json',
+            body: JSON.stringify([])
+        });
+    });
+
     // Mock Members List
     // We mock ALL GET requests to members endpoint for ANY group or specific group g1
     await page.route('**/api/groups/*/members*', async (route) => {
@@ -97,8 +105,11 @@ test.describe('Groups (Mocked)', () => {
     // Click to expand
     await page.locator('text=Bible Study').click();
 
+    // Click Members Tab
+    await page.getByRole('tab', { name: 'Members' }).click();
+
     // Wait for the Members section to appear.
-    await expect(page.locator('text=Members')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Members' })).toBeVisible();
 
     // Verify members are listed
     await expect(page.locator('text=Test User')).toBeVisible();
@@ -107,7 +118,10 @@ test.describe('Groups (Mocked)', () => {
 
   test('should add a member as admin', async ({ page }) => {
     await page.locator('text=Bible Study').click();
-    await expect(page.locator('text=Members')).toBeVisible();
+
+    // Click Members Tab
+    await page.getByRole('tab', { name: 'Members' }).click();
+    await expect(page.getByRole('heading', { name: 'Members' })).toBeVisible();
 
     await page.getByRole('button', { name: 'Add Member' }).click();
 
@@ -128,7 +142,10 @@ test.describe('Groups (Mocked)', () => {
     });
 
     await page.locator('text=Bible Study').click();
-    await expect(page.locator('text=Members')).toBeVisible();
+
+    // Click Members Tab
+    await page.getByRole('tab', { name: 'Members' }).click();
+    await expect(page.getByRole('heading', { name: 'Members' })).toBeVisible();
     await expect(page.locator('text=Member One')).toBeVisible();
 
     const memberRow = page.locator('div.flex.justify-between.items-center', { hasText: 'Member One' });

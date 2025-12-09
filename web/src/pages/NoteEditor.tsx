@@ -15,12 +15,12 @@ import { Input } from "@/components/ui/input"
 // Since we are building iteratively, I will use createNote for everything first, then update for proper updates.
 // But first, let's fix the API service to support Get/Update.
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+const API_URL = import.meta.env.VITE_API_URL;
 import { auth } from "@/lib/firebase";
 
 async function getNote(id: string) {
     const token = await auth.currentUser?.getIdToken();
-    const res = await fetch(`${API_URL}/notes/${id}`, {
+    const res = await fetch(`${API_URL}/api/notes/${id}`, {
         headers: { "Authorization": `Bearer ${token}` }
     });
     if (!res.ok) throw new Error("Failed to load note");
@@ -29,7 +29,7 @@ async function getNote(id: string) {
 
 async function updateNote(id: string, title: string, content: Record<string, unknown>) {
     const token = await auth.currentUser?.getIdToken();
-    const res = await fetch(`${API_URL}/notes/${id}`, {
+    const res = await fetch(`${API_URL}/api/notes/${id}`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",
@@ -94,7 +94,7 @@ export default function NoteEditor() {
     const fetchMyGroups = async () => {
         try {
             const token = await auth.currentUser?.getIdToken();
-            const res = await fetch(`${API_URL}/groups`, {
+            const res = await fetch(`${API_URL}/api/groups`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (res.ok) {
@@ -115,7 +115,7 @@ export default function NoteEditor() {
         setSharing(true);
         try {
             const token = await auth.currentUser?.getIdToken();
-            const res = await fetch(`${API_URL}/groups/${selectedGroupId}/shares`, {
+            const res = await fetch(`${API_URL}/api/groups/${selectedGroupId}/shares`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
