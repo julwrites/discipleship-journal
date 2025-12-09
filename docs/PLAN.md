@@ -61,7 +61,7 @@ A Personal Web App (PWA) for spiritual journaling, integrated with Bible AI, to 
 - **Domain**: `app.navteens.org`.
 - **Social Features (Part 1)**: User Connections & Sharing.
 
-### Phase 4: Social Groups [In Progress]
+### Phase 4: Social Groups [Completed]
 - **Social Features**: Groups.
 - **Feature**:
   - Create and Manage Groups.
@@ -69,9 +69,5 @@ A Personal Web App (PWA) for spiritual journaling, integrated with Bible AI, to 
   - Group Discussions/Journal Sharing.
 
 ## Future Work (Post-MVP)
-- **Native Apps**: React Native (sharing logic with PWA).
-
-## Infrastructure & Costs
-- **Estimated Cost (1000 users)**: ~$10-15 USD/month.
-  - Cloud SQL is the primary cost driver.
-  - Cloud Run and Firebase Hosting likely fall within free tiers.
+- **Phase 5: Native Apps**
+  - React Native (sharing logic with PWA).
