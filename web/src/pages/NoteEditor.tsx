@@ -15,12 +15,12 @@ import { Input } from "@/components/ui/input"
 // Since we are building iteratively, I will use createNote for everything first, then update for proper updates.
 // But first, let's fix the API service to support Get/Update.
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+const API_URL = import.meta.env.VITE_API_URL;
 import { auth } from "@/lib/firebase";
 
 async function getNote(id: string) {
     const token = await auth.currentUser?.getIdToken();
-    const res = await fetch(`${API_URL}/notes/${id}`, {
+    const res = await fetch(`${API_URL}/api/notes/${id}`, {
         headers: { "Authorization": `Bearer ${token}` }
     });
     if (!res.ok) throw new Error("Failed to load note");
@@ -29,7 +29,7 @@ async function getNote(id: string) {
 
 async function updateNote(id: string, title: string, content: Record<string, unknown>) {
     const token = await auth.currentUser?.getIdToken();
-    const res = await fetch(`${API_URL}/notes/${id}`, {
+    const res = await fetch(`${API_URL}/api/notes/${id}`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",
@@ -58,6 +58,12 @@ export default function NoteEditor() {
     const [aiResponse, setAiResponse] = useState("");
     const [askingAI, setAskingAI] = useState(false);
 
+    // Sharing State
+    const [myGroups, setMyGroups] = useState<{ id: string, name: string }[]>([]);
+    const [selectedGroupId, setSelectedGroupId] = useState("");
+    const [shareComment, setShareComment] = useState("");
+    const [sharing, setSharing] = useState(false);
+
     useEffect(() => {
         if (id && id !== "new") {
             getNote(id).then(note => {
@@ -82,6 +88,52 @@ export default function NoteEditor() {
             alert("Failed to save");
         } finally {
             setSaving(false);
+        }
+    };
+
+    const fetchMyGroups = async () => {
+        try {
+            const token = await auth.currentUser?.getIdToken();
+            const res = await fetch(`${API_URL}/api/groups`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setMyGroups(data || []);
+            }
+        } catch (error) {
+            console.error("Failed to fetch groups", error);
+        }
+    };
+
+    const handleShare = async () => {
+        if (!id || id === "new") {
+            alert("Please save the note first.");
+            return;
+        }
+        if (!selectedGroupId) return;
+        setSharing(true);
+        try {
+            const token = await auth.currentUser?.getIdToken();
+            const res = await fetch(`${API_URL}/api/groups/${selectedGroupId}/shares`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ note_id: id, comment: shareComment })
+            });
+            if (res.ok) {
+                alert("Note shared!");
+                setSelectedGroupId("");
+                setShareComment("");
+            } else {
+                alert("Failed to share.");
+            }
+        } catch (error) {
+            console.error("Share failed", error);
+        } finally {
+            setSharing(false);
         }
     };
 
@@ -189,6 +241,37 @@ export default function NoteEditor() {
                     <Button variant={mode === "edit" ? "default" : "outline"} onClick={() => setMode("edit")}>Edit</Button>
                     <Button variant={mode === "preview" ? "default" : "outline"} onClick={() => setMode("preview")}>Preview</Button>
                     <Button onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
+
+                    <Dialog onOpenChange={(open) => { if (open) fetchMyGroups(); }}>
+                        <DialogTrigger asChild>
+                            <Button variant="outline" disabled={!id || id === "new"}>Share</Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Share to Group</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                                <select
+                                    className="w-full p-2 border rounded"
+                                    value={selectedGroupId}
+                                    onChange={(e) => setSelectedGroupId(e.target.value)}
+                                >
+                                    <option value="">Select a Group...</option>
+                                    {myGroups.map(g => (
+                                        <option key={g.id} value={g.id}>{g.name}</option>
+                                    ))}
+                                </select>
+                                <Input
+                                    placeholder="Add a comment (optional)..."
+                                    value={shareComment}
+                                    onChange={(e) => setShareComment(e.target.value)}
+                                />
+                                <Button onClick={handleShare} disabled={sharing || !selectedGroupId} className="w-full">
+                                    {sharing ? "Sharing..." : "Share Note"}
+                                </Button>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
                 </div>
             </div>
 

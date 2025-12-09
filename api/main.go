@@ -130,6 +130,11 @@ func main() {
 		r.Get("/api/groups/{id}/members", handlers.GetGroupMembers)
 		r.Post("/api/groups/{id}/members", handlers.AddGroupMember)
 		r.Delete("/api/groups/{id}/members/{userId}", handlers.RemoveGroupMember)
+
+		// Group Shares
+		r.Post("/api/groups/{id}/shares", handlers.ShareNoteToGroup)
+		r.Get("/api/groups/{id}/shares", handlers.ListGroupShares)
+		r.Get("/api/groups/{id}/shares/{shareId}", handlers.GetSharedNoteDetails)
 	})
 
 	server := &http.Server{
