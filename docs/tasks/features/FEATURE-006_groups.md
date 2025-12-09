@@ -2,7 +2,7 @@
 
 ## Task Information
 - **Task ID**: FEATURE-006
-- **Status**: [ ] Pending
+- **Status**: [x] Completed
 - **Priority**: high
 - **Phase**: 4 (Post-MVP)
 - **Estimated Effort**: 3 days
@@ -14,19 +14,19 @@
 Implement the ability for users to create and join groups. This allows for small group discipleship and content sharing.
 
 ### Acceptance Criteria
-- [ ] **Database**:
-    - [ ] `groups` table (id, name, description, created_by).
-    - [ ] `group_members` table (group_id, user_id, role, joined_at).
-- [ ] **API**:
-    - [ ] Create Group (`POST /api/groups`).
-    - [ ] List My Groups (`GET /api/groups`).
-    - [ ] Search Groups (`GET /api/groups/search`).
-    - [ ] Join Group (`POST /api/groups/{id}/join`).
-    - [ ] List Group Members (`GET /api/groups/{id}/members`).
-- [ ] **UI**:
-    - [ ] "Groups" Page with "My Groups" and "Find Groups" tabs.
-    - [ ] Create Group Dialog.
-    - [ ] Group Details View (member list).
+- [x] **Database**:
+    - [x] `groups` table (id, name, description, created_by).
+    - [x] `group_members` table (group_id, user_id, role, joined_at).
+- [x] **API**:
+    - [x] Create Group (`POST /api/groups`).
+    - [x] List My Groups (`GET /api/groups`).
+    - [x] Search Groups (`GET /api/groups/search`).
+    - [x] Join Group (`POST /api/groups/{id}/join`).
+    - [x] List Group Members (`GET /api/groups/{id}/members`).
+- [x] **UI**:
+    - [x] "Groups" Page with "My Groups" and "Find Groups" tabs.
+    - [x] Create Group Dialog.
+    - [x] Group Details View (member list).
 
 ### Implementation Notes
 - Use `pgx` for database interactions.
@@ -36,3 +36,4 @@ Implement the ability for users to create and join groups. This allows for small
 
 ---
 *Created: 2025-12-05*
+*Completed: 2025-05-18*

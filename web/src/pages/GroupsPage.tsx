@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { ChevronDown, ChevronUp, UserPlus, Trash2 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 interface Group {
     id: string;
@@ -20,6 +21,15 @@ interface GroupMember {
     display_name: string;
     email: string;
     role: string;
+}
+
+interface SharedNote {
+    id: string; // shareId
+    note_id: string;
+    title: string;
+    shared_by: string;
+    shared_at: string;
+    comment: string;
 }
 
 interface UserSearchResult {
@@ -38,10 +48,12 @@ export default function GroupsPage() {
     const [newGroup, setNewGroup] = useState({ name: "", description: "" });
     const [expandedGroupId, setExpandedGroupId] = useState<string | null>(null);
     const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
+    const [groupShares, setGroupShares] = useState<SharedNote[]>([]);
     const [userSearchQuery, setUserSearchQuery] = useState("");
     const [userSearchResults, setUserSearchResults] = useState<UserSearchResult[]>([]);
     const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
     const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
+    const [viewingSharedNote, setViewingSharedNote] = useState<SharedNote & { content: { markdown?: string } } | null>(null);
 
     const fetchMyGroups = useCallback(async () => {
         if (!user) return;
@@ -152,8 +164,32 @@ export default function GroupsPage() {
                 const data = await res.json();
                 setGroupMembers(data || []);
             }
+
+            // Fetch shared notes
+            const res2 = await fetch(`${import.meta.env.VITE_API_URL}/api/groups/${groupId}/shares`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res2.ok) {
+                const data = await res2.json();
+                setGroupShares(data || []);
+            }
         } catch (error) {
-            console.error("Failed to fetch members", error);
+            console.error("Failed to fetch details", error);
+        }
+    };
+
+    const viewSharedNote = async (groupId: string, shareId: string) => {
+        try {
+            const token = await user?.getIdToken();
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/groups/${groupId}/shares/${shareId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setViewingSharedNote(data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch shared note", error);
         }
     };
 
@@ -214,6 +250,26 @@ export default function GroupsPage() {
 
     return (
         <div className="p-8 max-w-4xl mx-auto space-y-6">
+             {viewingSharedNote && (
+                 <Dialog open={!!viewingSharedNote} onOpenChange={(o) => !o && setViewingSharedNote(null)}>
+                     <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                         <DialogHeader>
+                             <DialogTitle>{viewingSharedNote.title}</DialogTitle>
+                         </DialogHeader>
+                         <div className="space-y-4">
+                             <div className="bg-slate-50 p-3 rounded text-sm text-gray-600">
+                                 <p><strong>Shared by:</strong> {viewingSharedNote.shared_by}</p>
+                                 <p><strong>Date:</strong> {new Date(viewingSharedNote.shared_at).toLocaleString()}</p>
+                                 {viewingSharedNote.comment && <p className="mt-1 italic">"{viewingSharedNote.comment}"</p>}
+                             </div>
+                             <div className="prose prose-slate max-w-none">
+                                 <ReactMarkdown>{viewingSharedNote.content?.markdown || "No content"}</ReactMarkdown>
+                             </div>
+                         </div>
+                     </DialogContent>
+                 </Dialog>
+             )}
+
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold">Groups</h1>
                 <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
@@ -266,67 +322,91 @@ export default function GroupsPage() {
                                 </CardHeader>
                                 {expandedGroupId === g.id && (
                                     <CardContent>
-                                        <div className="space-y-4">
-                                            <div className="flex justify-between items-center border-b pb-2">
-                                                <h3 className="font-semibold">Members</h3>
-                                                {g.role === 'admin' && (
-                                                    <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
-                                                        <DialogTrigger asChild>
-                                                            <Button size="sm" variant="outline" onClick={() => setActiveGroupId(g.id)}>
-                                                                <UserPlus size={16} className="mr-2" /> Add Member
-                                                            </Button>
-                                                        </DialogTrigger>
-                                                        <DialogContent>
-                                                            <DialogHeader>
-                                                                <DialogTitle>Add Member to {g.name}</DialogTitle>
-                                                            </DialogHeader>
-                                                            <div className="space-y-4">
-                                                                <div className="flex gap-2">
-                                                                    <Input
-                                                                        placeholder="Search by email, name, or username"
-                                                                        value={userSearchQuery}
-                                                                        onChange={(e) => setUserSearchQuery(e.target.value)}
-                                                                    />
-                                                                    <Button onClick={searchUsers}>Search</Button>
-                                                                </div>
-                                                                <div className="space-y-2 max-h-60 overflow-y-auto">
-                                                                    {userSearchResults.map(u => (
-                                                                        <div key={u.id} className="flex justify-between items-center p-2 border rounded">
-                                                                            <div>
-                                                                                <p className="font-medium">{u.display_name}</p>
-                                                                                <p className="text-xs text-gray-500">@{u.username || 'unknown'} • {u.email}</p>
+                                        <Tabs defaultValue="shares">
+                                            <TabsList className="mb-4">
+                                                <TabsTrigger value="shares">Shared Notes</TabsTrigger>
+                                                <TabsTrigger value="members">Members</TabsTrigger>
+                                            </TabsList>
+
+                                            <TabsContent value="shares" className="space-y-4">
+                                                 {groupShares.length === 0 && <p className="text-sm text-gray-500">No notes shared yet.</p>}
+                                                 {groupShares.map(s => (
+                                                     <Card key={s.id} className="bg-slate-50 cursor-pointer hover:bg-slate-100 transition" onClick={() => viewSharedNote(g.id, s.id)}>
+                                                         <CardContent className="p-4">
+                                                             <div className="flex justify-between items-start">
+                                                                 <div>
+                                                                     <h4 className="font-bold text-md">{s.title}</h4>
+                                                                     <p className="text-xs text-gray-500">Shared by {s.shared_by} on {new Date(s.shared_at).toLocaleDateString()}</p>
+                                                                     {s.comment && <p className="text-sm mt-2 italic">"{s.comment}"</p>}
+                                                                 </div>
+                                                             </div>
+                                                         </CardContent>
+                                                     </Card>
+                                                 ))}
+                                            </TabsContent>
+
+                                            <TabsContent value="members" className="space-y-4">
+                                                <div className="flex justify-between items-center border-b pb-2">
+                                                    <h3 className="font-semibold">Members</h3>
+                                                    {g.role === 'admin' && (
+                                                        <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
+                                                            <DialogTrigger asChild>
+                                                                <Button size="sm" variant="outline" onClick={() => setActiveGroupId(g.id)}>
+                                                                    <UserPlus size={16} className="mr-2" /> Add Member
+                                                                </Button>
+                                                            </DialogTrigger>
+                                                            <DialogContent>
+                                                                <DialogHeader>
+                                                                    <DialogTitle>Add Member to {g.name}</DialogTitle>
+                                                                </DialogHeader>
+                                                                <div className="space-y-4">
+                                                                    <div className="flex gap-2">
+                                                                        <Input
+                                                                            placeholder="Search by email, name, or username"
+                                                                            value={userSearchQuery}
+                                                                            onChange={(e) => setUserSearchQuery(e.target.value)}
+                                                                        />
+                                                                        <Button onClick={searchUsers}>Search</Button>
+                                                                    </div>
+                                                                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                                                                        {userSearchResults.map(u => (
+                                                                            <div key={u.id} className="flex justify-between items-center p-2 border rounded">
+                                                                                <div>
+                                                                                    <p className="font-medium">{u.display_name}</p>
+                                                                                    <p className="text-xs text-gray-500">@{u.username || 'unknown'} • {u.email}</p>
+                                                                                </div>
+                                                                                <Button size="sm" onClick={() => addMember(u.id)}>Add</Button>
                                                                             </div>
-                                                                            <Button size="sm" onClick={() => addMember(u.id)}>Add</Button>
-                                                                        </div>
-                                                                    ))}
+                                                                        ))}
+                                                                    </div>
                                                                 </div>
+                                                            </DialogContent>
+                                                        </Dialog>
+                                                    )}
+                                                </div>
+                                                <div className="space-y-2">
+                                                    {groupMembers.map(m => (
+                                                        <div key={m.user_id} className="flex justify-between items-center">
+                                                            <div className="flex items-center gap-2">
+                                                                <div>
+                                                                    <p className="font-medium">{m.display_name}</p>
+                                                                    <p className="text-xs text-gray-500">{m.email}</p>
+                                                                </div>
+                                                                <span className="text-xs bg-gray-100 px-1 rounded">{m.role}</span>
                                                             </div>
-                                                        </DialogContent>
-                                                    </Dialog>
-                                                )}
-                                            </div>
-                                            <div className="space-y-2">
-                                                {groupMembers.map(m => (
-                                                    <div key={m.user_id} className="flex justify-between items-center">
-                                                        <div className="flex items-center gap-2">
-                                                            <div>
-                                                                <p className="font-medium">{m.display_name}</p>
-                                                                <p className="text-xs text-gray-500">{m.email}</p>
-                                                            </div>
-                                                            <span className="text-xs bg-gray-100 px-1 rounded">{m.role}</span>
+                                                            {g.role === 'admin' && m.role !== 'admin' && (
+                                                                <Button size="icon" variant="ghost" className="text-red-500 h-8 w-8" onClick={() => removeMember(g.id, m.user_id)}>
+                                                                    <Trash2 size={16} />
+                                                                </Button>
+                                                            )}
                                                         </div>
-                                                        {g.role === 'admin' && m.role !== 'admin' && (
-                                                            <Button size="icon" variant="ghost" className="text-red-500 h-8 w-8" onClick={() => removeMember(g.id, m.user_id)}>
-                                                                <Trash2 size={16} />
-                                                            </Button>
-                                                        )}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            <div className="pt-4 border-t">
-                                                <Button variant="destructive" size="sm" onClick={() => handleLeave(g.id)}>Leave Group</Button>
-                                            </div>
-                                        </div>
+                                                    ))}
+                                                </div>
+                                                <div className="pt-4 border-t">
+                                                    <Button variant="destructive" size="sm" onClick={() => handleLeave(g.id)}>Leave Group</Button>
+                                                </div>
+                                            </TabsContent>
+                                        </Tabs>
                                     </CardContent>
                                 )}
                             </Card>
