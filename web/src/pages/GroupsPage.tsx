@@ -8,29 +8,22 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { ChevronDown, ChevronUp, UserPlus, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-
-interface Group {
-    id: string;
-    name: string;
-    description: string;
-    role?: string;
-}
-
-interface GroupMember {
-    user_id: string;
-    display_name: string;
-    email: string;
-    role: string;
-}
-
-interface SharedNote {
-    id: string; // shareId
-    note_id: string;
-    title: string;
-    shared_by: string;
-    shared_at: string;
-    comment: string;
-}
+import {
+    Group,
+    GroupMember,
+    SharedNote,
+    getMyGroups,
+    searchGroups,
+    createGroup,
+    joinGroup,
+    leaveGroup,
+    getGroupMembers,
+    getGroupShares,
+    getSharedNote,
+    addGroupMember,
+    removeGroupMember
+} from "@/services/group.service";
+import { searchUsers } from "@/services/api";
 
 interface UserSearchResult {
     id: string;
@@ -53,42 +46,27 @@ export default function GroupsPage() {
     const [userSearchResults, setUserSearchResults] = useState<UserSearchResult[]>([]);
     const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
     const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
-    const [viewingSharedNote, setViewingSharedNote] = useState<SharedNote & { content: { markdown?: string } } | null>(null);
+    const [viewingSharedNote, setViewingSharedNote] = useState<SharedNote & { content?: { markdown?: string } } | null>(null);
 
-    const fetchMyGroups = useCallback(async () => {
+    const loadMyGroups = useCallback(async () => {
         if (!user) return;
         try {
-            const token = await user.getIdToken();
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/groups`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setMyGroups(data || []);
-            }
+            const data = await getMyGroups();
+            setMyGroups(data || []);
         } catch (error) {
             console.error("Failed to fetch groups", error);
         }
     }, [user]);
 
     useEffect(() => {
-        const load = async () => {
-            await fetchMyGroups();
-        };
-        load();
-    }, [fetchMyGroups]);
+        loadMyGroups();
+    }, [loadMyGroups]);
 
     const handleSearch = async () => {
         if (searchQuery.length < 3) return;
         try {
-            const token = await user?.getIdToken();
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/groups/search?q=${searchQuery}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setSearchResults(data || []);
-            }
+            const data = await searchGroups(searchQuery);
+            setSearchResults(data || []);
         } catch (error) {
             console.error("Search failed", error);
         }
@@ -96,20 +74,10 @@ export default function GroupsPage() {
 
     const handleCreate = async () => {
         try {
-            const token = await user?.getIdToken();
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/groups`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify(newGroup)
-            });
-            if (res.ok) {
-                setIsCreateOpen(false);
-                setNewGroup({ name: "", description: "" });
-                fetchMyGroups();
-            }
+            await createGroup(newGroup);
+            setIsCreateOpen(false);
+            setNewGroup({ name: "", description: "" });
+            loadMyGroups();
         } catch (error) {
             console.error("Create failed", error);
         }
@@ -117,16 +85,10 @@ export default function GroupsPage() {
 
     const handleJoin = async (id: string) => {
         try {
-            const token = await user?.getIdToken();
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/groups/${id}/join`, {
-                method: "POST",
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) {
-                alert("Joined group!");
-                handleSearch(); // Refresh search results to show updated role
-                fetchMyGroups();
-            }
+            await joinGroup(id);
+            alert("Joined group!");
+            handleSearch(); // Refresh search results to show updated role
+            loadMyGroups();
         } catch (error) {
             console.error("Join failed", error);
         }
@@ -135,14 +97,9 @@ export default function GroupsPage() {
     const handleLeave = async (id: string) => {
         if (!confirm("Are you sure you want to leave this group?")) return;
         try {
-            const token = await user?.getIdToken();
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/groups/${id}/leave`, {
-                method: "DELETE",
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) {
-                fetchMyGroups();
-            }
+            await leaveGroup(id);
+            loadMyGroups();
+            if (expandedGroupId === id) setExpandedGroupId(null);
         } catch (error) {
             console.error("Leave failed", error);
         }
@@ -156,23 +113,11 @@ export default function GroupsPage() {
         }
         setExpandedGroupId(groupId);
         try {
-            const token = await user?.getIdToken();
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/groups/${groupId}/members`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setGroupMembers(data || []);
-            }
+            const members = await getGroupMembers(groupId);
+            setGroupMembers(members || []);
 
-            // Fetch shared notes
-            const res2 = await fetch(`${import.meta.env.VITE_API_URL}/api/groups/${groupId}/shares`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res2.ok) {
-                const data = await res2.json();
-                setGroupShares(data || []);
-            }
+            const shares = await getGroupShares(groupId);
+            setGroupShares(shares || []);
         } catch (error) {
             console.error("Failed to fetch details", error);
         }
@@ -180,69 +125,41 @@ export default function GroupsPage() {
 
     const viewSharedNote = async (groupId: string, shareId: string) => {
         try {
-            const token = await user?.getIdToken();
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/groups/${groupId}/shares/${shareId}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setViewingSharedNote(data);
-            }
+            const note = await getSharedNote(groupId, shareId);
+            setViewingSharedNote(note);
         } catch (error) {
             console.error("Failed to fetch shared note", error);
         }
     };
 
-    const searchUsers = async () => {
+    const handleSearchUsers = async () => {
         if (userSearchQuery.length < 3) return;
         try {
-            const token = await user?.getIdToken();
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/search?q=${userSearchQuery}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setUserSearchResults(data || []);
-            }
+            const data = await searchUsers(userSearchQuery);
+            setUserSearchResults(data || []);
         } catch (error) {
             console.error("User search failed", error);
         }
     };
 
-    const addMember = async (userId: string) => {
+    const handleAddMember = async (userId: string) => {
         if (!activeGroupId) return;
         try {
-            const token = await user?.getIdToken();
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/groups/${activeGroupId}/members`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({ user_id: userId })
-            });
-            if (res.ok) {
-                setIsAddMemberOpen(false);
-                setUserSearchQuery("");
-                setUserSearchResults([]);
-                toggleGroupDetails(activeGroupId); // Refresh members
-            }
+            await addGroupMember(activeGroupId, userId);
+            setIsAddMemberOpen(false);
+            setUserSearchQuery("");
+            setUserSearchResults([]);
+            toggleGroupDetails(activeGroupId); // Refresh members
         } catch (error) {
             console.error("Failed to add member", error);
         }
     };
 
-    const removeMember = async (groupId: string, userId: string) => {
+    const handleRemoveMember = async (groupId: string, userId: string) => {
         if (!confirm("Remove this member?")) return;
         try {
-            const token = await user?.getIdToken();
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/groups/${groupId}/members/${userId}`, {
-                method: "DELETE",
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) {
-                 toggleGroupDetails(groupId); // Refresh members
-            }
+            await removeGroupMember(groupId, userId);
+            toggleGroupDetails(groupId); // Refresh members
         } catch (error) {
             console.error("Failed to remove member", error);
         }
@@ -263,7 +180,7 @@ export default function GroupsPage() {
                                  {viewingSharedNote.comment && <p className="mt-1 italic">"{viewingSharedNote.comment}"</p>}
                              </div>
                              <div className="prose prose-slate max-w-none">
-                                 <ReactMarkdown>{viewingSharedNote.content?.markdown || "No content"}</ReactMarkdown>
+                                 <ReactMarkdown>{viewingSharedNote.content?.markdown as string || "No content"}</ReactMarkdown>
                              </div>
                          </div>
                      </DialogContent>
@@ -366,7 +283,7 @@ export default function GroupsPage() {
                                                                             value={userSearchQuery}
                                                                             onChange={(e) => setUserSearchQuery(e.target.value)}
                                                                         />
-                                                                        <Button onClick={searchUsers}>Search</Button>
+                                                                        <Button onClick={handleSearchUsers}>Search</Button>
                                                                     </div>
                                                                     <div className="space-y-2 max-h-60 overflow-y-auto">
                                                                         {userSearchResults.map(u => (
@@ -375,7 +292,7 @@ export default function GroupsPage() {
                                                                                     <p className="font-medium">{u.display_name}</p>
                                                                                     <p className="text-xs text-gray-500">@{u.username || 'unknown'} • {u.email}</p>
                                                                                 </div>
-                                                                                <Button size="sm" onClick={() => addMember(u.id)}>Add</Button>
+                                                                                <Button size="sm" onClick={() => handleAddMember(u.id)}>Add</Button>
                                                                             </div>
                                                                         ))}
                                                                     </div>
@@ -395,7 +312,7 @@ export default function GroupsPage() {
                                                                 <span className="text-xs bg-gray-100 px-1 rounded">{m.role}</span>
                                                             </div>
                                                             {g.role === 'admin' && m.role !== 'admin' && (
-                                                                <Button size="icon" variant="ghost" className="text-red-500 h-8 w-8" onClick={() => removeMember(g.id, m.user_id)}>
+                                                                <Button size="icon" variant="ghost" className="text-red-500 h-8 w-8" onClick={() => handleRemoveMember(g.id, m.user_id)}>
                                                                     <Trash2 size={16} />
                                                                 </Button>
                                                             )}

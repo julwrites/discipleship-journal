@@ -6,10 +6,25 @@ import (
 	"os"
 	"time"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var DB *pgxpool.Pool
+// DBIface defines the interface for database operations to allow mocking.
+// It covers the methods used from *pgxpool.Pool.
+type DBIface interface {
+	Begin(ctx context.Context) (pgx.Tx, error)
+	Exec(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error)
+	Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error)
+	QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row
+	Ping(ctx context.Context) error
+	Close()
+}
+
+// DB is the global database connection pool.
+// We use the interface type to allow swapping with a mock in tests.
+var DB DBIface
 
 func Connect() error {
 	dbURL := os.Getenv("DATABASE_URL")
@@ -27,15 +42,16 @@ func Connect() error {
 	config.MaxConnLifetime = time.Hour
 	config.MaxConnIdleTime = 30 * time.Minute
 
-	DB, err = pgxpool.NewWithConfig(context.Background(), config)
+	pool, err := pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {
 		return fmt.Errorf("unable to create connection pool: %w", err)
 	}
 
-	if err := DB.Ping(context.Background()); err != nil {
+	if err := pool.Ping(context.Background()); err != nil {
 		return fmt.Errorf("unable to ping database: %w", err)
 	}
 
+	DB = pool // pool satisfies DBIface
 	fmt.Println("Connected to database")
 	return nil
 }
