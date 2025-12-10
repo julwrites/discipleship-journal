@@ -12,6 +12,7 @@ import (
 	"discipleship_journal_api/middleware"
 	"firebase.google.com/go/v4/auth"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 )
@@ -27,7 +28,7 @@ func TestCreateGroup(t *testing.T) {
 
 	// Mock User
 	userID := "test-firebase-uid"
-	userUUID := "00000000-0000-0000-0000-000000000001"
+	userUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 
 	// Mock Request
 	reqBody := CreateGroupRequest{
@@ -89,7 +90,7 @@ func TestListMyGroups(t *testing.T) {
 	database.DB = mock
 
 	userID := "test-firebase-uid"
-	userUUID := "00000000-0000-0000-0000-000000000001"
+	userUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 
 	req := httptest.NewRequest("GET", "/groups", nil)
 	token := &auth.Token{UID: userID}
@@ -131,7 +132,7 @@ func TestJoinGroup(t *testing.T) {
 	database.DB = mock
 
 	userID := "test-uid"
-	userUUID := "uuid-1"
+	userUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 	groupID := "group-1"
 
 	req := httptest.NewRequest("POST", "/groups/"+groupID+"/join", nil)

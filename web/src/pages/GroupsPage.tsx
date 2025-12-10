@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -48,7 +48,7 @@ export default function GroupsPage() {
     const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
     const [viewingSharedNote, setViewingSharedNote] = useState<SharedNote & { content?: { markdown?: string } } | null>(null);
 
-    const loadMyGroups = useCallback(async () => {
+    const refreshGroups = async () => {
         if (!user) return;
         try {
             const data = await getMyGroups();
@@ -56,12 +56,17 @@ export default function GroupsPage() {
         } catch (error) {
             console.error("Failed to fetch groups", error);
         }
-    }, [user]);
+    };
 
     useEffect(() => {
-        // Void function to ignore promise for useEffect
-        void loadMyGroups();
-    }, [loadMyGroups]);
+        if (!user) return;
+        const load = async () => {
+             await refreshGroups();
+        };
+        void load();
+        // We only want this to run when user changes, not when refreshGroups (which isn't memoized) changes
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user]);
 
     const handleSearch = async () => {
         if (searchQuery.length < 3) return;
@@ -78,7 +83,7 @@ export default function GroupsPage() {
             await createGroup(newGroup);
             setIsCreateOpen(false);
             setNewGroup({ name: "", description: "" });
-            void loadMyGroups();
+            void refreshGroups();
         } catch (error) {
             console.error("Create failed", error);
         }
@@ -89,7 +94,7 @@ export default function GroupsPage() {
             await joinGroup(id);
             alert("Joined group!");
             handleSearch(); // Refresh search results to show updated role
-            void loadMyGroups();
+            void refreshGroups();
         } catch (error) {
             console.error("Join failed", error);
         }
@@ -99,7 +104,7 @@ export default function GroupsPage() {
         if (!confirm("Are you sure you want to leave this group?")) return;
         try {
             await leaveGroup(id);
-            void loadMyGroups();
+            void refreshGroups();
             if (expandedGroupId === id) setExpandedGroupId(null);
         } catch (error) {
             console.error("Leave failed", error);
