@@ -59,7 +59,8 @@ export default function GroupsPage() {
     }, [user]);
 
     useEffect(() => {
-        loadMyGroups();
+        // Void function to ignore promise for useEffect
+        void loadMyGroups();
     }, [loadMyGroups]);
 
     const handleSearch = async () => {
@@ -77,7 +78,7 @@ export default function GroupsPage() {
             await createGroup(newGroup);
             setIsCreateOpen(false);
             setNewGroup({ name: "", description: "" });
-            loadMyGroups();
+            void loadMyGroups();
         } catch (error) {
             console.error("Create failed", error);
         }
@@ -88,7 +89,7 @@ export default function GroupsPage() {
             await joinGroup(id);
             alert("Joined group!");
             handleSearch(); // Refresh search results to show updated role
-            loadMyGroups();
+            void loadMyGroups();
         } catch (error) {
             console.error("Join failed", error);
         }
@@ -98,7 +99,7 @@ export default function GroupsPage() {
         if (!confirm("Are you sure you want to leave this group?")) return;
         try {
             await leaveGroup(id);
-            loadMyGroups();
+            void loadMyGroups();
             if (expandedGroupId === id) setExpandedGroupId(null);
         } catch (error) {
             console.error("Leave failed", error);
