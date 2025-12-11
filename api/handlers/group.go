@@ -53,9 +53,12 @@ func CreateGroup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
+	var committed bool
 	defer func() {
-		if err := tx.Rollback(r.Context()); err != nil && err != pgx.ErrTxClosed {
-			slog.Error("Failed to rollback transaction", "error", err)
+		if !committed {
+			if err := tx.Rollback(r.Context()); err != nil && err != pgx.ErrTxClosed {
+				slog.Error("Failed to rollback transaction", "error", err)
+			}
 		}
 	}()
 
@@ -83,6 +86,7 @@ func CreateGroup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Transaction commit failed", http.StatusInternalServerError)
 		return
 	}
+	committed = true
 
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(map[string]string{"id": groupID}); err != nil {

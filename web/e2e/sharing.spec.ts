@@ -59,12 +59,6 @@ test.describe('Note Sharing (Mocked)', () => {
         }
     });
 
-    // Handle Alert
-    page.once('dialog', async dialog => {
-        expect(dialog.message()).toBe('Note shared!');
-        await dialog.accept();
-    });
-
     await page.goto('/notes/note-1');
 
     // Wait for note to load
@@ -83,7 +77,12 @@ test.describe('Note Sharing (Mocked)', () => {
     await page.getByPlaceholder('Add a comment (optional)...').fill('Check this out!');
 
     // Click Share Note
+    const dialogPromise = page.waitForEvent('dialog');
     await page.getByRole('button', { name: 'Share Note' }).click();
+
+    const dialog = await dialogPromise;
+    expect(dialog.message()).toBe('Note shared!');
+    await dialog.accept();
 
     // Verify Request
     expect(shareRequest).toBeTruthy();
