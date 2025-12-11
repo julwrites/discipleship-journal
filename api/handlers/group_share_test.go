@@ -13,6 +13,7 @@ import (
 	"discipleship_journal_api/middleware"
 	"firebase.google.com/go/v4/auth"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 )
@@ -26,7 +27,7 @@ func TestShareNoteToGroup(t *testing.T) {
 	database.DB = mock
 
 	userID := "uid-1"
-	userUUID := "00000000-0000-0000-0000-000000000001"
+	userUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 	groupID := "group-1"
 	noteID := "note-1"
 
@@ -57,7 +58,7 @@ func TestShareNoteToGroup(t *testing.T) {
 	// 3. Verify Ownership
 	mock.ExpectQuery("SELECT user_id FROM notes").
 		WithArgs(noteID).
-		WillReturnRows(pgxmock.NewRows([]string{"user_id"}).AddRow(userUUID))
+		WillReturnRows(pgxmock.NewRows([]string{"user_id"}).AddRow(userUUID.String()))
 
 	// 4. Insert Share
 	mock.ExpectExec("INSERT INTO group_shares").
@@ -83,7 +84,7 @@ func TestListGroupShares(t *testing.T) {
 	database.DB = mock
 
 	userID := "uid-1"
-	userUUID := "00000000-0000-0000-0000-000000000001"
+	userUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 	groupID := "group-1"
 
 	req := httptest.NewRequest("GET", "/groups/"+groupID+"/shares", nil)
