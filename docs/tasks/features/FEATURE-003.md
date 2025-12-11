@@ -1,14 +1,14 @@
-# Task: AI Chat Integration
+---
+id: FEATURE-003
+status: completed
+title: AI Chat Integration
+priority: high
+created: 2025-12-11 06:09:10
+category: unknown
+type: task
+---
 
-## Task Information
-- **Task ID**: FEATURE-003
-- **Status**: completed
-- **Priority**: high
-- **Phase**: 2
-- **Estimated Effort**: 3 days
-- **Dependencies**: FEATURE-002
-
-## Task Details
+# AI Chat Integration
 
 ### Description
 Integrate BibleAIAPI for chat and context-aware questions.
@@ -24,7 +24,3 @@ Integrate BibleAIAPI for chat and context-aware questions.
 ### Implementation Status
 - ✅ Backend handlers implemented and verified (`api/handlers/chat.go`).
 - ✅ Frontend page scaffolded (`ChatPage.tsx`).
-
----
-*Created: 2025-05-18*
-*Status: completed - Implemented and Verified*

@@ -1,14 +1,14 @@
-# Task: Setup Continuous Deployment (CD) Pipeline
+---
+id: INFRA-006
+status: completed
+title: Setup Continuous Deployment (CD) Pipeline
+priority: high
+created: 2025-12-11 06:09:10
+category: unknown
+type: task
+---
 
-## Task Information
-- **Task ID**: INFRA-006
-- **Status**: completed
-- **Priority**: high
-- **Phase**: 3
-- **Estimated Effort**: 0.5 days
-- **Dependencies**: INFRA-001, INFRA-003, INFRA-004
-
-## Task Details
+# Setup Continuous Deployment (CD) Pipeline
 
 ### Description
 Implement a GitHub Actions workflow to automatically deploy the Backend to Cloud Run and the Frontend to Firebase Hosting when changes are pushed to the `main` branch.
@@ -32,7 +32,3 @@ Implement a GitHub Actions workflow to automatically deploy the Backend to Cloud
 - Use `google-github-actions/deploy-cloudrun` for Cloud Run.
 - Use `FirebaseExtended/action-hosting-deploy` or `firebase-tools` for Frontend.
 - This pipeline connects the scripts created in INFRA-003/004 with the CI setup in INFRA-001.
-
----
-*Created: 2025-05-21*
-*Status: completed - Workflow file created.*

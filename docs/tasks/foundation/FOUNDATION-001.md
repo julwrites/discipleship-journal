@@ -1,14 +1,14 @@
-# Task: Project Structure Setup
+---
+id: FOUNDATION-001
+status: completed
+title: Project Structure Setup
+priority: critical
+created: 2025-12-11 06:09:10
+category: unknown
+type: task
+---
 
-## Task Information
-- **Task ID**: FOUNDATION-001
-- **Status**: completed
-- **Priority**: critical
-- **Phase**: 1
-- **Estimated Effort**: 1 day
-- **Dependencies**: None
-
-## Task Details
+# Project Structure Setup
 
 ### Description
 Initialize the monorepo structure with Go backend and React frontend.
@@ -23,7 +23,3 @@ Initialize the monorepo structure with Go backend and React frontend.
 - ✅ Created `api/` with `go.mod`.
 - ✅ Created `web/` with Vite template.
 - ✅ Created `docs/` structure.
-
----
-*Created: 2025-05-18*
-*Status: completed - Scaffolding in place*

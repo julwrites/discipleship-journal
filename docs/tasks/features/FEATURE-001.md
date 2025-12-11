@@ -1,14 +1,14 @@
-# Task: User Settings
+---
+id: FEATURE-001
+status: completed
+title: User Settings
+priority: high
+created: 2025-12-11 06:09:10
+category: unknown
+type: task
+---
 
-## Task Information
-- **Task ID**: FEATURE-001
-- **Status**: completed
-- **Priority**: high
-- **Phase**: 2
-- **Estimated Effort**: 2 days
-- **Dependencies**: FOUNDATION-002
-
-## Task Details
+# User Settings
 
 ### Description
 Allow users to configure their profile settings.
@@ -23,7 +23,3 @@ Allow users to configure their profile settings.
 - ✅ Database schema updated (`api/migrations/000002_schema_updates.up.sql`).
 - ✅ Backend handlers implemented and verified (`api/handlers/user.go`).
 - ✅ Frontend page matches API (`web/src/pages/Settings.tsx`).
-
----
-*Created: 2025-05-18*
-*Status: completed - Implemented and Verified*

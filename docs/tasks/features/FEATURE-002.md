@@ -1,14 +1,14 @@
-# Task: Dashboard & Journaling
+---
+id: FEATURE-002
+status: completed
+title: Dashboard & Journaling
+priority: critical
+created: 2025-12-11 06:09:10
+category: unknown
+type: task
+---
 
-## Task Information
-- **Task ID**: FEATURE-002
-- **Status**: completed
-- **Priority**: critical
-- **Phase**: 2
-- **Estimated Effort**: 3 days
-- **Dependencies**: FOUNDATION-002, FEATURE-001
-
-## Task Details
+# Dashboard & Journaling
 
 ### Description
 Core journaling functionality: Dashboard view, Create Note, Edit Note.
@@ -24,7 +24,3 @@ Core journaling functionality: Dashboard view, Create Note, Edit Note.
 - ✅ Database schema aligned (`api/migrations/000002_schema_updates.up.sql`).
 - ✅ Backend handlers implemented and verified (`api/handlers/note.go`).
 - ✅ Frontend pages scaffolded (`Dashboard.tsx`, `NoteEditor.tsx`).
-
----
-*Created: 2025-05-18*
-*Status: completed - Implemented and Verified*

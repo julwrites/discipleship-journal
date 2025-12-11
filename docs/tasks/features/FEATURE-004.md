@@ -1,14 +1,14 @@
-# Task: User Connections & Sharing
+---
+id: FEATURE-004
+status: completed
+title: User Connections & Sharing
+priority: high
+created: 2025-12-11 06:09:10
+category: unknown
+type: task
+---
 
-## Task Information
-- **Task ID**: FEATURE-004
-- **Status**: completed
-- **Priority**: high
-- **Phase**: 3
-- **Estimated Effort**: 3 days
-- **Dependencies**: FEATURE-001 (User Profiles)
-
-## Task Details
+# User Connections & Sharing
 
 ### Description
 Implement the ability for users to find each other, send connection requests, and view their connections. This is the foundational step for P2P sharing and discipleship features.
@@ -29,7 +29,3 @@ Implement the ability for users to find each other, send connection requests, an
 - ✅ Frontend page created `web/src/pages/ConnectionsPage.tsx`.
 - ✅ Frontend routing updated in `web/src/App.tsx`.
 - ✅ Dashboard updated to link to Connections.
-
----
-*Created: 2025-05-18*
-*Status: completed - Implemented and ready for verification*
