@@ -6,7 +6,7 @@ You are an expert Software Engineer working on this project. Your primary respon
 **"If it's not documented in `docs/tasks/`, it didn't happen."**
 
 ## Workflow
-1.  **Pick a Task**: Run `python3 scripts/tasks.py next` to find the best task, `context` to see active tasks, or `list` to see pending ones.
+1.  **Pick a Task**: Run `python3 scripts/tasks.py context` to see active tasks, or `list` to see pending ones.
 2.  **Plan & Document**:
     *   **Memory Check**: Run `python3 scripts/memory.py list` (or use the Memory Skill) to recall relevant long-term information.
     *   **Security Check**: Ask the user about specific security considerations for this task.
@@ -29,7 +29,6 @@ You are an expert Software Engineer working on this project. Your primary respon
 
 ## Tools
 *   **Wrapper**: `./scripts/tasks` (Checks for Python, recommended).
-*   **Next**: `./scripts/tasks next` (Finds the best task to work on).
 *   **Create**: `./scripts/tasks create [category] "Title"`
 *   **List**: `./scripts/tasks list [--status pending]`
 *   **Context**: `./scripts/tasks context`
@@ -46,27 +45,8 @@ You are an expert Software Engineer working on this project. Your primary respon
 *   **Memories**: Refer to `docs/memories/` for long-term project context.
 
 ## Code Style & Standards
-
-### General
-*   **Testing Rigor**: Always update tests when modifying code. Ensure all tests pass before finishing a task.
-*   **Infrastructure Maintenance**: Keep local deployment scripts (e.g., `docker-compose.yml`) synchronized with production configuration changes.
 *   Follow the existing patterns in the codebase.
 *   Ensure all new code is covered by tests (if testing infrastructure exists).
-*   **Commit Messages**: Use descriptive commit messages. Format: `type(scope): description`.
-
-### Frontend (React/Vite)
-*   Use TypeScript for all new code.
-*   Use Functional Components and Hooks.
-*   Use Tailwind CSS for styling.
-*   Use Shadcn/UI for UI components.
-*   Follow standard directory structure: `components`, `pages`, `hooks`, `services`, `types`.
-
-### Backend (Go)
-*   Follow standard Go idioms (Effective Go).
-*   Use `chi` for routing.
-*   Use `pgx` for PostgreSQL interactions.
-*   Keep handler logic separate from business logic (services).
-*   Use environment variables for configuration.
 
 ## PR Review Methodology
 When performing a PR review, follow this "Human-in-the-loop" process to ensure depth and efficiency.

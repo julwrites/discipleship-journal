@@ -1,14 +1,14 @@
-# Task: Setup Observability (Logging & Metrics)
+---
+id: INFRA-002
+status: completed
+title: Setup Observability (Logging & Metrics)
+priority: medium
+created: 2025-12-11 06:09:10
+category: unknown
+type: task
+---
 
-## Task Information
-- **Task ID**: INFRA-002
-- **Status**: completed
-- **Priority**: medium
-- **Phase**: 1.5
-- **Estimated Effort**: 1 day
-- **Dependencies**: FOUNDATION-001
-
-## Task Details
+# Setup Observability (Logging & Metrics)
 
 ### Description
 Implement structured logging and basic error tracking to enable effective debugging and monitoring of the application in production.
@@ -31,8 +31,3 @@ Implement structured logging and basic error tracking to enable effective debugg
 - `web/src/components/ErrorBoundary.tsx` catches React errors.
 - `api/main.go` sets up the logger and health check.
 - Sentry setup is deferred/optional, currently logging to console in ErrorBoundary.
-
----
-
-*Created: 2025-05-18*
-*Status: completed*

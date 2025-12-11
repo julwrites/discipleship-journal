@@ -1,14 +1,14 @@
-# Task: Setup Frontend Deployment
+---
+id: INFRA-003
+status: completed
+title: Setup Frontend Deployment
+priority: high
+created: 2025-12-11 06:09:10
+category: unknown
+type: task
+---
 
-## Task Information
-- **Task ID**: INFRA-003
-- **Status**: completed
-- **Priority**: high
-- **Phase**: 1.5
-- **Estimated Effort**: 0.5 days
-- **Dependencies**: FOUNDATION-001
-
-## Task Details
+# Setup Frontend Deployment
 
 ### Description
 Configure Firebase Hosting and create a script to deploy the frontend application. This allows for manual deployments and integration into CI/CD pipelines.
@@ -27,8 +27,3 @@ Configure Firebase Hosting and create a script to deploy the frontend applicatio
 ### Implementation Notes
 - Used `web/dist` as the public directory.
 - Configured rewrites to `index.html` for SPA routing.
-
----
-
-*Created: 2025-05-18*
-*Status: completed*

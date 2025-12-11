@@ -1,14 +1,14 @@
-# Task: Setup Testing Infrastructure
+---
+id: TEST-001
+status: completed
+title: Setup Testing Infrastructure
+priority: critical
+created: 2025-12-11 06:09:10
+category: unknown
+type: task
+---
 
-## Task Information
-- **Task ID**: TEST-001
-- **Status**: completed
-- **Priority**: critical
-- **Phase**: 1.5
-- **Estimated Effort**: 2 days
-- **Dependencies**: FOUNDATION-001
-
-## Task Details
+# Setup Testing Infrastructure
 
 ### Description
 Establish a comprehensive testing strategy for both Frontend and Backend to ensure code quality and prevent regressions. This includes unit testing frameworks, integration testing support, and end-to-end (E2E) testing setup.
@@ -37,8 +37,3 @@ Establish a comprehensive testing strategy for both Frontend and Backend to ensu
 - Frontend testing set up with Vitest and React Testing Library. Dummy test passing.
 - Backend testing set up. `testcontainers` installed. Integration test created but commented out in sandbox due to missing Docker. Simple unit test verified.
 - E2E setup deferred to a separate task or later step.
-
----
-
-*Created: 2025-05-18*
-*Status: completed*

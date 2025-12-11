@@ -1,14 +1,14 @@
-# Task: Social Groups
+---
+id: FEATURE-006
+status: unknown
+title: Social Groups
+priority: high
+created: 2025-12-11 06:09:10
+category: unknown
+type: task
+---
 
-## Task Information
-- **Task ID**: FEATURE-006
-- **Status**: [x] Completed
-- **Priority**: high
-- **Phase**: 4 (Post-MVP)
-- **Estimated Effort**: 3 days
-- **Dependencies**: FEATURE-004 (Connections)
-
-## Task Details
+# Social Groups
 
 ### Description
 Implement the ability for users to create and join groups. This allows for small group discipleship and content sharing.
@@ -33,7 +33,3 @@ Implement the ability for users to create and join groups. This allows for small
 - Reuse `validate.go` for input validation.
 - Role can be 'admin' or 'member'.
 - Groups should be public for now (searchable).
-
----
-*Created: 2025-12-05*
-*Completed: 2025-05-18*

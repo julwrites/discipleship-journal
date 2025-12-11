@@ -1,14 +1,14 @@
-# Task: Authentication Setup
+---
+id: FOUNDATION-002
+status: completed
+title: Authentication Setup
+priority: critical
+created: 2025-12-11 06:09:10
+category: unknown
+type: task
+---
 
-## Task Information
-- **Task ID**: FOUNDATION-002
-- **Status**: completed
-- **Priority**: critical
-- **Phase**: 1
-- **Estimated Effort**: 1 day
-- **Dependencies**: FOUNDATION-001
-
-## Task Details
+# Authentication Setup
 
 ### Description
 Implement Firebase Authentication integration for Frontend and Backend.
@@ -23,7 +23,3 @@ Implement Firebase Authentication integration for Frontend and Backend.
 - ✅ `web/src/lib/firebase.ts` created.
 - ✅ `web/src/hooks/useAuth.ts` created and verified with tests.
 - ✅ `api/middleware/auth.go` created and verified with basic unit tests.
-
----
-*Created: 2025-05-18*
-*Status: completed*

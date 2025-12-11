@@ -1,14 +1,14 @@
-# Task: Setup CI/CD Pipeline
+---
+id: INFRA-001
+status: Completed
+title: Setup CI/CD Pipeline
+priority: high
+created: 2025-12-11 06:09:10
+category: unknown
+type: task
+---
 
-## Task Information
-- **Task ID**: INFRA-001
-- **Status**: Completed
-- **Priority**: high
-- **Phase**: 1.5
-- **Estimated Effort**: 1 day
-- **Dependencies**: TEST-001
-
-## Task Details
+# Setup CI/CD Pipeline
 
 ### Description
 Implement Continuous Integration (CI) to automatically run linting and testing on every Pull Request. Prepare Continuous Deployment (CD) workflows for future deployment to staging/production.
@@ -36,8 +36,3 @@ Implement Continuous Integration (CI) to automatically run linting and testing o
 - Use `actions/setup-go` and `actions/setup-node`.
 - Use `golangci/golangci-lint-action` for Go linting.
 - Ensure caching is configured to speed up runs.
-
----
-
-*Created: 2025-05-18*
-*Status: completed*

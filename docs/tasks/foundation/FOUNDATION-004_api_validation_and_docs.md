@@ -1,14 +1,14 @@
-# Task: API Input Validation & Documentation
+---
+id: FOUNDATION-004
+status: completed
+title: API Input Validation & Documentation
+priority: high
+created: 2025-12-11 06:09:10
+category: unknown
+type: task
+---
 
-## Task Information
-- **Task ID**: FOUNDATION-004
-- **Status**: completed
-- **Priority**: high
-- **Phase**: 1.5
-- **Estimated Effort**: 1 day
-- **Dependencies**: FOUNDATION-003
-
-## Task Details
+# API Input Validation & Documentation
 
 ### Description
 Implement input validation using `go-playground/validator` and API documentation using `swaggo/swag`.
@@ -28,6 +28,3 @@ Implement input validation using `go-playground/validator` and API documentation
 ### Work Log
 - 2025-05-21: Started task. Integrated validator.
 - 2025-12-01: Completed validation helper refactoring (`api/handlers/validate.go`), standardized JSON error responses, annotated handlers with Swaggo comments, and generated Swagger documentation.
-
----
-*Created: 2025-05-21*

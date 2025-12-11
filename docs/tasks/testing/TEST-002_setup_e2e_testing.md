@@ -1,14 +1,14 @@
-# Task: Setup End-to-End (E2E) Testing
+---
+id: TEST-002
+status: Completed
+title: Setup End-to-End (E2E) Testing
+priority: high
+created: 2025-12-11 06:09:10
+category: unknown
+type: task
+---
 
-## Task Information
-- **Task ID**: TEST-002
-- **Status**: Completed
-- **Priority**: high
-- **Phase**: 3.5
-- **Estimated Effort**: 1 day
-- **Dependencies**: TEST-001
-
-## Task Details
+# Setup End-to-End (E2E) Testing
 
 ### Description
 Implement End-to-End (E2E) testing using Playwright to verify the application's critical paths from a user's perspective. This was deferred from TEST-001.
@@ -31,7 +31,3 @@ Implement End-to-End (E2E) testing using Playwright to verify the application's 
 - Ensure the dev server is running before tests start (Playwright's `webServer` config).
 - Added fallback logic in `useAuth` hook to handle mock environment variables during tests to prevent infinite loading state.
 - Created `web/.env` with mock keys for local testing.
-
----
-*Created: 2025-05-21*
-*Status: completed - Basic E2E setup and smoke tests verified.*

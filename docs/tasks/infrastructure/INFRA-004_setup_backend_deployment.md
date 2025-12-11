@@ -1,14 +1,14 @@
-# Task: Setup Backend Deployment
+---
+id: INFRA-004
+status: completed
+title: Setup Backend Deployment
+priority: high
+created: 2025-12-11 06:09:10
+category: unknown
+type: task
+---
 
-## Task Information
-- **Task ID**: INFRA-004
-- **Status**: completed
-- **Priority**: high
-- **Phase**: 1.5
-- **Estimated Effort**: 0.5 days
-- **Dependencies**: FOUNDATION-001
-
-## Task Details
+# Setup Backend Deployment
 
 ### Description
 Create a script to deploy the Backend API to Google Cloud Run. This ensures consistent deployment parameters and enables CI/CD integration.
@@ -30,8 +30,3 @@ Create a script to deploy the Backend API to Google Cloud Run. This ensures cons
 ### Implementation Notes
 - Using `gcloud builds submit` for simplified build/push.
 - Configured for `us-central1`.
-
----
-
-*Created: 2025-05-18*
-*Status: completed*

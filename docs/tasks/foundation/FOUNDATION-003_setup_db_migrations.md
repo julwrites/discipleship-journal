@@ -1,14 +1,14 @@
-# Task: Database Schema & Migrations
+---
+id: FOUNDATION-003
+status: completed
+title: Database Schema & Migrations
+priority: high
+created: 2025-12-11 06:09:10
+category: unknown
+type: task
+---
 
-## Task Information
-- **Task ID**: FOUNDATION-003
-- **Status**: completed
-- **Priority**: high
-- **Phase**: 1.5
-- **Estimated Effort**: 2 days
-- **Dependencies**: FOUNDATION-002
-
-## Task Details
+# Database Schema & Migrations
 
 ### Description
 Set up `golang-migrate` for database schema management and create initial schema for Users and Journals.
@@ -31,7 +31,3 @@ Set up `golang-migrate` for database schema management and create initial schema
 - ✅ Created migrations for users, notes, and connections.
 - ✅ Created `scripts/migrate_up.sh` and `scripts/migrate_down.sh`.
 - ✅ Verified scripts work (though verification in sandbox is limited by Docker permissions, scripts logic is sound).
-
----
-*Created: 2025-05-20*
-*Completed: 2025-05-21*
