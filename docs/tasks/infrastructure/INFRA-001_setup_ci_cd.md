@@ -1,10 +1,10 @@
 ---
 id: INFRA-001
-status: Completed
+status: completed
 title: Setup CI/CD Pipeline
 priority: high
 created: 2025-12-11 06:09:10
-category: unknown
+category: infrastructure
 type: task
 ---
 

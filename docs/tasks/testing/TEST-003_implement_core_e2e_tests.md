@@ -1,10 +1,10 @@
 ---
 id: TEST-003
-status: Completed
+status: completed
 title: Implement Core E2E Tests
 priority: high
 created: 2025-12-11 06:09:10
-category: unknown
+category: testing
 type: task
 ---
 
