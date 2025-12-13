@@ -8,6 +8,7 @@ import (
 
 	"discipleship_journal_api/database"
 	"discipleship_journal_api/middleware"
+	"discipleship_journal_api/services"
 	"firebase.google.com/go/v4/auth"
 	"github.com/go-resty/resty/v2"
 )
@@ -106,10 +107,14 @@ func ChatWithAI(w http.ResponseWriter, r *http.Request) {
 		"type": "chat_log",
 	}
 
-	var noteID string
-	err = database.DB.QueryRow(r.Context(),
-		"INSERT INTO notes (user_id, title, content) VALUES ($1, $2, $3) RETURNING id",
-		userUUID, noteTitle, noteContent).Scan(&noteID)
+	contentJSON, err := json.Marshal(noteContent)
+	if err != nil {
+		http.Error(w, "Failed to marshal content", http.StatusInternalServerError)
+		return
+	}
+
+	noteService := services.NewNoteService(database.DB)
+	_, err = noteService.CreateNote(r.Context(), userUUID.String(), noteTitle, contentJSON)
 
 	if err != nil {
 		http.Error(w, "Failed to save chat note", http.StatusInternalServerError)

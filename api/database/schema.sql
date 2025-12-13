@@ -24,6 +24,22 @@ CREATE TABLE IF NOT EXISTS notes (
 -- Indexes
 CREATE INDEX idx_notes_user_id ON notes(user_id);
 CREATE INDEX idx_notes_content ON notes USING gin (content);
+
+-- Connections Table
+CREATE TABLE IF NOT EXISTS connections (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    requester_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    receiver_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending', -- pending, accepted
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT unique_connection UNIQUE (requester_id, receiver_id),
+    CONSTRAINT no_self_connection CHECK (requester_id != receiver_id)
+);
+
+CREATE INDEX idx_connections_requester ON connections(requester_id);
+CREATE INDEX idx_connections_receiver ON connections(receiver_id);
+
 CREATE TABLE IF NOT EXISTS groups (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,

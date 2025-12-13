@@ -156,15 +156,9 @@ func ListConnections(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// RespondToConnectionRequest accepts or rejects a connection request
-func RespondToConnectionRequest(w http.ResponseWriter, r *http.Request) {
+// AcceptConnectionRequest accepts a connection request
+func AcceptConnectionRequest(w http.ResponseWriter, r *http.Request) {
 	connID := chi.URLParam(r, "id")
-	action := r.URL.Query().Get("action") // accept or reject
-
-	if action != "accept" && action != "reject" {
-		http.Error(w, "Invalid action", http.StatusBadRequest)
-		return
-	}
 
 	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
 	uid := token.UID
@@ -174,16 +168,44 @@ func RespondToConnectionRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if action == "reject" {
-		_, err = database.DB.Exec(r.Context(),
-			"DELETE FROM connections WHERE id = $1 AND (receiver_id = $2 OR requester_id = $2)", connID, userUUID)
-	} else {
-		_, err = database.DB.Exec(r.Context(),
-			"UPDATE connections SET status = 'accepted' WHERE id = $1 AND receiver_id = $2", connID, userUUID)
-	}
+	commandTag, err := database.DB.Exec(r.Context(),
+		"UPDATE connections SET status = 'accepted' WHERE id = $1 AND receiver_id = $2", connID, userUUID)
 
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		http.Error(w, "Connection request not found or not for you", http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+// DeleteConnectionRequest rejects or deletes a connection
+func DeleteConnectionRequest(w http.ResponseWriter, r *http.Request) {
+	connID := chi.URLParam(r, "id")
+
+	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
+	uid := token.UID
+	userUUID, err := GetUserUUID(r.Context(), uid)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusInternalServerError)
+		return
+	}
+
+	commandTag, err := database.DB.Exec(r.Context(),
+		"DELETE FROM connections WHERE id = $1 AND (receiver_id = $2 OR requester_id = $2)", connID, userUUID)
+
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		http.Error(w, "Connection not found", http.StatusNotFound)
 		return
 	}
 

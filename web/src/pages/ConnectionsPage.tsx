@@ -6,6 +6,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { auth } from "@/lib/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useCallback } from "react";
+import {
+    getConnections,
+    searchUsers as apiSearchUsers,
+    sendConnectionRequest,
+    respondToConnectionRequest
+} from "@/services/api";
 
 interface User {
     id: string;
@@ -31,14 +37,8 @@ export default function ConnectionsPage() {
 
     const fetchConnections = useCallback(async () => {
         try {
-            const token = await user?.getIdToken();
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/connections`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setConnections(data || []);
-            }
+            const data = await getConnections();
+            setConnections(data || []);
         } catch (error) {
             console.error("Failed to fetch connections", error);
         }
@@ -54,14 +54,8 @@ export default function ConnectionsPage() {
         if (searchQuery.length < 3) return;
         setLoading(true);
         try {
-            const token = await user?.getIdToken();
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/search?q=${searchQuery}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setSearchResults(data || []);
-            }
+            const data = await apiSearchUsers(searchQuery);
+            setSearchResults(data || []);
         } catch (error) {
             console.error("Search failed", error);
         } finally {
@@ -71,40 +65,19 @@ export default function ConnectionsPage() {
 
     const sendRequest = async (receiverEmail: string) => {
         try {
-            const token = await user?.getIdToken();
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/connections/request`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({ receiver_email: receiverEmail })
-            });
-            if (res.ok) {
-                alert("Request sent!");
-                fetchConnections();
-            } else {
-                const err = await res.text();
-                alert("Failed: " + err);
-            }
-        } catch (error) {
+            await sendConnectionRequest(receiverEmail);
+            alert("Request sent!");
+            fetchConnections();
+        } catch (error: any) {
             console.error("Request failed", error);
+            alert("Failed: " + error.message);
         }
     };
 
     const respondToRequest = async (id: string, action: "accept" | "reject") => {
         try {
-            const token = await user?.getIdToken();
-            const method = action === "reject" ? "DELETE" : "PUT";
-            const url = `${import.meta.env.VITE_API_URL}/api/connections/${id}?action=${action}`;
-
-            const res = await fetch(url, {
-                method: method,
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) {
-                fetchConnections();
-            }
+            await respondToConnectionRequest(id, action);
+            fetchConnections();
         } catch (error) {
             console.error("Response failed", error);
         }

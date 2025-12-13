@@ -2,11 +2,14 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"discipleship_journal_api/database"
 	"discipleship_journal_api/middleware"
+	"discipleship_journal_api/services"
 	"firebase.google.com/go/v4/auth"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
@@ -28,10 +31,13 @@ type CreateNoteRequest struct {
 
 // GetNotes godoc
 // @Summary Get all notes for user
-// @Description Fetch all notes belonging to the authenticated user
+// @Description Fetch all notes belonging to the authenticated user, with pagination and search
 // @Tags notes
 // @Accept json
 // @Produce json
+// @Param page query int false "Page number"
+// @Param limit query int false "Items per page"
+// @Param q query string false "Search query"
 // @Success 200 {array} Note
 // @Failure 404 {string} string "User not found"
 // @Failure 500 {string} string "Internal Server Error"
@@ -46,8 +52,42 @@ func GetNotes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows, err := database.DB.Query(r.Context(), "SELECT id, user_id, title, content, created_at, updated_at FROM notes WHERE user_id=$1 ORDER BY updated_at DESC", userUUID)
-	if err != nil {
+	// Pagination parameters
+	pageStr := r.URL.Query().Get("page")
+	limitStr := r.URL.Query().Get("limit")
+	searchQuery := r.URL.Query().Get("q")
+
+	page := 1
+	limit := 20
+
+	if pageStr != "" {
+		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
+			page = p
+		}
+	}
+	if limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 && l <= 100 {
+			limit = l
+		}
+	}
+
+	offset := (page - 1) * limit
+
+	var rows pgx.Rows
+	var qErr error
+
+	baseQuery := "SELECT id, user_id, title, content, created_at, updated_at FROM notes WHERE user_id=$1"
+
+	if searchQuery != "" {
+		baseQuery += " AND (title ILIKE $2 OR content::text ILIKE $2)"
+		baseQuery += fmt.Sprintf(" ORDER BY updated_at DESC LIMIT %d OFFSET %d", limit, offset)
+		rows, qErr = database.DB.Query(r.Context(), baseQuery, userUUID, "%"+searchQuery+"%")
+	} else {
+		baseQuery += fmt.Sprintf(" ORDER BY updated_at DESC LIMIT %d OFFSET %d", limit, offset)
+		rows, qErr = database.DB.Query(r.Context(), baseQuery, userUUID)
+	}
+
+	if qErr != nil {
 		http.Error(w, "Failed to fetch notes", http.StatusInternalServerError)
 		return
 	}
@@ -69,6 +109,44 @@ func GetNotes(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(notes); err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 	}
+}
+
+// DeleteNote godoc
+// @Summary Delete a note
+// @Description Delete a journal note by ID
+// @Tags notes
+// @Accept json
+// @Produce json
+// @Param id path string true "Note ID"
+// @Success 200
+// @Failure 403 {string} string "Unauthorized"
+// @Failure 404 {string} string "Note not found"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /api/notes/{id} [delete]
+func DeleteNote(w http.ResponseWriter, r *http.Request) {
+	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
+	uid := token.UID
+	noteID := chi.URLParam(r, "id")
+
+	userUUID, err := GetUserUUID(r.Context(), uid)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	commandTag, err := database.DB.Exec(r.Context(), "DELETE FROM notes WHERE id=$1 AND user_id=$2", noteID, userUUID)
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		// Could be 404 or 403, but since we include user_id in query, it acts as both.
+		http.Error(w, "Note not found or unauthorized", http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 // CreateNote godoc
@@ -98,18 +176,21 @@ func CreateNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var noteID string
-	err = database.DB.QueryRow(r.Context(),
-		"INSERT INTO notes (user_id, title, content) VALUES ($1, $2, $3) RETURNING id",
-		userUUID, req.Title, req.Content).Scan(&noteID)
+	noteService := services.NewNoteService(database.DB)
+	contentJSON, err := json.Marshal(req.Content)
+	if err != nil {
+		http.Error(w, "Invalid content", http.StatusBadRequest)
+		return
+	}
 
+	note, err := noteService.CreateNote(r.Context(), userUUID.String(), req.Title, contentJSON)
 	if err != nil {
 		http.Error(w, "Failed to create note", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(map[string]string{"id": noteID}); err != nil {
+	if err := json.NewEncoder(w).Encode(map[string]string{"id": note.ID}); err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 	}
 }
