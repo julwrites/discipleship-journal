@@ -109,6 +109,7 @@ func main() {
 		r.Post("/api/notes", handlers.CreateNote)
 		r.Get("/api/notes/{id}", handlers.GetNote)
 		r.Put("/api/notes/{id}", handlers.UpdateNote)
+		r.Delete("/api/notes/{id}", handlers.DeleteNote)
 
 		r.Get("/api/bible/passage", handlers.GetBiblePassage)
 		r.Post("/api/chat", handlers.ChatWithAI)
@@ -118,8 +119,8 @@ func main() {
 		r.Get("/api/users/search", handlers.SearchUsers)
 		r.Post("/api/connections/request", handlers.SendConnectionRequest)
 		r.Get("/api/connections", handlers.ListConnections)
-		r.Put("/api/connections/{id}", handlers.RespondToConnectionRequest)
-		r.Delete("/api/connections/{id}", handlers.RespondToConnectionRequest) // Reject is a delete with a different param/logic or just delete
+		r.Put("/api/connections/{id}", handlers.AcceptConnectionRequest)
+		r.Delete("/api/connections/{id}", handlers.DeleteConnectionRequest)
 
 		// Groups
 		r.Post("/api/groups", handlers.CreateGroup)

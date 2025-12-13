@@ -1,7 +1,16 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { createNote, getBiblePassage, askAI } from "@/services/api";
+import {
+    createNote,
+    getNote,
+    updateNote,
+    deleteNote,
+    getBiblePassage,
+    askAI,
+    getGroups,
+    shareNote
+} from "@/services/api";
 import ReactMarkdown from "react-markdown";
 import {
   Dialog,
@@ -12,34 +21,6 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 
-// Since we are building iteratively, I will use createNote for everything first, then update for proper updates.
-// But first, let's fix the API service to support Get/Update.
-
-const API_URL = import.meta.env.VITE_API_URL;
-import { auth } from "@/lib/firebase";
-
-async function getNote(id: string) {
-    const token = await auth.currentUser?.getIdToken();
-    const res = await fetch(`${API_URL}/api/notes/${id}`, {
-        headers: { "Authorization": `Bearer ${token}` }
-    });
-    if (!res.ok) throw new Error("Failed to load note");
-    return res.json();
-}
-
-async function updateNote(id: string, title: string, content: Record<string, unknown>) {
-    const token = await auth.currentUser?.getIdToken();
-    const res = await fetch(`${API_URL}/api/notes/${id}`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ title, content })
-    });
-    if (!res.ok) throw new Error("Failed to update note");
-}
-
 export default function NoteEditor() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -47,6 +28,7 @@ export default function NoteEditor() {
     const [markdown, setMarkdown] = useState("");
     const [mode, setMode] = useState<"edit" | "preview">("edit");
     const [saving, setSaving] = useState(false);
+    const [lastSaved, setLastSaved] = useState<string | null>(null);
 
     // Bible Passage State
     const [passageRef, setPassageRef] = useState("");
@@ -63,44 +45,73 @@ export default function NoteEditor() {
     const [selectedGroupId, setSelectedGroupId] = useState("");
     const [shareComment, setShareComment] = useState("");
     const [sharing, setSharing] = useState(false);
+    const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
         if (id && id !== "new") {
             getNote(id).then(note => {
                 setTitle(note.title);
                 setMarkdown(note.content.markdown || "");
+                setLastSaved("Loaded");
             }).catch(console.error);
         }
     }, [id]);
 
-    const handleSave = async () => {
+    const handleSave = async (manual = true) => {
         setSaving(true);
         try {
             const content = { markdown };
             if (id === "new") {
+                if (!manual) return; // Don't auto-save new notes until title/content exists or manual save
                 const res = await createNote(title, content);
                 navigate(`/notes/${res.id}`, { replace: true });
+                setLastSaved(new Date().toLocaleTimeString());
             } else if (id) {
                 await updateNote(id, title, content);
+                setLastSaved(new Date().toLocaleTimeString());
             }
         } catch (e) {
             console.error(e);
-            alert("Failed to save");
+            if (manual) alert("Failed to save");
         } finally {
             setSaving(false);
         }
     };
 
+    // Auto-save effect
+    useEffect(() => {
+        if (!id || id === "new") return;
+
+        const timer = setTimeout(() => {
+            if (title || markdown) {
+                handleSave(false);
+            }
+        }, 2000); // 2 second debounce
+
+        return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [title, markdown, id]);
+
+    const handleDelete = async () => {
+        if (!id || id === "new") return;
+        if (!confirm("Are you sure you want to delete this note? This action cannot be undone.")) return;
+
+        setDeleting(true);
+        try {
+            await deleteNote(id);
+            alert("Note deleted.");
+            navigate("/", { replace: true });
+        } catch (e) {
+            console.error(e);
+            alert("Failed to delete note.");
+            setDeleting(false);
+        }
+    };
+
     const fetchMyGroups = async () => {
         try {
-            const token = await auth.currentUser?.getIdToken();
-            const res = await fetch(`${API_URL}/api/groups`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setMyGroups(data || []);
-            }
+            const data = await getGroups();
+            setMyGroups(data || []);
         } catch (error) {
             console.error("Failed to fetch groups", error);
         }
@@ -114,24 +125,13 @@ export default function NoteEditor() {
         if (!selectedGroupId) return;
         setSharing(true);
         try {
-            const token = await auth.currentUser?.getIdToken();
-            const res = await fetch(`${API_URL}/api/groups/${selectedGroupId}/shares`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({ note_id: id, comment: shareComment })
-            });
-            if (res.ok) {
-                alert("Note shared!");
-                setSelectedGroupId("");
-                setShareComment("");
-            } else {
-                alert("Failed to share.");
-            }
+            await shareNote(selectedGroupId, id, shareComment);
+            alert("Note shared!");
+            setSelectedGroupId("");
+            setShareComment("");
         } catch (error) {
             console.error("Share failed", error);
+            alert("Failed to share.");
         } finally {
             setSharing(false);
         }
@@ -238,9 +238,16 @@ export default function NoteEditor() {
                         </DialogContent>
                     </Dialog>
 
+                    {lastSaved && <span className="text-sm text-gray-500 mr-2">{saving ? "Saving..." : `Saved at ${lastSaved}`}</span>}
                     <Button variant={mode === "edit" ? "default" : "outline"} onClick={() => setMode("edit")}>Edit</Button>
                     <Button variant={mode === "preview" ? "default" : "outline"} onClick={() => setMode("preview")}>Preview</Button>
-                    <Button onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
+                    <Button onClick={() => handleSave(true)} disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
+
+                    {id && id !== "new" && (
+                        <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+                            {deleting ? "..." : "Delete"}
+                        </Button>
+                    )}
 
                     <Dialog onOpenChange={(open) => { if (open) fetchMyGroups(); }}>
                         <DialogTrigger asChild>
