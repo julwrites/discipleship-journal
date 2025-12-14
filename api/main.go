@@ -18,6 +18,7 @@ import (
 	"discipleship_journal_api/database"
 	"discipleship_journal_api/handlers"
 	"discipleship_journal_api/middleware"
+	"discipleship_journal_api/services"
 
 	_ "discipleship_journal_api/docs"
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -61,6 +62,20 @@ func main() {
 	if err != nil {
 		logger.Error("Firebase Auth init failed", "error", err)
 	}
+
+	// Init Bible AI Client
+	var bibleAIClient services.BibleAIClient
+	bibleAPIURL := os.Getenv("BIBLE_API_URL")
+
+	if bibleAPIURL != "" {
+		bibleAIClient = services.NewRealBibleAIClient(bibleAPIURL, os.Getenv("BIBLE_API_KEY"))
+	} else {
+		logger.Info("BIBLE_API_URL not set, using MockBibleAIClient")
+		bibleAIClient = services.NewMockBibleAIClient()
+	}
+
+	bibleHandler := handlers.NewBibleHandler(bibleAIClient)
+	chatHandler := handlers.NewChatHandler(bibleAIClient)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -111,9 +126,9 @@ func main() {
 		r.Put("/api/notes/{id}", handlers.UpdateNote)
 		r.Delete("/api/notes/{id}", handlers.DeleteNote)
 
-		r.Get("/api/bible/passage", handlers.GetBiblePassage)
-		r.Post("/api/chat", handlers.ChatWithAI)
-		r.Post("/api/ai/ask", handlers.AskAI)
+		r.Get("/api/bible/passage", bibleHandler.GetBiblePassage)
+		r.Post("/api/chat", chatHandler.ChatWithAI)
+		r.Post("/api/ai/ask", chatHandler.AskAI)
 
 		// Connections
 		r.Get("/api/users/search", handlers.SearchUsers)
