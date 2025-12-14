@@ -42,7 +42,7 @@ export default function ConnectionsPage() {
         } catch (error) {
             console.error("Failed to fetch connections", error);
         }
-    }, [user]);
+    }, []);
 
     useEffect(() => {
         if (user) {
@@ -68,9 +68,13 @@ export default function ConnectionsPage() {
             await sendConnectionRequest(receiverEmail);
             alert("Request sent!");
             fetchConnections();
-        } catch (error: any) {
+        } catch (error) {
             console.error("Request failed", error);
-            alert("Failed: " + error.message);
+            let message = "Unknown error";
+            if (error instanceof Error) {
+                message = error.message;
+            }
+            alert("Failed: " + message);
         }
     };
 

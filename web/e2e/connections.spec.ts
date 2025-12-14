@@ -55,7 +55,7 @@ test.describe('Connections (Mocked)', () => {
     await page.route('**/api/connections/request', async route => {
         const body = route.request().postDataJSON();
         expect(body.receiver_email).toBe('friend@example.com');
-        await route.fulfill({ status: 201 });
+        await route.fulfill({ status: 201, json: { success: true } });
     });
 
     // Type in search box

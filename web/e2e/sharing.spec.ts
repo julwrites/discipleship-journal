@@ -60,9 +60,12 @@ test.describe('Note Sharing (Mocked)', () => {
     });
 
     // Handle Alert
-    page.once('dialog', async dialog => {
-        expect(dialog.message()).toBe('Note shared!');
-        await dialog.accept();
+    const dialogDismissedPromise = new Promise<void>(resolve => {
+        page.once('dialog', async dialog => {
+            expect(dialog.message()).toBe('Note shared!');
+            await dialog.accept();
+            resolve();
+        });
     });
 
     await page.goto('/notes/note-1');
@@ -90,5 +93,7 @@ test.describe('Note Sharing (Mocked)', () => {
     const postData = shareRequest.postDataJSON();
     expect(postData.note_id).toBe('note-1');
     expect(postData.comment).toBe('Check this out!');
+
+    await dialogDismissedPromise;
   });
 });
