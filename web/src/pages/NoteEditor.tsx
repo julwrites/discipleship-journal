@@ -46,6 +46,7 @@ export default function NoteEditor() {
     const [shareComment, setShareComment] = useState("");
     const [sharing, setSharing] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const [saveError, setSaveError] = useState(false);
 
     useEffect(() => {
         if (id && id !== "new") {
@@ -59,6 +60,7 @@ export default function NoteEditor() {
 
     const handleSave = async (manual = true) => {
         setSaving(true);
+        setSaveError(false);
         try {
             const content = { markdown };
             if (id === "new") {
@@ -72,6 +74,7 @@ export default function NoteEditor() {
             }
         } catch (e) {
             console.error(e);
+            setSaveError(true);
             if (manual) alert("Failed to save");
         } finally {
             setSaving(false);
@@ -238,7 +241,8 @@ export default function NoteEditor() {
                         </DialogContent>
                     </Dialog>
 
-                    {lastSaved && <span className="text-sm text-gray-500 mr-2">{saving ? "Saving..." : `Saved at ${lastSaved}`}</span>}
+                    {saveError && <span className="text-sm text-red-500 mr-2">Error saving</span>}
+                    {!saveError && lastSaved && <span className="text-sm text-gray-500 mr-2">{saving ? "Saving..." : `Saved at ${lastSaved}`}</span>}
                     <Button variant={mode === "edit" ? "default" : "outline"} onClick={() => setMode("edit")}>Edit</Button>
                     <Button variant={mode === "preview" ? "default" : "outline"} onClick={() => setMode("preview")}>Preview</Button>
                     <Button onClick={() => handleSave(true)} disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
