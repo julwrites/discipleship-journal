@@ -86,6 +86,7 @@ describe('NoteEditor', () => {
         );
 
         await screen.findByDisplayValue('Test Note');
+        expect(mockGetNote).toHaveBeenCalledWith('123');
 
         vi.useFakeTimers();
 
