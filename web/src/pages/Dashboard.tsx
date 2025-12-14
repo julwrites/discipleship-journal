@@ -24,19 +24,27 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-      setLoading(true);
-      fetchNotes(page, 20, search).then(newNotes => {
-          if (page === 1) {
-              setNotes(newNotes);
-          } else {
-              setNotes(prev => [...prev, ...newNotes]);
+      const load = async () => {
+          setLoading(true);
+          try {
+              const newNotes = await fetchNotes(page, 20, search);
+              if (page === 1) {
+                  setNotes(newNotes);
+              } else {
+                  setNotes(prev => [...prev, ...newNotes]);
+              }
+              if (newNotes.length < 20) {
+                  setHasMore(false);
+              } else {
+                  setHasMore(true);
+              }
+          } catch (error) {
+              console.error(error);
+          } finally {
+              setLoading(false);
           }
-          if (newNotes.length < 20) {
-              setHasMore(false);
-          } else {
-              setHasMore(true);
-          }
-      }).catch(console.error).finally(() => setLoading(false));
+      };
+      load();
   }, [page, search]);
 
   const handleSearch = (val: string) => {
