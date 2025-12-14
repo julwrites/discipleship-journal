@@ -76,9 +76,9 @@ test.describe('Groups (Mocked)', () => {
                 ])
             });
         } else if (route.request().method() === 'POST') {
-             await route.fulfill({ status: 201 });
+             await route.fulfill({ status: 201, json: { success: true } });
         } else if (route.request().method() === 'DELETE') {
-             await route.fulfill({ status: 200 });
+             await route.fulfill({ status: 200, json: { success: true } });
         }
     });
 
