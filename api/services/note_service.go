@@ -9,6 +9,12 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
+// NoteServiceInterface defines the methods for note operations.
+type NoteServiceInterface interface {
+	CreateNote(ctx context.Context, userID, title string, content json.RawMessage) (*Note, error)
+	DeleteNote(ctx context.Context, userID, noteID string) error
+}
+
 type NoteService struct {
 	db DBInterface
 }

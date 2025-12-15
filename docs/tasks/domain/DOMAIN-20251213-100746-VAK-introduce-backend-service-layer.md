@@ -1,6 +1,6 @@
 ---
 id: DOMAIN-20251213-100746-VAK
-status: pending
+status: review_requested
 title: Introduce Backend Service Layer
 priority: high
 created: 2025-12-13 10:07:46
@@ -31,6 +31,6 @@ The application's business logic is currently tightly coupled with the HTTP hand
     -   Update `api/handlers/chat.go`: Use `NoteService` to save the chat log instead of raw SQL.
 
 ## Acceptance Criteria
-- [ ] `api/services/note_service.go` exists and contains the note creation logic.
-- [ ] `api/handlers/note.go` and `api/handlers/chat.go` no longer contain raw SQL for inserting notes.
-- [ ] Both "New Note" and "Chat with AI" features function correctly.
+- [x] `api/services/note_service.go` exists and contains the note creation logic.
+- [x] `api/handlers/note.go` and `api/handlers/chat.go` no longer contain raw SQL for inserting notes.
+- [x] Both "New Note" and "Chat with AI" features function correctly.

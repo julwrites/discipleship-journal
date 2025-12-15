@@ -21,7 +21,8 @@ func TestChatWithAI(t *testing.T) {
 		client = services.NewMockBibleAIClient()
 	}
 
-	handler := NewChatHandler(client)
+	mockService := new(MockNoteService)
+	handler := NewChatHandler(client, mockService)
 
 	// Note: Testing ChatWithAI fully requires mocking Auth Middleware and DB context,
 	// or refactoring the handler to be more testable.

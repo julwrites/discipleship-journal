@@ -5,18 +5,18 @@ import (
 	"fmt"
 	"net/http"
 
-	"discipleship_journal_api/database"
 	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/services"
 	"firebase.google.com/go/v4/auth"
 )
 
 type ChatHandler struct {
-	Client services.BibleAIClient
+	Client      services.BibleAIClient
+	NoteService services.NoteServiceInterface
 }
 
-func NewChatHandler(client services.BibleAIClient) *ChatHandler {
-	return &ChatHandler{Client: client}
+func NewChatHandler(client services.BibleAIClient, noteService services.NoteServiceInterface) *ChatHandler {
+	return &ChatHandler{Client: client, NoteService: noteService}
 }
 
 type ChatRequest struct {
@@ -96,9 +96,7 @@ func (h *ChatHandler) ChatWithAI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Ideally inject NoteService, but for now rely on existing pattern or inject it
-	noteService := services.NewNoteService(database.DB)
-	_, err = noteService.CreateNote(r.Context(), userUUID.String(), noteTitle, contentJSON)
+	_, err = h.NoteService.CreateNote(r.Context(), userUUID.String(), noteTitle, contentJSON)
 
 	if err != nil {
 		http.Error(w, "Failed to save chat note", http.StatusInternalServerError)
