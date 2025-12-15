@@ -30,11 +30,12 @@ type CreateNoteRequest struct {
 }
 
 type NoteHandler struct {
-	db DBInterface
+	db          DBInterface
+	noteService services.NoteServiceInterface
 }
 
-func NewNoteHandler(db DBInterface) *NoteHandler {
-	return &NoteHandler{db: db}
+func NewNoteHandler(db DBInterface, noteService services.NoteServiceInterface) *NoteHandler {
+	return &NoteHandler{db: db, noteService: noteService}
 }
 
 func (h *NoteHandler) getUserUUID(ctx context.Context, firebaseUID string) (string, error) {
@@ -151,8 +152,7 @@ func (h *NoteHandler) DeleteNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	noteService := services.NewNoteService(h.db)
-	err = noteService.DeleteNote(r.Context(), userUUID, noteID)
+	err = h.noteService.DeleteNote(r.Context(), userUUID, noteID)
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -193,14 +193,13 @@ func (h *NoteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	noteService := services.NewNoteService(h.db)
 	contentJSON, err := json.Marshal(req.Content)
 	if err != nil {
 		http.Error(w, "Invalid content", http.StatusBadRequest)
 		return
 	}
 
-	note, err := noteService.CreateNote(r.Context(), userUUID, req.Title, contentJSON)
+	note, err := h.noteService.CreateNote(r.Context(), userUUID, req.Title, contentJSON)
 	if err != nil {
 		http.Error(w, "Failed to create note", http.StatusInternalServerError)
 		return

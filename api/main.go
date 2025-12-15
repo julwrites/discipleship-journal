@@ -74,9 +74,11 @@ func main() {
 		bibleAIClient = services.NewMockBibleAIClient()
 	}
 
+	noteService := services.NewNoteService(database.DB)
+
 	bibleHandler := handlers.NewBibleHandler(bibleAIClient)
-	chatHandler := handlers.NewChatHandler(bibleAIClient)
-	noteHandler := handlers.NewNoteHandler(database.DB)
+	chatHandler := handlers.NewChatHandler(bibleAIClient, noteService)
+	noteHandler := handlers.NewNoteHandler(database.DB, noteService)
 	connectionHandler := handlers.NewConnectionHandler(database.DB)
 
 	port := os.Getenv("PORT")
