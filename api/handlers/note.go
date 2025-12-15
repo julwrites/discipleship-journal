@@ -47,6 +47,18 @@ func (h *NoteHandler) getUserUUID(ctx context.Context, firebaseUID string) (stri
 	return id, nil
 }
 
+type Meta struct {
+	Total      int `json:"total"`
+	Page       int `json:"page"`
+	Limit      int `json:"limit"`
+	TotalPages int `json:"total_pages"`
+}
+
+type NotesResponse struct {
+	Data []Note `json:"data"`
+	Meta Meta   `json:"meta"`
+}
+
 // GetNotes godoc
 // @Summary Get all notes for user
 // @Description Fetch all notes belonging to the authenticated user, with pagination and search
@@ -56,7 +68,7 @@ func (h *NoteHandler) getUserUUID(ctx context.Context, firebaseUID string) (stri
 // @Param page query int false "Page number"
 // @Param limit query int false "Items per page"
 // @Param q query string false "Search query"
-// @Success 200 {array} Note
+// @Success 200 {object} NotesResponse
 // @Failure 404 {string} string "User not found"
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /api/notes [get]
@@ -93,6 +105,21 @@ func (h *NoteHandler) GetNotes(w http.ResponseWriter, r *http.Request) {
 
 	var rows pgx.Rows
 	var qErr error
+	var total int
+
+	// Count total notes
+	countQuery := "SELECT COUNT(*) FROM notes WHERE user_id=$1"
+	if searchQuery != "" {
+		countQuery += " AND (title ILIKE $2 OR content::text ILIKE $2)"
+		err = h.db.QueryRow(r.Context(), countQuery, userUUID, "%"+searchQuery+"%").Scan(&total)
+	} else {
+		err = h.db.QueryRow(r.Context(), countQuery, userUUID).Scan(&total)
+	}
+
+	if err != nil {
+		http.Error(w, "Failed to count notes", http.StatusInternalServerError)
+		return
+	}
 
 	baseQuery := "SELECT id, user_id, title, content, created_at, updated_at FROM notes WHERE user_id=$1"
 
@@ -124,7 +151,22 @@ func (h *NoteHandler) GetNotes(w http.ResponseWriter, r *http.Request) {
 		notes = []Note{}
 	}
 
-	if err := json.NewEncoder(w).Encode(notes); err != nil {
+	totalPages := (total + limit - 1) / limit
+	if totalPages == 0 && total > 0 {
+		totalPages = 1
+	}
+
+	resp := NotesResponse{
+		Data: notes,
+		Meta: Meta{
+			Total:      total,
+			Page:       page,
+			Limit:      limit,
+			TotalPages: totalPages,
+		},
+	}
+
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 	}
 }
