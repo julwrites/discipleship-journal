@@ -71,7 +71,8 @@ test.describe('Note Sharing (Mocked)', () => {
     await page.goto('/notes/note-1');
 
     // Wait for note to load
-    await expect(page.locator('textarea')).toHaveValue('# Sharing is Caring');
+    await expect(page.locator('.ProseMirror')).toBeVisible();
+    await expect(page.locator('.ProseMirror')).toContainText('Sharing is Caring');
 
     // Click Share
     await page.getByRole('button', { name: 'Share' }).click();
