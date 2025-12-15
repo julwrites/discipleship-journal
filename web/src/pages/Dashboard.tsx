@@ -27,16 +27,25 @@ export default function Dashboard() {
       const load = async () => {
           setLoading(true);
           try {
-              const newNotes = await fetchNotes(page, 20, search);
+              const response = await fetchNotes(page, 20, search);
+              // Check if response has data/meta structure or is just array (for backward compat if needed, though we updated API)
+              const newNotes = response.data || response;
+
               if (page === 1) {
                   setNotes(newNotes);
               } else {
                   setNotes(prev => [...prev, ...newNotes]);
               }
-              if (newNotes.length < 20) {
-                  setHasMore(false);
+
+              if (response.meta) {
+                  setHasMore(page < response.meta.total_pages);
               } else {
-                  setHasMore(true);
+                  // Fallback
+                  if (newNotes.length < 20) {
+                      setHasMore(false);
+                  } else {
+                      setHasMore(true);
+                  }
               }
           } catch (error) {
               console.error(error);

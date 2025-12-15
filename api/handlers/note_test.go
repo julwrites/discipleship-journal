@@ -37,6 +37,11 @@ func TestGetNotes(t *testing.T) {
 		WithArgs(uid).
 		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
 
+	// Mock count query
+	mockDB.ExpectQuery("SELECT COUNT\\(\\*\\) FROM notes WHERE user_id=").
+		WithArgs(userUUID).
+		WillReturnRows(pgxmock.NewRows([]string{"count"}).AddRow(1))
+
 	// Mock notes query
 	now := time.Now()
 	// Note: using map[string]interface{} for content as the handler scans into a map
@@ -56,13 +61,15 @@ func TestGetNotes(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, w.Code, "Response body: %s", w.Body.String())
 
-	var notes []Note
-	err = json.Unmarshal(w.Body.Bytes(), &notes)
+	var resp NotesResponse
+	err = json.Unmarshal(w.Body.Bytes(), &resp)
 	assert.NoError(t, err)
-	assert.Len(t, notes, 1)
-	if len(notes) > 0 {
-		assert.Equal(t, "note-1", notes[0].ID)
+	assert.Len(t, resp.Data, 1)
+	if len(resp.Data) > 0 {
+		assert.Equal(t, "note-1", resp.Data[0].ID)
 	}
+	assert.Equal(t, 1, resp.Meta.Total)
+	assert.Equal(t, 1, resp.Meta.TotalPages)
 
 	if err := mockDB.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %s", err)
