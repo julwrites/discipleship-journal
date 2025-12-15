@@ -30,6 +30,7 @@
     "react-firebase-hooks": "^5.1.1",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.9.6",
+    "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
     "tailwindcss-animate": "^1.0.7"
   },

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -109,7 +110,7 @@ export default function GroupsPage() {
     const handleJoin = async (id: string) => {
         try {
             await joinGroup(id);
-            alert("Joined group!");
+            toast.success("Joined group!");
             handleSearch(); // Refresh search results to show updated role
             fetchMyGroups();
         } catch (error) {

@@ -1,6 +1,6 @@
 ---
 id: PRESENTATION-20251213-100721-RNV
-status: pending
+status: completed
 title: Standardize Frontend API Calls
 priority: medium
 created: 2025-12-13 10:07:21

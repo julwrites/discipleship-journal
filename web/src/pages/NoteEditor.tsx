@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
     createNote,
@@ -79,7 +80,7 @@ export default function NoteEditor() {
         } catch (e) {
             console.error(e);
             setSaveError(true);
-            if (manual) alert("Failed to save");
+            if (manual) toast.error("Failed to save");
         } finally {
             setSaving(false);
         }
@@ -111,7 +112,7 @@ export default function NoteEditor() {
             navigate("/", { replace: true });
         } catch (e) {
             console.error(e);
-            alert("Failed to delete note.");
+            toast.error("Failed to delete note.");
             setDeleting(false);
             setDeleteConfirmOpen(false);
         }
@@ -128,19 +129,19 @@ export default function NoteEditor() {
 
     const handleShare = async () => {
         if (!id || id === "new") {
-            alert("Please save the note first.");
+            toast.error("Please save the note first.");
             return;
         }
         if (!selectedGroupId) return;
         setSharing(true);
         try {
             await shareNote(selectedGroupId, id, shareComment);
-            alert("Note shared!");
+            toast.success("Note shared!");
             setSelectedGroupId("");
             setShareComment("");
         } catch (error) {
             console.error("Share failed", error);
-            alert("Failed to share.");
+            toast.error("Failed to share.");
         } finally {
             setSharing(false);
         }

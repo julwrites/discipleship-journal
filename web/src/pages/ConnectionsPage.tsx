@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -66,7 +67,7 @@ export default function ConnectionsPage() {
     const sendRequest = async (receiverEmail: string) => {
         try {
             await sendConnectionRequest(receiverEmail);
-            alert("Request sent!");
+            toast.success("Request sent!");
             fetchConnections();
         } catch (error) {
             console.error("Request failed", error);
@@ -74,7 +75,7 @@ export default function ConnectionsPage() {
             if (error instanceof Error) {
                 message = error.message;
             }
-            alert("Failed: " + message);
+            toast.error("Failed: " + message);
         }
     };
 

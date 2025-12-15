@@ -3,6 +3,15 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import NoteEditor from './NoteEditor';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import * as api from '@/services/api';
+import { toast } from 'sonner';
+
+// Mock sonner
+vi.mock('sonner', () => ({
+    toast: {
+        success: vi.fn(),
+        error: vi.fn(),
+    }
+}));
 
 // Mock RichTextEditor to avoid complex Tiptap interaction in integration tests
 vi.mock('@/components/RichTextEditor', () => ({
@@ -86,7 +95,6 @@ describe('NoteEditor', () => {
         });
         vi.mocked(api.updateNote).mockRejectedValue(new Error('Network error'));
 
-        const alertMock = vi.spyOn(window, 'alert').mockImplementation(() => {});
         const consoleErrorMock = vi.spyOn(console, 'error').mockImplementation(() => {});
 
         render(
@@ -114,9 +122,13 @@ describe('NoteEditor', () => {
         await waitFor(() => {
              const errorIndicator = screen.queryByText(/Error saving/i) || screen.queryByText(/Failed to save/i);
              expect(errorIndicator).toBeInTheDocument();
+             // In auto-save, we usually don't show a toast/alert unless manual save,
+             // but checking the code: if (!manual) return; in catch block?
+             // The code is: if (manual) toast.error("Failed to save");
+             // So no toast should be called for auto-save failure.
+             expect(toast.error).not.toHaveBeenCalled();
         });
 
-        alertMock.mockRestore();
         consoleErrorMock.mockRestore();
     });
 
