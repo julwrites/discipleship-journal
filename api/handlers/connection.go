@@ -1,11 +1,11 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
 
-	"discipleship_journal_api/database"
 	"discipleship_journal_api/middleware"
 	"firebase.google.com/go/v4/auth"
 	"github.com/go-chi/chi/v5"
@@ -25,15 +25,32 @@ type ConnectionResponse struct {
 	ReceiverEmail  string `json:"receiver_email,omitempty"`
 }
 
+type ConnectionHandler struct {
+	db DBInterface
+}
+
+func NewConnectionHandler(db DBInterface) *ConnectionHandler {
+	return &ConnectionHandler{db: db}
+}
+
+func (h *ConnectionHandler) getUserUUID(ctx context.Context, firebaseUID string) (string, error) {
+	var id string
+	err := h.db.QueryRow(ctx, "SELECT id FROM users WHERE firebase_uid=$1", firebaseUID).Scan(&id)
+	if err != nil {
+		return "", err
+	}
+	return id, nil
+}
+
 // SearchUsers searches for users by email or username
-func SearchUsers(w http.ResponseWriter, r *http.Request) {
+func (h *ConnectionHandler) SearchUsers(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	if len(query) < 3 {
 		http.Error(w, "Search query too short", http.StatusBadRequest)
 		return
 	}
 
-	rows, err := database.DB.Query(r.Context(),
+	rows, err := h.db.Query(r.Context(),
 		"SELECT id, email, display_name, username FROM users WHERE email ILIKE $1 OR display_name ILIKE $1 OR username ILIKE $1 LIMIT 10",
 		"%"+query+"%")
 	if err != nil {
@@ -68,7 +85,7 @@ func SearchUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 // SendConnectionRequest sends a connection request to another user
-func SendConnectionRequest(w http.ResponseWriter, r *http.Request) {
+func (h *ConnectionHandler) SendConnectionRequest(w http.ResponseWriter, r *http.Request) {
 	var req ConnectionRequest
 	if !DecodeAndValidate(w, r, &req) {
 		return
@@ -76,7 +93,7 @@ func SendConnectionRequest(w http.ResponseWriter, r *http.Request) {
 
 	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
 	requesterUID := token.UID
-	requesterUUID, err := GetUserUUID(r.Context(), requesterUID)
+	requesterUUID, err := h.getUserUUID(r.Context(), requesterUID)
 	if err != nil {
 		http.Error(w, "Requester not found", http.StatusInternalServerError)
 		return
@@ -84,7 +101,7 @@ func SendConnectionRequest(w http.ResponseWriter, r *http.Request) {
 
 	// Find receiver UUID
 	var receiverUUID string
-	err = database.DB.QueryRow(r.Context(), "SELECT id FROM users WHERE email = $1", req.ReceiverEmail).Scan(&receiverUUID)
+	err = h.db.QueryRow(r.Context(), "SELECT id FROM users WHERE email = $1", req.ReceiverEmail).Scan(&receiverUUID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			http.Error(w, "User not found", http.StatusNotFound)
@@ -94,14 +111,14 @@ func SendConnectionRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if requesterUUID.String() == receiverUUID {
+	if requesterUUID == receiverUUID {
 		http.Error(w, "Cannot connect with yourself", http.StatusBadRequest)
 		return
 	}
 
 	// Insert connection
 	var connID string
-	err = database.DB.QueryRow(r.Context(),
+	err = h.db.QueryRow(r.Context(),
 		`INSERT INTO connections (requester_id, receiver_id, status)
 		 VALUES ($1, $2, 'pending')
 		 RETURNING id`, requesterUUID, receiverUUID).Scan(&connID)
@@ -119,16 +136,16 @@ func SendConnectionRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 // ListConnections lists all connections for the current user
-func ListConnections(w http.ResponseWriter, r *http.Request) {
+func (h *ConnectionHandler) ListConnections(w http.ResponseWriter, r *http.Request) {
 	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
 	uid := token.UID
-	userUUID, err := GetUserUUID(r.Context(), uid)
+	userUUID, err := h.getUserUUID(r.Context(), uid)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
 		return
 	}
 
-	rows, err := database.DB.Query(r.Context(),
+	rows, err := h.db.Query(r.Context(),
 		`SELECT c.id, c.requester_id, c.receiver_id, c.status,
 		        u1.email as requester_email, u2.email as receiver_email
 		 FROM connections c
@@ -157,18 +174,18 @@ func ListConnections(w http.ResponseWriter, r *http.Request) {
 }
 
 // AcceptConnectionRequest accepts a connection request
-func AcceptConnectionRequest(w http.ResponseWriter, r *http.Request) {
+func (h *ConnectionHandler) AcceptConnectionRequest(w http.ResponseWriter, r *http.Request) {
 	connID := chi.URLParam(r, "id")
 
 	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
 	uid := token.UID
-	userUUID, err := GetUserUUID(r.Context(), uid)
+	userUUID, err := h.getUserUUID(r.Context(), uid)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
 		return
 	}
 
-	commandTag, err := database.DB.Exec(r.Context(),
+	commandTag, err := h.db.Exec(r.Context(),
 		"UPDATE connections SET status = 'accepted' WHERE id = $1 AND receiver_id = $2", connID, userUUID)
 
 	if err != nil {
@@ -185,18 +202,18 @@ func AcceptConnectionRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteConnectionRequest rejects or deletes a connection
-func DeleteConnectionRequest(w http.ResponseWriter, r *http.Request) {
+func (h *ConnectionHandler) DeleteConnectionRequest(w http.ResponseWriter, r *http.Request) {
 	connID := chi.URLParam(r, "id")
 
 	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
 	uid := token.UID
-	userUUID, err := GetUserUUID(r.Context(), uid)
+	userUUID, err := h.getUserUUID(r.Context(), uid)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
 		return
 	}
 
-	commandTag, err := database.DB.Exec(r.Context(),
+	commandTag, err := h.db.Exec(r.Context(),
 		"DELETE FROM connections WHERE id = $1 AND (receiver_id = $2 OR requester_id = $2)", connID, userUUID)
 
 	if err != nil {

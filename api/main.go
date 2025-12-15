@@ -76,6 +76,8 @@ func main() {
 
 	bibleHandler := handlers.NewBibleHandler(bibleAIClient)
 	chatHandler := handlers.NewChatHandler(bibleAIClient)
+	noteHandler := handlers.NewNoteHandler(database.DB)
+	connectionHandler := handlers.NewConnectionHandler(database.DB)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -120,22 +122,22 @@ func main() {
 		r.Post("/api/users/me", handlers.CreateOrUpdateUser)
 		r.Put("/api/users/me", handlers.UpdateUser)
 
-		r.Get("/api/notes", handlers.GetNotes)
-		r.Post("/api/notes", handlers.CreateNote)
-		r.Get("/api/notes/{id}", handlers.GetNote)
-		r.Put("/api/notes/{id}", handlers.UpdateNote)
-		r.Delete("/api/notes/{id}", handlers.DeleteNote)
+		r.Get("/api/notes", noteHandler.GetNotes)
+		r.Post("/api/notes", noteHandler.CreateNote)
+		r.Get("/api/notes/{id}", noteHandler.GetNote)
+		r.Put("/api/notes/{id}", noteHandler.UpdateNote)
+		r.Delete("/api/notes/{id}", noteHandler.DeleteNote)
 
 		r.Get("/api/bible/passage", bibleHandler.GetBiblePassage)
 		r.Post("/api/chat", chatHandler.ChatWithAI)
 		r.Post("/api/ai/ask", chatHandler.AskAI)
 
 		// Connections
-		r.Get("/api/users/search", handlers.SearchUsers)
-		r.Post("/api/connections/request", handlers.SendConnectionRequest)
-		r.Get("/api/connections", handlers.ListConnections)
-		r.Put("/api/connections/{id}", handlers.AcceptConnectionRequest)
-		r.Delete("/api/connections/{id}", handlers.DeleteConnectionRequest)
+		r.Get("/api/users/search", connectionHandler.SearchUsers)
+		r.Post("/api/connections/request", connectionHandler.SendConnectionRequest)
+		r.Get("/api/connections", connectionHandler.ListConnections)
+		r.Put("/api/connections/{id}", connectionHandler.AcceptConnectionRequest)
+		r.Delete("/api/connections/{id}", connectionHandler.DeleteConnectionRequest)
 
 		// Groups
 		r.Post("/api/groups", handlers.CreateGroup)

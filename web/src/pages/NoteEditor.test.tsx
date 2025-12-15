@@ -146,4 +146,78 @@ describe('NoteEditor', () => {
             expect(screen.getByText('Dashboard')).toBeInTheDocument();
         });
     });
+
+    it('adds bible passage', async () => {
+        vi.mocked(api.getNote).mockResolvedValue({
+            id: '123',
+            title: 'Test Note',
+            content: { markdown: 'Initial content' }
+        });
+        vi.mocked(api.getBiblePassage).mockResolvedValue({ text: 'For God so loved the world...' });
+
+        render(
+            <MemoryRouter initialEntries={['/notes/123']}>
+                <Routes>
+                    <Route path="/notes/:id" element={<NoteEditor />} />
+                </Routes>
+            </MemoryRouter>
+        );
+
+        await screen.findByDisplayValue('Test Note');
+
+        const addScriptureBtn = screen.getByRole('button', { name: 'Add Scripture' });
+        fireEvent.click(addScriptureBtn);
+
+        const dialog = await screen.findByRole('dialog');
+        const input = within(dialog).getByPlaceholderText('e.g. John 3:16');
+        fireEvent.change(input, { target: { value: 'John 3:16' } });
+
+        const searchBtn = within(dialog).getByRole('button', { name: 'Search' });
+        fireEvent.click(searchBtn);
+
+        await waitFor(() => {
+            expect(api.getBiblePassage).toHaveBeenCalledWith('John 3:16');
+            expect(within(dialog).getByText('For God so loved the world...')).toBeInTheDocument();
+        });
+
+        const insertBtn = within(dialog).getByRole('button', { name: 'Insert into Note' });
+        fireEvent.click(insertBtn);
+
+        const textarea = screen.getByDisplayValue(/For God so loved the world.../);
+        expect(textarea).toBeInTheDocument();
+    });
+
+    it('asks AI', async () => {
+        vi.mocked(api.getNote).mockResolvedValue({
+            id: '123',
+            title: 'Test Note',
+            content: { markdown: 'Content' }
+        });
+        vi.mocked(api.askAI).mockResolvedValue({ response: 'AI Answer' });
+
+        render(
+            <MemoryRouter initialEntries={['/notes/123']}>
+                <Routes>
+                    <Route path="/notes/:id" element={<NoteEditor />} />
+                </Routes>
+            </MemoryRouter>
+        );
+
+        await screen.findByDisplayValue('Test Note');
+
+        const askAiBtn = screen.getByRole('button', { name: 'Ask AI' });
+        fireEvent.click(askAiBtn);
+
+        const dialog = await screen.findByRole('dialog');
+        const input = within(dialog).getByPlaceholderText('Ask a question...');
+        fireEvent.change(input, { target: { value: 'Explain this' } });
+
+        const askBtn = within(dialog).getByRole('button', { name: 'Ask' });
+        fireEvent.click(askBtn);
+
+        await waitFor(() => {
+            expect(api.askAI).toHaveBeenCalledWith('Content', 'Explain this');
+            expect(within(dialog).getByText('AI Answer')).toBeInTheDocument();
+        });
+    });
 });
