@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"discipleship_journal_api/services"
+	"github.com/jackc/pgx/v5"
 	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 )
@@ -45,6 +46,50 @@ func TestCreateNote(t *testing.T) {
 		note, err := service.CreateNote(context.Background(), userID, title, content)
 		assert.Error(t, err)
 		assert.Nil(t, note)
+	})
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestDeleteNote(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mock.Close()
+
+	service := services.NewNoteService(mock)
+	userID := "user-123"
+	noteID := "note-123"
+
+	t.Run("Success", func(t *testing.T) {
+		mock.ExpectExec("DELETE FROM notes").
+			WithArgs(noteID, userID).
+			WillReturnResult(pgxmock.NewResult("DELETE", 1))
+
+		err := service.DeleteNote(context.Background(), userID, noteID)
+		assert.NoError(t, err)
+	})
+
+	t.Run("NotFound", func(t *testing.T) {
+		mock.ExpectExec("DELETE FROM notes").
+			WithArgs(noteID, userID).
+			WillReturnResult(pgxmock.NewResult("DELETE", 0))
+
+		err := service.DeleteNote(context.Background(), userID, noteID)
+		assert.Error(t, err)
+		assert.Equal(t, pgx.ErrNoRows, err)
+	})
+
+	t.Run("DatabaseError", func(t *testing.T) {
+		mock.ExpectExec("DELETE FROM notes").
+			WithArgs(noteID, userID).
+			WillReturnError(errors.New("db error"))
+
+		err := service.DeleteNote(context.Background(), userID, noteID)
+		assert.Error(t, err)
 	})
 
 	if err := mock.ExpectationsWereMet(); err != nil {

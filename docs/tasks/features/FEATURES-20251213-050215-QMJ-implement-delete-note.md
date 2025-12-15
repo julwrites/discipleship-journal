@@ -1,6 +1,6 @@
 ---
 id: FEATURES-20251213-050215-QMJ
-status: pending
+status: completed
 title: Implement Delete Note
 priority: high
 created: 2025-12-13 05:02:15
@@ -31,8 +31,8 @@ Users currently cannot delete notes they have created. This is a basic CRUD requ
 4.  On success, redirect to the Dashboard or remove the note from the list.
 
 ## Acceptance Criteria
-- [ ] `DELETE /api/notes/{id}` deletes the note from the database.
-- [ ] Users cannot delete notes belonging to others (return 403).
-- [ ] "Delete" button is visible in the UI.
-- [ ] Confirmation dialog prevents accidental deletion.
-- [ ] Deleting a note redirects user appropriately.
+- [x] `DELETE /api/notes/{id}` deletes the note from the database.
+- [x] Users cannot delete notes belonging to others (return 403).
+- [x] "Delete" button is visible in the UI.
+- [x] Confirmation dialog prevents accidental deletion.
+- [x] Deleting a note redirects user appropriately.
