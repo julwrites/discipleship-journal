@@ -63,13 +63,14 @@ test.describe('Journaling (Mocked)', () => {
     await page.getByTitle('New Note').click();
 
     // Verify we are on the editor
-    await expect(page.getByPlaceholder('Write your thoughts...')).toBeVisible();
+    await expect(page.locator('.ProseMirror')).toBeVisible();
 
     // Type Title
     await page.getByPlaceholder('Title').fill('My Daily Journal');
 
     // Type content
-    await page.getByPlaceholder('Write your thoughts...').fill('# My Daily Journal\n\nToday I learned about grace.');
+    await page.locator('.ProseMirror').click();
+    await page.keyboard.type('# My Daily Journal\n\nToday I learned about grace.');
 
     // Save
     await page.getByRole('button', { name: 'Save' }).click();

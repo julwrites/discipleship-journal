@@ -4,6 +4,18 @@ import NoteEditor from './NoteEditor';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import * as api from '@/services/api';
 
+// Mock RichTextEditor to avoid complex Tiptap interaction in integration tests
+vi.mock('@/components/RichTextEditor', () => ({
+    default: ({ content, onChange, editable }: { content: string, onChange: (value: string) => void, editable: boolean }) => (
+        <textarea
+            data-testid="rich-text-editor"
+            value={content}
+            onChange={(e) => onChange(e.target.value)}
+            disabled={!editable}
+        />
+    )
+}));
+
 // Mock the API
 vi.mock('@/services/api', () => ({
     getNote: vi.fn(),
