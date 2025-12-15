@@ -1,13 +1,13 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
-	"discipleship_journal_api/database"
 	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/services"
 	"firebase.google.com/go/v4/auth"
@@ -29,6 +29,23 @@ type CreateNoteRequest struct {
 	Content map[string]interface{} `json:"content" validate:"required"`
 }
 
+type NoteHandler struct {
+	db DBInterface
+}
+
+func NewNoteHandler(db DBInterface) *NoteHandler {
+	return &NoteHandler{db: db}
+}
+
+func (h *NoteHandler) getUserUUID(ctx context.Context, firebaseUID string) (string, error) {
+	var id string
+	err := h.db.QueryRow(ctx, "SELECT id FROM users WHERE firebase_uid=$1", firebaseUID).Scan(&id)
+	if err != nil {
+		return "", err
+	}
+	return id, nil
+}
+
 // GetNotes godoc
 // @Summary Get all notes for user
 // @Description Fetch all notes belonging to the authenticated user, with pagination and search
@@ -42,11 +59,11 @@ type CreateNoteRequest struct {
 // @Failure 404 {string} string "User not found"
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /api/notes [get]
-func GetNotes(w http.ResponseWriter, r *http.Request) {
+func (h *NoteHandler) GetNotes(w http.ResponseWriter, r *http.Request) {
 	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
 	uid := token.UID
 
-	userUUID, err := GetUserUUID(r.Context(), uid)
+	userUUID, err := h.getUserUUID(r.Context(), uid)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
@@ -81,10 +98,10 @@ func GetNotes(w http.ResponseWriter, r *http.Request) {
 	if searchQuery != "" {
 		baseQuery += " AND (title ILIKE $2 OR content::text ILIKE $2)"
 		baseQuery += fmt.Sprintf(" ORDER BY updated_at DESC LIMIT %d OFFSET %d", limit, offset)
-		rows, qErr = database.DB.Query(r.Context(), baseQuery, userUUID, "%"+searchQuery+"%")
+		rows, qErr = h.db.Query(r.Context(), baseQuery, userUUID, "%"+searchQuery+"%")
 	} else {
 		baseQuery += fmt.Sprintf(" ORDER BY updated_at DESC LIMIT %d OFFSET %d", limit, offset)
-		rows, qErr = database.DB.Query(r.Context(), baseQuery, userUUID)
+		rows, qErr = h.db.Query(r.Context(), baseQuery, userUUID)
 	}
 
 	if qErr != nil {
@@ -123,19 +140,19 @@ func GetNotes(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {string} string "Note not found"
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /api/notes/{id} [delete]
-func DeleteNote(w http.ResponseWriter, r *http.Request) {
+func (h *NoteHandler) DeleteNote(w http.ResponseWriter, r *http.Request) {
 	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
 	uid := token.UID
 	noteID := chi.URLParam(r, "id")
 
-	userUUID, err := GetUserUUID(r.Context(), uid)
+	userUUID, err := h.getUserUUID(r.Context(), uid)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
 
-	noteService := services.NewNoteService(database.DB)
-	err = noteService.DeleteNote(r.Context(), userUUID.String(), noteID)
+	noteService := services.NewNoteService(h.db)
+	err = noteService.DeleteNote(r.Context(), userUUID, noteID)
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -161,11 +178,11 @@ func DeleteNote(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {string} string "User not found"
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /api/notes [post]
-func CreateNote(w http.ResponseWriter, r *http.Request) {
+func (h *NoteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
 	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
 	uid := token.UID
 
-	userUUID, err := GetUserUUID(r.Context(), uid)
+	userUUID, err := h.getUserUUID(r.Context(), uid)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
@@ -176,14 +193,14 @@ func CreateNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	noteService := services.NewNoteService(database.DB)
+	noteService := services.NewNoteService(h.db)
 	contentJSON, err := json.Marshal(req.Content)
 	if err != nil {
 		http.Error(w, "Invalid content", http.StatusBadRequest)
 		return
 	}
 
-	note, err := noteService.CreateNote(r.Context(), userUUID.String(), req.Title, contentJSON)
+	note, err := noteService.CreateNote(r.Context(), userUUID, req.Title, contentJSON)
 	if err != nil {
 		http.Error(w, "Failed to create note", http.StatusInternalServerError)
 		return
@@ -208,12 +225,12 @@ func CreateNote(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {string} string "Note not found"
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /api/notes/{id} [put]
-func UpdateNote(w http.ResponseWriter, r *http.Request) {
+func (h *NoteHandler) UpdateNote(w http.ResponseWriter, r *http.Request) {
 	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
 	uid := token.UID
 	noteID := chi.URLParam(r, "id")
 
-	userUUID, err := GetUserUUID(r.Context(), uid)
+	userUUID, err := h.getUserUUID(r.Context(), uid)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
@@ -226,7 +243,7 @@ func UpdateNote(w http.ResponseWriter, r *http.Request) {
 
 	// Verify ownership
 	var ownerID string
-	err = database.DB.QueryRow(r.Context(), "SELECT user_id FROM notes WHERE id=$1", noteID).Scan(&ownerID)
+	err = h.db.QueryRow(r.Context(), "SELECT user_id FROM notes WHERE id=$1", noteID).Scan(&ownerID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			http.Error(w, "Note not found", http.StatusNotFound)
@@ -236,12 +253,12 @@ func UpdateNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if ownerID != userUUID.String() {
+	if ownerID != userUUID {
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
 	}
 
-	_, err = database.DB.Exec(r.Context(),
+	_, err = h.db.Exec(r.Context(),
 		"UPDATE notes SET title=$1, content=$2, updated_at=NOW() WHERE id=$3",
 		req.Title, req.Content, noteID)
 
@@ -264,19 +281,19 @@ func UpdateNote(w http.ResponseWriter, r *http.Request) {
 // @Failure 403 {string} string "Unauthorized"
 // @Failure 404 {string} string "Note not found"
 // @Router /api/notes/{id} [get]
-func GetNote(w http.ResponseWriter, r *http.Request) {
+func (h *NoteHandler) GetNote(w http.ResponseWriter, r *http.Request) {
 	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
 	uid := token.UID
 	noteID := chi.URLParam(r, "id")
 
-	userUUID, err := GetUserUUID(r.Context(), uid)
+	userUUID, err := h.getUserUUID(r.Context(), uid)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
 
 	var n Note
-	err = database.DB.QueryRow(r.Context(), "SELECT id, user_id, title, content, created_at, updated_at FROM notes WHERE id=$1", noteID).Scan(&n.ID, &n.UserID, &n.Title, &n.Content, &n.CreatedAt, &n.UpdatedAt)
+	err = h.db.QueryRow(r.Context(), "SELECT id, user_id, title, content, created_at, updated_at FROM notes WHERE id=$1", noteID).Scan(&n.ID, &n.UserID, &n.Title, &n.Content, &n.CreatedAt, &n.UpdatedAt)
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -287,7 +304,7 @@ func GetNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if n.UserID != userUUID.String() {
+	if n.UserID != userUUID {
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
 	}
