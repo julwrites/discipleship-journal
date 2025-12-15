@@ -1,6 +1,6 @@
 ---
 id: FEATURES-20251213-092126-FFY
-status: pending
+status: completed
 title: Rich Text Editing
 priority: medium
 created: 2025-12-13 09:21:26

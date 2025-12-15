@@ -12,6 +12,7 @@ import {
     shareNote
 } from "@/services/api";
 import ReactMarkdown from "react-markdown";
+import RichTextEditor from "@/components/RichTextEditor";
 import {
   Dialog,
   DialogContent,
@@ -317,16 +318,15 @@ export default function NoteEditor() {
                 onChange={(e) => setTitle(e.target.value)}
             />
 
-            <div className="flex-1 border rounded-lg overflow-hidden">
+            <div className="flex-1 overflow-hidden flex flex-col">
                 {mode === "edit" ? (
-                    <textarea
-                        className="w-full h-full p-4 resize-none outline-none"
-                        placeholder="Write your thoughts..."
-                        value={markdown}
-                        onChange={(e) => setMarkdown(e.target.value)}
+                    <RichTextEditor
+                        content={markdown}
+                        onChange={setMarkdown}
+                        editable={true}
                     />
                 ) : (
-                    <div className="p-4 prose prose-slate max-w-none overflow-auto h-full">
+                    <div className="flex-1 border rounded-lg overflow-auto p-4 prose prose-slate max-w-none bg-slate-50">
                         <ReactMarkdown>{markdown}</ReactMarkdown>
                     </div>
                 )}
