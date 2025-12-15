@@ -27,7 +27,7 @@ CREATE INDEX idx_notes_content ON notes USING gin (content);
 
 -- Connections Table
 CREATE TABLE IF NOT EXISTS connections (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     requester_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     receiver_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     status VARCHAR(20) NOT NULL DEFAULT 'pending', -- pending, accepted
