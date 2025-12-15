@@ -1,4 +1,4 @@
-import { useEditor, EditorContent } from '@tiptap/react'
+import { useEditor, EditorContent, Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
@@ -37,14 +37,14 @@ export default function RichTextEditor({
         content: content,
         editable: editable,
         onUpdate: ({ editor }) => {
-            const markdownOutput = (editor as any).getMarkdown();
+            const markdownOutput = (editor as Editor & { getMarkdown: () => string }).getMarkdown();
             onChange(markdownOutput);
         },
     });
 
     // Update editor content when prop changes
     useEffect(() => {
-        if (editor && content !== (editor as any).getMarkdown()) {
+        if (editor && content !== (editor as Editor & { getMarkdown: () => string }).getMarkdown()) {
             // Only update if content is different to avoid cursor jumps and loops
             // However, getMarkdown() might return slightly different format than input content.
             // A better check might be needed or just accept that external updates reset cursor.
