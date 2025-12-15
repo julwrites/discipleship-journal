@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import NoteEditor from './NoteEditor';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -106,5 +106,44 @@ describe('NoteEditor', () => {
 
         alertMock.mockRestore();
         consoleErrorMock.mockRestore();
+    });
+
+    it('deletes note after confirmation', async () => {
+        vi.mocked(api.getNote).mockResolvedValue({
+            id: '123',
+            title: 'Test Note',
+            content: { markdown: 'Initial content' }
+        });
+        const mockDeleteNote = vi.mocked(api.deleteNote).mockResolvedValue(undefined);
+
+        render(
+            <MemoryRouter initialEntries={['/notes/123']}>
+                <Routes>
+                    <Route path="/notes/:id" element={<NoteEditor />} />
+                    <Route path="/" element={<div>Dashboard</div>} />
+                </Routes>
+            </MemoryRouter>
+        );
+
+        await screen.findByDisplayValue('Test Note');
+
+        // Click Delete trigger button
+        // We use getAllByText because the confirm button also says "Delete" but it's not visible yet?
+        // Actually, trigger is visible.
+        const deleteTrigger = screen.getByRole('button', { name: 'Delete' });
+        fireEvent.click(deleteTrigger);
+
+        // Check for confirmation dialog text
+        expect(await screen.findByText(/Are you sure you want to delete/i)).toBeInTheDocument();
+
+        // Use within to find the button inside the dialog
+        const dialog = await screen.findByRole('dialog');
+        const confirmBtn = within(dialog).getByRole('button', { name: 'Delete' });
+        fireEvent.click(confirmBtn);
+
+        await waitFor(() => {
+            expect(mockDeleteNote).toHaveBeenCalledWith('123');
+            expect(screen.getByText('Dashboard')).toBeInTheDocument();
+        });
     });
 });

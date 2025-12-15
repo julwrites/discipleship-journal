@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type NoteService struct {
@@ -14,6 +15,7 @@ type NoteService struct {
 
 type DBInterface interface {
 	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
 }
 
 func NewNoteService(db DBInterface) *NoteService {
@@ -43,4 +45,15 @@ func (s *NoteService) CreateNote(ctx context.Context, userID, title string, cont
 		return nil, err
 	}
 	return &note, nil
+}
+
+func (s *NoteService) DeleteNote(ctx context.Context, userID, noteID string) error {
+	commandTag, err := s.db.Exec(ctx, "DELETE FROM notes WHERE id=$1 AND user_id=$2", noteID, userID)
+	if err != nil {
+		return err
+	}
+	if commandTag.RowsAffected() == 0 {
+		return pgx.ErrNoRows
+	}
+	return nil
 }

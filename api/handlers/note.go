@@ -134,15 +134,15 @@ func DeleteNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	commandTag, err := database.DB.Exec(r.Context(), "DELETE FROM notes WHERE id=$1 AND user_id=$2", noteID, userUUID)
-	if err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		return
-	}
+	noteService := services.NewNoteService(database.DB)
+	err = noteService.DeleteNote(r.Context(), userUUID.String(), noteID)
 
-	if commandTag.RowsAffected() == 0 {
-		// Could be 404 or 403, but since we include user_id in query, it acts as both.
-		http.Error(w, "Note not found or unauthorized", http.StatusNotFound)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			http.Error(w, "Note not found or unauthorized", http.StatusNotFound)
+		} else {
+			http.Error(w, "Database error", http.StatusInternalServerError)
+		}
 		return
 	}
 

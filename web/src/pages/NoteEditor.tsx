@@ -18,6 +18,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 
@@ -47,6 +49,7 @@ export default function NoteEditor() {
     const [sharing, setSharing] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [saveError, setSaveError] = useState(false);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
     useEffect(() => {
         if (id && id !== "new") {
@@ -95,19 +98,21 @@ export default function NoteEditor() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [title, markdown, id]);
 
-    const handleDelete = async () => {
+    const handleDelete = () => {
         if (!id || id === "new") return;
-        if (!confirm("Are you sure you want to delete this note? This action cannot be undone.")) return;
+        setDeleteConfirmOpen(true);
+    };
 
+    const confirmDelete = async () => {
         setDeleting(true);
         try {
-            await deleteNote(id);
-            alert("Note deleted.");
+            await deleteNote(id!);
             navigate("/", { replace: true });
         } catch (e) {
             console.error(e);
             alert("Failed to delete note.");
             setDeleting(false);
+            setDeleteConfirmOpen(false);
         }
     };
 
@@ -248,9 +253,28 @@ export default function NoteEditor() {
                     <Button onClick={() => handleSave(true)} disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
 
                     {id && id !== "new" && (
-                        <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
-                            {deleting ? "..." : "Delete"}
-                        </Button>
+                        <>
+                            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+                                {deleting ? "..." : "Delete"}
+                            </Button>
+
+                            <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>Delete Note</DialogTitle>
+                                        <DialogDescription>
+                                            Are you sure you want to delete this note? This action cannot be undone.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <DialogFooter>
+                                        <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
+                                        <Button variant="destructive" onClick={confirmDelete} disabled={deleting}>
+                                            {deleting ? "Deleting..." : "Delete"}
+                                        </Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                        </>
                     )}
 
                     <Dialog onOpenChange={(open) => { if (open) fetchMyGroups(); }}>
