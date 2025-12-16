@@ -63,21 +63,6 @@ jobs:
 
           echo "✅ All required values are set (values masked as secrets)"
 
-          # Test project access by getting project info (won't echo project ID)
-          echo "Testing project access..."
-          gcloud projects describe ${{ env.GCP_PROJECT_ID }} --format="value(projectId)" || {
-            echo "❌ ERROR: Cannot access project"
-            echo "Possible issues:"
-            echo "1. Project doesn't exist: https://console.cloud.google.com/"
-            echo "2. Service account doesn't have access"
-            echo "3. Project ID format is wrong"
-            echo ""
-            echo "Project ID should be like: 'discipleship-journal-52a2c' (no 'projects/' prefix)"
-            exit 1
-          }
-
-          echo "✅ Project access verified"
-
           # Enable Artifact Registry API if needed
           echo "Checking Artifact Registry API..."
           gcloud services enable artifactregistry.googleapis.com --project=${{ env.GCP_PROJECT_ID }} || {
@@ -88,12 +73,32 @@ jobs:
         run: |
           echo "🔍 Checking Artifact Registry..."
 
+          # Debug: Show that values are set (without revealing them)
+          echo "GCP_PROJECT_ID is set: $(if [ -n \"${{ env.GCP_PROJECT_ID }}\" ]; then echo 'YES'; else echo 'NO'; fi)"
+          echo "GCP_REGION is set: $(if [ -n \"${{ env.GCP_REGION }}\" ]; then echo 'YES'; else echo 'NO'; fi)"
+          echo "GCP_ARTIFACT_REPOSITORY is set: $(if [ -n \"${{ env.GCP_ARTIFACT_REPOSITORY }}\" ]; then echo 'YES'; else echo 'NO'; fi)"
+
+          # Show command we're about to run (with masked values)
+          echo "Command: gcloud artifacts repositories list --project=*** --location=***"
+
           # Try to list repositories (won't echo values due to secret masking)
           echo "Listing repositories in region ${{ env.GCP_REGION }}..."
+
+          # First, test project access with a simpler command
+          echo "Testing project access..."
+          gcloud projects describe ${{ env.GCP_PROJECT_ID }} --format="value(projectId)" || {
+            echo "❌ ERROR: Cannot access project"
+            echo "This suggests the project ID is wrong or service account doesn't have access"
+            exit 1
+          }
+
+          echo "✅ Project access verified"
+
+          # Now try to list repositories
           gcloud artifacts repositories list \
             --project=${{ env.GCP_PROJECT_ID }} \
             --location=${{ env.GCP_REGION }} 2>&1 || {
-            echo "⚠️ Could not list repositories (might be permission issue)"
+            echo "⚠️ Could not list repositories (might be permission issue or repository doesn't exist)"
             echo "Continuing anyway - Docker push will fail if repository doesn't exist"
           }
 
@@ -126,6 +131,7 @@ jobs:
           region: ${{ env.GCP_REGION }}
           env_vars: |
             APP_ENV=production
+            GOOGLE_CLOUD_PROJECT=${{ env.GCP_PROJECT_ID }}
             DATABASE_URL=${{ secrets.DATABASE_URL }}
 
   deploy-frontend:
