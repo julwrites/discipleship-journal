@@ -58,7 +58,11 @@ func main() {
 	// Init Firebase Service
 	// Pass empty string for saKey to use default credentials (production)
 	// or rely on GOOGLE_APPLICATION_CREDENTIALS
-	firebaseService, err := services.NewFirebaseService(context.Background(), "", "discipleship-journal-pwa")
+	firebaseProjectID := os.Getenv("GOOGLE_CLOUD_PROJECT")
+	if firebaseProjectID == "" {
+		firebaseProjectID = "discipleship-journal-52a2c" // Default to your actual project ID
+	}
+	firebaseService, err := services.NewFirebaseService(context.Background(), "", firebaseProjectID)
 	if err != nil {
 		logger.Error("Firebase init failed", "error", err)
 	}
