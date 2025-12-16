@@ -67,18 +67,10 @@ test.describe('Connections (Mocked)', () => {
     // Wait for results
     await expect(page.getByText('friend@example.com')).toBeVisible();
 
-    // Handle Alert
-    const dialogDismissedPromise = new Promise<void>(resolve => {
-        page.once('dialog', async dialog => {
-            expect(dialog.message()).toBe('Request sent!');
-            await dialog.dismiss();
-            resolve();
-        });
-    });
-
     // Click "Connect" button
     await page.getByRole('button', { name: 'Connect' }).click();
 
-    await dialogDismissedPromise;
+    // Verify Toast
+    await expect(page.getByText('Request sent!')).toBeVisible();
   });
 });
