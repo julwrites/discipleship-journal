@@ -142,7 +142,8 @@ func TestCreateNoteHandler(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w.Code)
 
 		var resp map[string]string
-		json.NewDecoder(w.Body).Decode(&resp)
+		err := json.NewDecoder(w.Body).Decode(&resp)
+		assert.NoError(t, err)
 		assert.Equal(t, "note-123", resp["id"])
 
 		noteServiceMock.AssertExpectations(t)
