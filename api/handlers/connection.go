@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"discipleship_journal_api/middleware"
+	"discipleship_journal_api/services"
 	"firebase.google.com/go/v4/auth"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
@@ -26,11 +27,12 @@ type ConnectionResponse struct {
 }
 
 type ConnectionHandler struct {
-	db DBInterface
+	db                  DBInterface
+	notificationService services.NotificationService
 }
 
-func NewConnectionHandler(db DBInterface) *ConnectionHandler {
-	return &ConnectionHandler{db: db}
+func NewConnectionHandler(db DBInterface, notificationService services.NotificationService) *ConnectionHandler {
+	return &ConnectionHandler{db: db, notificationService: notificationService}
 }
 
 func (h *ConnectionHandler) getUserUUID(ctx context.Context, firebaseUID string) (string, error) {
@@ -128,6 +130,26 @@ func (h *ConnectionHandler) SendConnectionRequest(w http.ResponseWriter, r *http
 		http.Error(w, "Connection request already exists or error", http.StatusConflict)
 		return
 	}
+
+	// Fetch requester name synchronously to avoid race conditions in tests and ensure data availability
+	var requesterName string
+	if err := h.db.QueryRow(r.Context(), "SELECT display_name FROM users WHERE id = $1", requesterUUID).Scan(&requesterName); err != nil {
+		requesterName = "Someone"
+	}
+
+	// Send notification
+	go func() {
+		// Use a detached context for background task
+		ctx := context.Background()
+
+		err := h.notificationService.SendNotification(ctx, receiverUUID, "New Connection Request", requesterName+" wants to connect with you.", map[string]string{
+			"type": "connection_request",
+			"id":   connID,
+		})
+		if err != nil {
+			slog.Error("Failed to send notification", "error", err)
+		}
+	}()
 
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(map[string]string{"id": connID, "status": "pending"}); err != nil {

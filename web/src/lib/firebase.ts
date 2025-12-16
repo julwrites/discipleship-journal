@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
+import { getMessaging } from "firebase/messaging";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -13,10 +14,18 @@ const firebaseConfig = {
 // Conditional initialization to prevent crashes during mock testing if keys are invalid
 let appInstance;
 let authInstance;
+let messagingInstance;
 
 try {
   appInstance = initializeApp(firebaseConfig);
   authInstance = getAuth(appInstance);
+  // Only init messaging if supported (e.g. not in some test envs or if not configured)
+  // Also messaging isn't supported in all browsers/contexts
+  try {
+      messagingInstance = getMessaging(appInstance);
+  } catch (msgErr) {
+      console.warn("Firebase Messaging initialization failed", msgErr);
+  }
 } catch (e) {
   console.warn("Firebase initialization failed (expected during mock testing):", e);
   // Provide a dummy auth object if needed, or rely on handling the error where it's used.
@@ -37,3 +46,4 @@ try {
 
 export const app = appInstance;
 export const auth = authInstance;
+export const messaging = messagingInstance;

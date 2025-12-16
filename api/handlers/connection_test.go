@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"discipleship_journal_api/middleware"
+	"discipleship_journal_api/services"
 	"firebase.google.com/go/v4/auth"
 	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
@@ -21,7 +22,8 @@ func TestSendConnectionRequest(t *testing.T) {
 	}
 	defer mock.Close()
 
-	handler := NewConnectionHandler(mock)
+	mockNotification := services.NewMockNotificationService()
+	handler := NewConnectionHandler(mock, mockNotification)
 
 	uid := "firebase-uid-1"
 	requesterUUID := "user-uuid-1"
@@ -43,6 +45,11 @@ func TestSendConnectionRequest(t *testing.T) {
 		WithArgs(requesterUUID, receiverUUID).
 		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow("conn-1"))
 
+	// Expect synchronous requester name lookup
+	mock.ExpectQuery("SELECT display_name FROM users WHERE id").
+		WithArgs(requesterUUID).
+		WillReturnRows(pgxmock.NewRows([]string{"display_name"}).AddRow("Requester Name"))
+
 	reqBody := ConnectionRequest{ReceiverEmail: receiverEmail}
 	bodyBytes, _ := json.Marshal(reqBody)
 
@@ -63,6 +70,13 @@ func TestSendConnectionRequest(t *testing.T) {
 	}
 }
 
+func TestNewConnectionHandler(t *testing.T) {
+	mock, _ := pgxmock.NewPool()
+	mockNotification := services.NewMockNotificationService()
+	handler := NewConnectionHandler(mock, mockNotification)
+	assert.NotNil(t, handler)
+}
+
 func TestListConnections(t *testing.T) {
 	mock, err := pgxmock.NewPool()
 	if err != nil {
@@ -70,7 +84,8 @@ func TestListConnections(t *testing.T) {
 	}
 	defer mock.Close()
 
-	handler := NewConnectionHandler(mock)
+	mockNotification := services.NewMockNotificationService()
+	handler := NewConnectionHandler(mock, mockNotification)
 
 	uid := "firebase-uid-1"
 	userUUID := "user-uuid-1"
