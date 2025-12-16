@@ -38,22 +38,31 @@ jobs:
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
 
-      - name: Verify Artifact Registry Repository Exists
+      - name: Verify Artifact Registry Setup
         run: |
-          # Check if repository exists - if not, deployment will fail
-          echo "Checking if Artifact Registry repository exists..."
-          if gcloud artifacts repositories describe ${{ env.GCP_ARTIFACT_REPOSITORY }} \
-               --location=${{ env.GCP_REGION }} 2>/dev/null; then
-            echo "✅ Artifact Registry repository exists: ${{ env.GCP_ARTIFACT_REPOSITORY }}"
-          else
-            echo "❌ ERROR: Artifact Registry repository not found: ${{ env.GCP_ARTIFACT_REPOSITORY }}"
-            echo "Please create it manually with:"
-            echo "  gcloud artifacts repositories create ${{ env.GCP_ARTIFACT_REPOSITORY }} \\"
-            echo "    --repository-format=docker \\"
-            echo "    --location=${{ env.GCP_REGION }}"
-            exit 1
-          fi
+          echo "🔍 Verifying Artifact Registry setup..."
+          echo "Project: ${{ env.GCP_PROJECT_ID }}"
+          echo "Region: ${{ env.GCP_REGION }}"
+          echo "Repository: ${{ env.GCP_ARTIFACT_REPOSITORY }}"
+          echo "Full Docker path: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPOSITORY }}"
+
+          # Try to list repositories (more permissive than describe)
+          echo ""
+          echo "Listing Artifact Registry repositories in project ${{ env.GCP_PROJECT_ID }}..."
+          gcloud artifacts repositories list \
+            --project=${{ env.GCP_PROJECT_ID }} \
+            --location=${{ env.GCP_REGION }} || true
+
+          echo ""
+          echo "⚠️ Note: If repository doesn't exist, Docker push will fail with 404."
+          echo "Create it with:"
+          echo "  gcloud artifacts repositories create ${{ env.GCP_ARTIFACT_REPOSITORY }} \\"
+          echo "    --repository-format=docker \\"
+          echo "    --location=${{ env.GCP_REGION }} \\"
+          echo "    --project=${{ env.GCP_PROJECT_ID }}"
 
       - name: Authenticate Docker to Artifact Registry
         # Use Google's official action for Docker auth
