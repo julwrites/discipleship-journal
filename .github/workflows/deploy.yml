@@ -7,11 +7,14 @@ on:
   workflow_dispatch:
 
 env:
-  PROJECT_ID: discipleship-journal
-  REGION: us-central1
-  SERVICE_NAME: discipleship-journal-api
-  # Artifact Registry repository name
-  AR_REPOSITORY: discipleship-journal-repo
+  # Backend GCP configuration (from secrets)
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_REGION: ${{ secrets.GCP_REGION }}
+  GCP_SERVICE_NAME: ${{ secrets.GCP_SERVICE_NAME }}
+  GCP_ARTIFACT_REPOSITORY: ${{ secrets.GCP_ARTIFACT_REPOSITORY }}
+
+  # Frontend Firebase configuration
+  FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
 
 jobs:
   deploy-backend:
@@ -36,22 +39,22 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
 
       - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
 
       - name: Build and Push Container to Artifact Registry
         run: |
           # Build image with Artifact Registry tag
-          docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.AR_REPOSITORY }}/${{ env.SERVICE_NAME }}:${{ github.sha }} .
+          docker build -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPOSITORY }}/${{ env.GCP_SERVICE_NAME }}:${{ github.sha }} .
 
           # Push to Artifact Registry
-          docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.AR_REPOSITORY }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+          docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPOSITORY }}/${{ env.GCP_SERVICE_NAME }}:${{ github.sha }}
 
       - name: Deploy to Cloud Run from Artifact Registry
         uses: google-github-actions/deploy-cloudrun@v2
         with:
-          service: ${{ env.SERVICE_NAME }}
-          image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.AR_REPOSITORY }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
-          region: ${{ env.REGION }}
+          service: ${{ env.GCP_SERVICE_NAME }}
+          image: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPOSITORY }}/${{ env.GCP_SERVICE_NAME }}:${{ github.sha }}
+          region: ${{ env.GCP_REGION }}
           env_vars: |
             APP_ENV=production
             DATABASE_URL=${{ secrets.DATABASE_URL }}
@@ -84,4 +87,4 @@ jobs:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_DISCIPLESHIP_JOURNAL }}'
           channelId: live
-          projectId: discipleship-journal
+          projectId: ${{ env.FIREBASE_PROJECT_ID }}
