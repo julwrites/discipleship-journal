@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -8,10 +9,20 @@ import (
 
 	"discipleship_journal_api/database"
 	"discipleship_journal_api/middleware"
+	"discipleship_journal_api/services"
 	"firebase.google.com/go/v4/auth"
-	"github.com/go-chi/chi/v5"
-	"github.com/jackc/pgx/v5"
+	chi "github.com/go-chi/chi/v5"
+	pgx "github.com/jackc/pgx/v5"
 )
+
+type GroupHandler struct {
+	db                  DBInterface
+	notificationService services.NotificationService
+}
+
+func NewGroupHandler(db DBInterface, notificationService services.NotificationService) *GroupHandler {
+	return &GroupHandler{db: db, notificationService: notificationService}
+}
 
 type CreateGroupRequest struct {
 	Name        string `json:"name" validate:"required,min=3,max=100"`
@@ -35,7 +46,7 @@ type GroupMemberResponse struct {
 }
 
 // CreateGroup creates a new group
-func CreateGroup(w http.ResponseWriter, r *http.Request) {
+func (h *GroupHandler) CreateGroup(w http.ResponseWriter, r *http.Request) {
 	var req CreateGroupRequest
 	if !DecodeAndValidate(w, r, &req) {
 		return
@@ -91,7 +102,7 @@ func CreateGroup(w http.ResponseWriter, r *http.Request) {
 }
 
 // ListMyGroups lists groups the user belongs to
-func ListMyGroups(w http.ResponseWriter, r *http.Request) {
+func (h *GroupHandler) ListMyGroups(w http.ResponseWriter, r *http.Request) {
 	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
 	userUUID, err := GetUserUUID(r.Context(), token.UID)
 	if err != nil {
@@ -99,7 +110,7 @@ func ListMyGroups(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows, err := database.DB.Query(r.Context(),
+	rows, err := h.db.Query(r.Context(),
 		`SELECT g.id, g.name, g.description, g.created_by, gm.role
 		 FROM groups g
 		 JOIN group_members gm ON g.id = gm.group_id
@@ -126,7 +137,7 @@ func ListMyGroups(w http.ResponseWriter, r *http.Request) {
 }
 
 // SearchGroups searches for groups by name
-func SearchGroups(w http.ResponseWriter, r *http.Request) {
+func (h *GroupHandler) SearchGroups(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	if len(query) < 3 {
 		http.Error(w, "Search query too short", http.StatusBadRequest)
@@ -141,7 +152,7 @@ func SearchGroups(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows, err := database.DB.Query(r.Context(),
+	rows, err := h.db.Query(r.Context(),
 		`SELECT g.id, g.name, g.description, g.created_by,
 		 COALESCE((SELECT role FROM group_members WHERE group_id = g.id AND user_id = $2), '') as role
 		 FROM groups g
@@ -168,7 +179,7 @@ func SearchGroups(w http.ResponseWriter, r *http.Request) {
 }
 
 // JoinGroup allows a user to join a group
-func JoinGroup(w http.ResponseWriter, r *http.Request) {
+func (h *GroupHandler) JoinGroup(w http.ResponseWriter, r *http.Request) {
 	groupID := chi.URLParam(r, "id")
 	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
 	userUUID, err := GetUserUUID(r.Context(), token.UID)
@@ -179,7 +190,7 @@ func JoinGroup(w http.ResponseWriter, r *http.Request) {
 
 	// Check if already a member
 	var exists bool
-	err = database.DB.QueryRow(r.Context(),
+	err = h.db.QueryRow(r.Context(),
 		"SELECT EXISTS(SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2)",
 		groupID, userUUID).Scan(&exists)
 	if err != nil {
@@ -191,7 +202,7 @@ func JoinGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = database.DB.Exec(r.Context(),
+	_, err = h.db.Exec(r.Context(),
 		"INSERT INTO group_members (group_id, user_id, role) VALUES ($1, $2, 'member')",
 		groupID, userUUID)
 	if err != nil {
@@ -203,7 +214,7 @@ func JoinGroup(w http.ResponseWriter, r *http.Request) {
 }
 
 // LeaveGroup allows a user to leave a group
-func LeaveGroup(w http.ResponseWriter, r *http.Request) {
+func (h *GroupHandler) LeaveGroup(w http.ResponseWriter, r *http.Request) {
 	groupID := chi.URLParam(r, "id")
 	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
 	userUUID, err := GetUserUUID(r.Context(), token.UID)
@@ -214,7 +225,7 @@ func LeaveGroup(w http.ResponseWriter, r *http.Request) {
 
 	// Prevent last admin from leaving? (Optional, skipping for MVP)
 
-	result, err := database.DB.Exec(r.Context(),
+	result, err := h.db.Exec(r.Context(),
 		"DELETE FROM group_members WHERE group_id = $1 AND user_id = $2",
 		groupID, userUUID)
 	if err != nil {
@@ -231,7 +242,7 @@ func LeaveGroup(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetGroupMembers lists members of a group
-func GetGroupMembers(w http.ResponseWriter, r *http.Request) {
+func (h *GroupHandler) GetGroupMembers(w http.ResponseWriter, r *http.Request) {
 	groupID := chi.URLParam(r, "id")
 
 	// Check if user is a member of the group (or group is public? Assuming public read of members for now)
@@ -244,7 +255,7 @@ func GetGroupMembers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var isMember bool
-	err = database.DB.QueryRow(r.Context(),
+	err = h.db.QueryRow(r.Context(),
 		"SELECT EXISTS(SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2)",
 		groupID, userUUID).Scan(&isMember)
 	if err != nil {
@@ -257,7 +268,7 @@ func GetGroupMembers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows, err := database.DB.Query(r.Context(),
+	rows, err := h.db.Query(r.Context(),
 		`SELECT gm.user_id, u.display_name, u.email, gm.role, gm.joined_at
 		 FROM group_members gm
 		 JOIN users u ON gm.user_id = u.id
@@ -290,7 +301,7 @@ type AddMemberRequest struct {
 }
 
 // AddGroupMember adds a user to a group (Admin only)
-func AddGroupMember(w http.ResponseWriter, r *http.Request) {
+func (h *GroupHandler) AddGroupMember(w http.ResponseWriter, r *http.Request) {
 	groupID := chi.URLParam(r, "id")
 	var req AddMemberRequest
 	if !DecodeAndValidate(w, r, &req) {
@@ -306,7 +317,7 @@ func AddGroupMember(w http.ResponseWriter, r *http.Request) {
 
 	// Verify admin role
 	var role string
-	err = database.DB.QueryRow(r.Context(),
+	err = h.db.QueryRow(r.Context(),
 		"SELECT role FROM group_members WHERE group_id = $1 AND user_id = $2",
 		groupID, userUUID).Scan(&role)
 	if err != nil {
@@ -325,7 +336,7 @@ func AddGroupMember(w http.ResponseWriter, r *http.Request) {
 
 	// Check if user to add exists and is not already member
 	// (Assuming req.UserID is the internal UUID, we should probably check existence)
-	_, err = database.DB.Exec(r.Context(),
+	_, err = h.db.Exec(r.Context(),
 		"INSERT INTO group_members (group_id, user_id, role) VALUES ($1, $2, 'member') ON CONFLICT DO NOTHING",
 		groupID, req.UserID)
 	if err != nil {
@@ -334,11 +345,30 @@ func AddGroupMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get group name synchronously
+	var groupName string
+	if err := h.db.QueryRow(r.Context(), "SELECT name FROM groups WHERE id = $1", groupID).Scan(&groupName); err != nil {
+		groupName = "a group"
+	}
+
+	// Send notification
+	go func() {
+		ctx := context.Background()
+
+		err := h.notificationService.SendNotification(ctx, req.UserID, "Group Invitation", "You have been added to "+groupName, map[string]string{
+			"type": "group_invite",
+			"id":   groupID,
+		})
+		if err != nil {
+			slog.Error("Failed to send notification", "error", err)
+		}
+	}()
+
 	w.WriteHeader(http.StatusCreated)
 }
 
 // RemoveGroupMember removes a user from a group (Admin only)
-func RemoveGroupMember(w http.ResponseWriter, r *http.Request) {
+func (h *GroupHandler) RemoveGroupMember(w http.ResponseWriter, r *http.Request) {
 	groupID := chi.URLParam(r, "id")
 	targetUserID := chi.URLParam(r, "userId")
 
@@ -351,7 +381,7 @@ func RemoveGroupMember(w http.ResponseWriter, r *http.Request) {
 
 	// Verify admin role
 	var role string
-	err = database.DB.QueryRow(r.Context(),
+	err = h.db.QueryRow(r.Context(),
 		"SELECT role FROM group_members WHERE group_id = $1 AND user_id = $2",
 		groupID, userUUID).Scan(&role)
 	if err != nil {
@@ -369,7 +399,7 @@ func RemoveGroupMember(w http.ResponseWriter, r *http.Request) {
 	// If admin removes self, who is admin?
 	// For now, let's allow removing any member.
 
-	_, err = database.DB.Exec(r.Context(),
+	_, err = h.db.Exec(r.Context(),
 		"DELETE FROM group_members WHERE group_id = $1 AND user_id = $2",
 		groupID, targetUserID)
 	if err != nil {
