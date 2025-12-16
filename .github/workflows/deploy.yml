@@ -41,28 +41,61 @@ jobs:
         with:
           project_id: ${{ env.GCP_PROJECT_ID }}
 
+      - name: Validate GCP Configuration
+        run: |
+          echo "🔍 Validating GCP configuration..."
+
+          # Check if values are set (without echoing them since they're secrets)
+          if [ -z "${{ env.GCP_PROJECT_ID }}" ]; then
+            echo "❌ ERROR: GCP_PROJECT_ID is empty!"
+            exit 1
+          fi
+
+          if [ -z "${{ env.GCP_REGION }}" ]; then
+            echo "❌ ERROR: GCP_REGION is empty!"
+            exit 1
+          fi
+
+          if [ -z "${{ env.GCP_ARTIFACT_REPOSITORY }}" ]; then
+            echo "❌ ERROR: GCP_ARTIFACT_REPOSITORY is empty!"
+            exit 1
+          fi
+
+          echo "✅ All required values are set (values masked as secrets)"
+
+          # Test project access by getting project info (won't echo project ID)
+          echo "Testing project access..."
+          gcloud projects describe ${{ env.GCP_PROJECT_ID }} --format="value(projectId)" || {
+            echo "❌ ERROR: Cannot access project"
+            echo "Possible issues:"
+            echo "1. Project doesn't exist: https://console.cloud.google.com/"
+            echo "2. Service account doesn't have access"
+            echo "3. Project ID format is wrong"
+            echo ""
+            echo "Project ID should be like: 'discipleship-journal-52a2c' (no 'projects/' prefix)"
+            exit 1
+          }
+
+          echo "✅ Project access verified"
+
+          # Enable Artifact Registry API if needed
+          echo "Checking Artifact Registry API..."
+          gcloud services enable artifactregistry.googleapis.com --project=${{ env.GCP_PROJECT_ID }} || {
+            echo "⚠️ Could not enable Artifact Registry API (might already be enabled)"
+          }
+
       - name: Verify Artifact Registry Setup
         run: |
-          echo "🔍 Verifying Artifact Registry setup..."
-          echo "Project: ${{ env.GCP_PROJECT_ID }}"
-          echo "Region: ${{ env.GCP_REGION }}"
-          echo "Repository: ${{ env.GCP_ARTIFACT_REPOSITORY }}"
-          echo "Full Docker path: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPOSITORY }}"
+          echo "🔍 Checking Artifact Registry..."
 
-          # Try to list repositories (more permissive than describe)
-          echo ""
-          echo "Listing Artifact Registry repositories in project ${{ env.GCP_PROJECT_ID }}..."
+          # Try to list repositories (won't echo values due to secret masking)
+          echo "Listing repositories in region ${{ env.GCP_REGION }}..."
           gcloud artifacts repositories list \
             --project=${{ env.GCP_PROJECT_ID }} \
-            --location=${{ env.GCP_REGION }} || true
-
-          echo ""
-          echo "⚠️ Note: If repository doesn't exist, Docker push will fail with 404."
-          echo "Create it with:"
-          echo "  gcloud artifacts repositories create ${{ env.GCP_ARTIFACT_REPOSITORY }} \\"
-          echo "    --repository-format=docker \\"
-          echo "    --location=${{ env.GCP_REGION }} \\"
-          echo "    --project=${{ env.GCP_PROJECT_ID }}"
+            --location=${{ env.GCP_REGION }} 2>&1 || {
+            echo "⚠️ Could not list repositories (might be permission issue)"
+            echo "Continuing anyway - Docker push will fail if repository doesn't exist"
+          }
 
       - name: Authenticate Docker to Artifact Registry
         # Use Google's official action for Docker auth
