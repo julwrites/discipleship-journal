@@ -32,7 +32,7 @@ func NewRealBibleAIClient(apiURL, apiKey string) *RealBibleAIClient {
 // GetPassage fetches a bible passage from the external API.
 func (c *RealBibleAIClient) GetPassage(ctx context.Context, reference string) (map[string]interface{}, error) {
 	if c.APIURL == "" {
-		return nil, fmt.Errorf("Bible API not configured")
+		return nil, fmt.Errorf("bible API not configured")
 	}
 
 	var result map[string]interface{}
@@ -48,7 +48,7 @@ func (c *RealBibleAIClient) GetPassage(ctx context.Context, reference string) (m
 	}
 
 	if resp.IsError() {
-		return nil, fmt.Errorf("Bible API Error: %s", resp.Status())
+		return nil, fmt.Errorf("bible API error: %s", resp.Status())
 	}
 
 	return result, nil
@@ -57,7 +57,7 @@ func (c *RealBibleAIClient) GetPassage(ctx context.Context, reference string) (m
 // ChatCompletion sends a chat completion request to the external API.
 func (c *RealBibleAIClient) ChatCompletion(ctx context.Context, payload map[string]interface{}) (map[string]interface{}, error) {
 	if c.APIURL == "" {
-		return nil, fmt.Errorf("Bible API not configured")
+		return nil, fmt.Errorf("bible API not configured")
 	}
 
 	var result map[string]interface{}
@@ -73,7 +73,7 @@ func (c *RealBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 	}
 
 	if resp.IsError() {
-		return nil, fmt.Errorf("Bible API Error: %s", resp.Status())
+		return nil, fmt.Errorf("bible API error: %s", resp.Status())
 	}
 
 	return result, nil

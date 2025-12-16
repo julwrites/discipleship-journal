@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"discipleship_journal_api/services"
+	"encoding/json"
 	"github.com/stretchr/testify/mock"
 )
 

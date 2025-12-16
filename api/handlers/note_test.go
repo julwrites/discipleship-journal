@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,163 +12,268 @@ import (
 
 	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/services"
+
 	"firebase.google.com/go/v4/auth"
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5"
 	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
+func setupTest(t *testing.T) (pgxmock.PgxPoolIface, *MockNoteService, *NoteHandler) {
+	dbMock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("unexpected error opening stub database connection: %v", err)
+	}
+	// We can't easily defer dbMock.Close() here because it needs to live as long as the test
+	// But since it's a mock, it's probably fine, or we can return a cleanup func.
+
+	noteServiceMock := new(MockNoteService)
+	handler := NewNoteHandler(dbMock, noteServiceMock)
+	return dbMock, noteServiceMock, handler
+}
+
 func TestGetNotes(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer mockDB.Close()
-
-	mockService := new(MockNoteService)
-	handler := NewNoteHandler(mockDB, mockService)
-
-	uid := "firebase-uid-123"
+	firebaseUID := "firebase-uid-123"
 	userUUID := "user-uuid-123"
-
-	// Mock getUserUUID query
-	mockDB.ExpectQuery("SELECT id FROM users WHERE firebase_uid=").
-		WithArgs(uid).
-		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
-
-	// Mock count query
-	mockDB.ExpectQuery("SELECT COUNT\\(\\*\\) FROM notes WHERE user_id=").
-		WithArgs(userUUID).
-		WillReturnRows(pgxmock.NewRows([]string{"count"}).AddRow(1))
-
-	// Mock notes query
 	now := time.Now()
-	// Note: using map[string]interface{} for content as the handler scans into a map
-	mockDB.ExpectQuery("SELECT id, user_id, title, content, created_at, updated_at FROM notes WHERE user_id=").
-		WithArgs(userUUID).
-		WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "created_at", "updated_at"}).
-			AddRow("note-1", userUUID, "Title 1", map[string]interface{}{}, now, now))
 
-	req := httptest.NewRequest("GET", "/api/notes", nil)
-	token := &auth.Token{UID: uid}
-	ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
-	req = req.WithContext(ctx)
+	t.Run("success", func(t *testing.T) {
+		dbMock, _, handler := setupTest(t)
+		defer dbMock.Close()
 
-	w := httptest.NewRecorder()
+		// 1. Mock getUserUUID
+		dbMock.ExpectQuery("SELECT id FROM users").
+			WithArgs(firebaseUID).
+			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
 
-	handler.GetNotes(w, req)
+		// 2. Mock Count Query
+		dbMock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM notes WHERE user_id=\\$1").
+			WithArgs(userUUID).
+			WillReturnRows(pgxmock.NewRows([]string{"count"}).AddRow(1))
 
-	require.Equal(t, http.StatusOK, w.Code, "Response body: %s", w.Body.String())
+		// 3. Mock Select Query
+		// Note: content is map[string]interface{}, but stored as jsonb. pgx scans it.
+		// We mock it as json.RawMessage or bytes? Or map?
+		// In TestCreateNoteHandler I used matchedBy contentJSON.
+		// Here we are returning rows. pgxmock accepts any values.
+		content := map[string]interface{}{"text": "content"}
 
-	var resp NotesResponse
-	err = json.Unmarshal(w.Body.Bytes(), &resp)
-	assert.NoError(t, err)
-	assert.Len(t, resp.Data, 1)
-	if len(resp.Data) > 0 {
-		assert.Equal(t, "note-1", resp.Data[0].ID)
-	}
-	assert.Equal(t, 1, resp.Meta.Total)
-	assert.Equal(t, 1, resp.Meta.TotalPages)
+		dbMock.ExpectQuery("SELECT id, user_id, title, content, created_at, updated_at FROM notes").
+			WithArgs(userUUID).
+			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "created_at", "updated_at"}).
+				AddRow("note-1", userUUID, "Title 1", content, now, now))
 
-	if err := mockDB.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
+		req := httptest.NewRequest("GET", "/api/notes", nil)
+		token := &auth.Token{UID: firebaseUID}
+		ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		handler.GetNotes(w, req)
+
+		require.Equal(t, http.StatusOK, w.Code, "Response body: %s", w.Body.String())
+
+		var resp NotesResponse
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		assert.NoError(t, err)
+		assert.Len(t, resp.Data, 1)
+		if len(resp.Data) > 0 {
+			assert.Equal(t, "note-1", resp.Data[0].ID)
+		}
+		assert.Equal(t, 1, resp.Meta.Total)
+		assert.Equal(t, 1, resp.Meta.TotalPages)
+
+		if err := dbMock.ExpectationsWereMet(); err != nil {
+			t.Errorf("there were unfulfilled expectations: %s", err)
+		}
+	})
 }
 
-func TestCreateNote(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer mockDB.Close()
-
-	mockService := new(MockNoteService)
-	handler := NewNoteHandler(mockDB, mockService)
-
-	uid := "firebase-uid-123"
+func TestCreateNoteHandler(t *testing.T) {
+	firebaseUID := "firebase-uid-123"
 	userUUID := "user-uuid-123"
+	title := "Test Note"
+	contentMap := map[string]interface{}{"text": "hello"}
+	contentJSON, _ := json.Marshal(contentMap)
 
-	// Mock getUserUUID query
-	mockDB.ExpectQuery("SELECT id FROM users WHERE firebase_uid=").
-		WithArgs(uid).
-		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
-
-	// Mock insert note using Service
-	reqBody := CreateNoteRequest{
-		Title:   "New Note",
-		Content: map[string]interface{}{"text": "content"},
+	validReq := CreateNoteRequest{
+		Title:   title,
+		Content: contentMap,
 	}
-	bodyBytes, _ := json.Marshal(reqBody)
 
-	// NoteService.CreateNote expectation
-	mockService.On("CreateNote", mock.Anything, userUUID, reqBody.Title, mock.Anything).
-		Return(&services.Note{ID: "new-note-id"}, nil)
-
-	req := httptest.NewRequest("POST", "/api/notes", bytes.NewBuffer(bodyBytes))
-	req.Header.Set("Content-Type", "application/json")
-	token := &auth.Token{UID: uid}
-	ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
-	req = req.WithContext(ctx)
-
-	w := httptest.NewRecorder()
-
-	handler.CreateNote(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-
-	var resp map[string]string
-	err = json.Unmarshal(w.Body.Bytes(), &resp)
-	assert.NoError(t, err)
-	assert.Equal(t, "new-note-id", resp["id"])
-
-	if err := mockDB.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
+	createdNote := &services.Note{
+		ID:        "note-123",
+		UserID:    userUUID,
+		Title:     title,
+		Content:   contentJSON,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
-	mockService.AssertExpectations(t)
+
+	t.Run("success", func(t *testing.T) {
+		dbMock, noteServiceMock, handler := setupTest(t)
+		defer dbMock.Close()
+
+		// Mock getUserUUID behavior
+		dbMock.ExpectQuery("SELECT id FROM users").
+			WithArgs(firebaseUID).
+			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+
+		// Mock NoteService behavior
+		noteServiceMock.On("CreateNote", mock.Anything, userUUID, title, mock.MatchedBy(func(c json.RawMessage) bool {
+			return string(c) == string(contentJSON)
+		})).Return(createdNote, nil)
+
+		// Create request
+		body, _ := json.Marshal(validReq)
+		req := httptest.NewRequest("POST", "/api/notes", bytes.NewBuffer(body))
+
+		// Add auth context
+		token := &auth.Token{UID: firebaseUID}
+		ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		handler.CreateNote(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var resp map[string]string
+		err := json.NewDecoder(w.Body).Decode(&resp)
+		assert.NoError(t, err)
+		assert.Equal(t, "note-123", resp["id"])
+
+		noteServiceMock.AssertExpectations(t)
+		if err := dbMock.ExpectationsWereMet(); err != nil {
+			t.Errorf("unfulfilled db expectations: %s", err)
+		}
+	})
+
+	t.Run("invalid request", func(t *testing.T) {
+		dbMock, _, handler := setupTest(t)
+		defer dbMock.Close()
+
+		// Mock getUserUUID behavior (called before validation)
+		dbMock.ExpectQuery("SELECT id FROM users").
+			WithArgs(firebaseUID).
+			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+
+		invalidReq := CreateNoteRequest{
+			Title: "", // Invalid
+		}
+		body, _ := json.Marshal(invalidReq)
+		req := httptest.NewRequest("POST", "/api/notes", bytes.NewBuffer(body))
+
+		token := &auth.Token{UID: firebaseUID}
+		ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		handler.CreateNote(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		if err := dbMock.ExpectationsWereMet(); err != nil {
+			t.Errorf("unfulfilled db expectations: %s", err)
+		}
+	})
 }
 
-func TestDeleteNote(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer mockDB.Close()
-
-	mockService := new(MockNoteService)
-	handler := NewNoteHandler(mockDB, mockService)
-
-	uid := "firebase-uid-123"
+func TestDeleteNoteHandler(t *testing.T) {
+	firebaseUID := "firebase-uid-123"
 	userUUID := "user-uuid-123"
-	noteID := "note-1"
+	noteID := "note-123"
 
-	// Mock getUserUUID query
-	mockDB.ExpectQuery("SELECT id FROM users WHERE firebase_uid=").
-		WithArgs(uid).
-		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+	t.Run("success", func(t *testing.T) {
+		dbMock, noteServiceMock, handler := setupTest(t)
+		defer dbMock.Close()
 
-	// Mock delete note using Service
-	mockService.On("DeleteNote", mock.Anything, userUUID, noteID).Return(nil)
+		dbMock.ExpectQuery("SELECT id FROM users").
+			WithArgs(firebaseUID).
+			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
 
-	req := httptest.NewRequest("DELETE", "/api/notes/"+noteID, nil)
-	token := &auth.Token{UID: uid}
-	ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
-	// Mock URL Param
-	rctx := chi.NewRouteContext()
-	rctx.URLParams.Add("id", noteID)
-	ctx = context.WithValue(ctx, chi.RouteCtxKey, rctx)
+		noteServiceMock.On("DeleteNote", mock.Anything, userUUID, noteID).Return(nil)
 
-	req = req.WithContext(ctx)
+		req := httptest.NewRequest("DELETE", "/api/notes/"+noteID, nil)
 
-	w := httptest.NewRecorder()
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", noteID)
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
 
-	handler.DeleteNote(w, req)
+		token := &auth.Token{UID: firebaseUID}
+		ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
+		req = req.WithContext(ctx)
 
-	assert.Equal(t, http.StatusOK, w.Code)
+		w := httptest.NewRecorder()
+		handler.DeleteNote(w, req)
 
-	if err := mockDB.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
-	mockService.AssertExpectations(t)
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		noteServiceMock.AssertExpectations(t)
+		if err := dbMock.ExpectationsWereMet(); err != nil {
+			t.Errorf("unfulfilled db expectations: %s", err)
+		}
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		dbMock, noteServiceMock, handler := setupTest(t)
+		defer dbMock.Close()
+
+		dbMock.ExpectQuery("SELECT id FROM users").
+			WithArgs(firebaseUID).
+			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+
+		noteServiceMock.On("DeleteNote", mock.Anything, userUUID, noteID).Return(pgx.ErrNoRows)
+
+		req := httptest.NewRequest("DELETE", "/api/notes/"+noteID, nil)
+
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", noteID)
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+		token := &auth.Token{UID: firebaseUID}
+		ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		handler.DeleteNote(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+		noteServiceMock.AssertExpectations(t)
+		if err := dbMock.ExpectationsWereMet(); err != nil {
+			t.Errorf("unfulfilled db expectations: %s", err)
+		}
+	})
+
+	t.Run("db error", func(t *testing.T) {
+		dbMock, noteServiceMock, handler := setupTest(t)
+		defer dbMock.Close()
+
+		dbMock.ExpectQuery("SELECT id FROM users").
+			WithArgs(firebaseUID).
+			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+
+		noteServiceMock.On("DeleteNote", mock.Anything, userUUID, noteID).Return(errors.New("db error"))
+
+		req := httptest.NewRequest("DELETE", "/api/notes/"+noteID, nil)
+
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", noteID)
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+		token := &auth.Token{UID: firebaseUID}
+		ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		handler.DeleteNote(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		noteServiceMock.AssertExpectations(t)
+		if err := dbMock.ExpectationsWereMet(); err != nil {
+			t.Errorf("unfulfilled db expectations: %s", err)
+		}
+	})
 }
