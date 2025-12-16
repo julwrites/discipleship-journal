@@ -38,16 +38,26 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
+      - name: Authenticate Docker to Artifact Registry
+        # Use Google's official action for Docker auth
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.GCP_REGION }}-docker.pkg.dev
+          username: _json_key
+          password: ${{ secrets.GCP_SA_KEY }}
 
       - name: Build and Push Container to Artifact Registry
         run: |
           # Build image with Artifact Registry tag
-          docker build -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPOSITORY }}/${{ env.GCP_SERVICE_NAME }}:${{ github.sha }} .
+          IMAGE_TAG=${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPOSITORY }}/${{ env.GCP_SERVICE_NAME }}:${{ github.sha }}
 
-          # Push to Artifact Registry
-          docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPOSITORY }}/${{ env.GCP_SERVICE_NAME }}:${{ github.sha }}
+          echo "Building image: $IMAGE_TAG"
+          docker build -t $IMAGE_TAG .
+
+          echo "Pushing to Artifact Registry..."
+          docker push $IMAGE_TAG
+
+          echo "✅ Image pushed successfully to Artifact Registry"
 
       - name: Deploy to Cloud Run from Artifact Registry
         uses: google-github-actions/deploy-cloudrun@v2
