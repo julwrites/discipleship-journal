@@ -18,6 +18,7 @@ import (
 	"discipleship_journal_api/database"
 	"discipleship_journal_api/handlers"
 	"discipleship_journal_api/middleware"
+	"discipleship_journal_api/services"
 
 	_ "discipleship_journal_api/docs"
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -54,13 +55,54 @@ func main() {
 	}
 	defer database.Close()
 
-	// Init Auth Middleware (assumes GOOGLE_APPLICATION_CREDENTIALS or similar set in prod)
-	// For local dev with a specific key file, pass the content or path.
-	// Here we use default context.
-	authMiddleware, err := middleware.NewAuthMiddleware(context.Background())
+	// Init Firebase Service
+	// Pass empty string for saKey to use default credentials (production)
+	// or rely on GOOGLE_APPLICATION_CREDENTIALS
+	firebaseService, err := services.NewFirebaseService(context.Background(), "", "discipleship-journal-pwa")
 	if err != nil {
-		logger.Error("Firebase Auth init failed", "error", err)
+		logger.Error("Firebase init failed", "error", err)
 	}
+
+	var authMiddleware *middleware.AuthMiddleware
+	var notificationService services.NotificationService
+
+	if firebaseService != nil {
+		authMiddleware = middleware.NewAuthMiddlewareFromClient(firebaseService.AuthClient)
+		if firebaseService.MessagingClient != nil {
+			notificationService = services.NewNotificationService(database.DB, firebaseService.MessagingClient)
+		} else {
+			logger.Warn("Firebase Messaging not initialized")
+			notificationService = services.NewMockNotificationService() // Fallback to avoid nil pointer
+		}
+	} else {
+		// Fallback for local dev without firebase creds?
+		// We can't really auth without firebase.
+		// Existing code allowed running but AuthMiddleware would fail.
+		logger.Error("Firebase Service is nil")
+	}
+
+	// Init Bible AI Client
+	var bibleAIClient services.BibleAIClient
+	bibleAPIURL := os.Getenv("BIBLE_API_URL")
+
+	if bibleAPIURL != "" {
+		bibleAIClient = services.NewRealBibleAIClient(bibleAPIURL, os.Getenv("BIBLE_API_KEY"))
+	} else {
+		logger.Info("BIBLE_API_URL not set, using MockBibleAIClient")
+		bibleAIClient = services.NewMockBibleAIClient()
+	}
+
+	noteService := services.NewNoteService(database.DB)
+
+	bibleHandler := handlers.NewBibleHandler(bibleAIClient)
+	chatHandler := handlers.NewChatHandler(bibleAIClient, noteService)
+	noteHandler := handlers.NewNoteHandler(database.DB, noteService)
+
+	// Update handlers to use notification service
+	connectionHandler := handlers.NewConnectionHandler(database.DB, notificationService)
+	groupHandler := handlers.NewGroupHandler(database.DB, notificationService)
+	groupShareHandler := handlers.NewGroupShareHandler(database.DB, notificationService)
+	notificationHandler := handlers.NewNotificationHandler(notificationService)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -105,36 +147,40 @@ func main() {
 		r.Post("/api/users/me", handlers.CreateOrUpdateUser)
 		r.Put("/api/users/me", handlers.UpdateUser)
 
-		r.Get("/api/notes", handlers.GetNotes)
-		r.Post("/api/notes", handlers.CreateNote)
-		r.Get("/api/notes/{id}", handlers.GetNote)
-		r.Put("/api/notes/{id}", handlers.UpdateNote)
+		r.Get("/api/notes", noteHandler.GetNotes)
+		r.Post("/api/notes", noteHandler.CreateNote)
+		r.Get("/api/notes/{id}", noteHandler.GetNote)
+		r.Put("/api/notes/{id}", noteHandler.UpdateNote)
+		r.Delete("/api/notes/{id}", noteHandler.DeleteNote)
 
-		r.Get("/api/bible/passage", handlers.GetBiblePassage)
-		r.Post("/api/chat", handlers.ChatWithAI)
-		r.Post("/api/ai/ask", handlers.AskAI)
+		r.Get("/api/bible/passage", bibleHandler.GetBiblePassage)
+		r.Post("/api/chat", chatHandler.ChatWithAI)
+		r.Post("/api/ai/ask", chatHandler.AskAI)
+
+		// Notifications
+		r.Post("/api/notifications/register", notificationHandler.RegisterDevice)
 
 		// Connections
-		r.Get("/api/users/search", handlers.SearchUsers)
-		r.Post("/api/connections/request", handlers.SendConnectionRequest)
-		r.Get("/api/connections", handlers.ListConnections)
-		r.Put("/api/connections/{id}", handlers.RespondToConnectionRequest)
-		r.Delete("/api/connections/{id}", handlers.RespondToConnectionRequest) // Reject is a delete with a different param/logic or just delete
+		r.Get("/api/users/search", connectionHandler.SearchUsers)
+		r.Post("/api/connections/request", connectionHandler.SendConnectionRequest)
+		r.Get("/api/connections", connectionHandler.ListConnections)
+		r.Put("/api/connections/{id}", connectionHandler.AcceptConnectionRequest)
+		r.Delete("/api/connections/{id}", connectionHandler.DeleteConnectionRequest)
 
 		// Groups
-		r.Post("/api/groups", handlers.CreateGroup)
-		r.Get("/api/groups", handlers.ListMyGroups)
-		r.Get("/api/groups/search", handlers.SearchGroups)
-		r.Post("/api/groups/{id}/join", handlers.JoinGroup)
-		r.Delete("/api/groups/{id}/leave", handlers.LeaveGroup)
-		r.Get("/api/groups/{id}/members", handlers.GetGroupMembers)
-		r.Post("/api/groups/{id}/members", handlers.AddGroupMember)
-		r.Delete("/api/groups/{id}/members/{userId}", handlers.RemoveGroupMember)
+		r.Post("/api/groups", groupHandler.CreateGroup)
+		r.Get("/api/groups", groupHandler.ListMyGroups)
+		r.Get("/api/groups/search", groupHandler.SearchGroups)
+		r.Post("/api/groups/{id}/join", groupHandler.JoinGroup)
+		r.Delete("/api/groups/{id}/leave", groupHandler.LeaveGroup)
+		r.Get("/api/groups/{id}/members", groupHandler.GetGroupMembers)
+		r.Post("/api/groups/{id}/members", groupHandler.AddGroupMember)
+		r.Delete("/api/groups/{id}/members/{userId}", groupHandler.RemoveGroupMember)
 
 		// Group Shares
-		r.Post("/api/groups/{id}/shares", handlers.ShareNoteToGroup)
-		r.Get("/api/groups/{id}/shares", handlers.ListGroupShares)
-		r.Get("/api/groups/{id}/shares/{shareId}", handlers.GetSharedNoteDetails)
+		r.Post("/api/groups/{id}/shares", groupShareHandler.ShareNoteToGroup)
+		r.Get("/api/groups/{id}/shares", groupShareHandler.ListGroupShares)
+		r.Get("/api/groups/{id}/shares/{shareId}", groupShareHandler.GetSharedNoteDetails)
 	})
 
 	server := &http.Server{

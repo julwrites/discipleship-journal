@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -8,6 +9,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { ChevronDown, ChevronUp, UserPlus, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import {
+    getGroups,
+    searchGroups,
+    createGroup,
+    joinGroup,
+    leaveGroup,
+    getGroupMembers,
+    getGroupShares,
+    getSharedNote,
+    searchUsers as apiSearchUsers,
+    addGroupMember,
+    removeGroupMember
+} from "@/services/api";
 
 interface Group {
     id: string;
@@ -58,14 +72,8 @@ export default function GroupsPage() {
     const fetchMyGroups = useCallback(async () => {
         if (!user) return;
         try {
-            const token = await user.getIdToken();
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/groups`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setMyGroups(data || []);
-            }
+            const data = await getGroups();
+            setMyGroups(data || []);
         } catch (error) {
             console.error("Failed to fetch groups", error);
         }
@@ -81,14 +89,8 @@ export default function GroupsPage() {
     const handleSearch = async () => {
         if (searchQuery.length < 3) return;
         try {
-            const token = await user?.getIdToken();
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/groups/search?q=${searchQuery}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setSearchResults(data || []);
-            }
+            const data = await searchGroups(searchQuery);
+            setSearchResults(data || []);
         } catch (error) {
             console.error("Search failed", error);
         }
@@ -96,20 +98,10 @@ export default function GroupsPage() {
 
     const handleCreate = async () => {
         try {
-            const token = await user?.getIdToken();
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/groups`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify(newGroup)
-            });
-            if (res.ok) {
-                setIsCreateOpen(false);
-                setNewGroup({ name: "", description: "" });
-                fetchMyGroups();
-            }
+            await createGroup(newGroup);
+            setIsCreateOpen(false);
+            setNewGroup({ name: "", description: "" });
+            fetchMyGroups();
         } catch (error) {
             console.error("Create failed", error);
         }
@@ -117,16 +109,10 @@ export default function GroupsPage() {
 
     const handleJoin = async (id: string) => {
         try {
-            const token = await user?.getIdToken();
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/groups/${id}/join`, {
-                method: "POST",
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) {
-                alert("Joined group!");
-                handleSearch(); // Refresh search results to show updated role
-                fetchMyGroups();
-            }
+            await joinGroup(id);
+            toast.success("Joined group!");
+            handleSearch(); // Refresh search results to show updated role
+            fetchMyGroups();
         } catch (error) {
             console.error("Join failed", error);
         }
@@ -135,14 +121,8 @@ export default function GroupsPage() {
     const handleLeave = async (id: string) => {
         if (!confirm("Are you sure you want to leave this group?")) return;
         try {
-            const token = await user?.getIdToken();
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/groups/${id}/leave`, {
-                method: "DELETE",
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) {
-                fetchMyGroups();
-            }
+            await leaveGroup(id);
+            fetchMyGroups();
         } catch (error) {
             console.error("Leave failed", error);
         }
@@ -156,23 +136,12 @@ export default function GroupsPage() {
         }
         setExpandedGroupId(groupId);
         try {
-            const token = await user?.getIdToken();
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/groups/${groupId}/members`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setGroupMembers(data || []);
-            }
+            const members = await getGroupMembers(groupId);
+            setGroupMembers(members || []);
 
             // Fetch shared notes
-            const res2 = await fetch(`${import.meta.env.VITE_API_URL}/api/groups/${groupId}/shares`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res2.ok) {
-                const data = await res2.json();
-                setGroupShares(data || []);
-            }
+            const shares = await getGroupShares(groupId);
+            setGroupShares(shares || []);
         } catch (error) {
             console.error("Failed to fetch details", error);
         }
@@ -180,14 +149,8 @@ export default function GroupsPage() {
 
     const viewSharedNote = async (groupId: string, shareId: string) => {
         try {
-            const token = await user?.getIdToken();
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/groups/${groupId}/shares/${shareId}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setViewingSharedNote(data);
-            }
+            const data = await getSharedNote(groupId, shareId);
+            setViewingSharedNote(data);
         } catch (error) {
             console.error("Failed to fetch shared note", error);
         }
@@ -196,14 +159,8 @@ export default function GroupsPage() {
     const searchUsers = async () => {
         if (userSearchQuery.length < 3) return;
         try {
-            const token = await user?.getIdToken();
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/search?q=${userSearchQuery}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setUserSearchResults(data || []);
-            }
+            const data = await apiSearchUsers(userSearchQuery);
+            setUserSearchResults(data || []);
         } catch (error) {
             console.error("User search failed", error);
         }
@@ -212,21 +169,11 @@ export default function GroupsPage() {
     const addMember = async (userId: string) => {
         if (!activeGroupId) return;
         try {
-            const token = await user?.getIdToken();
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/groups/${activeGroupId}/members`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({ user_id: userId })
-            });
-            if (res.ok) {
-                setIsAddMemberOpen(false);
-                setUserSearchQuery("");
-                setUserSearchResults([]);
-                toggleGroupDetails(activeGroupId); // Refresh members
-            }
+            await addGroupMember(activeGroupId, userId);
+            setIsAddMemberOpen(false);
+            setUserSearchQuery("");
+            setUserSearchResults([]);
+            toggleGroupDetails(activeGroupId); // Refresh members
         } catch (error) {
             console.error("Failed to add member", error);
         }
@@ -235,14 +182,8 @@ export default function GroupsPage() {
     const removeMember = async (groupId: string, userId: string) => {
         if (!confirm("Remove this member?")) return;
         try {
-            const token = await user?.getIdToken();
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/groups/${groupId}/members/${userId}`, {
-                method: "DELETE",
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) {
-                 toggleGroupDetails(groupId); // Refresh members
-            }
+            await removeGroupMember(groupId, userId);
+            toggleGroupDetails(groupId); // Refresh members
         } catch (error) {
             console.error("Failed to remove member", error);
         }

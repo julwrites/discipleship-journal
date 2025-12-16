@@ -1,10 +1,10 @@
 ---
 id: FEATURE-007
-status: unknown
+status: completed
 title: Group Sharing
 priority: high
 created: 2025-12-11 06:09:10
-category: unknown
+category: features
 type: task
 ---
 

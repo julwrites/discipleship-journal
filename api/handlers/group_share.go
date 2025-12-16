@@ -1,17 +1,27 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
 	"time"
 
-	"discipleship_journal_api/database"
 	"discipleship_journal_api/middleware"
+	"discipleship_journal_api/services"
 	"firebase.google.com/go/v4/auth"
-	"github.com/go-chi/chi/v5"
-	"github.com/jackc/pgx/v5"
+	chi "github.com/go-chi/chi/v5"
+	pgx "github.com/jackc/pgx/v5"
 )
+
+type GroupShareHandler struct {
+	db                  DBInterface
+	notificationService services.NotificationService
+}
+
+func NewGroupShareHandler(db DBInterface, notificationService services.NotificationService) *GroupShareHandler {
+	return &GroupShareHandler{db: db, notificationService: notificationService}
+}
 
 type ShareNoteRequest struct {
 	NoteID  string `json:"note_id" validate:"required"`
@@ -19,18 +29,18 @@ type ShareNoteRequest struct {
 }
 
 type SharedNoteResponse struct {
-	ID        string                 `json:"id"` // This is the share ID
-	GroupID   string                 `json:"group_id"`
-	NoteID    string                 `json:"note_id"`
-	Title     string                 `json:"title"`
-	Content   map[string]interface{} `json:"content"` // Included for detail view
-	SharedBy  string                 `json:"shared_by"` // User display name
-	SharedAt  string                 `json:"shared_at"`
-	Comment   string                 `json:"comment"`
+	ID       string                 `json:"id"` // This is the share ID
+	GroupID  string                 `json:"group_id"`
+	NoteID   string                 `json:"note_id"`
+	Title    string                 `json:"title"`
+	Content  map[string]interface{} `json:"content"`   // Included for detail view
+	SharedBy string                 `json:"shared_by"` // User display name
+	SharedAt string                 `json:"shared_at"`
+	Comment  string                 `json:"comment"`
 }
 
 // ShareNoteToGroup shares a note to a group
-func ShareNoteToGroup(w http.ResponseWriter, r *http.Request) {
+func (h *GroupShareHandler) ShareNoteToGroup(w http.ResponseWriter, r *http.Request) {
 	groupID := chi.URLParam(r, "id")
 	var req ShareNoteRequest
 	if !DecodeAndValidate(w, r, &req) {
@@ -46,7 +56,7 @@ func ShareNoteToGroup(w http.ResponseWriter, r *http.Request) {
 
 	// 1. Verify membership in group
 	var isMember bool
-	err = database.DB.QueryRow(r.Context(),
+	err = h.db.QueryRow(r.Context(),
 		"SELECT EXISTS(SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2)",
 		groupID, userUUID).Scan(&isMember)
 	if err != nil {
@@ -60,7 +70,7 @@ func ShareNoteToGroup(w http.ResponseWriter, r *http.Request) {
 
 	// 2. Verify ownership of note
 	var ownerID string
-	err = database.DB.QueryRow(r.Context(),
+	err = h.db.QueryRow(r.Context(),
 		"SELECT user_id FROM notes WHERE id = $1",
 		req.NoteID).Scan(&ownerID)
 	if err != nil {
@@ -77,7 +87,7 @@ func ShareNoteToGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 3. Create share
-	_, err = database.DB.Exec(r.Context(),
+	_, err = h.db.Exec(r.Context(),
 		"INSERT INTO group_shares (group_id, note_id, shared_by, comment) VALUES ($1, $2, $3, $4) ON CONFLICT (group_id, note_id) DO UPDATE SET shared_at = NOW(), comment = $4",
 		groupID, req.NoteID, userUUID, req.Comment)
 	if err != nil {
@@ -86,11 +96,50 @@ func ShareNoteToGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Fetch details synchronously
+	var groupName string
+	if err := h.db.QueryRow(r.Context(), "SELECT name FROM groups WHERE id = $1", groupID).Scan(&groupName); err != nil {
+		groupName = "Group"
+	}
+
+	var sharerName string
+	if err := h.db.QueryRow(r.Context(), "SELECT display_name FROM users WHERE id = $1", userUUID).Scan(&sharerName); err != nil {
+		sharerName = "Someone"
+	}
+
+	// Send notification to group members
+	go func() {
+		ctx := context.Background()
+
+		// Get members (excluding self)
+		rows, err := h.db.Query(ctx, "SELECT user_id FROM group_members WHERE group_id = $1 AND user_id != $2", groupID, userUUID)
+		if err != nil {
+			slog.Error("Failed to get members for notification", "error", err)
+			return
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var memberID string
+			if err := rows.Scan(&memberID); err == nil {
+				// Send to each member
+				err := h.notificationService.SendNotification(ctx, memberID, "New Shared Note", sharerName+" shared a note in "+groupName, map[string]string{
+					"type": "note_share",
+					"group_id": groupID,
+					"note_id": req.NoteID,
+				})
+				if err != nil {
+					slog.Error("Failed to send notification", "user_id", memberID, "error", err)
+				}
+			}
+		}
+	}()
+
 	w.WriteHeader(http.StatusCreated)
 }
 
 // ListGroupShares lists notes shared with the group
-func ListGroupShares(w http.ResponseWriter, r *http.Request) {
+func (h *GroupShareHandler) ListGroupShares(w http.ResponseWriter, r *http.Request) {
 	groupID := chi.URLParam(r, "id")
 
 	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
@@ -102,7 +151,7 @@ func ListGroupShares(w http.ResponseWriter, r *http.Request) {
 
 	// Verify membership
 	var isMember bool
-	err = database.DB.QueryRow(r.Context(),
+	err = h.db.QueryRow(r.Context(),
 		"SELECT EXISTS(SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2)",
 		groupID, userUUID).Scan(&isMember)
 	if err != nil {
@@ -114,7 +163,7 @@ func ListGroupShares(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows, err := database.DB.Query(r.Context(),
+	rows, err := h.db.Query(r.Context(),
 		`SELECT gs.id, gs.group_id, gs.note_id, n.title, u.display_name, gs.shared_at, gs.comment
 		 FROM group_shares gs
 		 JOIN notes n ON gs.note_id = n.id
@@ -145,7 +194,7 @@ func ListGroupShares(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetSharedNoteDetails fetches details of a shared note
-func GetSharedNoteDetails(w http.ResponseWriter, r *http.Request) {
+func (h *GroupShareHandler) GetSharedNoteDetails(w http.ResponseWriter, r *http.Request) {
 	groupID := chi.URLParam(r, "id")
 	shareID := chi.URLParam(r, "shareId")
 
@@ -158,7 +207,7 @@ func GetSharedNoteDetails(w http.ResponseWriter, r *http.Request) {
 
 	// Verify membership
 	var isMember bool
-	err = database.DB.QueryRow(r.Context(),
+	err = h.db.QueryRow(r.Context(),
 		"SELECT EXISTS(SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2)",
 		groupID, userUUID).Scan(&isMember)
 	if err != nil {
@@ -172,7 +221,7 @@ func GetSharedNoteDetails(w http.ResponseWriter, r *http.Request) {
 
 	var s SharedNoteResponse
 	var sharedAt time.Time
-	err = database.DB.QueryRow(r.Context(),
+	err = h.db.QueryRow(r.Context(),
 		`SELECT gs.id, gs.group_id, gs.note_id, n.title, n.content, u.display_name, gs.shared_at, gs.comment
 		 FROM group_shares gs
 		 JOIN notes n ON gs.note_id = n.id

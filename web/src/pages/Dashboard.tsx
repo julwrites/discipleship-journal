@@ -15,15 +15,52 @@ interface Note {
 export default function Dashboard() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     syncUser();
-    fetchNotes().then(setNotes).catch(console.error);
   }, []);
 
-  const filteredNotes = notes.filter((note) =>
-    (note.title || "").toLowerCase().includes(search.toLowerCase())
-  );
+  useEffect(() => {
+      const load = async () => {
+          setLoading(true);
+          try {
+              const response = await fetchNotes(page, 20, search);
+              // Check if response has data/meta structure or is just array (for backward compat if needed, though we updated API)
+              const newNotes = response.data || response;
+
+              if (page === 1) {
+                  setNotes(newNotes);
+              } else {
+                  setNotes(prev => [...prev, ...newNotes]);
+              }
+
+              if (response.meta) {
+                  setHasMore(page < response.meta.total_pages);
+              } else {
+                  // Fallback
+                  if (newNotes.length < 20) {
+                      setHasMore(false);
+                  } else {
+                      setHasMore(true);
+                  }
+              }
+          } catch (error) {
+              console.error(error);
+          } finally {
+              setLoading(false);
+          }
+      };
+      load();
+  }, [page, search]);
+
+  const handleSearch = (val: string) => {
+      setSearch(val);
+      setPage(1);
+      setHasMore(true);
+  };
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto">
@@ -50,14 +87,14 @@ export default function Dashboard() {
         <Input
           placeholder="Search notes..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => handleSearch(e.target.value)}
           className="max-w-md"
         />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredNotes.length === 0 && <p className="text-gray-500 col-span-full">No notes found.</p>}
-        {filteredNotes.map((note) => (
+        {notes.length === 0 && !loading && <p className="text-gray-500 col-span-full">No notes found.</p>}
+        {notes.map((note) => (
           <Link key={note.id} to={`/notes/${note.id}`} className="block">
             <div className="p-6 bg-white hover:bg-gray-50 transition rounded-lg shadow border h-40 flex flex-col">
                 <h3 className="font-semibold mb-2 line-clamp-2">{note.title || "Untitled Note"}</h3>
@@ -66,6 +103,14 @@ export default function Dashboard() {
           </Link>
         ))}
       </div>
+
+      {hasMore && notes.length > 0 && (
+          <div className="mt-8 text-center">
+              <Button onClick={() => setPage(p => p + 1)} disabled={loading} variant="outline">
+                  {loading ? "Loading..." : "Load More"}
+              </Button>
+          </div>
+      )}
 
       <div className="fixed bottom-8 right-8 flex flex-col gap-4">
         <Link to="/chat">

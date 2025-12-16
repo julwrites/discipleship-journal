@@ -1,44 +1,29 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { createNote, getBiblePassage, askAI } from "@/services/api";
+import {
+    createNote,
+    getNote,
+    updateNote,
+    deleteNote,
+    getBiblePassage,
+    askAI,
+    getGroups,
+    shareNote
+} from "@/services/api";
 import ReactMarkdown from "react-markdown";
+import RichTextEditor from "@/components/RichTextEditor";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-
-// Since we are building iteratively, I will use createNote for everything first, then update for proper updates.
-// But first, let's fix the API service to support Get/Update.
-
-const API_URL = import.meta.env.VITE_API_URL;
-import { auth } from "@/lib/firebase";
-
-async function getNote(id: string) {
-    const token = await auth.currentUser?.getIdToken();
-    const res = await fetch(`${API_URL}/api/notes/${id}`, {
-        headers: { "Authorization": `Bearer ${token}` }
-    });
-    if (!res.ok) throw new Error("Failed to load note");
-    return res.json();
-}
-
-async function updateNote(id: string, title: string, content: Record<string, unknown>) {
-    const token = await auth.currentUser?.getIdToken();
-    const res = await fetch(`${API_URL}/api/notes/${id}`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ title, content })
-    });
-    if (!res.ok) throw new Error("Failed to update note");
-}
 
 export default function NoteEditor() {
     const { id } = useParams();
@@ -47,6 +32,7 @@ export default function NoteEditor() {
     const [markdown, setMarkdown] = useState("");
     const [mode, setMode] = useState<"edit" | "preview">("edit");
     const [saving, setSaving] = useState(false);
+    const [lastSaved, setLastSaved] = useState<string | null>(null);
 
     // Bible Passage State
     const [passageRef, setPassageRef] = useState("");
@@ -63,44 +49,79 @@ export default function NoteEditor() {
     const [selectedGroupId, setSelectedGroupId] = useState("");
     const [shareComment, setShareComment] = useState("");
     const [sharing, setSharing] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    const [saveError, setSaveError] = useState(false);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
     useEffect(() => {
         if (id && id !== "new") {
             getNote(id).then(note => {
                 setTitle(note.title);
                 setMarkdown(note.content.markdown || "");
+                setLastSaved("Loaded");
             }).catch(console.error);
         }
     }, [id]);
 
-    const handleSave = async () => {
+    const handleSave = async (manual = true) => {
         setSaving(true);
+        setSaveError(false);
         try {
             const content = { markdown };
             if (id === "new") {
+                if (!manual) return; // Don't auto-save new notes until title/content exists or manual save
                 const res = await createNote(title, content);
                 navigate(`/notes/${res.id}`, { replace: true });
+                setLastSaved(new Date().toLocaleTimeString());
             } else if (id) {
                 await updateNote(id, title, content);
+                setLastSaved(new Date().toLocaleTimeString());
             }
         } catch (e) {
             console.error(e);
-            alert("Failed to save");
+            setSaveError(true);
+            if (manual) toast.error("Failed to save");
         } finally {
             setSaving(false);
         }
     };
 
+    // Auto-save effect
+    useEffect(() => {
+        if (!id || id === "new") return;
+
+        const timer = setTimeout(() => {
+            if (title || markdown) {
+                handleSave(false);
+            }
+        }, 2000); // 2 second debounce
+
+        return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [title, markdown, id]);
+
+    const handleDelete = () => {
+        if (!id || id === "new") return;
+        setDeleteConfirmOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        setDeleting(true);
+        try {
+            await deleteNote(id!);
+            navigate("/", { replace: true });
+        } catch (e) {
+            console.error(e);
+            toast.error("Failed to delete note.");
+            setDeleting(false);
+            setDeleteConfirmOpen(false);
+        }
+    };
+
     const fetchMyGroups = async () => {
         try {
-            const token = await auth.currentUser?.getIdToken();
-            const res = await fetch(`${API_URL}/api/groups`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setMyGroups(data || []);
-            }
+            const data = await getGroups();
+            setMyGroups(data || []);
         } catch (error) {
             console.error("Failed to fetch groups", error);
         }
@@ -108,30 +129,19 @@ export default function NoteEditor() {
 
     const handleShare = async () => {
         if (!id || id === "new") {
-            alert("Please save the note first.");
+            toast.error("Please save the note first.");
             return;
         }
         if (!selectedGroupId) return;
         setSharing(true);
         try {
-            const token = await auth.currentUser?.getIdToken();
-            const res = await fetch(`${API_URL}/api/groups/${selectedGroupId}/shares`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({ note_id: id, comment: shareComment })
-            });
-            if (res.ok) {
-                alert("Note shared!");
-                setSelectedGroupId("");
-                setShareComment("");
-            } else {
-                alert("Failed to share.");
-            }
+            await shareNote(selectedGroupId, id, shareComment);
+            toast.success("Note shared!");
+            setSelectedGroupId("");
+            setShareComment("");
         } catch (error) {
             console.error("Share failed", error);
+            toast.error("Failed to share.");
         } finally {
             setSharing(false);
         }
@@ -238,9 +248,36 @@ export default function NoteEditor() {
                         </DialogContent>
                     </Dialog>
 
+                    {saveError && <span className="text-sm text-red-500 mr-2">Error saving</span>}
+                    {!saveError && lastSaved && <span className="text-sm text-gray-500 mr-2">{saving ? "Saving..." : `Saved at ${lastSaved}`}</span>}
                     <Button variant={mode === "edit" ? "default" : "outline"} onClick={() => setMode("edit")}>Edit</Button>
                     <Button variant={mode === "preview" ? "default" : "outline"} onClick={() => setMode("preview")}>Preview</Button>
-                    <Button onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
+                    <Button onClick={() => handleSave(true)} disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
+
+                    {id && id !== "new" && (
+                        <>
+                            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+                                {deleting ? "..." : "Delete"}
+                            </Button>
+
+                            <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>Delete Note</DialogTitle>
+                                        <DialogDescription>
+                                            Are you sure you want to delete this note? This action cannot be undone.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <DialogFooter>
+                                        <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
+                                        <Button variant="destructive" onClick={confirmDelete} disabled={deleting}>
+                                            {deleting ? "Deleting..." : "Delete"}
+                                        </Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                        </>
+                    )}
 
                     <Dialog onOpenChange={(open) => { if (open) fetchMyGroups(); }}>
                         <DialogTrigger asChild>
@@ -282,16 +319,15 @@ export default function NoteEditor() {
                 onChange={(e) => setTitle(e.target.value)}
             />
 
-            <div className="flex-1 border rounded-lg overflow-hidden">
+            <div className="flex-1 overflow-hidden flex flex-col">
                 {mode === "edit" ? (
-                    <textarea
-                        className="w-full h-full p-4 resize-none outline-none"
-                        placeholder="Write your thoughts..."
-                        value={markdown}
-                        onChange={(e) => setMarkdown(e.target.value)}
+                    <RichTextEditor
+                        content={markdown}
+                        onChange={setMarkdown}
+                        editable={true}
                     />
                 ) : (
-                    <div className="p-4 prose prose-slate max-w-none overflow-auto h-full">
+                    <div className="flex-1 border rounded-lg overflow-auto p-4 prose prose-slate max-w-none bg-slate-50">
                         <ReactMarkdown>{markdown}</ReactMarkdown>
                     </div>
                 )}

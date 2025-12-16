@@ -4,13 +4,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 
-	"discipleship_journal_api/database"
 	"discipleship_journal_api/middleware"
+	"discipleship_journal_api/services"
 	"firebase.google.com/go/v4/auth"
-	"github.com/go-resty/resty/v2"
 )
+
+type ChatHandler struct {
+	Client      services.BibleAIClient
+	NoteService services.NoteServiceInterface
+}
+
+func NewChatHandler(client services.BibleAIClient, noteService services.NoteServiceInterface) *ChatHandler {
+	return &ChatHandler{Client: client, NoteService: noteService}
+}
 
 type ChatRequest struct {
 	Passage string   `json:"passage" validate:"required,min=5"`
@@ -33,21 +40,11 @@ type ChatResponse struct {
 // @Failure 400 {object} map[string]string
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /api/chat [post]
-func ChatWithAI(w http.ResponseWriter, r *http.Request) {
-	// BibleAIAPI Endpoint
-	apiURL := os.Getenv("BIBLE_API_URL")
-	apiKey := os.Getenv("BIBLE_API_KEY")
-
-	// if apiURL == "" {
-	// 	// Mock environment logic if needed, or error
-	// }
-
+func (h *ChatHandler) ChatWithAI(w http.ResponseWriter, r *http.Request) {
 	var req ChatRequest
 	if !DecodeAndValidate(w, r, &req) {
 		return
 	}
-
-	client := resty.New()
 
 	payload := map[string]interface{}{
 		"model": "bible-model",
@@ -57,32 +54,19 @@ func ChatWithAI(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	var aiResult map[string]interface{}
-
-	// Only call if URL is present, otherwise simulate
 	var answer string
-	if apiURL != "" {
-		resp, err := client.R().
-			SetHeader("Authorization", "Bearer "+apiKey).
-			SetBody(payload).
-			SetResult(&aiResult).
-			Post(apiURL + "/chat/completions")
+	aiResult, err := h.Client.ChatCompletion(r.Context(), payload)
 
-		if err != nil || resp.IsError() {
-			// Handle error or fallback
-			answer = "Error contacting AI service."
-		} else {
-			if choices, ok := aiResult["choices"].([]interface{}); ok && len(choices) > 0 {
-				if choice, ok := choices[0].(map[string]interface{}); ok {
-					if msg, ok := choice["message"].(map[string]interface{}); ok {
-						answer, _ = msg["content"].(string)
-					}
+	if err != nil {
+		answer = "Error contacting AI service: " + err.Error()
+	} else {
+		if choices, ok := aiResult["choices"].([]interface{}); ok && len(choices) > 0 {
+			if choice, ok := choices[0].(map[string]interface{}); ok {
+				if msg, ok := choice["message"].(map[string]interface{}); ok {
+					answer, _ = msg["content"].(string)
 				}
 			}
 		}
-	} else {
-		// Simulation
-		answer = "This is a simulated AI response based on " + req.Passage
 	}
 
 	// Create a new Journal Note with the conversation
@@ -106,10 +90,13 @@ func ChatWithAI(w http.ResponseWriter, r *http.Request) {
 		"type": "chat_log",
 	}
 
-	var noteID string
-	err = database.DB.QueryRow(r.Context(),
-		"INSERT INTO notes (user_id, title, content) VALUES ($1, $2, $3) RETURNING id",
-		userUUID, noteTitle, noteContent).Scan(&noteID)
+	contentJSON, err := json.Marshal(noteContent)
+	if err != nil {
+		http.Error(w, "Failed to marshal content", http.StatusInternalServerError)
+		return
+	}
+
+	_, err = h.NoteService.CreateNote(r.Context(), userUUID.String(), noteTitle, contentJSON)
 
 	if err != nil {
 		http.Error(w, "Failed to save chat note", http.StatusInternalServerError)
@@ -137,16 +124,11 @@ type AskAIRequest struct {
 // @Success 200 {object} ChatResponse
 // @Failure 400 {object} map[string]string
 // @Router /api/ai/ask [post]
-func AskAI(w http.ResponseWriter, r *http.Request) {
-	apiURL := os.Getenv("BIBLE_API_URL")
-	apiKey := os.Getenv("BIBLE_API_KEY")
-
+func (h *ChatHandler) AskAI(w http.ResponseWriter, r *http.Request) {
 	var req AskAIRequest
 	if !DecodeAndValidate(w, r, &req) {
 		return
 	}
-
-	client := resty.New()
 
 	payload := map[string]interface{}{
 		"model": "bible-model",
@@ -156,39 +138,23 @@ func AskAI(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	var aiResult map[string]interface{}
 	var answer string
+	aiResult, err := h.Client.ChatCompletion(r.Context(), payload)
 
-	if apiURL != "" {
-		resp, err := client.R().
-			SetHeader("Authorization", "Bearer "+apiKey).
-			SetBody(payload).
-			SetResult(&aiResult).
-			Post(apiURL + "/chat/completions")
-
-		if err == nil && !resp.IsError() {
-			if choices, ok := aiResult["choices"].([]interface{}); ok && len(choices) > 0 {
-				if choice, ok := choices[0].(map[string]interface{}); ok {
-					if msg, ok := choice["message"].(map[string]interface{}); ok {
-						answer, _ = msg["content"].(string)
-					}
+	if err != nil {
+		answer = "Error contacting AI service: " + err.Error()
+	} else {
+		if choices, ok := aiResult["choices"].([]interface{}); ok && len(choices) > 0 {
+			if choice, ok := choices[0].(map[string]interface{}); ok {
+				if msg, ok := choice["message"].(map[string]interface{}); ok {
+					answer, _ = msg["content"].(string)
 				}
 			}
 		}
-	} else {
-		// Fallback/Mock
-		answer = "AI analysis of note context: " + req.Context[:min(len(req.Context), 20)] + "... -> " + req.Prompt
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(ChatResponse{Response: answer}); err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 	}
-}
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }

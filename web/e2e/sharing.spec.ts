@@ -59,16 +59,11 @@ test.describe('Note Sharing (Mocked)', () => {
         }
     });
 
-    // Handle Alert
-    page.once('dialog', async dialog => {
-        expect(dialog.message()).toBe('Note shared!');
-        await dialog.accept();
-    });
-
     await page.goto('/notes/note-1');
 
     // Wait for note to load
-    await expect(page.locator('textarea')).toHaveValue('# Sharing is Caring');
+    await expect(page.locator('.ProseMirror')).toBeVisible();
+    await expect(page.locator('.ProseMirror')).toContainText('Sharing is Caring');
 
     // Click Share
     await page.getByRole('button', { name: 'Share' }).click();
@@ -90,5 +85,8 @@ test.describe('Note Sharing (Mocked)', () => {
     const postData = shareRequest.postDataJSON();
     expect(postData.note_id).toBe('note-1');
     expect(postData.comment).toBe('Check this out!');
+
+    // Verify Toast
+    await expect(page.getByText('Note shared!')).toBeVisible();
   });
 });

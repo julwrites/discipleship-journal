@@ -4,15 +4,15 @@ services:
   db:
     image: postgres:15-alpine
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: discipleship_journal
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-discipleship_journal}
     ports:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d discipleship_journal"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user} -d ${POSTGRES_DB:-discipleship_journal}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -20,8 +20,12 @@ services:
   api:
     build: ./api
     environment:
-      DATABASE_URL: postgres://user:password@db:5432/discipleship_journal?sslmode=disable
-      PORT: 8080
+      DATABASE_URL: ${DATABASE_URL:-postgres://user:password@db:5432/discipleship_journal?sslmode=disable}
+      PORT: ${PORT:-8080}
+      APP_ENV: ${APP_ENV:-development}
+      BIBLE_API_URL: ${BIBLE_API_URL:-}
+      BIBLE_API_KEY: ${BIBLE_API_KEY:-}
+      TEST_REAL_BIBLE_API: ${TEST_REAL_BIBLE_API:-false}
       # For local dev, we might need to handle Firebase Auth.
       # If using an emulator or service account, mount it here.
     ports:
@@ -31,7 +35,16 @@ services:
         condition: service_healthy
 
   web:
-    build: ./web
+    build:
+      context: ./web
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8080/api}
+        VITE_FIREBASE_API_KEY: ${VITE_FIREBASE_API_KEY:-mock-key}
+        VITE_FIREBASE_AUTH_DOMAIN: ${VITE_FIREBASE_AUTH_DOMAIN:-mock-project.firebaseapp.com}
+        VITE_FIREBASE_PROJECT_ID: ${VITE_FIREBASE_PROJECT_ID:-mock-project}
+        VITE_FIREBASE_STORAGE_BUCKET: ${VITE_FIREBASE_STORAGE_BUCKET:-mock-project.appspot.com}
+        VITE_FIREBASE_MESSAGING_SENDER_ID: ${VITE_FIREBASE_MESSAGING_SENDER_ID:-1234567890}
+        VITE_FIREBASE_APP_ID: ${VITE_FIREBASE_APP_ID:-1:1234567890:web:abcdef123456}
     ports:
       - "3000:80"
     depends_on:
@@ -43,7 +56,7 @@ services:
       - ./api/migrations:/migrations
     command:
       - -path=/migrations
-      - -database=postgres://user:password@db:5432/discipleship_journal?sslmode=disable
+      - -database=${DATABASE_URL:-postgres://user:password@db:5432/discipleship_journal?sslmode=disable}
       - up
     depends_on:
       db:

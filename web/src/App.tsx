@@ -8,6 +8,7 @@ import ConnectionsPage from "@/pages/ConnectionsPage";
 import GroupsPage from "@/pages/GroupsPage";
 import Settings from "@/pages/Settings";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { Toaster } from "@/components/ui/sonner";
 
 function App() {
   const { user, loading } = useAuth();
@@ -18,6 +19,7 @@ function App() {
 
   return (
     <ErrorBoundary>
+      <Toaster />
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={user ? <Navigate to="/" /> : <LoginPage />} />

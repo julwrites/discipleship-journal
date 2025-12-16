@@ -55,7 +55,7 @@ test.describe('Connections (Mocked)', () => {
     await page.route('**/api/connections/request', async route => {
         const body = route.request().postDataJSON();
         expect(body.receiver_email).toBe('friend@example.com');
-        await route.fulfill({ status: 201 });
+        await route.fulfill({ status: 201, json: { success: true } });
     });
 
     // Type in search box
@@ -67,18 +67,10 @@ test.describe('Connections (Mocked)', () => {
     // Wait for results
     await expect(page.getByText('friend@example.com')).toBeVisible();
 
-    // Handle Alert
-    const dialogDismissedPromise = new Promise<void>(resolve => {
-        page.once('dialog', async dialog => {
-            expect(dialog.message()).toBe('Request sent!');
-            await dialog.dismiss();
-            resolve();
-        });
-    });
-
     // Click "Connect" button
     await page.getByRole('button', { name: 'Connect' }).click();
 
-    await dialogDismissedPromise;
+    // Verify Toast
+    await expect(page.getByText('Request sent!')).toBeVisible();
   });
 });

@@ -4,19 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 
-	"github.com/go-resty/resty/v2"
+	"discipleship_journal_api/services"
 )
 
-type PassageRequest struct {
-	Reference string `json:"reference"`
+type BibleHandler struct {
+	Client services.BibleAIClient
 }
 
-type PassageResponse struct {
-	Reference string `json:"reference"`
-	Text      string `json:"text"`
-	// Add other fields from BibleAIAPI response if needed
+func NewBibleHandler(client services.BibleAIClient) *BibleHandler {
+	return &BibleHandler{Client: client}
 }
 
 // GetBiblePassage godoc
@@ -30,16 +27,7 @@ type PassageResponse struct {
 // @Failure 400 {string} string "Reference is required"
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /api/bible/passage [get]
-func GetBiblePassage(w http.ResponseWriter, r *http.Request) {
-	// BibleAIAPI Endpoint
-	apiURL := os.Getenv("BIBLE_API_URL")
-	apiKey := os.Getenv("BIBLE_API_KEY")
-
-	if apiURL == "" {
-		http.Error(w, "Bible API not configured", http.StatusInternalServerError)
-		return
-	}
-
+func (h *BibleHandler) GetBiblePassage(w http.ResponseWriter, r *http.Request) {
 	// Read query param
 	ref := r.URL.Query().Get("ref")
 	if ref == "" {
@@ -47,28 +35,14 @@ func GetBiblePassage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := resty.New()
-
-	// Assuming BibleAIAPI structure. If it's a GET request:
-	// Adjust endpoint path based on actual BibleAIAPI docs
-	var result map[string]interface{}
-	resp, err := client.R().
-		SetHeader("Authorization", "Bearer "+apiKey). // Or whatever auth method it uses
-		SetQueryParam("q", ref).                      // Or "reference" or path param
-		SetResult(&result).
-		Get(apiURL + "/bible/passage") // Adjust path
+	result, err := h.Client.GetPassage(r.Context(), ref)
 
 	if err != nil {
-		http.Error(w, "Failed to call Bible API", http.StatusInternalServerError)
+		// Log error if logger is available, or just send 500
+		http.Error(w, fmt.Sprintf("Failed to call Bible API: %v", err), http.StatusInternalServerError)
 		return
 	}
 
-	if resp.IsError() {
-		http.Error(w, fmt.Sprintf("Bible API Error: %s", resp.Status()), resp.StatusCode())
-		return
-	}
-
-	// Transform result if necessary, or just proxy it
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(result); err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
