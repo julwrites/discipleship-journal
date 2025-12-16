@@ -19,14 +19,14 @@ type ShareNoteRequest struct {
 }
 
 type SharedNoteResponse struct {
-	ID        string                 `json:"id"` // This is the share ID
-	GroupID   string                 `json:"group_id"`
-	NoteID    string                 `json:"note_id"`
-	Title     string                 `json:"title"`
-	Content   map[string]interface{} `json:"content"` // Included for detail view
-	SharedBy  string                 `json:"shared_by"` // User display name
-	SharedAt  string                 `json:"shared_at"`
-	Comment   string                 `json:"comment"`
+	ID       string                 `json:"id"` // This is the share ID
+	GroupID  string                 `json:"group_id"`
+	NoteID   string                 `json:"note_id"`
+	Title    string                 `json:"title"`
+	Content  map[string]interface{} `json:"content"`   // Included for detail view
+	SharedBy string                 `json:"shared_by"` // User display name
+	SharedAt string                 `json:"shared_at"`
+	Comment  string                 `json:"comment"`
 }
 
 // ShareNoteToGroup shares a note to a group
