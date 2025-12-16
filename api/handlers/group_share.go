@@ -96,18 +96,20 @@ func (h *GroupShareHandler) ShareNoteToGroup(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	// Fetch details synchronously
+	var groupName string
+	if err := h.db.QueryRow(r.Context(), "SELECT name FROM groups WHERE id = $1", groupID).Scan(&groupName); err != nil {
+		groupName = "Group"
+	}
+
+	var sharerName string
+	if err := h.db.QueryRow(r.Context(), "SELECT display_name FROM users WHERE id = $1", userUUID).Scan(&sharerName); err != nil {
+		sharerName = "Someone"
+	}
+
 	// Send notification to group members
 	go func() {
 		ctx := context.Background()
-		var groupName string
-		if err := h.db.QueryRow(ctx, "SELECT name FROM groups WHERE id = $1", groupID).Scan(&groupName); err != nil {
-			groupName = "Group"
-		}
-
-		var sharerName string
-		if err := h.db.QueryRow(ctx, "SELECT display_name FROM users WHERE id = $1", userUUID).Scan(&sharerName); err != nil {
-			sharerName = "Someone"
-		}
 
 		// Get members (excluding self)
 		rows, err := h.db.Query(ctx, "SELECT user_id FROM group_members WHERE group_id = $1 AND user_id != $2", groupID, userUUID)

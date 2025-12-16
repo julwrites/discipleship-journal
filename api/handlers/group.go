@@ -345,13 +345,15 @@ func (h *GroupHandler) AddGroupMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get group name synchronously
+	var groupName string
+	if err := h.db.QueryRow(r.Context(), "SELECT name FROM groups WHERE id = $1", groupID).Scan(&groupName); err != nil {
+		groupName = "a group"
+	}
+
 	// Send notification
 	go func() {
 		ctx := context.Background()
-		var groupName string
-		if err := h.db.QueryRow(ctx, "SELECT name FROM groups WHERE id = $1", groupID).Scan(&groupName); err != nil {
-			groupName = "a group"
-		}
 
 		err := h.notificationService.SendNotification(ctx, req.UserID, "Group Invitation", "You have been added to "+groupName, map[string]string{
 			"type": "group_invite",
