@@ -9,11 +9,9 @@ import GroupsPage from "@/pages/GroupsPage";
 import Settings from "@/pages/Settings";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { Toaster } from "@/components/ui/sonner";
-import { useNotifications } from "@/hooks/useNotifications";
 
 function App() {
   const { user, loading } = useAuth();
-  useNotifications();
 
   if (loading) {
     return <div className="flex h-screen items-center justify-center">Loading...</div>;

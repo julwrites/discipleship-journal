@@ -14,8 +14,8 @@ import (
 	"discipleship_journal_api/services"
 
 	"firebase.google.com/go/v4/auth"
-	"github.com/go-chi/chi/v5"
-	"github.com/jackc/pgx/v5"
+	chi "github.com/go-chi/chi/v5"
+	pgx "github.com/jackc/pgx/v5"
 	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

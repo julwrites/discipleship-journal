@@ -97,6 +97,7 @@ func main() {
 	bibleHandler := handlers.NewBibleHandler(bibleAIClient)
 	chatHandler := handlers.NewChatHandler(bibleAIClient, noteService)
 	noteHandler := handlers.NewNoteHandler(database.DB, noteService)
+
 	// Update handlers to use notification service
 	connectionHandler := handlers.NewConnectionHandler(database.DB, notificationService)
 	groupHandler := handlers.NewGroupHandler(database.DB, notificationService)

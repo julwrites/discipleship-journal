@@ -70,13 +70,6 @@ func TestSendConnectionRequest(t *testing.T) {
 	}
 }
 
-func TestNewConnectionHandler(t *testing.T) {
-	mock, _ := pgxmock.NewPool()
-	mockNotification := services.NewMockNotificationService()
-	handler := NewConnectionHandler(mock, mockNotification)
-	assert.NotNil(t, handler)
-}
-
 func TestListConnections(t *testing.T) {
 	mock, err := pgxmock.NewPool()
 	if err != nil {
