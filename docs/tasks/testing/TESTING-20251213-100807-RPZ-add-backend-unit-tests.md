@@ -1,6 +1,6 @@
 ---
 id: TESTING-20251213-100807-RPZ
-status: pending
+status: completed
 title: Add Backend Unit Tests
 priority: medium
 created: 2025-12-13 10:08:07
@@ -28,6 +28,6 @@ The backend codebase (`api/`) currently lacks unit tests, particularly in the `h
     -   Verify that `go test ./...` correctly discovers and runs these tests in the CI pipeline.
 
 ## Acceptance Criteria
-- [ ] At least one `*_test.go` file is added to `api/services/` or `api/handlers/`.
-- [ ] Tests cover success and failure scenarios for Note creation.
-- [ ] `go test ./...` passes locally and in CI.
+- [x] At least one `*_test.go` file is added to `api/services/` or `api/handlers/`.
+- [x] Tests cover success and failure scenarios for Note creation.
+- [x] `go test ./...` passes locally and in CI.
