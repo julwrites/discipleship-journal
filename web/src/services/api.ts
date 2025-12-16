@@ -255,3 +255,41 @@ export async function respondToConnectionRequest(id: string, action: "accept" | 
     if (action === "reject") return { success: true };
     return res.json();
 }
+
+export const api = {
+    get: async (endpoint: string) => {
+        const headers = await getHeaders();
+        const res = await fetch(`${API_URL}${endpoint}`, { headers });
+        if (!res.ok) throw new Error(`GET ${endpoint} failed`);
+        return res.json();
+    },
+    post: async (endpoint: string, body: Record<string, unknown>) => {
+        const headers = await getHeaders();
+        const res = await fetch(`${API_URL}${endpoint}`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify(body),
+        });
+        if (!res.ok) throw new Error(`POST ${endpoint} failed`);
+        return res.json();
+    },
+    put: async (endpoint: string, body: Record<string, unknown>) => {
+        const headers = await getHeaders();
+        const res = await fetch(`${API_URL}${endpoint}`, {
+            method: "PUT",
+            headers,
+            body: JSON.stringify(body),
+        });
+        if (!res.ok) throw new Error(`PUT ${endpoint} failed`);
+        return res.json();
+    },
+    delete: async (endpoint: string) => {
+        const headers = await getHeaders();
+        const res = await fetch(`${API_URL}${endpoint}`, {
+            method: "DELETE",
+            headers,
+        });
+        if (!res.ok) throw new Error(`DELETE ${endpoint} failed`);
+        return res.json();
+    }
+};

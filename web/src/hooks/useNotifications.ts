@@ -3,15 +3,21 @@ import { messaging } from '../lib/firebase';
 import { getToken, onMessage } from 'firebase/messaging';
 import { api } from '../services/api';
 
+import { Messaging } from 'firebase/messaging';
+
 export function useNotifications() {
   useEffect(() => {
-    if (!messaging) return;
+    // Skip if messaging is not initialized (e.g. mock mode or unsupported browser)
+    // Also skip if running in E2E mock mode explicitly
+    if (!messaging || import.meta.env.VITE_FIREBASE_API_KEY === 'mock-key') return;
+
+    const msg = messaging as Messaging;
 
     const registerToken = async () => {
       try {
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
-          const token = await getToken(messaging, {
+          const token = await getToken(msg, {
             vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY
           });
 
@@ -32,16 +38,10 @@ export function useNotifications() {
     registerToken();
 
     // Handle foreground messages
-    const unsubscribe = onMessage(messaging, (payload) => {
+    const unsubscribe = onMessage(msg, (payload) => {
       console.log('Message received. ', payload);
-      // You can use sonner or existing toast notification here
-      // For now just log it or maybe show a native notification if document is hidden?
-      // Typically foreground handling is for in-app toasts.
       if (payload.notification) {
-          // If we had a toast library hook, we'd use it here.
-          // Since this is a hook, we might need to pass a callback or context.
-          // For MVP, simply logging.
-          // Ideally we dispatch an event or use a global store.
+          // Show native notification for now, or could use Sonner
           new Notification(payload.notification.title || "New Notification", {
               body: payload.notification.body
           });
