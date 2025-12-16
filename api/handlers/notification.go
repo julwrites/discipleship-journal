@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 
 	"discipleship_journal_api/middleware"
@@ -55,5 +56,7 @@ func (h *NotificationHandler) RegisterDevice(w http.ResponseWriter, r *http.Requ
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"status": "registered"})
+	if err := json.NewEncoder(w).Encode(map[string]string{"status": "registered"}); err != nil {
+		slog.Error("Failed to encode response", "error", err)
+	}
 }

@@ -59,7 +59,7 @@ func (s *notificationService) SendNotification(ctx context.Context, userID, titl
 	}
 
 	// 3. Send message
-	br, err := s.messagingClient.SendMulticast(ctx, message)
+	br, err := s.messagingClient.SendEachForMulticast(ctx, message)
 	if err != nil {
 		return err
 	}
