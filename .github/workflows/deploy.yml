@@ -8,7 +8,8 @@ on:
 
 env:
   # Backend GCP configuration (from secrets)
-  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  # Note: GCP project ID should match Firebase project ID
+  GCP_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
   GCP_REGION: ${{ secrets.GCP_REGION }}
   GCP_SERVICE_NAME: ${{ secrets.GCP_SERVICE_NAME }}
   GCP_ARTIFACT_REPOSITORY: ${{ secrets.GCP_ARTIFACT_REPOSITORY }}
@@ -37,6 +38,22 @@ jobs:
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
+
+      - name: Verify Artifact Registry Repository Exists
+        run: |
+          # Check if repository exists - if not, deployment will fail
+          echo "Checking if Artifact Registry repository exists..."
+          if gcloud artifacts repositories describe ${{ env.GCP_ARTIFACT_REPOSITORY }} \
+               --location=${{ env.GCP_REGION }} 2>/dev/null; then
+            echo "✅ Artifact Registry repository exists: ${{ env.GCP_ARTIFACT_REPOSITORY }}"
+          else
+            echo "❌ ERROR: Artifact Registry repository not found: ${{ env.GCP_ARTIFACT_REPOSITORY }}"
+            echo "Please create it manually with:"
+            echo "  gcloud artifacts repositories create ${{ env.GCP_ARTIFACT_REPOSITORY }} \\"
+            echo "    --repository-format=docker \\"
+            echo "    --location=${{ env.GCP_REGION }}"
+            exit 1
+          fi
 
       - name: Authenticate Docker to Artifact Registry
         # Use Google's official action for Docker auth
