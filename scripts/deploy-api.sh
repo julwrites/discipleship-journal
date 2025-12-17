@@ -14,11 +14,18 @@ gcloud builds submit --tag $IMAGE_NAME api/
 
 # Deploy to Cloud Run
 # Note: Ensure DATABASE_URL and other secrets are set in Cloud Run environment variables or Secret Manager
+DEPLOY_ARGS=""
+if [ -n "$GCP_SERVICE_ACCOUNT" ]; then
+  echo "Using service account: $GCP_SERVICE_ACCOUNT"
+  DEPLOY_ARGS="--service-account $GCP_SERVICE_ACCOUNT"
+fi
+
 gcloud run deploy $SERVICE_NAME \
   --image $IMAGE_NAME \
   --platform managed \
   --region $REGION \
   --allow-unauthenticated \
-  --project $PROJECT_ID
+  --project $PROJECT_ID \
+  $DEPLOY_ARGS
 
 echo "Backend deployment initiated."
