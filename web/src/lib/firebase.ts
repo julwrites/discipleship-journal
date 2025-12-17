@@ -1,10 +1,9 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
-// Determine auth domain to avoid cross-site cookie issues on custom domains.
-// If running locally, use the env var. If in production (on the custom domain), use the hostname.
-const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const authDomain = isLocal ? import.meta.env.VITE_FIREBASE_AUTH_DOMAIN : window.location.hostname;
+// Use the configured auth domain (typically .firebaseapp.com) to ensure the auth handler is correctly served.
+// Using window.location.hostname can cause issues if the hosting domain (e.g. .web.app) does not correctly intercept /__/auth/handler.
+const authDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN;
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
