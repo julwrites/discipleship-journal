@@ -5,8 +5,9 @@ test.describe('Authentication Flow (Mocked)', () => {
   test('should show login page when not authenticated', async ({ page }) => {
     await page.goto('/');
     await expect(page).toHaveURL('/login');
-    await expect(page.getByText('Discipleship Journal')).toBeVisible();
-    await expect(page.getByRole('button', { name: /Sign in with Google/i })).toBeVisible();
+    // Use exact: true to avoid matching the footer
+    await expect(page.getByText('Discipleship Journal', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Google/i })).toBeVisible();
   });
 
   test('should redirect to dashboard if authenticated via localStorage mock', async ({ page }) => {

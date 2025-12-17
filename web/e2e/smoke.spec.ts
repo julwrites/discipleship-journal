@@ -13,6 +13,7 @@ test('login page elements are present', async ({ page }) => {
   // Check that the heading is visible eventually.
   // Using a more relaxed selector to find the heading by its text content directly
   // This helps avoid issues with specific role accessibility in some contexts
-  const heading = page.getByText('Discipleship Journal');
+  // Use exact: true to avoid matching the footer copyright text
+  const heading = page.getByText('Discipleship Journal', { exact: true });
   await expect(heading).toBeVisible({ timeout: 10000 });
 });
