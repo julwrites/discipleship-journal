@@ -4,6 +4,7 @@ import {
   signInWithPopup,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  getRedirectResult,
   AuthError
 } from "firebase/auth";
 import { Button } from "@/components/ui/button";
@@ -11,13 +12,28 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Book, Shield, Users, CheckCircle2 } from "lucide-react";
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  useEffect(() => {
+    if (!auth) return;
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result) {
+          console.log("Redirect login success");
+        }
+      })
+      .catch((error) => {
+        console.error("Redirect login error:", error);
+        const msg = getErrorMessage(error as AuthError);
+        toast.error(msg);
+      });
+  }, []);
 
   const getErrorMessage = (error: AuthError) => {
     switch (error.code) {
