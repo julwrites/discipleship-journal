@@ -44,6 +44,12 @@ export function useAuth() {
          return () => clearTimeout(timer);
     }
 
+    if (!auth) {
+        console.error("Firebase auth not initialized. Check your environment variables.");
+        setLoading(false);
+        return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
