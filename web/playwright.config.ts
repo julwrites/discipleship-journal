@@ -40,7 +40,7 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'VITE_FIREBASE_API_KEY=mock-key npm run dev',
+    command: 'FIREBASE_API_KEY=mock-key npm run dev',
     url: 'http://localhost:5173',
     reuseExistingServer: true,
   },
