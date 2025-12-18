@@ -2,6 +2,7 @@ import { auth } from "@/lib/firebase";
 import {
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   getRedirectResult,
@@ -51,6 +52,8 @@ export default function LoginPage() {
         return "Password should be at least 6 characters.";
       case "auth/popup-closed-by-user":
         return "Sign in was cancelled.";
+      case "auth/popup-blocked":
+        return "Popup was blocked by the browser. Redirecting to sign in page...";
       case "auth/unauthorized-domain":
         return "Domain not authorized. Check Firebase Console.";
       default:
@@ -68,9 +71,21 @@ export default function LoginPage() {
     try {
       await signInWithPopup(auth, provider);
     } catch (e) {
-      const msg = getErrorMessage(e as AuthError);
-      toast.error(msg);
-    } finally {
+      const error = e as AuthError;
+      if (error.code === 'auth/popup-blocked' || error.code === 'auth/cancelled-popup-request') {
+        toast.info("Popup blocked. Redirecting to Google Sign In...");
+        try {
+          await signInWithRedirect(auth, provider);
+          // Redirect happens, so isLoading remains true until page unloads
+          return;
+        } catch (redirectError) {
+          const msg = getErrorMessage(redirectError as AuthError);
+          toast.error(msg);
+        }
+      } else {
+        const msg = getErrorMessage(error);
+        toast.error(msg);
+      }
       setIsLoading(false);
     }
   };
@@ -106,10 +121,10 @@ export default function LoginPage() {
 
   if (!auth) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-50">
+      <div className="flex h-screen items-center justify-center bg-background">
         <div className="text-center space-y-4 max-w-md p-6">
-          <h1 className="text-3xl font-bold text-red-600">Configuration Error</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-destructive">Configuration Error</h1>
+          <p className="text-muted-foreground">
             Firebase authentication is not initialized. Please check your deployment configuration and environment variables.
           </p>
         </div>
@@ -130,7 +145,7 @@ export default function LoginPage() {
           </div>
 
           <h1 className="text-5xl font-extrabold tracking-tight mb-6 leading-tight">
-            Capture your thoughts, <span className="text-blue-400">prayers</span>, and growth.
+            Capture your thoughts, <span className="text-primary">prayers</span>, and growth.
           </h1>
           <p className="text-lg text-slate-300 max-w-md mb-8">
             A secure and private space for your spiritual journey. Document your walk, share with small groups, and reflect on your progress.
@@ -139,14 +154,14 @@ export default function LoginPage() {
 
         <div className="relative z-10 grid gap-6">
           <div className="flex items-start space-x-4">
-            <Shield className="h-6 w-6 text-blue-400 mt-1" />
+            <Shield className="h-6 w-6 text-primary mt-1" />
             <div>
               <h3 className="font-semibold text-lg">Private & Secure</h3>
               <p className="text-slate-400">Your journal entries are private by default. You control what you share.</p>
             </div>
           </div>
           <div className="flex items-start space-x-4">
-            <Users className="h-6 w-6 text-blue-400 mt-1" />
+            <Users className="h-6 w-6 text-primary mt-1" />
             <div>
               <h3 className="font-semibold text-lg">Group Sharing</h3>
               <p className="text-slate-400">Connect with your small group. Share prayer requests and insights effortlessly.</p>
@@ -160,22 +175,22 @@ export default function LoginPage() {
       </div>
 
       {/* Right Column - Auth Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-gray-50 dark:bg-slate-950">
-        <Card className="w-full max-w-md shadow-lg">
+      <div className="flex-1 flex items-center justify-center p-8 bg-background">
+        <Card className="w-full max-w-md shadow-lg border-border">
           <CardHeader className="space-y-1 text-center">
             <div className="flex justify-center mb-4 lg:hidden">
               <Book className="h-10 w-10 text-primary" />
             </div>
-            <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-2xl font-bold text-foreground">Welcome back</CardTitle>
+            <CardDescription className="text-muted-foreground">
               Enter your email to sign in to your account
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-4">
-                <TabsTrigger value="login">Sign In</TabsTrigger>
-                <TabsTrigger value="register">Create Account</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 mb-4 bg-muted">
+                <TabsTrigger value="login" className="data-[state=active]:bg-background data-[state=active]:text-foreground">Sign In</TabsTrigger>
+                <TabsTrigger value="register" className="data-[state=active]:bg-background data-[state=active]:text-foreground">Create Account</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">
@@ -187,6 +202,7 @@ export default function LoginPage() {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      className="bg-background text-foreground border-input"
                     />
                   </div>
                   <div className="space-y-2">
@@ -196,9 +212,10 @@ export default function LoginPage() {
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      className="bg-background text-foreground border-input"
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button type="submit" className="w-full">
                     {isLoading ? "Signing in..." : "Sign In with Email"}
                   </Button>
                 </form>
@@ -213,6 +230,7 @@ export default function LoginPage() {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      className="bg-background text-foreground border-input"
                     />
                   </div>
                   <div className="space-y-2">
@@ -223,17 +241,18 @@ export default function LoginPage() {
                       minLength={6}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      className="bg-background text-foreground border-input"
                     />
                   </div>
 
-                  <div className="space-y-2 text-sm text-gray-500">
+                  <div className="space-y-2 text-sm text-muted-foreground">
                     <div className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-green-500" />
-                        <span>At least 6 characters</span>
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      <span>At least 6 characters</span>
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button type="submit" className="w-full">
                     {isLoading ? "Creating account..." : "Create Account"}
                   </Button>
                 </form>
@@ -242,7 +261,7 @@ export default function LoginPage() {
 
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
+                <span className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-background px-2 text-muted-foreground">
@@ -251,7 +270,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <Button variant="outline" className="w-full" onClick={handleGoogleLogin} disabled={isLoading}>
+            <Button variant="outline" className="w-full border-input text-foreground hover:bg-muted" onClick={handleGoogleLogin} disabled={isLoading}>
               <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
                 <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
               </svg>
@@ -259,7 +278,7 @@ export default function LoginPage() {
             </Button>
           </CardContent>
           <CardFooter className="flex justify-center">
-            <p className="text-xs text-center text-gray-500">
+            <p className="text-xs text-center text-muted-foreground">
               By clicking continue, you agree to our Terms of Service and Privacy Policy.
             </p>
           </CardFooter>
