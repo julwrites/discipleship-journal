@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor, within } from '@testing-library/rea
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import LoginPage from './Login';
 import { auth } from '@/lib/firebase';
-import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithPopup, signInWithRedirect } from 'firebase/auth';
 
 // Mock Firebase Auth
 vi.mock('@/lib/firebase', () => ({
@@ -15,6 +15,7 @@ vi.mock('@/lib/firebase', () => ({
 vi.mock('firebase/auth', () => ({
     getAuth: vi.fn(),
     signInWithPopup: vi.fn(),
+    signInWithRedirect: vi.fn(),
     GoogleAuthProvider: vi.fn(),
     signInWithEmailAndPassword: vi.fn(),
     createUserWithEmailAndPassword: vi.fn(),
@@ -27,6 +28,7 @@ vi.mock('sonner', () => ({
     toast: {
         success: vi.fn(),
         error: vi.fn(),
+        info: vi.fn(),
     }
 }));
 
@@ -68,6 +70,22 @@ describe('LoginPage', () => {
 
         await waitFor(() => {
             expect(signInWithPopup).toHaveBeenCalled();
+        });
+    });
+
+    it('falls back to redirect on popup blocked', async () => {
+        // Mock popup failure
+        const error = { code: 'auth/popup-blocked', message: 'Popup blocked' };
+        vi.mocked(signInWithPopup).mockRejectedValueOnce(error);
+
+        render(<LoginPage />);
+
+        const googleButton = screen.getByRole('button', { name: /Google/i });
+        fireEvent.click(googleButton);
+
+        await waitFor(() => {
+            expect(signInWithPopup).toHaveBeenCalled();
+            expect(signInWithRedirect).toHaveBeenCalled();
         });
     });
 });
