@@ -11,6 +11,8 @@ const firebaseConfig = {
   measurementId: import.meta.env.FIREBASE_MEASUREMENT_ID
 };
 
+console.log(firebaseConfig); // Temporarily log this to figure out what is going wrong. 
+
 // Conditional initialization to prevent crashes during mock testing if keys are invalid
 let appInstance;
 let authInstance;
