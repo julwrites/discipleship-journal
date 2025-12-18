@@ -1,17 +1,14 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
-// Use the configured auth domain (typically .firebaseapp.com) to ensure the auth handler is correctly served.
-// Using window.location.hostname can cause issues if the hosting domain (e.g. .web.app) does not correctly intercept /__/auth/handler.
-const authDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN;
-
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: authDomain,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Conditional initialization to prevent crashes during mock testing if keys are invalid
