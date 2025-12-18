@@ -14,7 +14,7 @@ export function useAuth() {
     // Fallback for E2E testing with mock keys.
     // This bypasses Firebase auth initialization which fails with invalid keys.
     // We explicitly check for the mock key to enable this bypass.
-    const shouldBypassAuth = import.meta.env.VITE_FIREBASE_API_KEY === 'mock-key';
+    const shouldBypassAuth = import.meta.env.FIREBASE_API_KEY === 'mock-key';
 
     if (shouldBypassAuth) {
          console.warn("Using mock auth keys, bypassing auth check after timeout.");
