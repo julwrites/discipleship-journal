@@ -1,6 +1,6 @@
 import { auth } from "@/lib/firebase";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+const API_URL = import.meta.env.GCP_API_URL || "http://localhost:8080/api";
 
 async function getHeaders() {
   const token = await auth.currentUser?.getIdToken();
