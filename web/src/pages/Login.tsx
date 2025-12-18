@@ -2,6 +2,7 @@ import { auth } from "@/lib/firebase";
 import {
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   getRedirectResult,
@@ -51,6 +52,8 @@ export default function LoginPage() {
         return "Password should be at least 6 characters.";
       case "auth/popup-closed-by-user":
         return "Sign in was cancelled.";
+      case "auth/popup-blocked":
+        return "Popup was blocked by the browser. Redirecting to sign in page...";
       case "auth/unauthorized-domain":
         return "Domain not authorized. Check Firebase Console.";
       default:
@@ -68,9 +71,21 @@ export default function LoginPage() {
     try {
       await signInWithPopup(auth, provider);
     } catch (e) {
-      const msg = getErrorMessage(e as AuthError);
-      toast.error(msg);
-    } finally {
+      const error = e as AuthError;
+      if (error.code === 'auth/popup-blocked' || error.code === 'auth/cancelled-popup-request') {
+        toast.info("Popup blocked. Redirecting to Google Sign In...");
+        try {
+          await signInWithRedirect(auth, provider);
+          // Redirect happens, so isLoading remains true until page unloads
+          return;
+        } catch (redirectError) {
+          const msg = getErrorMessage(redirectError as AuthError);
+          toast.error(msg);
+        }
+      } else {
+        const msg = getErrorMessage(error);
+        toast.error(msg);
+      }
       setIsLoading(false);
     }
   };
