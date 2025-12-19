@@ -120,7 +120,11 @@ func main() {
 	r.Use(middleware.RequestLogger(logger))
 	r.Use(chimiddleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"*"}, // Adjust for production
+		AllowedOrigins: []string{
+			"https://journal.tehj.io",
+			"http://localhost:5173",
+			"http://localhost:4173",
+		},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
