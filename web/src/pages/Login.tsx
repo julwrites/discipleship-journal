@@ -71,30 +71,23 @@ export default function LoginPage() {
     }
     setIsLoading(true);
     const provider = new GoogleAuthProvider();
+
     try {
-      await signInWithPopup(auth, provider);
-      // This part only runs if popup is successful
-      setIsLoading(false); // Should reset loading state if popup succeeds
-    } catch (e) {
-      const error = e as AuthError;
-      if (error.code === 'auth/popup-blocked' || error.code === 'auth/cancelled-popup-request') {
-        toast.info("Popup blocked. Redirecting to Google Sign In...");
-        try {
-          await signInWithRedirect(auth, provider);
-          // This line won't be reached if a successful redirect happens.
-          // If it DOES reach here, it means signInWithRedirect also failed to redirect.
-          console.error("signInWithRedirect failed to redirect without throwing an error.");
-        } catch (redirectError) {
-          console.error("Error during signInWithRedirect:", redirectError);
-          const msg = getErrorMessage(redirectError as AuthError);
-          toast.error(msg);
-        }
-      } else {
-        console.error("Error during signInWithPopup:", error);
-        const msg = getErrorMessage(error);
-        toast.error(msg);
-      }
-      setIsLoading(false); // Ensure loading is reset if error caught and no redirect occurred
+      // --- TEMPORARILY MODIFIED FOR DEBUGGING ---
+      // Directly call signInWithRedirect to bypass popup logic
+      toast.info("Attempting Google Sign In with Redirect..."); // Inform user of direct redirect attempt
+      await signInWithRedirect(auth, provider);
+      // This line will only be reached if signInWithRedirect *fails to redirect*
+      // AND *does not throw an error*. This would be an unexpected state.
+      console.error("signInWithRedirect completed without redirecting or throwing an error. This is unusual.");
+      setIsLoading(false); // Reset loading if it somehow returns without redirect
+      // --- END TEMPORARY MODIFICATION ---
+
+    } catch (redirectError) {
+      console.error("Error caught during signInWithRedirect:", redirectError);
+      const msg = getErrorMessage(redirectError as AuthError);
+      toast.error(msg);
+      setIsLoading(false); // Reset if an error is caught
     }
   };
 
