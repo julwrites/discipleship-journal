@@ -17,6 +17,9 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      workbox: {
+        navigateFallbackDenylist: [/^\/__/],
+      },
       manifest: {
         name: 'Discipleship Journal',
         short_name: 'Journal',
