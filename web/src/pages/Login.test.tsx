@@ -62,15 +62,34 @@ describe('LoginPage', () => {
         });
     });
 
-    it('handles google login with redirect (debugging mode)', async () => {
+    it('handles google login with popup', async () => {
         render(<LoginPage />);
 
         const googleButton = screen.getByRole('button', { name: /Google/i });
         fireEvent.click(googleButton);
 
         await waitFor(() => {
+            expect(signInWithPopup).toHaveBeenCalled();
+            expect(signInWithRedirect).not.toHaveBeenCalled();
+        });
+    });
+
+    it('handles google login popup blocked fallback', async () => {
+        // Mock popup failure
+        vi.mocked(signInWithPopup).mockRejectedValueOnce({
+            code: 'auth/popup-blocked',
+            message: 'Popup blocked'
+        });
+
+        render(<LoginPage />);
+
+        const googleButton = screen.getByRole('button', { name: /Google/i });
+        fireEvent.click(googleButton);
+
+        await waitFor(() => {
+            expect(signInWithPopup).toHaveBeenCalled();
+            // Should fallback to redirect
             expect(signInWithRedirect).toHaveBeenCalled();
-            expect(signInWithPopup).not.toHaveBeenCalled();
         });
     });
 });

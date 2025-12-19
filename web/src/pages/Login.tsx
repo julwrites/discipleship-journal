@@ -2,6 +2,7 @@ import { auth } from "@/lib/firebase";
 import {
   GoogleAuthProvider,
   signInWithRedirect,
+  signInWithPopup,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   getRedirectResult,
@@ -72,21 +73,33 @@ export default function LoginPage() {
     const provider = new GoogleAuthProvider();
 
     try {
-      // --- TEMPORARILY MODIFIED FOR DEBUGGING ---
-      // Directly call signInWithRedirect to bypass popup logic
-      toast.info("Attempting Google Sign In with Redirect..."); // Inform user of direct redirect attempt
-      await signInWithRedirect(auth, provider);
-      // This line will only be reached if signInWithRedirect *fails to redirect*
-      // AND *does not throw an error*. This would be an unexpected state.
-      console.error("signInWithRedirect completed without redirecting or throwing an error. This is unusual.");
-      setIsLoading(false); // Reset loading if it somehow returns without redirect
-      // --- END TEMPORARY MODIFICATION ---
+      // Try popup first as it is cleaner and doesn't require a redirect flow
+      await signInWithPopup(auth, provider);
+      // Success is handled by auth state listener or subsequent redirect
+    } catch (error) {
+      const authError = error as AuthError;
+      console.error("Google Sign In (Popup) failed:", authError);
 
-    } catch (redirectError) {
-      console.error("Error caught during signInWithRedirect:", redirectError);
-      const msg = getErrorMessage(redirectError as AuthError);
-      toast.error(msg);
-      setIsLoading(false); // Reset if an error is caught
+      if (authError.code === 'auth/popup-blocked' || authError.code === 'auth/popup-closed-by-user') {
+        // Fallback to redirect if popup is blocked or closed (sometimes mistakenly)
+        // But closed-by-user usually means they cancelled, so maybe only on blocked.
+        // However, some mobile browsers block popups aggressively.
+        if (authError.code === 'auth/popup-blocked') {
+            toast.info("Popup blocked. Redirecting to Google Sign In...");
+            try {
+                await signInWithRedirect(auth, provider);
+                return; // Redirecting...
+            } catch (redirectError) {
+                console.error("Google Sign In (Redirect) failed:", redirectError);
+                toast.error(getErrorMessage(redirectError as AuthError));
+            }
+        } else {
+             toast.error(getErrorMessage(authError));
+        }
+      } else {
+        toast.error(getErrorMessage(authError));
+      }
+      setIsLoading(false);
     }
   };
 
