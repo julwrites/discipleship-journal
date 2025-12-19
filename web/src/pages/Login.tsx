@@ -1,7 +1,6 @@
 import { auth } from "@/lib/firebase";
 import {
   GoogleAuthProvider,
-  signInWithPopup,
   signInWithRedirect,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
