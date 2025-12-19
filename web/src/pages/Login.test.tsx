@@ -1,5 +1,6 @@
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
 import LoginPage from './Login';
 import { auth } from '@/lib/firebase';
 import { signInWithEmailAndPassword, signInWithPopup, signInWithRedirect } from 'firebase/auth';
@@ -38,13 +39,21 @@ describe('LoginPage', () => {
     });
 
     it('renders the login page correctly', () => {
-        render(<LoginPage />);
+        render(
+            <MemoryRouter>
+                <LoginPage />
+            </MemoryRouter>
+        );
         expect(screen.getByText('Discipleship Journal')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Google/i })).toBeInTheDocument();
     });
 
     it('handles email login', async () => {
-        render(<LoginPage />);
+        render(
+            <MemoryRouter>
+                <LoginPage />
+            </MemoryRouter>
+        );
 
         const signInButton = screen.getByRole('button', { name: 'Sign In with Email' });
         const form = signInButton.closest('form');
@@ -63,7 +72,11 @@ describe('LoginPage', () => {
     });
 
     it('handles google login with popup', async () => {
-        render(<LoginPage />);
+        render(
+            <MemoryRouter>
+                <LoginPage />
+            </MemoryRouter>
+        );
 
         const googleButton = screen.getByRole('button', { name: /Google/i });
         fireEvent.click(googleButton);
@@ -81,7 +94,11 @@ describe('LoginPage', () => {
             message: 'Popup blocked'
         });
 
-        render(<LoginPage />);
+        render(
+            <MemoryRouter>
+                <LoginPage />
+            </MemoryRouter>
+        );
 
         const googleButton = screen.getByRole('button', { name: /Google/i });
         fireEvent.click(googleButton);

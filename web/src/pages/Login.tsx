@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { Book, Shield, Users, CheckCircle2 } from "lucide-react";
@@ -292,7 +293,7 @@ export default function LoginPage() {
           </CardContent>
           <CardFooter className="flex justify-center">
             <p className="text-xs text-center text-muted-foreground">
-              By clicking continue, you agree to our Terms of Service and Privacy Policy.
+              By clicking continue, you agree to our <Link to="/terms-of-service" className="underline hover:text-primary">Terms of Service</Link> and <Link to="/privacy-policy" className="underline hover:text-primary">Privacy Policy</Link>.
             </p>
           </CardFooter>
         </Card>
