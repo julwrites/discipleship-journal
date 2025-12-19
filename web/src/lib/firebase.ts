@@ -11,9 +11,6 @@ const firebaseConfig = {
   measurementId: import.meta.env.FIREBASE_MEASUREMENT_ID
 };
 
-console.log("Runtime Firebase Config:", firebaseConfig);
-console.log("FIREBASE_AUTH_DOMAIN (from env):", import.meta.env.FIREBASE_AUTH_DOMAIN);
-
 // Conditional initialization to prevent crashes during mock testing if keys are invalid
 let appInstance;
 let authInstance;
@@ -21,7 +18,6 @@ let authInstance;
 try {
   appInstance = initializeApp(firebaseConfig);
   authInstance = getAuth(appInstance);
-  console.log("Firebase Auth initialized successfully:", authInstance);
 } catch (e) {
   console.warn("Firebase initialization failed (expected during mock testing):", e);
   // Provide a dummy auth object if needed, or rely on handling the error where it's used.

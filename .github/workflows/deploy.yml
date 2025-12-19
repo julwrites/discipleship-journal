@@ -80,7 +80,7 @@ jobs:
           service: ${{ env.GCP_SERVICE_NAME }}
           image: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPOSITORY }}/${{ env.GCP_SERVICE_NAME }}:${{ github.sha }}
           region: ${{ env.GCP_REGION }}
-          flags: '--service-account=${{ secrets.GCP_SERVICE_ACCOUNT }}'
+          flags: '--service-account=${{ secrets.GCP_SERVICE_ACCOUNT }} --allow-unauthenticated'
           env_vars: |
             APP_ENV=production
             GOOGLE_CLOUD_PROJECT=${{ env.GCP_PROJECT_ID }}
