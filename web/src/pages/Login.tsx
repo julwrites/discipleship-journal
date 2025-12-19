@@ -63,6 +63,7 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+    console.log("handleGoogleLogin called.");
 
     if (!auth) {
       toast.error("Authentication not initialized.");
@@ -72,23 +73,28 @@ export default function LoginPage() {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
+      // This part only runs if popup is successful
+      setIsLoading(false); // Should reset loading state if popup succeeds
     } catch (e) {
       const error = e as AuthError;
       if (error.code === 'auth/popup-blocked' || error.code === 'auth/cancelled-popup-request') {
         toast.info("Popup blocked. Redirecting to Google Sign In...");
         try {
           await signInWithRedirect(auth, provider);
-          // Redirect happens, so isLoading remains true until page unloads
-          return;
+          // This line won't be reached if a successful redirect happens.
+          // If it DOES reach here, it means signInWithRedirect also failed to redirect.
+          console.error("signInWithRedirect failed to redirect without throwing an error.");
         } catch (redirectError) {
+          console.error("Error during signInWithRedirect:", redirectError);
           const msg = getErrorMessage(redirectError as AuthError);
           toast.error(msg);
         }
       } else {
+        console.error("Error during signInWithPopup:", error);
         const msg = getErrorMessage(error);
         toast.error(msg);
       }
-      setIsLoading(false);
+      setIsLoading(false); // Ensure loading is reset if error caught and no redirect occurred
     }
   };
 
