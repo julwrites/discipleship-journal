@@ -7,6 +7,9 @@ import ChatPage from "@/pages/ChatPage";
 import ConnectionsPage from "@/pages/ConnectionsPage";
 import GroupsPage from "@/pages/GroupsPage";
 import Settings from "@/pages/Settings";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import TermsOfService from "@/pages/TermsOfService";
+import PublicLayout from "@/components/PublicLayout";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -22,6 +25,11 @@ function App() {
       <Toaster />
       <BrowserRouter>
         <Routes>
+          <Route element={<PublicLayout />}>
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
+          </Route>
+
           <Route path="/login" element={user ? <Navigate to="/" /> : <LoginPage />} />
 
           <Route path="/" element={user ? <Dashboard /> : <Navigate to="/login" />} />
