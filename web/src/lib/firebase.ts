@@ -45,11 +45,8 @@ try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any;
 
-      // Mocking minimal messaging object
-      messagingInstance = {
-        getToken: () => Promise.resolve("mock-token"),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any;
+      // Messaging is null in mock mode to prevent SDK crashes
+      messagingInstance = null;
   }
   console.error("Firebase initialization catch block activated. Auth instance might be mocked or null.");
 }

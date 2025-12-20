@@ -5,7 +5,9 @@ import { NavigationRoute, registerRoute } from 'workbox-routing'
 import { initializeApp } from "firebase/app";
 import { getMessaging, onBackgroundMessage } from "firebase/messaging/sw";
 
-declare let self: ServiceWorkerGlobalScope
+// Fix for strict typing of __WB_MANIFEST
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare let self: ServiceWorkerGlobalScope & { __WB_MANIFEST: any }
 
 self.skipWaiting()
 clientsClaim()
@@ -40,7 +42,6 @@ try {
   const messaging = getMessaging(app);
 
   onBackgroundMessage(messaging, (payload) => {
-    console.log('[firebase-messaging-sw.js] Received background message ', payload);
     const notificationTitle = payload.notification?.title || 'Discipleship Journal';
     const notificationOptions = {
       body: payload.notification?.body,

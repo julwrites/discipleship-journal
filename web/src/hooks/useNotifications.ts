@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getToken, onMessage } from "firebase/messaging";
 import { messaging } from "@/lib/firebase";
 import { registerDevice } from "@/services/api";
@@ -11,41 +11,53 @@ export function useNotifications() {
   const [permission, setPermission] = useState<NotificationPermission>(
     typeof Notification !== "undefined" ? Notification.permission : "default"
   );
+  const isSupported = !!messaging;
+
+  const registerToken = useCallback(async () => {
+    if (!messaging || !user) return;
+    try {
+        let registration;
+        if ('serviceWorker' in navigator) {
+            registration = await navigator.serviceWorker.ready;
+        }
+
+        const currentToken = await getToken(messaging, {
+            serviceWorkerRegistration: registration
+        });
+
+        if (currentToken) {
+            setToken(currentToken);
+            await registerDevice(currentToken);
+        }
+    } catch (error) {
+        console.error("Error retrieving token:", error);
+    }
+  }, [user]);
+
+  const requestPermission = useCallback(async () => {
+    if (!messaging) return;
+    try {
+      const status = await Notification.requestPermission();
+      setPermission(status);
+      if (status === 'granted') {
+          await registerToken();
+      }
+    } catch (error) {
+      console.error("Error requesting permission:", error);
+    }
+  }, [registerToken]);
 
   useEffect(() => {
     if (!user || !messaging) return;
 
-    const requestPermission = async () => {
-      try {
-        const status = await Notification.requestPermission();
-        setPermission(status);
-
-        if (status === "granted") {
-          let registration;
-          if ('serviceWorker' in navigator) {
-             registration = await navigator.serviceWorker.ready;
-          }
-
-          const currentToken = await getToken(messaging, {
-              serviceWorkerRegistration: registration
-          });
-
-          if (currentToken) {
-            setToken(currentToken);
-            // Only register if token changed? Ideally backend handles idempotency.
-            await registerDevice(currentToken);
-            console.log("Device registered for notifications");
-          }
-        }
-      } catch (error) {
-        console.error("An error occurred while retrieving token: ", error);
-      }
-    };
-
-    requestPermission();
+    // Only attempt registration if permission is already granted
+    if (permission === "granted") {
+        setTimeout(() => {
+            registerToken();
+        }, 0);
+    }
 
     const unsubscribe = onMessage(messaging, (payload) => {
-      console.log("Foreground message received:", payload);
       toast(payload.notification?.title || "New Notification", {
         description: payload.notification?.body,
       });
@@ -54,7 +66,7 @@ export function useNotifications() {
     return () => {
       unsubscribe();
     };
-  }, [user]);
+  }, [user, permission, registerToken]);
 
-  return { token, permission };
+  return { token, permission, requestPermission, isSupported };
 }
