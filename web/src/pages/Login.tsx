@@ -6,6 +6,9 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   getRedirectResult,
+  sendSignInLinkToEmail,
+  isSignInWithEmailLink,
+  signInWithEmailLink,
   AuthError
 } from "firebase/auth";
 import { Button } from "@/components/ui/button";
@@ -21,15 +24,43 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [magicLinkEmail, setMagicLinkEmail] = useState("");
+  const [activeTab, setActiveTab] = useState("login");
 
   useEffect(() => {
     if (!auth) return;
+
+    // Handle Google Redirect Result
     getRedirectResult(auth)
       .catch((error) => {
         console.error("Redirect login error:", error);
         const msg = getErrorMessage(error as AuthError);
         toast.error(msg);
       });
+
+    // Handle Email Link Sign-in
+    if (isSignInWithEmailLink(auth, window.location.href)) {
+      let emailForSignIn = window.localStorage.getItem('emailForSignIn');
+      if (!emailForSignIn) {
+        emailForSignIn = window.prompt('Please provide your email for confirmation');
+      }
+
+      if (emailForSignIn) {
+        setIsLoading(true);
+        signInWithEmailLink(auth, emailForSignIn, window.location.href)
+          .then(() => {
+            window.localStorage.removeItem('emailForSignIn');
+            toast.success("Successfully signed in!");
+            // Navigation handled by auth listener in App or router
+          })
+          .catch((error) => {
+            console.error("Email link sign in error:", error);
+            const msg = getErrorMessage(error as AuthError);
+            toast.error(msg);
+            setIsLoading(false);
+          });
+      }
+    }
   }, []);
 
   const getErrorMessage = (error: AuthError) => {
@@ -52,6 +83,8 @@ export default function LoginPage() {
         return "Popup was blocked by the browser. Redirecting to sign in page...";
       case "auth/unauthorized-domain":
         return "Domain not authorized. Check Firebase Console.";
+      case "auth/invalid-action-code":
+        return "The login link has expired or has already been used.";
       default:
         return error.message || "An error occurred during authentication.";
     }
@@ -78,8 +111,6 @@ export default function LoginPage() {
 
       if (authError.code === 'auth/popup-blocked' || authError.code === 'auth/popup-closed-by-user') {
         // Fallback to redirect if popup is blocked or closed (sometimes mistakenly)
-        // But closed-by-user usually means they cancelled, so maybe only on blocked.
-        // However, some mobile browsers block popups aggressively.
         if (authError.code === 'auth/popup-blocked') {
             toast.info("Popup blocked. Redirecting to Google Sign In...");
             try {
@@ -121,6 +152,35 @@ export default function LoginPage() {
       await createUserWithEmailAndPassword(auth, email, password);
       toast.success("Account created successfully!");
     } catch (e) {
+      const msg = getErrorMessage(e as AuthError);
+      toast.error(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleMagicLinkSend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!auth) return;
+    if (!magicLinkEmail) {
+        toast.error("Please enter your email address.");
+        return;
+    }
+
+    setIsLoading(true);
+    const actionCodeSettings = {
+      // URL must be whitelisted in Firebase Console.
+      url: window.location.origin + '/login', // Redirect back to login page to handle verification
+      handleCodeInApp: true,
+    };
+
+    try {
+      await sendSignInLinkToEmail(auth, magicLinkEmail, actionCodeSettings);
+      window.localStorage.setItem('emailForSignIn', magicLinkEmail);
+      toast.success("Login link sent! Please check your email.");
+      setMagicLinkEmail(""); // Clear input
+    } catch (e) {
+      console.error("Send Magic Link Error:", e);
       const msg = getErrorMessage(e as AuthError);
       toast.error(msg);
     } finally {
@@ -192,14 +252,15 @@ export default function LoginPage() {
             </div>
             <CardTitle className="text-2xl font-bold text-foreground">Welcome back</CardTitle>
             <CardDescription className="text-muted-foreground">
-              Enter your email to sign in to your account
+              {activeTab === 'magic-link' ? 'Enter your email to receive a magic link' : 'Enter your email to sign in to your account'}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-4 bg-muted">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-3 mb-4 bg-muted">
                 <TabsTrigger value="login" className="data-[state=active]:bg-background data-[state=active]:text-foreground">Sign In</TabsTrigger>
-                <TabsTrigger value="register" className="data-[state=active]:bg-background data-[state=active]:text-foreground">Create Account</TabsTrigger>
+                <TabsTrigger value="magic-link" className="data-[state=active]:bg-background data-[state=active]:text-foreground">Magic Link</TabsTrigger>
+                <TabsTrigger value="register" className="data-[state=active]:bg-background data-[state=active]:text-foreground">Register</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">
@@ -226,6 +287,24 @@ export default function LoginPage() {
                   </div>
                   <Button type="submit" className="w-full">
                     {isLoading ? "Signing in..." : "Sign In with Email"}
+                  </Button>
+                </form>
+              </TabsContent>
+
+              <TabsContent value="magic-link">
+                <form onSubmit={handleMagicLinkSend} className="space-y-4">
+                  <div className="space-y-2">
+                    <Input
+                      type="email"
+                      placeholder="name@example.com"
+                      required
+                      value={magicLinkEmail}
+                      onChange={(e) => setMagicLinkEmail(e.target.value)}
+                      className="bg-background text-foreground border-input"
+                    />
+                  </div>
+                  <Button type="submit" className="w-full">
+                    {isLoading ? "Sending Link..." : "Send Magic Link"}
                   </Button>
                 </form>
               </TabsContent>

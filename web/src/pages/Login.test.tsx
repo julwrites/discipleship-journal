@@ -3,7 +3,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import LoginPage from './Login';
 import { auth } from '@/lib/firebase';
-import { signInWithEmailAndPassword, signInWithPopup, signInWithRedirect } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithPopup, signInWithRedirect, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from 'firebase/auth';
+import userEvent from '@testing-library/user-event';
 
 // Mock Firebase Auth
 vi.mock('@/lib/firebase', () => ({
@@ -21,6 +22,9 @@ vi.mock('firebase/auth', () => ({
     signInWithEmailAndPassword: vi.fn(),
     createUserWithEmailAndPassword: vi.fn(),
     getRedirectResult: vi.fn().mockResolvedValue(null),
+    sendSignInLinkToEmail: vi.fn(),
+    isSignInWithEmailLink: vi.fn().mockReturnValue(false),
+    signInWithEmailLink: vi.fn(),
     AuthError: vi.fn(),
 }));
 
@@ -33,9 +37,13 @@ vi.mock('sonner', () => ({
     }
 }));
 
+// Mock window.prompt
+window.prompt = vi.fn();
+
 describe('LoginPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        window.localStorage.clear();
     });
 
     it('renders the login page correctly', () => {
@@ -107,6 +115,72 @@ describe('LoginPage', () => {
             expect(signInWithPopup).toHaveBeenCalled();
             // Should fallback to redirect
             expect(signInWithRedirect).toHaveBeenCalled();
+        });
+    });
+
+    it('sends magic link', async () => {
+        render(
+            <MemoryRouter>
+                <LoginPage />
+            </MemoryRouter>
+        );
+
+        // Click Magic Link tab
+        const magicLinkTab = screen.getByRole('tab', { name: 'Magic Link' });
+        await userEvent.click(magicLinkTab);
+
+        const sendLinkButton = screen.getByRole('button', { name: 'Send Magic Link' });
+        const form = sendLinkButton.closest('form');
+        expect(form).toBeInTheDocument();
+
+        const emailInput = within(form!).getByPlaceholderText('name@example.com');
+        fireEvent.change(emailInput, { target: { value: 'magic@example.com' } });
+        fireEvent.click(sendLinkButton);
+
+        await waitFor(() => {
+            expect(sendSignInLinkToEmail).toHaveBeenCalledWith(auth, 'magic@example.com', expect.objectContaining({
+                handleCodeInApp: true,
+                url: expect.stringContaining('/login')
+            }));
+            expect(window.localStorage.getItem('emailForSignIn')).toBe('magic@example.com');
+        });
+    });
+
+    it('completes sign in with email link', async () => {
+        // Mock isSignInWithEmailLink to return true
+        vi.mocked(isSignInWithEmailLink).mockReturnValue(true);
+        // Mock stored email
+        window.localStorage.setItem('emailForSignIn', 'stored@example.com');
+        // Mock successful sign in
+        vi.mocked(signInWithEmailLink).mockResolvedValue({ user: {} } as any);
+
+        render(
+            <MemoryRouter>
+                <LoginPage />
+            </MemoryRouter>
+        );
+
+        await waitFor(() => {
+            expect(signInWithEmailLink).toHaveBeenCalledWith(auth, 'stored@example.com', expect.any(String));
+            expect(window.localStorage.getItem('emailForSignIn')).toBeNull(); // Should be cleared
+        });
+    });
+
+    it('prompts for email if not in storage during link sign in', async () => {
+        vi.mocked(isSignInWithEmailLink).mockReturnValue(true);
+        window.localStorage.removeItem('emailForSignIn');
+        vi.mocked(window.prompt).mockReturnValue('prompted@example.com');
+        vi.mocked(signInWithEmailLink).mockResolvedValue({ user: {} } as any);
+
+        render(
+            <MemoryRouter>
+                <LoginPage />
+            </MemoryRouter>
+        );
+
+        await waitFor(() => {
+            expect(window.prompt).toHaveBeenCalled();
+            expect(signInWithEmailLink).toHaveBeenCalledWith(auth, 'prompted@example.com', expect.any(String));
         });
     });
 });
