@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
+import { getMessaging } from "firebase/messaging";
 
 const firebaseConfig = {
   apiKey: import.meta.env.FIREBASE_API_KEY,
@@ -14,10 +15,20 @@ const firebaseConfig = {
 // Conditional initialization to prevent crashes during mock testing if keys are invalid
 let appInstance;
 let authInstance;
+let messagingInstance;
 
 try {
   appInstance = initializeApp(firebaseConfig);
   authInstance = getAuth(appInstance);
+
+  try {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+       messagingInstance = getMessaging(appInstance);
+    }
+  } catch (e) {
+    console.warn("Firebase Messaging initialization failed:", e);
+  }
+
 } catch (e) {
   console.warn("Firebase initialization failed (expected during mock testing):", e);
   // Provide a dummy auth object if needed, or rely on handling the error where it's used.
@@ -33,9 +44,13 @@ try {
           // Add other methods as needed or keep it minimal
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any;
+
+      // Messaging is null in mock mode to prevent SDK crashes
+      messagingInstance = null;
   }
   console.error("Firebase initialization catch block activated. Auth instance might be mocked or null.");
 }
 
 export const app = appInstance;
 export const auth = authInstance;
+export const messaging = messagingInstance;
