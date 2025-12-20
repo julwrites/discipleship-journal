@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { syncUser, updateUser } from "@/services/api";
 import { useTheme } from "@/components/ThemeProvider";
-import { Moon, Sun, Laptop, Palette } from "lucide-react";
+import { useNotifications } from "@/hooks/useNotifications";
+import { Moon, Sun, Laptop, Palette, Bell } from "lucide-react";
 
 export default function Settings() {
   const [username, setUsername] = useState("");
@@ -12,6 +13,7 @@ export default function Settings() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { theme, setTheme, mode, setMode } = useTheme();
+  const { permission, requestPermission, isSupported } = useNotifications();
 
   useEffect(() => {
     syncUser()
@@ -122,6 +124,37 @@ export default function Settings() {
                 </div>
             </div>
         </div>
+
+        {/* Notifications Section */}
+        {isSupported && (
+          <div className="border rounded-lg p-6 space-y-4">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                  <Bell className="h-5 w-5" />
+                  Notifications
+              </h2>
+              <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                      <p className="font-medium">Push Notifications</p>
+                      <p className="text-sm text-muted-foreground">
+                          Receive updates about new messages and connection requests.
+                      </p>
+                  </div>
+                  {permission === 'granted' ? (
+                      <Button variant="outline" disabled className="text-green-600 border-green-200 bg-green-50">
+                          Enabled
+                      </Button>
+                  ) : permission === 'denied' ? (
+                      <Button variant="destructive" disabled>
+                          Blocked
+                      </Button>
+                  ) : (
+                      <Button onClick={requestPermission}>
+                          Enable Notifications
+                      </Button>
+                  )}
+              </div>
+          </div>
+        )}
 
         {/* Profile Section */}
         <div className="border rounded-lg p-6 space-y-4">

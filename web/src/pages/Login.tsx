@@ -25,11 +25,6 @@ export default function LoginPage() {
   useEffect(() => {
     if (!auth) return;
     getRedirectResult(auth)
-      .then((result) => {
-        if (result) {
-          console.log("Redirect login success");
-        }
-      })
       .catch((error) => {
         console.error("Redirect login error:", error);
         const msg = getErrorMessage(error as AuthError);

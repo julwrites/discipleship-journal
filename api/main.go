@@ -120,7 +120,14 @@ func main() {
 	r.Use(middleware.RequestLogger(logger))
 	r.Use(chimiddleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"*"}, // Adjust for production
+		AllowedOrigins: []string{
+			"https://journal.tehj.io",
+			"https://discipleship-journal-52a2c.web.app",
+			"https://discipleship-journal-52a2c.firebaseapp.com",
+			"http://localhost:5173",
+			"http://localhost:4173",
+			"http://localhost:8080",
+		},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},

@@ -1,16 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <path d="M464 96h-160c-26.51 0-48 21.49-48 48v288c0 26.51 21.49 48 48 48h160c26.51 0 48-21.49 48-48V144c0-26.51-21.49-48-48-48z" fill="black"/>
-  <path d="M48 96h160c26.51 0 48 21.49 48 48v288c0 26.51-21.49 48-48 48H48c-26.51 0-48-21.49-48-48V144c0-26.51 21.49-48 48-48z" fill="black"/>
-  <!-- Cross needs to be cutout (transparent) or handled differently for mask.
-       For mask icon, usually it's a silhouette.
-       Let's make the book solid and the cross transparent (cutout). -->
-  <!-- Actually, for safari pinned tab, it uses the fill color. So we want the shape to be the ink.
-       If we want the cross to be 'white' (background color), we should subtract it.
-       Simplest is just the book shape if we can't do complex path ops easily here without a library.
-       But we can overlay white on black in SVG. Mask icon treats opacity as nothing.
-  -->
-  <rect x="246" y="140" width="20" height="200" rx="4" fill="white" /> <!-- This won't work as 'cutout' in simple mask unless it's a mask. -->
-  <!-- Let's just do a simple book shape without the cross cutout for the mask, or try to rely on path direction (nonzero winding) but that's complex to hand code.
-       Alternative: Just the cross? No, book is better.
-       Let's just use the book shape filled black. -->
+  <!-- Just the book shape in black -->
+  <g transform="translate(106, 106) scale(0.6)">
+    <path d="M448 360V48a48 48 0 0 0-48-48H128a48 48 0 0 0-48 48v312c0 26.5 21.5 48 48 48h272a48 48 0 0 0 48-48z" fill="black" />
+  </g>
 </svg>

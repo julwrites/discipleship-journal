@@ -208,7 +208,7 @@ export default function NoteEditor() {
                                     </Button>
                                 </div>
                                 {bibleText && (
-                                    <div className="p-2 bg-slate-50 border rounded max-h-40 overflow-auto text-sm italic">
+                                    <div className="p-2 bg-slate-50 dark:bg-muted border rounded max-h-40 overflow-auto text-sm italic">
                                         {bibleText}
                                     </div>
                                 )}
@@ -239,7 +239,7 @@ export default function NoteEditor() {
                                     </Button>
                                 </div>
                                 {aiResponse && (
-                                    <div className="p-4 bg-slate-50 border rounded max-h-60 overflow-auto text-sm">
+                                    <div className="p-4 bg-slate-50 dark:bg-muted border rounded max-h-60 overflow-auto text-sm">
                                         <p className="font-semibold mb-2">Answer:</p>
                                         <ReactMarkdown>{aiResponse}</ReactMarkdown>
                                     </div>
@@ -313,7 +313,7 @@ export default function NoteEditor() {
             </div>
 
             <input
-                className="text-4xl font-bold w-full mb-4 p-2 border-b outline-none"
+                className="text-4xl font-bold w-full mb-4 p-2 border-b outline-none bg-transparent text-foreground placeholder:text-muted-foreground"
                 placeholder="Title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -327,7 +327,7 @@ export default function NoteEditor() {
                         editable={true}
                     />
                 ) : (
-                    <div className="flex-1 border rounded-lg overflow-auto p-4 prose prose-slate max-w-none bg-slate-50">
+                    <div className="flex-1 border rounded-lg overflow-auto p-4 prose prose-slate dark:prose-invert max-w-none bg-slate-50 dark:bg-muted">
                         <ReactMarkdown>{markdown}</ReactMarkdown>
                     </div>
                 )}
