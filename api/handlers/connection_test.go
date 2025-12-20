@@ -11,6 +11,7 @@ import (
 	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/services"
 	"firebase.google.com/go/v4/auth"
+	"github.com/go-chi/chi/v5"
 	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 )
@@ -109,6 +110,108 @@ func TestListConnections(t *testing.T) {
 	err = json.Unmarshal(w.Body.Bytes(), &conns)
 	assert.NoError(t, err)
 	assert.Len(t, conns, 1)
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestAcceptConnectionRequest(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
+
+	mockNotification := services.NewMockNotificationService()
+	handler := NewConnectionHandler(mock, mockNotification)
+
+	uid := "firebase-uid-1"
+	userUUID := "user-uuid-1"
+	connID := "conn-1"
+
+	// Mock user UUID lookup
+	mock.ExpectQuery("SELECT id FROM users WHERE firebase_uid=").
+		WithArgs(uid).
+		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+
+	// Mock update connection
+	mock.ExpectExec("UPDATE connections SET status = 'accepted'").
+		WithArgs(connID, userUUID).
+		WillReturnResult(pgxmock.NewResult("UPDATE", 1))
+
+	req := httptest.NewRequest("PUT", "/api/connections/"+connID, nil)
+
+	// Setup Chi context for URL param
+	rctx := chi.NewRouteContext()
+	rctx.URLParams.Add("id", connID)
+	ctx := context.WithValue(req.Context(), chi.RouteCtxKey, rctx)
+
+	token := &auth.Token{UID: uid}
+	ctx = context.WithValue(ctx, middleware.UserContextKey, token)
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
+
+	handler.AcceptConnectionRequest(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var resp map[string]bool
+	err = json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.NoError(t, err)
+	assert.True(t, resp["success"])
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestDeleteConnectionRequest(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
+
+	mockNotification := services.NewMockNotificationService()
+	handler := NewConnectionHandler(mock, mockNotification)
+
+	uid := "firebase-uid-1"
+	userUUID := "user-uuid-1"
+	connID := "conn-1"
+
+	// Mock user UUID lookup
+	mock.ExpectQuery("SELECT id FROM users WHERE firebase_uid=").
+		WithArgs(uid).
+		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+
+	// Mock delete connection
+	mock.ExpectExec("DELETE FROM connections").
+		WithArgs(connID, userUUID).
+		WillReturnResult(pgxmock.NewResult("DELETE", 1))
+
+	req := httptest.NewRequest("DELETE", "/api/connections/"+connID, nil)
+
+	// Setup Chi context
+	rctx := chi.NewRouteContext()
+	rctx.URLParams.Add("id", connID)
+	ctx := context.WithValue(req.Context(), chi.RouteCtxKey, rctx)
+
+	token := &auth.Token{UID: uid}
+	ctx = context.WithValue(ctx, middleware.UserContextKey, token)
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
+
+	handler.DeleteConnectionRequest(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var resp map[string]bool
+	err = json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.NoError(t, err)
+	assert.True(t, resp["success"])
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %s", err)

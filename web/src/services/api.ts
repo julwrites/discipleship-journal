@@ -251,8 +251,6 @@ export async function respondToConnectionRequest(id: string, action: "accept" | 
         headers,
     });
     if (!res.ok) throw new Error("Failed to respond to connection request");
-    // DELETE returns 200 OK but no content usually, or we can just return success
-    if (action === "reject") return { success: true };
     return res.json();
 }
 
