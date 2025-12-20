@@ -152,6 +152,7 @@ describe('LoginPage', () => {
         // Mock stored email
         window.localStorage.setItem('emailForSignIn', 'stored@example.com');
         // Mock successful sign in
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         vi.mocked(signInWithEmailLink).mockResolvedValue({ user: {} } as any);
 
         render(
@@ -170,6 +171,7 @@ describe('LoginPage', () => {
         vi.mocked(isSignInWithEmailLink).mockReturnValue(true);
         window.localStorage.removeItem('emailForSignIn');
         vi.mocked(window.prompt).mockReturnValue('prompted@example.com');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         vi.mocked(signInWithEmailLink).mockResolvedValue({ user: {} } as any);
 
         render(
