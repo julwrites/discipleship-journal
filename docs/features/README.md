@@ -12,10 +12,12 @@
 | **Social Groups** | Implemented | Create and join groups for discipleship (`/api/groups`). |
 | **Note Sharing** | Implemented | Share notes with groups (`/api/groups/{id}/shares`). |
 | **PWA Support** | Implemented | Installable app with offline capabilities. |
+| **Delete Notes** | Implemented | Soft delete notes via API and UI. |
+| **Rich Text Editing** | Implemented | Markdown-based rich text editor (`Tiptap`). |
+| **Auto-Save** | Implemented | Debounced auto-save for notes. |
+| **Push Notifications** | Implemented | FCM notifications for groups and messages. |
 
 ## Future Features
-*   Delete notes.
-*   Rich text editing for notes (Markdown supported in frontend).
 *   Search/Filter notes (Basic search implemented).
 *   Bible reading plans.
-*   Push Notifications.
+*   Passwordless Sign-in (Magic Links).
