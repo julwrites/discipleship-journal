@@ -1,6 +1,6 @@
 ---
 id: FEATURES-20251220-092428-DIJ
-status: pending
+status: completed
 title: Passwordless Sign-in
 priority: medium
 created: 2025-12-20 09:24:28
