@@ -255,3 +255,16 @@ export async function respondToConnectionRequest(id: string, action: "accept" | 
     if (action === "reject") return { success: true };
     return res.json();
 }
+
+// --- Notifications ---
+
+export async function registerDevice(token: string, deviceType: string = "web") {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/notifications/register`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ token, device_type: deviceType }),
+    });
+    if (!res.ok) throw new Error("Failed to register device");
+    return res.json();
+}
