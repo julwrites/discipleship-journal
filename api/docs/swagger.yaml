@@ -44,6 +44,17 @@ definitions:
     - content
     - title
     type: object
+  handlers.Meta:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
   handlers.Note:
     properties:
       content:
@@ -59,6 +70,24 @@ definitions:
         type: string
       user_id:
         type: string
+    type: object
+  handlers.NotesResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/handlers.Note'
+        type: array
+      meta:
+        $ref: '#/definitions/handlers.Meta'
+    type: object
+  handlers.RegisterDeviceRequest:
+    properties:
+      device_type:
+        type: string
+      token:
+        type: string
+    required:
+    - token
     type: object
   handlers.UpdateUserRequest:
     properties:
@@ -86,6 +115,39 @@ definitions:
       id:
         type: string
       updated_at:
+        type: string
+    type: object
+  models.ReadingPlan:
+    properties:
+      created_at:
+        type: string
+      days:
+        type: integer
+      description:
+        type: string
+      id:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.UserReadingPlan:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      reading_plan_id:
+        type: string
+      start_date:
+        type: string
+      status:
+        description: active, completed
+        type: string
+      updated_at:
+        type: string
+      user_id:
         type: string
     type: object
 host: localhost:8080
@@ -191,20 +253,77 @@ paths:
       summary: Chat with AI
       tags:
       - chat
-  /api/notes:
+  /api/my-reading-plans:
     get:
       consumes:
       - application/json
-      description: Fetch all notes belonging to the authenticated user
+      description: Get a list of reading plans the user is subscribed to
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/handlers.Note'
-            type: array
+            additionalProperties: true
+            type: object
+      summary: Get user's reading plans
+      tags:
+      - reading-plans
+  /api/my-reading-plans/{id}/progress:
+    post:
+      consumes:
+      - application/json
+      description: Mark a specific day in a reading plan as complete
+      parameters:
+      - description: Plan ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Day Number
+        in: body
+        name: day_number
+        required: true
+        schema:
+          type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+      summary: Mark a day as complete
+      tags:
+      - reading-plans
+  /api/notes:
+    get:
+      consumes:
+      - application/json
+      description: Fetch all notes belonging to the authenticated user, with pagination
+        and search
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Search query
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.NotesResponse'
         "404":
           description: User not found
           schema:
@@ -239,8 +358,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
+            additionalProperties: true
             type: object
         "404":
           description: User not found
@@ -254,6 +372,36 @@ paths:
       tags:
       - notes
   /api/notes/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a journal note by ID
+      parameters:
+      - description: Note ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "403":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Note not found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Delete a note
+      tags:
+      - notes
     get:
       consumes:
       - application/json
@@ -287,11 +435,6 @@ paths:
       - application/json
       description: Update an existing journal note
       parameters:
-      - description: Note ID
-        in: path
-        name: id
-        required: true
-        type: string
       - description: Update Note Request
         in: body
         name: request
@@ -306,8 +449,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
+            additionalProperties: true
             type: object
         "403":
           description: Unauthorized
@@ -324,6 +466,103 @@ paths:
       summary: Update a note
       tags:
       - notes
+  /api/notifications/register:
+    post:
+      consumes:
+      - application/json
+      description: Registers a Firebase Cloud Messaging token for the user to receive
+        push notifications.
+      parameters:
+      - description: Device Registration
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.RegisterDeviceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Register FCM token
+      tags:
+      - notifications
+  /api/reading-plans:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all available reading plans
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all reading plans
+      tags:
+      - reading-plans
+  /api/reading-plans/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get details of a specific reading plan including days
+      parameters:
+      - description: Plan ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ReadingPlan'
+      summary: Get a reading plan
+      tags:
+      - reading-plans
+  /api/reading-plans/{id}/subscribe:
+    post:
+      consumes:
+      - application/json
+      description: Subscribe the current user to a reading plan
+      parameters:
+      - description: Plan ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserReadingPlan'
+      summary: Subscribe to a reading plan
+      tags:
+      - reading-plans
   /users:
     post:
       consumes:
