@@ -1,6 +1,6 @@
 ---
 id: DOMAIN-20251213-100746-VAK
-status: review_requested
+status: completed
 title: Introduce Backend Service Layer
 priority: high
 created: 2025-12-13 10:07:46

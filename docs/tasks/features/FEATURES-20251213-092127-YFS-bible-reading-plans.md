@@ -5,7 +5,7 @@ title: Bible Reading Plans
 priority: low
 created: 2025-12-13 09:21:27
 category: features
-dependencies:
+dependencies: FOUNDATION-004
 type: story
 ---
 

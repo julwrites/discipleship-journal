@@ -85,6 +85,8 @@ jobs:
             APP_ENV=production
             GOOGLE_CLOUD_PROJECT=${{ env.GCP_PROJECT_ID }}
             DATABASE_URL=${{ secrets.DATABASE_URL }}
+            BIBLE_API_URL=${{ secrets.BIBLE_API_URL }}
+            BIBLE_API_KEY=${{ secrets.BIBLE_API_KEY }}
 
   deploy-frontend:
     runs-on: ubuntu-latest

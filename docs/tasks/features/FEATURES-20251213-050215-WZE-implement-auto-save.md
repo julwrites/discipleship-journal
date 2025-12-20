@@ -1,6 +1,6 @@
 ---
 id: FEATURES-20251213-050215-WZE
-status: review_requested
+status: completed
 title: Implement Auto-Save
 priority: high
 created: 2025-12-13 05:02:15
