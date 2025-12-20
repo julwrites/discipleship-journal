@@ -1,6 +1,6 @@
 ---
 id: DOMAIN-20251213-100827-HRO
-status: pending
+status: completed
 title: Standardize Connections API
 priority: low
 created: 2025-12-13 10:08:27
