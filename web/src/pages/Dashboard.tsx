@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchNotes, syncUser } from "@/services/api";
 import { Link } from "react-router-dom";
-import { Settings, Users } from "lucide-react";
+import { Settings, Users, BookOpen } from "lucide-react";
 
 interface Note {
   id: string;
@@ -70,6 +70,11 @@ export default function Dashboard() {
           <Link to="/connections">
             <Button variant="ghost" size="icon" title="Connections">
               <Users className="w-5 h-5" />
+            </Button>
+          </Link>
+          <Link to="/reading-plans">
+            <Button variant="ghost" size="icon" title="Reading Plans">
+              <BookOpen className="w-5 h-5" />
             </Button>
           </Link>
           <Link to="/settings">

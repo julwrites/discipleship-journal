@@ -223,6 +223,7 @@ func main() {
 		r.Post("/api/reading-plans/{id}/subscribe", readingPlanHandler.Subscribe)
 		r.Get("/api/my-reading-plans", readingPlanHandler.GetUserPlans)
 		r.Post("/api/my-reading-plans/{id}/progress", readingPlanHandler.MarkDayComplete)
+		r.Get("/api/my-reading-plans/{id}/progress", readingPlanHandler.GetPlanProgress)
 	})
 
 	server := &http.Server{

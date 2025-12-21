@@ -31,6 +31,7 @@ type UserReadingPlan struct {
 	Status        string    `json:"status"` // active, completed
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
+	Plan          *ReadingPlan `json:"plan,omitempty"`
 }
 
 type UserReadingPlanProgress struct {

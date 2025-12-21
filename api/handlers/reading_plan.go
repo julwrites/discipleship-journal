@@ -45,6 +45,51 @@ func (h *ReadingPlanHandler) GetAllPlans(w http.ResponseWriter, r *http.Request)
 	}
 }
 
+// GetPlanProgress godoc
+// @Summary      Get reading plan progress
+// @Description  Get the list of completed days for a specific plan
+// @Tags         reading-plans
+// @Accept       json
+// @Produce      json
+// @Param        id   path      string  true  "Plan ID"
+// @Success      200  {object}  map[string]interface{}
+// @Router       /api/my-reading-plans/{id}/progress [get]
+func (h *ReadingPlanHandler) GetPlanProgress(w http.ResponseWriter, r *http.Request) {
+	userID, err := h.getUserID(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	idStr := chi.URLParam(r, "id")
+	planID, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(w, "Invalid plan ID", http.StatusBadRequest)
+		return
+	}
+
+	days, err := h.service.GetPlanProgress(r.Context(), userID, planID)
+	if err != nil {
+		if err == models.ErrNotFound {
+			http.Error(w, "Plan not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if days == nil {
+		days = []int{}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{
+		"completed_days": days,
+	}); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
 // GetPlan godoc
 // @Summary      Get a reading plan
 // @Description  Get details of a specific reading plan including days
@@ -80,10 +125,20 @@ func (h *ReadingPlanHandler) GetPlan(w http.ResponseWriter, r *http.Request) {
 
 	// Combine into a response struct
 	response := struct {
-		*models.ReadingPlan
-		Days []*models.ReadingPlanDay `json:"days"`
+		ID          uuid.UUID                `json:"id"`
+		Title       string                   `json:"title"`
+		Description string                   `json:"description"`
+		TotalDays   int                      `json:"total_days"`
+		CreatedAt   interface{}              `json:"created_at"`
+		UpdatedAt   interface{}              `json:"updated_at"`
+		Days        []*models.ReadingPlanDay `json:"days"`
 	}{
-		ReadingPlan: plan,
+		ID:          plan.ID,
+		Title:       plan.Title,
+		Description:       plan.Description,
+		TotalDays:   plan.Days,
+		CreatedAt:   plan.CreatedAt,
+		UpdatedAt:   plan.UpdatedAt,
 		Days:        days,
 	}
 
