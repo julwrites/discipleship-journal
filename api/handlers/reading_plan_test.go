@@ -63,6 +63,14 @@ func (m *MockReadingPlanService) MarkDayComplete(ctx context.Context, userID, pl
 	return args.Error(0)
 }
 
+func (m *MockReadingPlanService) GetPlanProgress(ctx context.Context, userID, planID uuid.UUID) ([]int, error) {
+	args := m.Called(ctx, userID, planID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]int), args.Error(1)
+}
+
 func TestGetAllPlans_Handler(t *testing.T) {
 	mockService := new(MockReadingPlanService)
 	handler := NewReadingPlanHandler(mockService)

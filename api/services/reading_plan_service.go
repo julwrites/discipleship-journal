@@ -16,6 +16,7 @@ type ReadingPlanService interface {
 	Subscribe(ctx context.Context, userID, planID uuid.UUID) (*models.UserReadingPlan, error)
 	GetUserPlans(ctx context.Context, userID uuid.UUID) ([]*models.UserReadingPlan, error)
 	MarkDayComplete(ctx context.Context, userID, planID uuid.UUID, dayNumber int) error
+	GetPlanProgress(ctx context.Context, userID, planID uuid.UUID) ([]int, error)
 }
 
 type readingPlanService struct {
@@ -122,10 +123,12 @@ func (s *readingPlanService) Subscribe(ctx context.Context, userID, planID uuid.
 
 func (s *readingPlanService) GetUserPlans(ctx context.Context, userID uuid.UUID) ([]*models.UserReadingPlan, error) {
 	query := `
-		SELECT id, user_id, reading_plan_id, start_date, status, created_at, updated_at
-		FROM user_reading_plans
-		WHERE user_id = $1
-		ORDER BY start_date DESC
+		SELECT u.id, u.user_id, u.reading_plan_id, u.start_date, u.status, u.created_at, u.updated_at,
+		       p.id, p.title, p.description, p.days, p.created_at, p.updated_at
+		FROM user_reading_plans u
+		JOIN reading_plans p ON u.reading_plan_id = p.id
+		WHERE u.user_id = $1
+		ORDER BY u.start_date DESC
 	`
 	rows, err := s.db.Query(ctx, query, userID)
 	if err != nil {
@@ -135,11 +138,16 @@ func (s *readingPlanService) GetUserPlans(ctx context.Context, userID uuid.UUID)
 
 	var plans []*models.UserReadingPlan
 	for rows.Next() {
-		var p models.UserReadingPlan
-		if err := rows.Scan(&p.ID, &p.UserID, &p.ReadingPlanID, &p.StartDate, &p.Status, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		var u models.UserReadingPlan
+		var p models.ReadingPlan
+		if err := rows.Scan(
+			&u.ID, &u.UserID, &u.ReadingPlanID, &u.StartDate, &u.Status, &u.CreatedAt, &u.UpdatedAt,
+			&p.ID, &p.Title, &p.Description, &p.Days, &p.CreatedAt, &p.UpdatedAt,
+		); err != nil {
 			return nil, err
 		}
-		plans = append(plans, &p)
+		u.Plan = &p
+		plans = append(plans, &u)
 	}
 	return plans, nil
 }
@@ -167,4 +175,41 @@ func (s *readingPlanService) MarkDayComplete(ctx context.Context, userID, planID
 	`
 	_, err = s.db.Exec(ctx, query, userPlanID, dayNumber, time.Now())
 	return err
+}
+
+func (s *readingPlanService) GetPlanProgress(ctx context.Context, userID, planID uuid.UUID) ([]int, error) {
+	var userPlanID uuid.UUID
+	err := s.db.QueryRow(ctx, `
+		SELECT id FROM user_reading_plans
+		WHERE user_id = $1 AND reading_plan_id = $2
+	`, userID, planID).Scan(&userPlanID)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, models.ErrNotFound
+		}
+		return nil, err
+	}
+
+	query := `
+		SELECT day_number
+		FROM user_reading_plan_progress
+		WHERE user_reading_plan_id = $1
+		ORDER BY day_number ASC
+	`
+	rows, err := s.db.Query(ctx, query, userPlanID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var completedDays []int
+	for rows.Next() {
+		var d int
+		if err := rows.Scan(&d); err != nil {
+			return nil, err
+		}
+		completedDays = append(completedDays, d)
+	}
+	return completedDays, nil
 }

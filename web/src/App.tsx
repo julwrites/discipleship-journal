@@ -6,6 +6,8 @@ import NoteEditor from "@/pages/NoteEditor";
 import ChatPage from "@/pages/ChatPage";
 import ConnectionsPage from "@/pages/ConnectionsPage";
 import GroupsPage from "@/pages/GroupsPage";
+import ReadingPlansPage from "@/pages/ReadingPlansPage";
+import ReadingPlanDetail from "@/pages/ReadingPlanDetail";
 import Settings from "@/pages/Settings";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
@@ -40,6 +42,8 @@ function App() {
           <Route path="/chat" element={user ? <ChatPage /> : <Navigate to="/login" />} />
           <Route path="/connections" element={user ? <ConnectionsPage /> : <Navigate to="/login" />} />
           <Route path="/groups" element={user ? <GroupsPage /> : <Navigate to="/login" />} />
+          <Route path="/reading-plans" element={user ? <ReadingPlansPage /> : <Navigate to="/login" />} />
+          <Route path="/reading-plans/:id" element={user ? <ReadingPlanDetail /> : <Navigate to="/login" />} />
 
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

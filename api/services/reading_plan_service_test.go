@@ -180,3 +180,33 @@ func TestMarkDayComplete(t *testing.T) {
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestGetUserPlans(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	assert.NoError(t, err)
+	defer mock.Close()
+
+	service := NewReadingPlanService(mock)
+	userID := uuid.New()
+	planID := uuid.New()
+
+	rows := mock.NewRows([]string{
+		"id", "user_id", "reading_plan_id", "start_date", "status", "created_at", "updated_at",
+		"p_id", "title", "description", "days", "p_created_at", "p_updated_at",
+	}).
+		AddRow(
+			uuid.New(), userID, planID, time.Now(), "active", time.Now(), time.Now(),
+			planID, "Plan Title", "Plan Desc", 30, time.Now(), time.Now(),
+		)
+
+	mock.ExpectQuery(`SELECT u.id, u.user_id, u.reading_plan_id, u.start_date, u.status, u.created_at, u.updated_at,\s+p.id, p.title, p.description, p.days, p.created_at, p.updated_at\s+FROM user_reading_plans u\s+JOIN reading_plans p ON u.reading_plan_id = p.id\s+WHERE u.user_id = \$1`).
+		WithArgs(userID).
+		WillReturnRows(rows)
+
+	plans, err := service.GetUserPlans(context.Background(), userID)
+	assert.NoError(t, err)
+	assert.Len(t, plans, 1)
+	assert.Equal(t, "Plan Title", plans[0].Plan.Title)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
