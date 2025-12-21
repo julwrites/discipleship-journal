@@ -16,7 +16,7 @@
 | **Rich Text Editing** | Implemented | Markdown-based rich text editor (`Tiptap`). |
 | **Auto-Save** | Implemented | Debounced auto-save for notes. |
 | **Push Notifications** | Implemented | FCM notifications for groups and messages. |
-| **Bible Reading Plans** | Implemented | Subscribe to reading plans and track progress (`/api/reading-plans`). |
+| **Bible Reading Plans** | Implemented | Subscribe to reading plans and track progress ([Details](reading_plans.md)). |
 
 ## Future Features
 *   Search/Filter notes (Basic search implemented).
