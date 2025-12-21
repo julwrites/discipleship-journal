@@ -9,6 +9,9 @@
   "lint-staged": {
     "web/**/*.{ts,tsx}": [
       "bash -c 'cd web && npx eslint ${@#web/}' --"
+    ],
+    "api/**/*.go": [
+      "bash -c 'cd api && golangci-lint run ./...'"
     ]
   }
 }

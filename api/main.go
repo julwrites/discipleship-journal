@@ -109,6 +109,10 @@ func main() {
 	groupShareHandler := handlers.NewGroupShareHandler(database.DB, notificationService)
 	notificationHandler := handlers.NewNotificationHandler(notificationService)
 
+	// Reading Plans
+	readingPlanService := services.NewReadingPlanService(database.DB)
+	readingPlanHandler := handlers.NewReadingPlanHandler(readingPlanService)
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -212,6 +216,13 @@ func main() {
 		r.Post("/api/groups/{id}/shares", groupShareHandler.ShareNoteToGroup)
 		r.Get("/api/groups/{id}/shares", groupShareHandler.ListGroupShares)
 		r.Get("/api/groups/{id}/shares/{shareId}", groupShareHandler.GetSharedNoteDetails)
+
+		// Reading Plans
+		r.Get("/api/reading-plans", readingPlanHandler.GetAllPlans)
+		r.Get("/api/reading-plans/{id}", readingPlanHandler.GetPlan)
+		r.Post("/api/reading-plans/{id}/subscribe", readingPlanHandler.Subscribe)
+		r.Get("/api/my-reading-plans", readingPlanHandler.GetUserPlans)
+		r.Post("/api/my-reading-plans/{id}/progress", readingPlanHandler.MarkDayComplete)
 	})
 
 	server := &http.Server{
