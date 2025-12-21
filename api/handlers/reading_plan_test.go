@@ -120,8 +120,7 @@ func TestSubscribe_Handler(t *testing.T) {
 
 	req := httptest.NewRequest("POST", "/api/reading-plans/"+planID.String()+"/subscribe", nil)
 	// Inject user ID for testing
-	type contextKey string
-	ctx := context.WithValue(req.Context(), contextKey("test_user_id"), userID)
+	ctx := context.WithValue(req.Context(), testUserKey, userID)
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()

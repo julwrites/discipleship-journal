@@ -23,7 +23,7 @@ func TestGetAllPlans(t *testing.T) {
 		AddRow(uuid.New(), "Plan 1", "Desc 1", 30, time.Now(), time.Now()).
 		AddRow(uuid.New(), "Plan 2", "Desc 2", 60, time.Now(), time.Now())
 
-	mock.ExpectQuery("SELECT id, title, description, days, created_at, updated_at FROM reading_plans").
+	mock.ExpectQuery(`SELECT id, title, description, days, created_at, updated_at\s+FROM reading_plans`).
 		WillReturnRows(rows)
 
 	plans, err := service.GetAllPlans(context.Background())
@@ -45,7 +45,7 @@ func TestMarkDayComplete_NotFound(t *testing.T) {
 	dayNumber := 1
 
 	// Mock find active plan - Not Found
-	mock.ExpectQuery("SELECT id FROM user_reading_plans").
+	mock.ExpectQuery(`SELECT id FROM user_reading_plans`).
 		WithArgs(userID, planID).
 		WillReturnError(pgx.ErrNoRows)
 
@@ -67,7 +67,7 @@ func TestGetPlan(t *testing.T) {
 	rows := mock.NewRows([]string{"id", "title", "description", "days", "created_at", "updated_at"}).
 		AddRow(id, "Plan 1", "Desc 1", 30, time.Now(), time.Now())
 
-	mock.ExpectQuery("SELECT id, title, description, days, created_at, updated_at FROM reading_plans WHERE id = \\$1").
+	mock.ExpectQuery(`SELECT id, title, description, days, created_at, updated_at\s+FROM reading_plans\s+WHERE id = \$1`).
 		WithArgs(id).
 		WillReturnRows(rows)
 
@@ -91,7 +91,7 @@ func TestGetPlanDays(t *testing.T) {
 		AddRow(uuid.New(), planID, 1, "Gen 1", time.Now()).
 		AddRow(uuid.New(), planID, 2, "Gen 2", time.Now())
 
-	mock.ExpectQuery("SELECT id, reading_plan_id, day_number, passage, created_at FROM reading_plan_days WHERE reading_plan_id = \\$1").
+	mock.ExpectQuery(`SELECT id, reading_plan_id, day_number, passage, created_at\s+FROM reading_plan_days\s+WHERE reading_plan_id = \$1`).
 		WithArgs(planID).
 		WillReturnRows(rows)
 
@@ -113,7 +113,7 @@ func TestSubscribe(t *testing.T) {
 	planID := uuid.New()
 
 	// Mock check if exists
-	mock.ExpectQuery("SELECT id FROM user_reading_plans").
+	mock.ExpectQuery(`SELECT id FROM user_reading_plans`).
 		WithArgs(userID, planID).
 		WillReturnError(pgx.ErrNoRows) // Not found, so proceed
 
@@ -121,7 +121,7 @@ func TestSubscribe(t *testing.T) {
 	rows := mock.NewRows([]string{"id", "user_id", "reading_plan_id", "start_date", "status", "created_at", "updated_at"}).
 		AddRow(uuid.New(), userID, planID, time.Now(), "active", time.Now(), time.Now())
 
-	mock.ExpectQuery("INSERT INTO user_reading_plans").
+	mock.ExpectQuery(`INSERT INTO user_reading_plans`).
 		WithArgs(userID, planID, pgxmock.AnyArg()).
 		WillReturnRows(rows)
 
@@ -143,7 +143,7 @@ func TestSubscribe_AlreadyExists(t *testing.T) {
 	planID := uuid.New()
 
 	// Mock check if exists - Returns a row
-	mock.ExpectQuery("SELECT id FROM user_reading_plans").
+	mock.ExpectQuery(`SELECT id FROM user_reading_plans`).
 		WithArgs(userID, planID).
 		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(uuid.New()))
 
@@ -166,12 +166,12 @@ func TestMarkDayComplete(t *testing.T) {
 	dayNumber := 1
 
 	// Mock find active plan
-	mock.ExpectQuery("SELECT id FROM user_reading_plans").
+	mock.ExpectQuery(`SELECT id FROM user_reading_plans`).
 		WithArgs(userID, planID).
 		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(userPlanID))
 
 	// Mock Insert Progress
-	mock.ExpectExec("INSERT INTO user_reading_plan_progress").
+	mock.ExpectExec(`INSERT INTO user_reading_plan_progress`).
 		WithArgs(userPlanID, dayNumber, pgxmock.AnyArg()).
 		WillReturnResult(pgxmock.NewResult("INSERT", 1))
 
