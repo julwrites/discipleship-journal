@@ -2,7 +2,7 @@
 
 | Feature | Status | Description |
 | :--- | :--- | :--- |
-| **Authentication** | Implemented | User sign-up and sign-in using Firebase Auth. |
+| **Authentication** | Implemented | User sign-up and sign-in using Firebase Auth (Google, Email, Passwordless). |
 | **User Profile** | Implemented | Create and update user profile information (`/api/users/me`). |
 | **Journaling** | Implemented | Create, read, and update notes (`/api/notes`). |
 | **Bible Integration** | Implemented | Fetch Bible passages (`/api/bible/passage`). |
@@ -19,5 +19,4 @@
 | **Bible Reading Plans** | Implemented | Subscribe to reading plans and track progress ([Details](reading_plans.md)). |
 
 ## Future Features
-*   Search/Filter notes (Basic search implemented).
-*   Passwordless Sign-in (Magic Links).
+*   Search/Filter notes (Debounced search implemented, advanced filtering pending).
