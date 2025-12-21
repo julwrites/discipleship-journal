@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ReadingPlansPage from "./ReadingPlansPage";
 import { BrowserRouter } from "react-router-dom";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, Mock } from "vitest";
 import * as api from "@/services/api";
 
 // Mock API
@@ -48,8 +48,8 @@ describe("ReadingPlansPage", () => {
     });
 
     it("renders loading state", () => {
-        (api.getReadingPlans as any).mockReturnValue(new Promise(() => {}));
-        (api.getMyReadingPlans as any).mockReturnValue(new Promise(() => {}));
+        (api.getReadingPlans as Mock).mockReturnValue(new Promise(() => {}));
+        (api.getMyReadingPlans as Mock).mockReturnValue(new Promise(() => {}));
 
         render(
             <BrowserRouter>
@@ -61,8 +61,8 @@ describe("ReadingPlansPage", () => {
     });
 
     it("renders empty state for my plans", async () => {
-        (api.getReadingPlans as any).mockResolvedValue({ data: [] });
-        (api.getMyReadingPlans as any).mockResolvedValue({ data: [] });
+        (api.getReadingPlans as Mock).mockResolvedValue({ data: [] });
+        (api.getMyReadingPlans as Mock).mockResolvedValue({ data: [] });
 
         render(
             <BrowserRouter>
@@ -81,8 +81,8 @@ describe("ReadingPlansPage", () => {
         const mockPlans = [
             { id: "1", title: "Test Plan", description: "Test Desc", days: 30 },
         ];
-        (api.getReadingPlans as any).mockResolvedValue({ data: mockPlans });
-        (api.getMyReadingPlans as any).mockResolvedValue({ data: [] });
+        (api.getReadingPlans as Mock).mockResolvedValue({ data: mockPlans });
+        (api.getMyReadingPlans as Mock).mockResolvedValue({ data: [] });
 
         render(
             <BrowserRouter>
@@ -111,9 +111,9 @@ describe("ReadingPlansPage", () => {
         const mockPlans = [
             { id: "1", title: "Test Plan", description: "Test Desc", days: 30 },
         ];
-        (api.getReadingPlans as any).mockResolvedValue({ data: mockPlans });
-        (api.getMyReadingPlans as any).mockResolvedValue({ data: [] });
-        (api.subscribeToPlan as any).mockResolvedValue({});
+        (api.getReadingPlans as Mock).mockResolvedValue({ data: mockPlans });
+        (api.getMyReadingPlans as Mock).mockResolvedValue({ data: [] });
+        (api.subscribeToPlan as Mock).mockResolvedValue({});
 
         render(
             <BrowserRouter>
