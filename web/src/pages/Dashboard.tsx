@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { auth } from "@/lib/firebase";
+import { useDebounce } from "@/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchNotes, syncUser } from "@/services/api";
@@ -15,6 +16,7 @@ interface Note {
 export default function Dashboard() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -23,11 +25,20 @@ export default function Dashboard() {
     syncUser();
   }, []);
 
+  // Reset page when search term changes
   useEffect(() => {
+    setPage(1);
+    setHasMore(true);
+  }, [debouncedSearch]);
+
+  useEffect(() => {
+      let ignore = false;
       const load = async () => {
           setLoading(true);
           try {
-              const response = await fetchNotes(page, 20, search);
+              const response = await fetchNotes(page, 20, debouncedSearch);
+              if (ignore) return;
+
               // Check if response has data/meta structure or is just array (for backward compat if needed, though we updated API)
               const newNotes = response.data || response;
 
@@ -48,18 +59,17 @@ export default function Dashboard() {
                   }
               }
           } catch (error) {
-              console.error(error);
+              if (!ignore) console.error(error);
           } finally {
-              setLoading(false);
+              if (!ignore) setLoading(false);
           }
       };
       load();
-  }, [page, search]);
+      return () => { ignore = true; };
+  }, [page, debouncedSearch]);
 
   const handleSearch = (val: string) => {
       setSearch(val);
-      setPage(1);
-      setHasMore(true);
   };
 
   return (
