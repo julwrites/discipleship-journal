@@ -8,15 +8,17 @@ import (
 	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/services"
 	"firebase.google.com/go/v4/auth"
+	"github.com/google/uuid"
 )
 
 type ChatHandler struct {
 	Client      services.BibleAIClient
 	NoteService services.NoteServiceInterface
+	DB          DBInterface
 }
 
-func NewChatHandler(client services.BibleAIClient, noteService services.NoteServiceInterface) *ChatHandler {
-	return &ChatHandler{Client: client, NoteService: noteService}
+func NewChatHandler(client services.BibleAIClient, noteService services.NoteServiceInterface, db DBInterface) *ChatHandler {
+	return &ChatHandler{Client: client, NoteService: noteService, DB: db}
 }
 
 type ChatRequest struct {
@@ -73,7 +75,8 @@ func (h *ChatHandler) ChatWithAI(w http.ResponseWriter, r *http.Request) {
 	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
 	uid := token.UID
 
-	userUUID, err := GetUserUUID(r.Context(), uid)
+	var userUUID uuid.UUID
+	err = h.DB.QueryRow(r.Context(), "SELECT id FROM users WHERE firebase_uid=$1", uid).Scan(&userUUID)
 	if err != nil {
 		http.Error(w, "User not found for saving note", http.StatusNotFound)
 		return
