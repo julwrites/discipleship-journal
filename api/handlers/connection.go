@@ -220,7 +220,11 @@ func (h *ConnectionHandler) AcceptConnectionRequest(w http.ResponseWriter, r *ht
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(map[string]bool{"success": true}); err != nil {
+		slog.Error("Failed to encode response", "error", err)
+	}
 }
 
 // DeleteConnectionRequest rejects or deletes a connection
@@ -248,5 +252,9 @@ func (h *ConnectionHandler) DeleteConnectionRequest(w http.ResponseWriter, r *ht
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(map[string]bool{"success": true}); err != nil {
+		slog.Error("Failed to encode response", "error", err)
+	}
 }

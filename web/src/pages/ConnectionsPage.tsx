@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { auth } from "@/lib/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { useCallback } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 import {
     getConnections,
     searchUsers as apiSearchUsers,
@@ -32,6 +32,7 @@ interface Connection {
 export default function ConnectionsPage() {
     const [user] = useAuthState(auth);
     const [searchQuery, setSearchQuery] = useState("");
+    const debouncedSearch = useDebounce(searchQuery, 500);
     const [searchResults, setSearchResults] = useState<User[]>([]);
     const [connections, setConnections] = useState<Connection[]>([]);
     const [loading, setLoading] = useState(false);
@@ -51,18 +52,27 @@ export default function ConnectionsPage() {
         }
     }, [user, fetchConnections]);
 
-    const handleSearch = async () => {
-        if (searchQuery.length < 3) return;
-        setLoading(true);
-        try {
-            const data = await apiSearchUsers(searchQuery);
-            setSearchResults(data || []);
-        } catch (error) {
-            console.error("Search failed", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    useEffect(() => {
+        let ignore = false;
+        const search = async () => {
+            if (debouncedSearch.length < 3) {
+                setSearchResults([]);
+                return;
+            }
+
+            setLoading(true);
+            try {
+                const data = await apiSearchUsers(debouncedSearch);
+                if (!ignore) setSearchResults(data || []);
+            } catch (error) {
+                if (!ignore) console.error("Search failed", error);
+            } finally {
+                if (!ignore) setLoading(false);
+            }
+        };
+        search();
+        return () => { ignore = true; };
+    }, [debouncedSearch]);
 
     const sendRequest = async (receiverEmail: string) => {
         try {
@@ -148,8 +158,9 @@ export default function ConnectionsPage() {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
-                        <Button onClick={handleSearch} disabled={loading}>Search</Button>
+                        {/* Search button removed as it's auto-debounced */}
                     </div>
+                    {loading && <p className="text-sm text-gray-500">Searching...</p>}
 
                     <div className="space-y-2">
                         {searchResults.map(u => (

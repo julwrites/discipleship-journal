@@ -3,25 +3,24 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
 	"discipleship_journal_api/middleware"
+	"discipleship_journal_api/models"
 	"discipleship_journal_api/services"
 	"firebase.google.com/go/v4/auth"
 	chi "github.com/go-chi/chi/v5"
-	pgx "github.com/jackc/pgx/v5"
 )
 
 type Note struct {
-	ID        string                 `json:"id"`
-	UserID    string                 `json:"user_id"`
-	Title     string                 `json:"title"`
-	Content   map[string]interface{} `json:"content"`
-	CreatedAt time.Time              `json:"created_at"`
-	UpdatedAt time.Time              `json:"updated_at"`
+	ID        string          `json:"id"`
+	UserID    string          `json:"user_id"`
+	Title     string          `json:"title"`
+	Content   json.RawMessage `json:"content"`
+	CreatedAt time.Time       `json:"created_at"`
+	UpdatedAt time.Time       `json:"updated_at"`
 }
 
 type CreateNoteRequest struct {
@@ -101,50 +100,23 @@ func (h *NoteHandler) GetNotes(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	offset := (page - 1) * limit
-
-	var rows pgx.Rows
-	var qErr error
-	var total int
-
-	// Count total notes
-	countQuery := "SELECT COUNT(*) FROM notes WHERE user_id=$1"
-	if searchQuery != "" {
-		countQuery += " AND (title ILIKE $2 OR content::text ILIKE $2)"
-		err = h.db.QueryRow(r.Context(), countQuery, userUUID, "%"+searchQuery+"%").Scan(&total)
-	} else {
-		err = h.db.QueryRow(r.Context(), countQuery, userUUID).Scan(&total)
-	}
-
+	serviceNotes, total, err := h.noteService.GetNotes(r.Context(), userUUID, page, limit, searchQuery)
 	if err != nil {
-		http.Error(w, "Failed to count notes", http.StatusInternalServerError)
-		return
-	}
-
-	baseQuery := "SELECT id, user_id, title, content, created_at, updated_at FROM notes WHERE user_id=$1"
-
-	if searchQuery != "" {
-		baseQuery += " AND (title ILIKE $2 OR content::text ILIKE $2)"
-		baseQuery += fmt.Sprintf(" ORDER BY updated_at DESC LIMIT %d OFFSET %d", limit, offset)
-		rows, qErr = h.db.Query(r.Context(), baseQuery, userUUID, "%"+searchQuery+"%")
-	} else {
-		baseQuery += fmt.Sprintf(" ORDER BY updated_at DESC LIMIT %d OFFSET %d", limit, offset)
-		rows, qErr = h.db.Query(r.Context(), baseQuery, userUUID)
-	}
-
-	if qErr != nil {
 		http.Error(w, "Failed to fetch notes", http.StatusInternalServerError)
 		return
 	}
-	defer rows.Close()
 
+	// Convert services.Note to handlers.Note
 	var notes []Note
-	for rows.Next() {
-		var n Note
-		if err := rows.Scan(&n.ID, &n.UserID, &n.Title, &n.Content, &n.CreatedAt, &n.UpdatedAt); err != nil {
-			continue
-		}
-		notes = append(notes, n)
+	for _, sn := range serviceNotes {
+		notes = append(notes, Note{
+			ID:        sn.ID,
+			UserID:    sn.UserID,
+			Title:     sn.Title,
+			Content:   sn.Content,
+			CreatedAt: sn.CreatedAt,
+			UpdatedAt: sn.UpdatedAt,
+		})
 	}
 
 	if notes == nil {
@@ -197,7 +169,7 @@ func (h *NoteHandler) DeleteNote(w http.ResponseWriter, r *http.Request) {
 	err = h.noteService.DeleteNote(r.Context(), userUUID, noteID)
 
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if err == models.ErrNotFound {
 			http.Error(w, "Note not found or unauthorized", http.StatusNotFound)
 		} else {
 			http.Error(w, "Database error", http.StatusInternalServerError)
@@ -282,29 +254,20 @@ func (h *NoteHandler) UpdateNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify ownership
-	var ownerID string
-	err = h.db.QueryRow(r.Context(), "SELECT user_id FROM notes WHERE id=$1", noteID).Scan(&ownerID)
+	contentJSON, err := json.Marshal(req.Content)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		http.Error(w, "Invalid content", http.StatusBadRequest)
+		return
+	}
+
+	err = h.noteService.UpdateNote(r.Context(), userUUID, noteID, req.Title, contentJSON)
+
+	if err != nil {
+		if err == models.ErrNotFound {
 			http.Error(w, "Note not found", http.StatusNotFound)
 		} else {
-			http.Error(w, "Database error", http.StatusInternalServerError)
+			http.Error(w, "Failed to update note", http.StatusInternalServerError)
 		}
-		return
-	}
-
-	if ownerID != userUUID {
-		http.Error(w, "Unauthorized", http.StatusForbidden)
-		return
-	}
-
-	_, err = h.db.Exec(r.Context(),
-		"UPDATE notes SET title=$1, content=$2, updated_at=NOW() WHERE id=$3",
-		req.Title, req.Content, noteID)
-
-	if err != nil {
-		http.Error(w, "Failed to update note", http.StatusInternalServerError)
 		return
 	}
 
@@ -333,11 +296,10 @@ func (h *NoteHandler) GetNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var n Note
-	err = h.db.QueryRow(r.Context(), "SELECT id, user_id, title, content, created_at, updated_at FROM notes WHERE id=$1", noteID).Scan(&n.ID, &n.UserID, &n.Title, &n.Content, &n.CreatedAt, &n.UpdatedAt)
+	sn, err := h.noteService.GetNote(r.Context(), userUUID, noteID)
 
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if err == models.ErrNotFound {
 			http.Error(w, "Note not found", http.StatusNotFound)
 		} else {
 			http.Error(w, "Database error", http.StatusInternalServerError)
@@ -345,12 +307,16 @@ func (h *NoteHandler) GetNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if n.UserID != userUUID {
-		http.Error(w, "Unauthorized", http.StatusForbidden)
-		return
+	note := Note{
+		ID:        sn.ID,
+		UserID:    sn.UserID,
+		Title:     sn.Title,
+		Content:   sn.Content,
+		CreatedAt: sn.CreatedAt,
+		UpdatedAt: sn.UpdatedAt,
 	}
 
-	if err := json.NewEncoder(w).Encode(n); err != nil {
+	if err := json.NewEncoder(w).Encode(note); err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 	}
 }

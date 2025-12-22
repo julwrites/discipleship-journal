@@ -251,8 +251,6 @@ export async function respondToConnectionRequest(id: string, action: "accept" | 
         headers,
     });
     if (!res.ok) throw new Error("Failed to respond to connection request");
-    // DELETE returns 200 OK but no content usually, or we can just return success
-    if (action === "reject") return { success: true };
     return res.json();
 }
 
@@ -266,5 +264,59 @@ export async function registerDevice(token: string, deviceType: string = "web") 
         body: JSON.stringify({ token, device_type: deviceType }),
     });
     if (!res.ok) throw new Error("Failed to register device");
+    return res.json();
+}
+
+// --- Reading Plans ---
+
+export async function getReadingPlans() {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/reading-plans`, { headers });
+    if (!res.ok) throw new Error("Failed to fetch reading plans");
+    return res.json();
+}
+
+export async function getReadingPlan(id: string) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/reading-plans/${id}`, { headers });
+    if (!res.ok) throw new Error("Failed to fetch reading plan details");
+    return res.json();
+}
+
+export async function subscribeToPlan(id: string) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/reading-plans/${id}/subscribe`, {
+        method: "POST",
+        headers,
+    });
+    if (!res.ok) {
+        if (res.status === 409) throw new Error("Already subscribed");
+        throw new Error("Failed to subscribe to plan");
+    }
+    return res.json();
+}
+
+export async function getMyReadingPlans() {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/my-reading-plans`, { headers });
+    if (!res.ok) throw new Error("Failed to fetch my reading plans");
+    return res.json();
+}
+
+export async function markPlanDayComplete(planId: string, dayNumber: number) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/my-reading-plans/${planId}/progress`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ day_number: dayNumber }),
+    });
+    if (!res.ok) throw new Error("Failed to mark day as complete");
+    return res.json();
+}
+
+export async function getPlanProgress(planId: string) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/my-reading-plans/${planId}/progress`, { headers });
+    if (!res.ok) throw new Error("Failed to fetch plan progress");
     return res.json();
 }

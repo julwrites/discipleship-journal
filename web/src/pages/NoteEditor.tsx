@@ -24,6 +24,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { useDebounce } from "@/hooks/useDebounce";
 
 export default function NoteEditor() {
     const { id } = useParams();
@@ -36,6 +37,7 @@ export default function NoteEditor() {
 
     // Bible Passage State
     const [passageRef, setPassageRef] = useState("");
+    const debouncedPassageRef = useDebounce(passageRef, 500);
     const [bibleText, setBibleText] = useState("");
     const [loadingPassage, setLoadingPassage] = useState(false);
 
@@ -148,6 +150,7 @@ export default function NoteEditor() {
     };
 
     const handleFetchPassage = async () => {
+        if (!passageRef) return;
         setLoadingPassage(true);
         try {
             const res = await getBiblePassage(passageRef);
@@ -161,6 +164,15 @@ export default function NoteEditor() {
             setLoadingPassage(false);
         }
     };
+
+    useEffect(() => {
+        if (debouncedPassageRef && debouncedPassageRef.length > 2) {
+            handleFetchPassage();
+        } else if (!debouncedPassageRef) {
+            setBibleText("");
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [debouncedPassageRef]);
 
     const handleAddPassage = () => {
         const newContent = `${markdown}\n\n> **${passageRef}**\n> ${bibleText}\n`;

@@ -50,6 +50,11 @@ export default defineConfig({
     },
   },
   envPrefix: ['VITE_', 'FIREBASE_', 'GCP_'],
+  server: {
+    headers: {
+      "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
+    },
+  },
   test: {
     globals: true,
     environment: 'jsdom',

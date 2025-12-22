@@ -2,7 +2,7 @@
 
 | Feature | Status | Description |
 | :--- | :--- | :--- |
-| **Authentication** | Implemented | User sign-up and sign-in using Firebase Auth. |
+| **Authentication** | Implemented | User sign-up and sign-in using Firebase Auth (Google, Email, Passwordless). |
 | **User Profile** | Implemented | Create and update user profile information (`/api/users/me`). |
 | **Journaling** | Implemented | Create, read, and update notes (`/api/notes`). |
 | **Bible Integration** | Implemented | Fetch Bible passages (`/api/bible/passage`). |
@@ -12,10 +12,11 @@
 | **Social Groups** | Implemented | Create and join groups for discipleship (`/api/groups`). |
 | **Note Sharing** | Implemented | Share notes with groups (`/api/groups/{id}/shares`). |
 | **PWA Support** | Implemented | Installable app with offline capabilities. |
+| **Delete Notes** | Implemented | Delete notes via API and UI (Hard Delete currently). |
+| **Rich Text Editing** | Implemented | Markdown-based rich text editor (`Tiptap`). |
+| **Auto-Save** | Implemented | Debounced auto-save for notes. |
+| **Push Notifications** | Implemented | FCM notifications for groups and messages. |
+| **Bible Reading Plans** | Implemented | Subscribe to reading plans and track progress ([Details](reading_plans.md)). |
 
 ## Future Features
-*   Delete notes.
-*   Rich text editing for notes (Markdown supported in frontend).
-*   Search/Filter notes (Basic search implemented).
-*   Bible reading plans.
-*   Push Notifications.
+*   Search/Filter notes (Debounced search implemented, advanced filtering pending).

@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strings"
 	"os/signal"
 	"syscall"
 	"time"
@@ -108,6 +109,10 @@ func main() {
 	groupShareHandler := handlers.NewGroupShareHandler(database.DB, notificationService)
 	notificationHandler := handlers.NewNotificationHandler(notificationService)
 
+	// Reading Plans
+	readingPlanService := services.NewReadingPlanService(database.DB)
+	readingPlanHandler := handlers.NewReadingPlanHandler(readingPlanService)
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -120,13 +125,32 @@ func main() {
 	r.Use(middleware.RequestLogger(logger))
 	r.Use(chimiddleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins: []string{
-			"https://journal.tehj.io",
-			"https://discipleship-journal-52a2c.web.app",
-			"https://discipleship-journal-52a2c.firebaseapp.com",
-			"http://localhost:5173",
-			"http://localhost:4173",
-			"http://localhost:8080",
+		AllowOriginFunc: func(r *http.Request, origin string) bool {
+			// Allow local development
+			if origin == "http://localhost:5173" || origin == "http://localhost:4173" || origin == "http://localhost:8080" {
+				return true
+			}
+			// Allow production domains
+			if origin == "https://journal.tehj.io" {
+				return true
+			}
+			// Allow Firebase hosting (including preview channels)
+			// Matches https://discipleship-journal-52a2c.web.app and https://discipleship-journal-52a2c--*.web.app
+			// Also matches firebaseapp.com
+			if len(origin) >= 8 && origin[:8] == "https://" {
+				domain := origin[8:] // Strip "https://"
+
+				// Exact matches
+				if domain == "discipleship-journal-52a2c.web.app" || domain == "discipleship-journal-52a2c.firebaseapp.com" {
+					return true
+				}
+
+				// Preview channels: starts with project ID + "--" and ends with .web.app
+				if strings.HasPrefix(domain, "discipleship-journal-52a2c--") && strings.HasSuffix(domain, ".web.app") {
+					return true
+				}
+			}
+			return false
 		},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
@@ -192,6 +216,14 @@ func main() {
 		r.Post("/api/groups/{id}/shares", groupShareHandler.ShareNoteToGroup)
 		r.Get("/api/groups/{id}/shares", groupShareHandler.ListGroupShares)
 		r.Get("/api/groups/{id}/shares/{shareId}", groupShareHandler.GetSharedNoteDetails)
+
+		// Reading Plans
+		r.Get("/api/reading-plans", readingPlanHandler.GetAllPlans)
+		r.Get("/api/reading-plans/{id}", readingPlanHandler.GetPlan)
+		r.Post("/api/reading-plans/{id}/subscribe", readingPlanHandler.Subscribe)
+		r.Get("/api/my-reading-plans", readingPlanHandler.GetUserPlans)
+		r.Post("/api/my-reading-plans/{id}/progress", readingPlanHandler.MarkDayComplete)
+		r.Get("/api/my-reading-plans/{id}/progress", readingPlanHandler.GetPlanProgress)
 	})
 
 	server := &http.Server{

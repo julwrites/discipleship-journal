@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { auth } from "@/lib/firebase";
+import { useDebounce } from "@/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchNotes, syncUser } from "@/services/api";
 import { Link } from "react-router-dom";
-import { Settings, Users } from "lucide-react";
+import { Settings, Users, BookOpen } from "lucide-react";
 
 interface Note {
   id: string;
@@ -15,51 +16,70 @@ interface Note {
 export default function Dashboard() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
+  const prevSearchRef = useRef(debouncedSearch);
 
   useEffect(() => {
     syncUser();
   }, []);
 
   useEffect(() => {
+      let ignore = false;
+
+      // Handle search changes
+      if (prevSearchRef.current !== debouncedSearch) {
+          prevSearchRef.current = debouncedSearch;
+          if (page !== 1) {
+              setPage(1);
+              setHasMore(true);
+              // Skip fetch, wait for re-render with page=1
+              return;
+          } else {
+              // Already at page 1, but search changed. Reset hasMore.
+              setHasMore(true);
+          }
+      }
+
       const load = async () => {
           setLoading(true);
           try {
-              const response = await fetchNotes(page, 20, search);
-              // Check if response has data/meta structure or is just array (for backward compat if needed, though we updated API)
-              const newNotes = response.data || response;
+              const response = await fetchNotes(page, 20, debouncedSearch);
+              if (!ignore) {
+                  // Check if response has data/meta structure or is just array (for backward compat if needed, though we updated API)
+                  const newNotes = response.data || response;
 
-              if (page === 1) {
-                  setNotes(newNotes);
-              } else {
-                  setNotes(prev => [...prev, ...newNotes]);
-              }
-
-              if (response.meta) {
-                  setHasMore(page < response.meta.total_pages);
-              } else {
-                  // Fallback
-                  if (newNotes.length < 20) {
-                      setHasMore(false);
+                  if (page === 1) {
+                      setNotes(newNotes);
                   } else {
-                      setHasMore(true);
+                      setNotes(prev => [...prev, ...newNotes]);
+                  }
+
+                  if (response.meta) {
+                      setHasMore(page < response.meta.total_pages);
+                  } else {
+                      // Fallback
+                      if (newNotes.length < 20) {
+                          setHasMore(false);
+                      } else {
+                          setHasMore(true);
+                      }
                   }
               }
           } catch (error) {
-              console.error(error);
+              if (!ignore) console.error(error);
           } finally {
-              setLoading(false);
+              if (!ignore) setLoading(false);
           }
       };
       load();
-  }, [page, search]);
+      return () => { ignore = true; };
+  }, [page, debouncedSearch]);
 
   const handleSearch = (val: string) => {
       setSearch(val);
-      setPage(1);
-      setHasMore(true);
   };
 
   return (
@@ -70,6 +90,11 @@ export default function Dashboard() {
           <Link to="/connections">
             <Button variant="ghost" size="icon" title="Connections">
               <Users className="w-5 h-5" />
+            </Button>
+          </Link>
+          <Link to="/reading-plans">
+            <Button variant="ghost" size="icon" title="Reading Plans">
+              <BookOpen className="w-5 h-5" />
             </Button>
           </Link>
           <Link to="/settings">

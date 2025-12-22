@@ -244,4 +244,44 @@ describe('NoteEditor', () => {
             expect(within(dialog).getByText('AI Answer')).toBeInTheDocument();
         });
     });
+
+    it('auto-searches bible passage after delay', async () => {
+        vi.mocked(api.getNote).mockResolvedValue({
+            id: '123',
+            title: 'Test Note',
+            content: { markdown: 'Initial content' }
+        });
+        vi.mocked(api.getBiblePassage).mockResolvedValue({ text: 'In the beginning...' });
+
+        render(
+            <MemoryRouter initialEntries={['/notes/123']}>
+                <Routes>
+                    <Route path="/notes/:id" element={<NoteEditor />} />
+                </Routes>
+            </MemoryRouter>
+        );
+
+        await screen.findByDisplayValue('Test Note');
+
+        const addScriptureBtn = screen.getByRole('button', { name: 'Add Scripture' });
+        fireEvent.click(addScriptureBtn);
+
+        const dialog = await screen.findByRole('dialog');
+        const input = within(dialog).getByPlaceholderText('e.g. John 3:16');
+
+        vi.useFakeTimers();
+        fireEvent.change(input, { target: { value: 'Gen 1:1' } });
+
+        // Fast forward
+        act(() => {
+            vi.advanceTimersByTime(600);
+        });
+
+        vi.useRealTimers();
+
+        await waitFor(() => {
+            expect(api.getBiblePassage).toHaveBeenCalledWith('Gen 1:1');
+            expect(within(dialog).getByText('In the beginning...')).toBeInTheDocument();
+        });
+    });
 });
