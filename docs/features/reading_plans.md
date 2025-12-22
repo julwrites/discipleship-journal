@@ -13,8 +13,8 @@ The Bible Reading Plans feature allows users to follow structured reading schedu
 ## API Endpoints
 
 ### Public/Browse
-- `GET /api/reading-plans`: List all available reading plans.
-- `GET /api/reading-plans/{id}`: Get details of a specific reading plan, including the schedule of readings.
+- `GET /api/reading-plans`: List all available reading plans. Returns a list of plans where `days` is the total number of days (integer).
+- `GET /api/reading-plans/{id}`: Get details of a specific reading plan. Response includes `days` (array of objects with `day_number` and `passage`) and `total_days` (integer), unlike the list endpoint which only provides `days` (integer).
 
 ### User/Subscription
 - `POST /api/reading-plans/{id}/subscribe`: Subscribe the current user to a plan.
