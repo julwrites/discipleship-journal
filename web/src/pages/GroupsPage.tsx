@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
+import { useDebounce } from "@/hooks/useDebounce";
 import { ChevronDown, ChevronUp, UserPlus, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import {
@@ -56,15 +57,21 @@ interface UserSearchResult {
 export default function GroupsPage() {
     const { user } = useAuth();
     const [myGroups, setMyGroups] = useState<Group[]>([]);
+
     const [searchResults, setSearchResults] = useState<Group[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
+    const debouncedSearchQuery = useDebounce(searchQuery, 500);
+
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [newGroup, setNewGroup] = useState({ name: "", description: "" });
     const [expandedGroupId, setExpandedGroupId] = useState<string | null>(null);
     const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
     const [groupShares, setGroupShares] = useState<SharedNote[]>([]);
+
     const [userSearchQuery, setUserSearchQuery] = useState("");
+    const debouncedUserSearchQuery = useDebounce(userSearchQuery, 500);
     const [userSearchResults, setUserSearchResults] = useState<UserSearchResult[]>([]);
+
     const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
     const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
     const [viewingSharedNote, setViewingSharedNote] = useState<SharedNote & { content: { markdown?: string } } | null>(null);
@@ -86,15 +93,44 @@ export default function GroupsPage() {
         load();
     }, [fetchMyGroups]);
 
-    const handleSearch = async () => {
-        if (searchQuery.length < 3) return;
-        try {
-            const data = await searchGroups(searchQuery);
-            setSearchResults(data || []);
-        } catch (error) {
-            console.error("Search failed", error);
-        }
-    };
+    // Find Groups Search
+    useEffect(() => {
+        let ignore = false;
+        const run = async () => {
+            if (debouncedSearchQuery.length < 3) {
+                setSearchResults([]);
+                return;
+            }
+            try {
+                const data = await searchGroups(debouncedSearchQuery);
+                if (!ignore) setSearchResults(data || []);
+            } catch (error) {
+                if (!ignore) console.error("Search failed", error);
+            }
+        };
+        run();
+        return () => { ignore = true; };
+    }, [debouncedSearchQuery]);
+
+    // Add Member User Search
+    useEffect(() => {
+        let ignore = false;
+        const run = async () => {
+            if (debouncedUserSearchQuery.length < 3) {
+                setUserSearchResults([]);
+                return;
+            }
+            try {
+                const data = await apiSearchUsers(debouncedUserSearchQuery);
+                if (!ignore) setUserSearchResults(data || []);
+            } catch (error) {
+                if (!ignore) console.error("User search failed", error);
+            }
+        };
+        run();
+        return () => { ignore = true; };
+    }, [debouncedUserSearchQuery]);
+
 
     const handleCreate = async () => {
         try {
@@ -111,8 +147,14 @@ export default function GroupsPage() {
         try {
             await joinGroup(id);
             toast.success("Joined group!");
-            handleSearch(); // Refresh search results to show updated role
+            // Refresh search results to show updated role
             fetchMyGroups();
+            // Re-trigger search if needed, but since it's debounced, manual call to searchGroups might be needed if we want immediate update
+            // For now, assume fetchMyGroups handles the "my groups" part, and search results might need refresh.
+            if (debouncedSearchQuery.length >= 3) {
+                 const data = await searchGroups(debouncedSearchQuery);
+                 setSearchResults(data || []);
+             }
         } catch (error) {
             console.error("Join failed", error);
         }
@@ -153,16 +195,6 @@ export default function GroupsPage() {
             setViewingSharedNote(data);
         } catch (error) {
             console.error("Failed to fetch shared note", error);
-        }
-    };
-
-    const searchUsers = async () => {
-        if (userSearchQuery.length < 3) return;
-        try {
-            const data = await apiSearchUsers(userSearchQuery);
-            setUserSearchResults(data || []);
-        } catch (error) {
-            console.error("User search failed", error);
         }
     };
 
@@ -307,7 +339,7 @@ export default function GroupsPage() {
                                                                             value={userSearchQuery}
                                                                             onChange={(e) => setUserSearchQuery(e.target.value)}
                                                                         />
-                                                                        <Button onClick={searchUsers}>Search</Button>
+                                                                        {/* Button removed */}
                                                                     </div>
                                                                     <div className="space-y-2 max-h-60 overflow-y-auto">
                                                                         {userSearchResults.map(u => (
@@ -362,7 +394,7 @@ export default function GroupsPage() {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
-                        <Button onClick={handleSearch}>Search</Button>
+                         {/* Button removed */}
                     </div>
                     <div className="grid gap-4 md:grid-cols-2">
                         {searchResults.map(g => (

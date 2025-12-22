@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { auth } from "@/lib/firebase";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
@@ -20,42 +20,52 @@ export default function Dashboard() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
+  const prevSearchRef = useRef(debouncedSearch);
 
   useEffect(() => {
     syncUser();
   }, []);
 
-  // Reset page when search term changes
-  useEffect(() => {
-    setPage(1);
-    setHasMore(true);
-  }, [debouncedSearch]);
-
   useEffect(() => {
       let ignore = false;
+
+      // Handle search changes
+      if (prevSearchRef.current !== debouncedSearch) {
+          prevSearchRef.current = debouncedSearch;
+          if (page !== 1) {
+              setPage(1);
+              setHasMore(true);
+              // Skip fetch, wait for re-render with page=1
+              return;
+          } else {
+              // Already at page 1, but search changed. Reset hasMore.
+              setHasMore(true);
+          }
+      }
+
       const load = async () => {
           setLoading(true);
           try {
               const response = await fetchNotes(page, 20, debouncedSearch);
-              if (ignore) return;
+              if (!ignore) {
+                  // Check if response has data/meta structure or is just array (for backward compat if needed, though we updated API)
+                  const newNotes = response.data || response;
 
-              // Check if response has data/meta structure or is just array (for backward compat if needed, though we updated API)
-              const newNotes = response.data || response;
-
-              if (page === 1) {
-                  setNotes(newNotes);
-              } else {
-                  setNotes(prev => [...prev, ...newNotes]);
-              }
-
-              if (response.meta) {
-                  setHasMore(page < response.meta.total_pages);
-              } else {
-                  // Fallback
-                  if (newNotes.length < 20) {
-                      setHasMore(false);
+                  if (page === 1) {
+                      setNotes(newNotes);
                   } else {
-                      setHasMore(true);
+                      setNotes(prev => [...prev, ...newNotes]);
+                  }
+
+                  if (response.meta) {
+                      setHasMore(page < response.meta.total_pages);
+                  } else {
+                      // Fallback
+                      if (newNotes.length < 20) {
+                          setHasMore(false);
+                      } else {
+                          setHasMore(true);
+                      }
                   }
               }
           } catch (error) {

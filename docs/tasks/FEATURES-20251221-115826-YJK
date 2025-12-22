@@ -1,0 +1,37 @@
+---
+id: FEATURES-20251221-115826-YJK
+status: in_progress
+title: Improve Search Performance with Debouncing
+priority: medium
+created: 2025-12-21 11:58:26
+category: features
+dependencies:
+type: task
+---
+
+# Improve Search Performance with Debouncing
+
+## Background
+The application uses search in multiple places (Dashboard, Connections, Groups). Currently, some searches are manual (click to search) or have potential performance issues (double fetching). The goal is to standardize on a debounced search UX and optimize existing implementations.
+
+## Plan
+1.  **Dashboard Search Optimization**:
+    -   Fix potential race condition/double-fetch where changing search term triggers a page reset (fetch) and then the search term update triggers another fetch.
+    -   Ensure `fetchNotes` is called optimally.
+
+2.  **Connections Page Search**:
+    -   Replace manual "Search" button with auto-debounced search for "Find People".
+
+3.  **Groups Page Search**:
+    -   Replace manual "Search" button with auto-debounced search for "Find Groups".
+    -   Replace manual "Search" button with auto-debounced search for "Add Member" dialog.
+
+## Technical Details
+-   Use `useDebounce` hook.
+-   Ensure cleanup of pending requests if possible (using `ignore` flag pattern).
+-   UX: Show loading state while typing/debouncing.
+
+## Verification
+-   **Dashboard**: Verify only one network request is made when typing stops. Verify pagination works correctly with search.
+-   **Connections**: Verify search triggers automatically after typing stops.
+-   **Groups**: Verify search triggers automatically after typing stops.
