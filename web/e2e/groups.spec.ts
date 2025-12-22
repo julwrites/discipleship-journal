@@ -126,8 +126,8 @@ test.describe('Groups (Mocked)', () => {
     await page.getByRole('button', { name: 'Add Member' }).click();
 
     await page.getByPlaceholder('Search by email, name, or username').fill('newuser');
-    await page.getByRole('button', { name: 'Search' }).click();
 
+    // Wait for auto-search
     await expect(page.locator('text=New User')).toBeVisible();
     await page.getByRole('button', { name: 'Add' }).click();
 

@@ -61,10 +61,7 @@ test.describe('Connections (Mocked)', () => {
     // Type in search box
     await page.getByPlaceholder('Search by email or name...').fill('friend');
 
-    // Click Search
-    await page.getByRole('button', { name: 'Search' }).click();
-
-    // Wait for results
+    // Wait for results (auto-search)
     await expect(page.getByText('friend@example.com')).toBeVisible();
 
     // Click "Connect" button
