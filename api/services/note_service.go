@@ -42,6 +42,7 @@ type Note struct {
 	Content   json.RawMessage `json:"content"`
 	CreatedAt time.Time       `json:"created_at"`
 	UpdatedAt time.Time       `json:"updated_at"`
+	DeletedAt *time.Time      `json:"deleted_at,omitempty"`
 }
 
 func (s *NoteService) CreateNote(ctx context.Context, userID, title string, content json.RawMessage) (*Note, error) {
@@ -61,7 +62,8 @@ func (s *NoteService) CreateNote(ctx context.Context, userID, title string, cont
 }
 
 func (s *NoteService) DeleteNote(ctx context.Context, userID, noteID string) error {
-	commandTag, err := s.db.Exec(ctx, "DELETE FROM notes WHERE id=$1 AND user_id=$2", noteID, userID)
+	query := `UPDATE notes SET deleted_at=NOW() WHERE id=$1 AND user_id=$2 AND deleted_at IS NULL`
+	commandTag, err := s.db.Exec(ctx, query, noteID, userID)
 	if err != nil {
 		return err
 	}
@@ -75,7 +77,7 @@ func (s *NoteService) UpdateNote(ctx context.Context, userID, noteID, title stri
 	query := `
 		UPDATE notes
 		SET title=$1, content=$2, updated_at=NOW()
-		WHERE id=$3 AND user_id=$4
+		WHERE id=$3 AND user_id=$4 AND deleted_at IS NULL
 	`
 	commandTag, err := s.db.Exec(ctx, query, title, content, noteID, userID)
 	if err != nil {
@@ -89,9 +91,9 @@ func (s *NoteService) UpdateNote(ctx context.Context, userID, noteID, title stri
 
 func (s *NoteService) GetNote(ctx context.Context, userID, noteID string) (*Note, error) {
 	var note Note
-	query := "SELECT id, user_id, title, content, created_at, updated_at FROM notes WHERE id=$1 AND user_id=$2"
+	query := "SELECT id, user_id, title, content, created_at, updated_at, deleted_at FROM notes WHERE id=$1 AND user_id=$2 AND deleted_at IS NULL"
 	err := s.db.QueryRow(ctx, query, noteID, userID).Scan(
-		&note.ID, &note.UserID, &note.Title, &note.Content, &note.CreatedAt, &note.UpdatedAt,
+		&note.ID, &note.UserID, &note.Title, &note.Content, &note.CreatedAt, &note.UpdatedAt, &note.DeletedAt,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -115,7 +117,7 @@ func (s *NoteService) GetNotes(ctx context.Context, userID string, page, limit i
 	var err error
 
 	// Count total notes
-	countQuery := "SELECT COUNT(*) FROM notes WHERE user_id=$1"
+	countQuery := "SELECT COUNT(*) FROM notes WHERE user_id=$1 AND deleted_at IS NULL"
 	var countArgs []interface{}
 	countArgs = append(countArgs, userID)
 
@@ -130,7 +132,7 @@ func (s *NoteService) GetNotes(ctx context.Context, userID string, page, limit i
 	}
 
 	// Fetch notes
-	baseQuery := "SELECT id, user_id, title, content, created_at, updated_at FROM notes WHERE user_id=$1"
+	baseQuery := "SELECT id, user_id, title, content, created_at, updated_at, deleted_at FROM notes WHERE user_id=$1 AND deleted_at IS NULL"
 	var queryArgs []interface{}
 	queryArgs = append(queryArgs, userID)
 
@@ -150,7 +152,7 @@ func (s *NoteService) GetNotes(ctx context.Context, userID string, page, limit i
 	var notes []Note
 	for rows.Next() {
 		var n Note
-		if err := rows.Scan(&n.ID, &n.UserID, &n.Title, &n.Content, &n.CreatedAt, &n.UpdatedAt); err != nil {
+		if err := rows.Scan(&n.ID, &n.UserID, &n.Title, &n.Content, &n.CreatedAt, &n.UpdatedAt, &n.DeletedAt); err != nil {
 			continue
 		}
 		notes = append(notes, n)
