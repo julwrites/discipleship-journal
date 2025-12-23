@@ -71,7 +71,7 @@ func (h *GroupShareHandler) ShareNoteToGroup(w http.ResponseWriter, r *http.Requ
 	// 2. Verify ownership of note
 	var ownerID string
 	err = h.db.QueryRow(r.Context(),
-		"SELECT user_id FROM notes WHERE id = $1",
+		"SELECT user_id FROM notes WHERE id = $1 AND deleted_at IS NULL",
 		req.NoteID).Scan(&ownerID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -168,7 +168,7 @@ func (h *GroupShareHandler) ListGroupShares(w http.ResponseWriter, r *http.Reque
 		 FROM group_shares gs
 		 JOIN notes n ON gs.note_id = n.id
 		 JOIN users u ON gs.shared_by = u.id
-		 WHERE gs.group_id = $1
+		 WHERE gs.group_id = $1 AND n.deleted_at IS NULL
 		 ORDER BY gs.shared_at DESC`, groupID)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
@@ -226,7 +226,7 @@ func (h *GroupShareHandler) GetSharedNoteDetails(w http.ResponseWriter, r *http.
 		 FROM group_shares gs
 		 JOIN notes n ON gs.note_id = n.id
 		 JOIN users u ON gs.shared_by = u.id
-		 WHERE gs.id = $1 AND gs.group_id = $2`, shareID, groupID).Scan(
+		 WHERE gs.id = $1 AND gs.group_id = $2 AND n.deleted_at IS NULL`, shareID, groupID).Scan(
 		&s.ID, &s.GroupID, &s.NoteID, &s.Title, &s.Content, &s.SharedBy, &sharedAt, &s.Comment)
 
 	if err != nil {
