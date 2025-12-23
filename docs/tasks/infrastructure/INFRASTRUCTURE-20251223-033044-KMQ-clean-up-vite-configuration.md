@@ -1,6 +1,6 @@
 ---
 id: INFRASTRUCTURE-20251223-033044-KMQ
-status: pending
+status: completed
 title: Clean up Vite configuration
 priority: low
 created: 2025-12-23 03:30:44
@@ -19,6 +19,6 @@ In `web/vite.config.ts`, the configuration object is cast to `any` at the end:
 This defeats type safety for the configuration.
 
 ## Acceptance Criteria
-- [ ] Remove `as any` casting.
-- [ ] Fix any type errors that arise (likely related to `Vitest` types or `VitePWA` plugin types).
-- [ ] Ensure `npm run build` and `npm run test` still work.
+- [x] Remove `as any` casting.
+- [x] Fix any type errors that arise (likely related to `Vitest` types or `VitePWA` plugin types).
+- [x] Ensure `npm run build` and `npm run test` still work.
