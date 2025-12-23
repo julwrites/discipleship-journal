@@ -39,7 +39,7 @@ type Note struct {
 	ID        string          `json:"id"`
 	UserID    string          `json:"user_id"`
 	Title     string          `json:"title"`
-	Content   json.RawMessage `json:"content"`
+	Content   json.RawMessage `json:"content,omitempty"`
 	CreatedAt time.Time       `json:"created_at"`
 	UpdatedAt time.Time       `json:"updated_at"`
 	DeletedAt *time.Time      `json:"deleted_at,omitempty"`
@@ -132,7 +132,7 @@ func (s *NoteService) GetNotes(ctx context.Context, userID string, page, limit i
 	}
 
 	// Fetch notes
-	baseQuery := "SELECT id, user_id, title, content, created_at, updated_at, deleted_at FROM notes WHERE user_id=$1 AND deleted_at IS NULL"
+	baseQuery := "SELECT id, user_id, title, created_at, updated_at, deleted_at FROM notes WHERE user_id=$1 AND deleted_at IS NULL"
 	var queryArgs []interface{}
 	queryArgs = append(queryArgs, userID)
 
@@ -152,7 +152,7 @@ func (s *NoteService) GetNotes(ctx context.Context, userID string, page, limit i
 	var notes []Note
 	for rows.Next() {
 		var n Note
-		if err := rows.Scan(&n.ID, &n.UserID, &n.Title, &n.Content, &n.CreatedAt, &n.UpdatedAt, &n.DeletedAt); err != nil {
+		if err := rows.Scan(&n.ID, &n.UserID, &n.Title, &n.CreatedAt, &n.UpdatedAt, &n.DeletedAt); err != nil {
 			continue
 		}
 		notes = append(notes, n)

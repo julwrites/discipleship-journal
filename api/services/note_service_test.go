@@ -234,7 +234,6 @@ func TestGetNotes(t *testing.T) {
 	ctx := context.Background()
 	userID := "user-123"
 	title := "Test Note"
-	content := json.RawMessage(`{"text": "hello"}`)
 	now := time.Now()
 	page := 1
 	limit := 10
@@ -244,10 +243,10 @@ func TestGetNotes(t *testing.T) {
 			WithArgs(userID).
 			WillReturnRows(pgxmock.NewRows([]string{"count"}).AddRow(1))
 
-		mock.ExpectQuery("SELECT id, user_id, title, content, created_at, updated_at, deleted_at FROM notes").
+		mock.ExpectQuery("SELECT id, user_id, title, created_at, updated_at, deleted_at FROM notes").
 			WithArgs(userID).
-			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "created_at", "updated_at", "deleted_at"}).
-				AddRow("note-123", userID, title, content, now, now, nil))
+			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "created_at", "updated_at", "deleted_at"}).
+				AddRow("note-123", userID, title, now, now, nil))
 
 		notes, total, err := service.GetNotes(ctx, userID, page, limit, "")
 
@@ -263,10 +262,10 @@ func TestGetNotes(t *testing.T) {
 			WithArgs(userID, "%"+searchQuery+"%").
 			WillReturnRows(pgxmock.NewRows([]string{"count"}).AddRow(1))
 
-		mock.ExpectQuery("SELECT id, user_id, title, content, created_at, updated_at, deleted_at FROM notes").
+		mock.ExpectQuery("SELECT id, user_id, title, created_at, updated_at, deleted_at FROM notes").
 			WithArgs(userID, "%"+searchQuery+"%").
-			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "created_at", "updated_at", "deleted_at"}).
-				AddRow("note-123", userID, title, content, now, now, nil))
+			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "created_at", "updated_at", "deleted_at"}).
+				AddRow("note-123", userID, title, now, now, nil))
 
 		notes, total, err := service.GetNotes(ctx, userID, page, limit, searchQuery)
 
