@@ -1,6 +1,6 @@
 ---
 id: TESTING-20251223-033043-KIR
-status: pending
+status: completed
 title: Fix duplicate key warnings in Dashboard tests
 priority: low
 created: 2025-12-23 03:30:43
