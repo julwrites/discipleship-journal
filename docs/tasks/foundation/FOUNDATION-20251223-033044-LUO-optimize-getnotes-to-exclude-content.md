@@ -1,6 +1,6 @@
 ---
 id: FOUNDATION-20251223-033044-LUO
-status: pending
+status: completed
 title: Optimize GetNotes to exclude content
 priority: medium
 created: 2025-12-23 03:30:44
