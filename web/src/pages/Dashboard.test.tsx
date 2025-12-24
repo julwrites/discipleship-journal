@@ -40,7 +40,7 @@ describe('Dashboard', () => {
         const mockFetchNotes = vi.mocked(api.fetchNotes);
 
         // Initial load: returns enough notes to have a second page
-        mockFetchNotes.mockImplementation(async (page, limit) => {
+        mockFetchNotes.mockImplementation(async (page = 1, limit = 20) => {
             const offset = (page - 1) * limit;
             return {
                 data: Array(limit).fill(null).map((_, i) => ({
