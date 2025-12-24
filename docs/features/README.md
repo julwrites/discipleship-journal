@@ -12,7 +12,7 @@
 | **Social Groups** | Implemented | Create and join groups for discipleship (`/api/groups`). |
 | **Note Sharing** | Implemented | Share notes with groups (`/api/groups/{id}/shares`). |
 | **PWA Support** | Implemented | Installable app with offline capabilities. |
-| **Delete Notes** | Implemented | Delete notes via API and UI (Hard Delete currently). |
+| **Delete Notes** | Implemented | Delete notes via API and UI (Soft Delete implemented). |
 | **Rich Text Editing** | Implemented | Markdown-based rich text editor (`Tiptap`). |
 | **Auto-Save** | Implemented | Debounced auto-save for notes. |
 | **Push Notifications** | Implemented | FCM notifications for groups and messages. |
