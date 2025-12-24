@@ -9,14 +9,14 @@
 | **AI Chat** | Implemented | Chat with an AI assistant (`/api/chat`). |
 | **AI Ask** | Implemented | Ask specific questions to AI (`/api/ai/ask`). |
 | **Connections** | Implemented | Connect with other users (`/api/connections`). |
-| **Social Groups** | Implemented | Create and join groups for discipleship (`/api/groups`). |
+| **Social Groups** | Implemented | Create and join groups for discipleship ([Details](groups.md)). |
 | **Note Sharing** | Implemented | Share notes with groups (`/api/groups/{id}/shares`). |
 | **PWA Support** | Implemented | Installable app with offline capabilities. |
 | **Delete Notes** | Implemented | Delete notes via API and UI (Soft Delete implemented). |
 | **Rich Text Editing** | Implemented | Markdown-based rich text editor (`Tiptap`). |
 | **Auto-Save** | Implemented | Debounced auto-save for notes. |
-| **Push Notifications** | Implemented | FCM notifications for groups and messages. |
+| **Push Notifications** | Implemented | FCM notifications for groups and messages ([Details](notifications.md)). |
 | **Bible Reading Plans** | Implemented | Subscribe to reading plans and track progress ([Details](reading_plans.md)). |
 
 ## Future Features
-*   Search/Filter notes (Debounced search implemented, advanced filtering pending).
+*   Advanced Search/Filter notes (Basic debounced search is implemented).
