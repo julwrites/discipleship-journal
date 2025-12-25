@@ -98,6 +98,7 @@ func main() {
 	}
 
 	noteService := services.NewNoteService(database.DB)
+	groupService := services.NewGroupService(database.DB, notificationService)
 
 	bibleHandler := handlers.NewBibleHandler(bibleAIClient)
 	chatHandler := handlers.NewChatHandler(bibleAIClient, noteService, database.DB)
@@ -105,8 +106,8 @@ func main() {
 
 	// Update handlers to use notification service
 	connectionHandler := handlers.NewConnectionHandler(database.DB, notificationService)
-	groupHandler := handlers.NewGroupHandler(database.DB, notificationService)
-	groupShareHandler := handlers.NewGroupShareHandler(database.DB, notificationService)
+	groupHandler := handlers.NewGroupHandler(groupService)
+	groupShareHandler := handlers.NewGroupShareHandler(groupService)
 	notificationHandler := handlers.NewNotificationHandler(notificationService)
 
 	// Reading Plans
