@@ -8,8 +8,22 @@ import (
 	"github.com/google/uuid"
 )
 
+type contextKey string
+
+const TestUserKey contextKey = "test_user_id"
+
 // GetUserUUID is a helper to get the UUID of the user from the database given the Firebase UID.
 func GetUserUUID(ctx context.Context, firebaseUID string) (uuid.UUID, error) {
+	// Check for test override first
+	if val := ctx.Value(TestUserKey); val != nil {
+		if id, ok := val.(uuid.UUID); ok {
+			return id, nil
+		}
+		if idStr, ok := val.(string); ok {
+			return uuid.Parse(idStr)
+		}
+	}
+
 	if firebaseUID == "" {
 		return uuid.Nil, errors.New("invalid firebase UID")
 	}

@@ -10,10 +10,6 @@ import (
 	"discipleship_journal_api/services"
 )
 
-type contextKey string
-
-const testUserKey contextKey = "test_user_id"
-
 type ReadingPlanHandler struct {
 	service services.ReadingPlanService
 }
@@ -163,7 +159,7 @@ func (h *ReadingPlanHandler) getUserID(r *http.Request) (uuid.UUID, error) {
 	}
 
 	// 2. Try test fallback
-	if val := r.Context().Value(testUserKey); val != nil {
+	if val := r.Context().Value(TestUserKey); val != nil {
 		return val.(uuid.UUID), nil
 	}
 
