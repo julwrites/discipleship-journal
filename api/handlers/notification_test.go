@@ -15,22 +15,18 @@ import (
 )
 
 func TestNotificationHandler_RegisterDevice(t *testing.T) {
-	// Mock NotificationService
-	mockNotif := new(MockNotificationServiceWithMock)
-	h := NewNotificationHandler(mockNotif)
-
 	testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 
 	testCases := []struct {
 		name           string
 		requestBody    string
-		setupMock      func()
+		setupMock      func(mockNotif *MockNotificationServiceWithMock)
 		expectedStatus int
 	}{
 		{
 			name:        "Success",
 			requestBody: `{"token": "fcm-token-123", "device_type": "android"}`,
-			setupMock: func() {
+			setupMock: func(mockNotif *MockNotificationServiceWithMock) {
 				// Expects UUID string, not Firebase UID, because Handler calls GetUserUUID then calls service with UUID string.
 				mockNotif.On("RegisterDevice", mock.Anything, testUUID.String(), "fcm-token-123", "android").
 					Return(nil)
@@ -40,14 +36,18 @@ func TestNotificationHandler_RegisterDevice(t *testing.T) {
 		{
 			name:        "Invalid Request",
 			requestBody: `{"token": ""}`,
-			setupMock:   func() {},
+			setupMock:   func(mockNotif *MockNotificationServiceWithMock) {},
 			expectedStatus: http.StatusBadRequest,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.setupMock()
+			// Mock NotificationService
+			mockNotif := new(MockNotificationServiceWithMock)
+			h := NewNotificationHandler(mockNotif)
+
+			tc.setupMock(mockNotif)
 
 			req := httptest.NewRequest("POST", "/notifications/device", strings.NewReader(tc.requestBody))
 			req.Header.Set("Content-Type", "application/json")
