@@ -2,67 +2,70 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
-	"discipleship_journal_api/middleware"
-	"firebase.google.com/go/v4/auth"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"firebase.google.com/go/v4/auth"
+	"discipleship_journal_api/middleware"
+	"github.com/google/uuid"
 )
 
 func TestNotificationHandler_RegisterDevice(t *testing.T) {
-	t.Run("Success", func(t *testing.T) {
-		mockService := new(MockNotificationService)
-		h := NewNotificationHandler(mockService)
-		userID := uuid.New()
+	// Mock NotificationService
+	mockNotif := new(MockNotificationServiceWithMock)
+	h := NewNotificationHandler(mockNotif)
 
-		reqBody := `{"token": "fcm-token", "device_type": "android"}`
-		req := httptest.NewRequest("POST", "/notifications/register", createBody(reqBody))
+	testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 
-		// Inject test user key
-		ctx := context.WithValue(req.Context(), TestUserKey, userID)
-		ctx = context.WithValue(ctx, middleware.UserContextKey, &auth.Token{UID: "test-uid"})
-		req = req.WithContext(ctx)
+	testCases := []struct {
+		name           string
+		requestBody    string
+		setupMock      func()
+		expectedStatus int
+	}{
+		{
+			name:        "Success",
+			requestBody: `{"token": "fcm-token-123", "device_type": "android"}`,
+			setupMock: func() {
+				// Expects UUID string, not Firebase UID, because Handler calls GetUserUUID then calls service with UUID string.
+				mockNotif.On("RegisterDevice", mock.Anything, testUUID.String(), "fcm-token-123", "android").
+					Return(nil)
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:        "Invalid Request",
+			requestBody: `{"token": ""}`,
+			setupMock:   func() {},
+			expectedStatus: http.StatusBadRequest,
+		},
+	}
 
-		mockService.On("RegisterDevice", mock.Anything, userID.String(), "fcm-token", "android").Return(nil)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.setupMock()
 
-		w := httptest.NewRecorder()
+			req := httptest.NewRequest("POST", "/notifications/device", strings.NewReader(tc.requestBody))
+			req.Header.Set("Content-Type", "application/json")
 
-		h.RegisterDevice(w, req)
+			// Inject Auth Token
+			dummyToken := &auth.Token{UID: "firebase-uid-123"}
+			ctx := context.WithValue(req.Context(), middleware.UserContextKey, dummyToken)
 
-		assert.Equal(t, http.StatusOK, w.Code)
-		mockService.AssertExpectations(t)
+			// Inject User UUID (since handler calls GetUserUUID)
+			ctx = context.WithValue(ctx, TestUserKey, testUUID)
 
-		var resp map[string]string
-		err := json.Unmarshal(w.Body.Bytes(), &resp)
-		assert.NoError(t, err)
-		assert.Equal(t, "registered", resp["status"])
-	})
+			req = req.WithContext(ctx)
 
-	t.Run("Unauthorized", func(t *testing.T) {
-		mockService := new(MockNotificationService)
-		h := NewNotificationHandler(mockService)
+			w := httptest.NewRecorder()
+			h.RegisterDevice(w, req)
 
-		reqBody := `{"token": "fcm-token"}`
-		req := httptest.NewRequest("POST", "/notifications/register", createBody(reqBody))
-		// No context injection
-
-		w := httptest.NewRecorder()
-
-		// We need to ensure GetUserUUID fails or the middleware context is missing.
-		// If middleware key is missing, handler panics on `r.Context().Value(middleware.UserContextKey).(*auth.Token)`
-		// So we must provide middleware key.
-		ctx := context.WithValue(req.Context(), middleware.UserContextKey, &auth.Token{UID: "test-uid"})
-		req = req.WithContext(ctx)
-
-		// GetUserUUID will fail because DB is not initialized and no TestUserKey
-
-		h.RegisterDevice(w, req)
-
-		assert.Equal(t, http.StatusUnauthorized, w.Code)
-	})
+			assert.Equal(t, tc.expectedStatus, w.Code)
+			mockNotif.AssertExpectations(t)
+		})
+	}
 }

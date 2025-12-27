@@ -1,6 +1,6 @@
 ---
 id: TESTING-20251225-033202-MIH
-status: pending
+status: completed
 title: Add unit tests for Groups and Notifications
 priority: high
 created: 2025-12-25 03:32:02
