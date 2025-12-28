@@ -12,13 +12,22 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
+// NoteFilter defines the criteria for filtering notes.
+type NoteFilter struct {
+	SearchQuery string
+	StartDate   *time.Time
+	EndDate     *time.Time
+	SortBy      string // "updated_at", "created_at", "title"
+	SortOrder   string // "asc", "desc"
+}
+
 // NoteServiceInterface defines the methods for note operations.
 type NoteServiceInterface interface {
 	CreateNote(ctx context.Context, userID, title string, content json.RawMessage) (*Note, error)
 	DeleteNote(ctx context.Context, userID, noteID string) error
 	UpdateNote(ctx context.Context, userID, noteID, title string, content json.RawMessage) error
 	GetNote(ctx context.Context, userID, noteID string) (*Note, error)
-	GetNotes(ctx context.Context, userID string, page, limit int, searchQuery string) ([]Note, int, error)
+	GetNotes(ctx context.Context, userID string, page, limit int, filter NoteFilter) ([]Note, int, error)
 }
 
 type NoteService struct {
@@ -105,7 +114,7 @@ func (s *NoteService) GetNote(ctx context.Context, userID, noteID string) (*Note
 	return &note, nil
 }
 
-func (s *NoteService) GetNotes(ctx context.Context, userID string, page, limit int, searchQuery string) ([]Note, int, error) {
+func (s *NoteService) GetNotes(ctx context.Context, userID string, page, limit int, filter NoteFilter) ([]Note, int, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -117,34 +126,59 @@ func (s *NoteService) GetNotes(ctx context.Context, userID string, page, limit i
 	var total int
 	var err error
 
-	// Count total notes
-	countQuery := "SELECT COUNT(*) FROM notes WHERE user_id=$1 AND deleted_at IS NULL"
-	var countArgs []interface{}
-	countArgs = append(countArgs, userID)
+	// Base logic for building the WHERE clause
+	// We'll use a slice of args and string building
+	whereClause := " WHERE user_id=$1 AND deleted_at IS NULL"
+	args := []interface{}{userID}
+	argIdx := 2
 
-	if searchQuery != "" {
-		countQuery += " AND (title ILIKE $2 OR content::text ILIKE $2)"
-		countArgs = append(countArgs, "%"+searchQuery+"%")
+	if filter.SearchQuery != "" {
+		whereClause += fmt.Sprintf(" AND (title ILIKE $%d OR content::text ILIKE $%d)", argIdx, argIdx)
+		args = append(args, "%"+filter.SearchQuery+"%")
+		argIdx++
 	}
 
-	err = s.db.QueryRow(ctx, countQuery, countArgs...).Scan(&total)
+	if filter.StartDate != nil {
+		whereClause += fmt.Sprintf(" AND updated_at >= $%d", argIdx)
+		args = append(args, *filter.StartDate)
+		argIdx++
+	}
+
+	if filter.EndDate != nil {
+		whereClause += fmt.Sprintf(" AND updated_at <= $%d", argIdx)
+		args = append(args, *filter.EndDate)
+		argIdx++ // Not strictly needed if last, but good practice
+	}
+
+	// Count total notes
+	countQuery := "SELECT COUNT(*) FROM notes" + whereClause
+	err = s.db.QueryRow(ctx, countQuery, args...).Scan(&total)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	// Fetch notes
-	baseQuery := "SELECT id, user_id, title, created_at, updated_at, deleted_at FROM notes WHERE user_id=$1 AND deleted_at IS NULL"
-	var queryArgs []interface{}
-	queryArgs = append(queryArgs, userID)
+	// Determine sort
+	orderBy := "updated_at"
+	orderDir := "DESC"
 
-	if searchQuery != "" {
-		baseQuery += " AND (title ILIKE $2 OR content::text ILIKE $2)"
-		queryArgs = append(queryArgs, "%"+searchQuery+"%")
+	switch filter.SortBy {
+	case "created_at":
+		orderBy = "created_at"
+	case "title":
+		orderBy = "title"
+	case "updated_at":
+		orderBy = "updated_at"
 	}
 
-	baseQuery += fmt.Sprintf(" ORDER BY updated_at DESC LIMIT %d OFFSET %d", limit, offset)
+	if filter.SortOrder == "asc" {
+		orderDir = "ASC"
+	}
 
-	rows, err := s.db.Query(ctx, baseQuery, queryArgs...)
+	// Fetch notes
+	baseQuery := "SELECT id, user_id, title, created_at, updated_at, deleted_at FROM notes" + whereClause
+	baseQuery += fmt.Sprintf(" ORDER BY %s %s LIMIT %d OFFSET %d", orderBy, orderDir, limit, offset)
+
+	rows, err := s.db.Query(ctx, baseQuery, args...)
 	if err != nil {
 		return nil, 0, err
 	}

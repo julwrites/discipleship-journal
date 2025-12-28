@@ -57,7 +57,8 @@ func TestGetNotes(t *testing.T) {
 			},
 		}
 
-		noteServiceMock.On("GetNotes", mock.Anything, userUUID, 1, 20, "").Return(serviceNotes, 1, nil)
+		// Updated to match filter struct
+		noteServiceMock.On("GetNotes", mock.Anything, userUUID, 1, 20, services.NoteFilter{}).Return(serviceNotes, 1, nil)
 
 		req := httptest.NewRequest("GET", "/api/notes", nil)
 		token := &auth.Token{UID: firebaseUID}

@@ -3,9 +3,14 @@ import { auth } from "@/lib/firebase";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { fetchNotes, syncUser } from "@/services/api";
+import { fetchNotes, syncUser, NoteFilter } from "@/services/api";
 import { Link } from "react-router-dom";
-import { Settings, Users, BookOpen } from "lucide-react";
+import { Settings, Users, BookOpen, Filter, CalendarIcon } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface Note {
   id: string;
@@ -22,6 +27,15 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const prevSearchRef = useRef(debouncedSearch);
 
+  // Filter state
+  const [startDate, setStartDate] = useState<Date | undefined>();
+  const [endDate, setEndDate] = useState<Date | undefined>();
+  const [sortBy, setSortBy] = useState<"updated_at" | "created_at" | "title">("updated_at");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
+  // Ref to track if filters changed to reset page
+  const prevFilterRef = useRef({ startDate, endDate, sortBy, sortOrder });
+
   useEffect(() => {
     syncUser();
   }, []);
@@ -29,16 +43,25 @@ export default function Dashboard() {
   useEffect(() => {
       let ignore = false;
 
-      // Handle search changes
-      if (prevSearchRef.current !== debouncedSearch) {
+      const currentFilters = { startDate, endDate, sortBy, sortOrder };
+      const filtersChanged =
+          prevFilterRef.current.startDate !== startDate ||
+          prevFilterRef.current.endDate !== endDate ||
+          prevFilterRef.current.sortBy !== sortBy ||
+          prevFilterRef.current.sortOrder !== sortOrder;
+
+      // Handle search or filter changes
+      if (prevSearchRef.current !== debouncedSearch || filtersChanged) {
           prevSearchRef.current = debouncedSearch;
+          prevFilterRef.current = currentFilters;
+
           if (page !== 1) {
               setPage(1);
               setHasMore(true);
               // Skip fetch, wait for re-render with page=1
               return;
           } else {
-              // Already at page 1, but search changed. Reset hasMore.
+              // Already at page 1, reset hasMore just in case
               setHasMore(true);
           }
       }
@@ -46,7 +69,14 @@ export default function Dashboard() {
       const load = async () => {
           setLoading(true);
           try {
-              const response = await fetchNotes(page, 20, debouncedSearch);
+              const filter: NoteFilter = {
+                  search: debouncedSearch,
+                  startDate,
+                  endDate,
+                  sortBy,
+                  sortOrder
+              };
+              const response = await fetchNotes(page, 20, filter);
               if (!ignore) {
                   // Check if response has data/meta structure or is just array (for backward compat if needed, though we updated API)
                   const newNotes = response.data || response;
@@ -76,10 +106,17 @@ export default function Dashboard() {
       };
       load();
       return () => { ignore = true; };
-  }, [page, debouncedSearch]);
+  }, [page, debouncedSearch, startDate, endDate, sortBy, sortOrder]);
 
   const handleSearch = (val: string) => {
       setSearch(val);
+  };
+
+  const clearFilters = () => {
+      setStartDate(undefined);
+      setEndDate(undefined);
+      setSortBy("updated_at");
+      setSortOrder("desc");
   };
 
   return (
@@ -108,13 +145,103 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="mb-6">
+      <div className="mb-6 flex gap-2 items-center">
         <Input
           placeholder="Search notes..."
           value={search}
           onChange={(e) => handleSearch(e.target.value)}
           className="max-w-md"
         />
+
+        <Popover>
+            <PopoverTrigger asChild>
+                <Button variant="outline" size="icon" title="Filter & Sort">
+                    <Filter className="w-4 h-4" />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-4">
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <h4 className="font-medium leading-none">Sort By</h4>
+                        <div className="flex gap-2">
+                            <Select value={sortBy} onValueChange={(val: any) => setSortBy(val)}>
+                                <SelectTrigger className="w-[140px]">
+                                    <SelectValue placeholder="Sort By" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="updated_at">Updated</SelectItem>
+                                    <SelectItem value="created_at">Created</SelectItem>
+                                    <SelectItem value="title">Title</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Select value={sortOrder} onValueChange={(val: any) => setSortOrder(val)}>
+                                <SelectTrigger className="w-[110px]">
+                                    <SelectValue placeholder="Order" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="desc">Desc</SelectItem>
+                                    <SelectItem value="asc">Asc</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <h4 className="font-medium leading-none">Date Range</h4>
+                        <div className="grid gap-2">
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant={"outline"}
+                                        className={cn(
+                                            "w-full justify-start text-left font-normal",
+                                            !startDate && "text-muted-foreground"
+                                        )}
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {startDate ? format(startDate, "PPP") : <span>Start Date</span>}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                        mode="single"
+                                        selected={startDate}
+                                        onSelect={setStartDate}
+                                        initialFocus
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant={"outline"}
+                                        className={cn(
+                                            "w-full justify-start text-left font-normal",
+                                            !endDate && "text-muted-foreground"
+                                        )}
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {endDate ? format(endDate, "PPP") : <span>End Date</span>}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                        mode="single"
+                                        selected={endDate}
+                                        onSelect={setEndDate}
+                                        initialFocus
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+                    </div>
+
+                    <Button variant="ghost" className="w-full" onClick={clearFilters}>
+                        Clear Filters
+                    </Button>
+                </div>
+            </PopoverContent>
+        </Popover>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

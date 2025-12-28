@@ -13,5 +13,8 @@
     "api/**/*.go": [
       "bash -c 'cd api && golangci-lint run ./...'"
     ]
+  },
+  "dependencies": {
+    "@radix-ui/react-icons": "^1.3.2"
   }
 }
