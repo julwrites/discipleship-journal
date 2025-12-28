@@ -140,7 +140,7 @@ export default function Settings() {
                       </p>
                   </div>
                   {permission === 'granted' ? (
-                      <Button variant="outline" disabled className="text-green-600 border-green-200 bg-green-50">
+                      <Button variant="outline" disabled className="text-green-600 border-green-200 bg-green-50 dark:bg-green-950 dark:text-green-400 dark:border-green-900">
                           Enabled
                       </Button>
                   ) : permission === 'denied' ? (

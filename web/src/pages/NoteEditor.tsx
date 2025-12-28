@@ -220,7 +220,7 @@ export default function NoteEditor() {
                                     </Button>
                                 </div>
                                 {bibleText && (
-                                    <div className="p-2 bg-slate-50 dark:bg-muted border rounded max-h-40 overflow-auto text-sm italic">
+                                    <div className="p-2 bg-muted border rounded max-h-40 overflow-auto text-sm italic">
                                         {bibleText}
                                     </div>
                                 )}
@@ -251,7 +251,7 @@ export default function NoteEditor() {
                                     </Button>
                                 </div>
                                 {aiResponse && (
-                                    <div className="p-4 bg-slate-50 dark:bg-muted border rounded max-h-60 overflow-auto text-sm">
+                                    <div className="p-4 bg-muted border rounded max-h-60 overflow-auto text-sm">
                                         <p className="font-semibold mb-2">Answer:</p>
                                         <ReactMarkdown>{aiResponse}</ReactMarkdown>
                                     </div>
@@ -260,8 +260,8 @@ export default function NoteEditor() {
                         </DialogContent>
                     </Dialog>
 
-                    {saveError && <span className="text-sm text-red-500 mr-2">Error saving</span>}
-                    {!saveError && lastSaved && <span className="text-sm text-gray-500 mr-2">{saving ? "Saving..." : `Saved at ${lastSaved}`}</span>}
+                    {saveError && <span className="text-sm text-destructive mr-2">Error saving</span>}
+                    {!saveError && lastSaved && <span className="text-sm text-muted-foreground mr-2">{saving ? "Saving..." : `Saved at ${lastSaved}`}</span>}
                     <Button variant={mode === "edit" ? "default" : "outline"} onClick={() => setMode("edit")}>Edit</Button>
                     <Button variant={mode === "preview" ? "default" : "outline"} onClick={() => setMode("preview")}>Preview</Button>
                     <Button onClick={() => handleSave(true)} disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
@@ -339,7 +339,7 @@ export default function NoteEditor() {
                         editable={true}
                     />
                 ) : (
-                    <div className="flex-1 border rounded-lg overflow-auto p-4 prose prose-slate dark:prose-invert max-w-none bg-slate-50 dark:bg-muted">
+                    <div className="flex-1 border rounded-lg overflow-auto p-4 prose dark:prose-invert max-w-none bg-muted">
                         <ReactMarkdown>{markdown}</ReactMarkdown>
                     </div>
                 )}

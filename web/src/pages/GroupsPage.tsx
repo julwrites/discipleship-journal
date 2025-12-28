@@ -230,12 +230,12 @@ export default function GroupsPage() {
                              <DialogTitle>{viewingSharedNote.title}</DialogTitle>
                          </DialogHeader>
                          <div className="space-y-4">
-                             <div className="bg-slate-50 p-3 rounded text-sm text-gray-600">
+                             <div className="bg-muted p-3 rounded text-sm text-muted-foreground">
                                  <p><strong>Shared by:</strong> {viewingSharedNote.shared_by}</p>
                                  <p><strong>Date:</strong> {new Date(viewingSharedNote.shared_at).toLocaleString()}</p>
                                  {viewingSharedNote.comment && <p className="mt-1 italic">"{viewingSharedNote.comment}"</p>}
                              </div>
-                             <div className="prose prose-slate max-w-none">
+                             <div className="prose dark:prose-invert max-w-none">
                                  <ReactMarkdown>{viewingSharedNote.content?.markdown || "No content"}</ReactMarkdown>
                              </div>
                          </div>
@@ -277,7 +277,7 @@ export default function GroupsPage() {
                 </TabsList>
 
                 <TabsContent value="my-groups" className="space-y-4">
-                    {myGroups.length === 0 && <p className="text-gray-500">You haven't joined any groups yet.</p>}
+                    {myGroups.length === 0 && <p className="text-muted-foreground">You haven't joined any groups yet.</p>}
                     <div className="space-y-4">
                         {myGroups.map(g => (
                             <Card key={g.id}>
@@ -288,7 +288,7 @@ export default function GroupsPage() {
                                             <CardDescription>{g.description}</CardDescription>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-sm font-medium bg-gray-100 px-2 py-1 rounded capitalize">{g.role}</span>
+                                            <span className="text-sm font-medium bg-muted px-2 py-1 rounded capitalize">{g.role}</span>
                                             {expandedGroupId === g.id ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                                         </div>
                                     </div>
@@ -302,14 +302,14 @@ export default function GroupsPage() {
                                             </TabsList>
 
                                             <TabsContent value="shares" className="space-y-4">
-                                                 {groupShares.length === 0 && <p className="text-sm text-gray-500">No notes shared yet.</p>}
+                                                 {groupShares.length === 0 && <p className="text-sm text-muted-foreground">No notes shared yet.</p>}
                                                  {groupShares.map(s => (
-                                                     <Card key={s.id} className="bg-slate-50 cursor-pointer hover:bg-slate-100 transition" onClick={() => viewSharedNote(g.id, s.id)}>
+                                                     <Card key={s.id} className="bg-muted/50 cursor-pointer hover:bg-muted transition" onClick={() => viewSharedNote(g.id, s.id)}>
                                                          <CardContent className="p-4">
                                                              <div className="flex justify-between items-start">
                                                                  <div>
                                                                      <h4 className="font-bold text-md">{s.title}</h4>
-                                                                     <p className="text-xs text-gray-500">Shared by {s.shared_by} on {new Date(s.shared_at).toLocaleDateString()}</p>
+                                                                     <p className="text-xs text-muted-foreground">Shared by {s.shared_by} on {new Date(s.shared_at).toLocaleDateString()}</p>
                                                                      {s.comment && <p className="text-sm mt-2 italic">"{s.comment}"</p>}
                                                                  </div>
                                                              </div>
@@ -346,7 +346,7 @@ export default function GroupsPage() {
                                                                             <div key={u.id} className="flex justify-between items-center p-2 border rounded">
                                                                                 <div>
                                                                                     <p className="font-medium">{u.display_name}</p>
-                                                                                    <p className="text-xs text-gray-500">@{u.username || 'unknown'} • {u.email}</p>
+                                                                                    <p className="text-xs text-muted-foreground">@{u.username || 'unknown'} • {u.email}</p>
                                                                                 </div>
                                                                                 <Button size="sm" onClick={() => addMember(u.id)}>Add</Button>
                                                                             </div>
@@ -363,12 +363,12 @@ export default function GroupsPage() {
                                                             <div className="flex items-center gap-2">
                                                                 <div>
                                                                     <p className="font-medium">{m.display_name}</p>
-                                                                    <p className="text-xs text-gray-500">{m.email}</p>
+                                                                    <p className="text-xs text-muted-foreground">{m.email}</p>
                                                                 </div>
-                                                                <span className="text-xs bg-gray-100 px-1 rounded">{m.role}</span>
+                                                                <span className="text-xs bg-muted px-1 rounded">{m.role}</span>
                                                             </div>
                                                             {g.role === 'admin' && m.role !== 'admin' && (
-                                                                <Button size="icon" variant="ghost" className="text-red-500 h-8 w-8" onClick={() => removeMember(g.id, m.user_id)}>
+                                                                <Button size="icon" variant="ghost" className="text-destructive h-8 w-8" onClick={() => removeMember(g.id, m.user_id)}>
                                                                     <Trash2 size={16} />
                                                                 </Button>
                                                             )}

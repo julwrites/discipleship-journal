@@ -65,10 +65,10 @@ export default function ChatPage() {
             </Button>
 
             {response && (
-                <div className="p-4 bg-slate-100 rounded-lg border mt-6">
+                <div className="p-4 bg-muted rounded-lg border mt-6">
                     <h3 className="font-semibold mb-2">AI Response:</h3>
                     <p className="whitespace-pre-wrap">{response}</p>
-                    <div className="mt-4 text-sm text-gray-500">
+                    <div className="mt-4 text-sm text-muted-foreground">
                         A journal note has been created with this conversation.
                         <Button variant="link" className="p-0 h-auto ml-1" onClick={() => navigate("/")}>Go to Dashboard</Button>
                     </div>

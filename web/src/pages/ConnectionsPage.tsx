@@ -115,7 +115,7 @@ export default function ConnectionsPage() {
                             <CardContent className="flex justify-between items-center p-4">
                                 <div>
                                     <p className="font-medium">{c.requester_email}</p>
-                                    <p className="text-sm text-gray-500">Wants to connect</p>
+                                    <p className="text-sm text-muted-foreground">Wants to connect</p>
                                 </div>
                                 <div className="space-x-2">
                                     <Button size="sm" onClick={() => respondToRequest(c.id, "accept")}>Accept</Button>
@@ -126,7 +126,7 @@ export default function ConnectionsPage() {
                     ))}
                     {connections.filter(c => c.status === 'pending' && c.requester_email === user?.email).length > 0 && (
                         <div className="mt-4">
-                            <h3 className="text-sm font-medium text-gray-500 uppercase">Sent Requests</h3>
+                            <h3 className="text-sm font-medium text-muted-foreground uppercase">Sent Requests</h3>
                              {connections.filter(c => c.status === 'pending' && c.requester_email === user?.email).map(c => (
                                 <div key={c.id} className="p-2 border-b">
                                     To: {c.receiver_email} (Pending)
@@ -147,7 +147,7 @@ export default function ConnectionsPage() {
                         )
                     })}
                      {connections.filter(c => c.status === 'accepted').length === 0 && (
-                        <p className="text-gray-500">No connections yet.</p>
+                        <p className="text-muted-foreground">No connections yet.</p>
                     )}
                 </TabsContent>
 
@@ -160,7 +160,7 @@ export default function ConnectionsPage() {
                         />
                         {/* Search button removed as it's auto-debounced */}
                     </div>
-                    {loading && <p className="text-sm text-gray-500">Searching...</p>}
+                    {loading && <p className="text-sm text-muted-foreground">Searching...</p>}
 
                     <div className="space-y-2">
                         {searchResults.map(u => (
@@ -168,7 +168,7 @@ export default function ConnectionsPage() {
                                 <CardContent className="flex justify-between items-center p-4">
                                     <div>
                                         <p className="font-medium">{u.display_name || "User"}</p>
-                                        <p className="text-sm text-gray-500">{u.email}</p>
+                                        <p className="text-sm text-muted-foreground">{u.email}</p>
                                     </div>
                                     <Button size="sm" onClick={() => sendRequest(u.email)}>Connect</Button>
                                 </CardContent>

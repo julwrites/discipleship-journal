@@ -75,21 +75,21 @@ export default function RichTextEditor({
     return (
         <div className="flex flex-col h-full border rounded-lg overflow-hidden">
             {editable && (
-                <div className="bg-slate-50 dark:bg-muted border-b p-2 flex gap-1 flex-wrap">
+                <div className="bg-muted border-b p-2 flex gap-1 flex-wrap">
                     <Button variant={editor.isActive('bold') ? "secondary" : "ghost"} size="sm" onClick={toggleBold} title="Bold">
                         <Bold className="w-4 h-4" />
                     </Button>
                     <Button variant={editor.isActive('italic') ? "secondary" : "ghost"} size="sm" onClick={toggleItalic} title="Italic">
                         <Italic className="w-4 h-4" />
                     </Button>
-                    <div className="w-px h-6 bg-slate-300 dark:bg-border mx-1" />
+                    <div className="w-px h-6 bg-border mx-1" />
                     <Button variant={editor.isActive('heading', { level: 1 }) ? "secondary" : "ghost"} size="sm" onClick={toggleHeading1} title="Heading 1">
                         <Heading1 className="w-4 h-4" />
                     </Button>
                     <Button variant={editor.isActive('heading', { level: 2 }) ? "secondary" : "ghost"} size="sm" onClick={toggleHeading2} title="Heading 2">
                         <Heading2 className="w-4 h-4" />
                     </Button>
-                    <div className="w-px h-6 bg-slate-300 dark:bg-border mx-1" />
+                    <div className="w-px h-6 bg-border mx-1" />
                     <Button variant={editor.isActive('bulletList') ? "secondary" : "ghost"} size="sm" onClick={toggleBulletList} title="Bullet List">
                         <List className="w-4 h-4" />
                     </Button>
@@ -99,7 +99,7 @@ export default function RichTextEditor({
                     <Button variant={editor.isActive('blockquote') ? "secondary" : "ghost"} size="sm" onClick={toggleBlockquote} title="Quote">
                         <Quote className="w-4 h-4" />
                     </Button>
-                    <div className="w-px h-6 bg-slate-300 dark:bg-border mx-1" />
+                    <div className="w-px h-6 bg-border mx-1" />
 
                     <LinkPopover editor={editor} />
                     <ImagePopover editor={editor} />
@@ -113,7 +113,7 @@ export default function RichTextEditor({
                     </Button>
                 </div>
             )}
-            <EditorContent editor={editor} className="flex-1 overflow-auto p-4 prose prose-slate dark:prose-invert max-w-none focus:outline-none" />
+            <EditorContent editor={editor} className="flex-1 overflow-auto p-4 prose dark:prose-invert max-w-none focus:outline-none" />
             <style>{`
                 .ProseMirror {
                     outline: none;
