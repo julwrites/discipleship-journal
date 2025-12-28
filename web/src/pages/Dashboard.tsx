@@ -245,12 +245,12 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {notes.length === 0 && !loading && <p className="text-gray-500 col-span-full">No notes found.</p>}
+        {notes.length === 0 && !loading && <p className="text-muted-foreground col-span-full">No notes found.</p>}
         {notes.map((note) => (
           <Link key={note.id} to={`/notes/${note.id}`} className="block">
-            <div className="p-6 bg-white hover:bg-gray-50 transition rounded-lg shadow border h-40 flex flex-col">
+            <div className="p-6 bg-card hover:bg-accent/50 text-card-foreground transition rounded-lg shadow border h-40 flex flex-col">
                 <h3 className="font-semibold mb-2 line-clamp-2">{note.title || "Untitled Note"}</h3>
-                <p className="text-gray-400 text-xs mt-auto">{new Date(note.updated_at).toLocaleDateString()}</p>
+                <p className="text-muted-foreground text-xs mt-auto">{new Date(note.updated_at).toLocaleDateString()}</p>
             </div>
           </Link>
         ))}
