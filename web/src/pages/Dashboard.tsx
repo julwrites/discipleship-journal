@@ -164,7 +164,7 @@ export default function Dashboard() {
                     <div className="space-y-2">
                         <h4 className="font-medium leading-none">Sort By</h4>
                         <div className="flex gap-2">
-                            <Select value={sortBy} onValueChange={(val: any) => setSortBy(val)}>
+                            <Select value={sortBy} onValueChange={(val: "updated_at" | "created_at" | "title") => setSortBy(val)}>
                                 <SelectTrigger className="w-[140px]">
                                     <SelectValue placeholder="Sort By" />
                                 </SelectTrigger>
@@ -174,7 +174,7 @@ export default function Dashboard() {
                                     <SelectItem value="title">Title</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <Select value={sortOrder} onValueChange={(val: any) => setSortOrder(val)}>
+                            <Select value={sortOrder} onValueChange={(val: "asc" | "desc") => setSortOrder(val)}>
                                 <SelectTrigger className="w-[110px]">
                                     <SelectValue placeholder="Order" />
                                 </SelectTrigger>
