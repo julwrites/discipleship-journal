@@ -36,7 +36,7 @@ The Push Notifications feature enables the application to send real-time alerts 
 ## Notification Types
 Currently supported notification types (sent in `data` payload):
 - `group_invite`: Sent when added to a group.
-- `note_share`: (Planned) Sent when a note is shared.
+- `note_share`: Sent when a note is shared.
 
 ## Future Enhancements
 - User preferences (mute specific groups/types).
