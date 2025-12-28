@@ -3,7 +3,18 @@ import { auth } from "@/lib/firebase";
 const API_URL = import.meta.env.GCP_API_URL || "http://localhost:8080/api";
 
 async function getHeaders() {
-  const token = await auth.currentUser?.getIdToken();
+  const shouldBypassAuth = import.meta.env.FIREBASE_API_KEY === 'mock-key';
+  let token = null;
+
+  if (shouldBypassAuth) {
+      const mockUserJson = localStorage.getItem('E2E_TEST_USER');
+      if (mockUserJson) {
+          token = "mock-token";
+      }
+  } else {
+      token = await auth.currentUser?.getIdToken();
+  }
+
   return {
     "Content-Type": "application/json",
     "Authorization": `Bearer ${token}`,
@@ -12,13 +23,38 @@ async function getHeaders() {
 
 // --- Notes ---
 
-export async function fetchNotes(page = 1, limit = 20, search = "") {
+export interface NoteFilter {
+  search?: string;
+  startDate?: Date;
+  endDate?: Date;
+  sortBy?: "updated_at" | "created_at" | "title";
+  sortOrder?: "asc" | "desc";
+}
+
+export async function fetchNotes(page = 1, limit = 20, filter: NoteFilter | string = {}) {
   const headers = await getHeaders();
   const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
-      q: search
   });
+
+  if (typeof filter === "string") {
+      if (filter) params.append("q", filter);
+  } else {
+      if (filter.search) params.append("q", filter.search);
+      if (filter.startDate) params.append("startDate", filter.startDate.toISOString());
+
+      // Fix: Adjust endDate to be the end of the day (23:59:59.999)
+      if (filter.endDate) {
+          const eod = new Date(filter.endDate);
+          eod.setHours(23, 59, 59, 999);
+          params.append("endDate", eod.toISOString());
+      }
+
+      if (filter.sortBy) params.append("sortBy", filter.sortBy);
+      if (filter.sortOrder) params.append("sortOrder", filter.sortOrder);
+  }
+
   const res = await fetch(`${API_URL}/notes?${params.toString()}`, { headers });
   if (!res.ok) throw new Error("Failed to fetch notes");
   return res.json();

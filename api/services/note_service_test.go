@@ -248,7 +248,7 @@ func TestGetNotes(t *testing.T) {
 			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "created_at", "updated_at", "deleted_at"}).
 				AddRow("note-123", userID, title, now, now, nil))
 
-		notes, total, err := service.GetNotes(ctx, userID, page, limit, "")
+		notes, total, err := service.GetNotes(ctx, userID, page, limit, NoteFilter{})
 
 		assert.NoError(t, err)
 		assert.Len(t, notes, 1)
@@ -267,7 +267,7 @@ func TestGetNotes(t *testing.T) {
 			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "created_at", "updated_at", "deleted_at"}).
 				AddRow("note-123", userID, title, now, now, nil))
 
-		notes, total, err := service.GetNotes(ctx, userID, page, limit, searchQuery)
+		notes, total, err := service.GetNotes(ctx, userID, page, limit, NoteFilter{SearchQuery: searchQuery})
 
 		assert.NoError(t, err)
 		assert.Len(t, notes, 1)
@@ -279,7 +279,7 @@ func TestGetNotes(t *testing.T) {
 			WithArgs(userID).
 			WillReturnError(errors.New("count error"))
 
-		notes, total, err := service.GetNotes(ctx, userID, page, limit, "")
+		notes, total, err := service.GetNotes(ctx, userID, page, limit, NoteFilter{})
 
 		assert.Error(t, err)
 		assert.Nil(t, notes)
