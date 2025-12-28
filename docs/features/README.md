@@ -17,6 +17,8 @@
 | **Auto-Save** | Implemented | Debounced auto-save for notes. |
 | **Push Notifications** | Implemented | FCM notifications for groups and messages ([Details](notifications.md)). |
 | **Bible Reading Plans** | Implemented | Subscribe to reading plans and track progress ([Details](reading_plans.md)). |
+| **Advanced Search** | Implemented | Filter notes by date, sort by title/date, and full-text search. |
 
 ## Future Features
-*   Advanced Search/Filter notes (Basic debounced search is implemented).
+*   [Planned] Global Search (across notes, bible, groups).
+*   [Planned] Audio/Video Notes.
