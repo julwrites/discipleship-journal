@@ -147,7 +147,6 @@ func (s *NoteService) GetNotes(ctx context.Context, userID string, page, limit i
 	if filter.EndDate != nil {
 		whereClause += fmt.Sprintf(" AND updated_at <= $%d", argIdx)
 		args = append(args, *filter.EndDate)
-		argIdx++ // Not strictly needed if last, but good practice
 	}
 
 	// Count total notes
