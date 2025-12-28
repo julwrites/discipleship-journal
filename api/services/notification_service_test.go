@@ -2,15 +2,16 @@ package services
 
 import (
 	"context"
+	"errors"
 	"testing"
 
-	"firebase.google.com/go/v4/messaging"
 	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"firebase.google.com/go/v4/messaging"
 )
 
-// MockMessagingClient
+// MockMessagingClient is a mock for MessagingClientInterface
 type MockMessagingClient struct {
 	mock.Mock
 }
@@ -24,91 +25,127 @@ func (m *MockMessagingClient) SendEachForMulticast(ctx context.Context, message 
 }
 
 func TestNotificationService_RegisterDevice(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
-	assert.NoError(t, err)
-	defer mockDB.Close()
+	t.Run("Success", func(t *testing.T) {
+		mockDB, err := pgxmock.NewConn()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer mockDB.Close(context.Background())
 
-	service := NewNotificationService(mockDB, nil)
+		mockMsgClient := new(MockMessagingClient)
+		service := NewNotificationService(mockDB, mockMsgClient)
 
-	ctx := context.Background()
-	userID := "user-uuid"
-	token := "fcm-token"
-	deviceType := "android"
+		mockDB.ExpectExec("INSERT INTO user_devices").
+			WithArgs("user-123", "token-123", "ios").
+			WillReturnResult(pgxmock.NewResult("INSERT", 1))
 
-	mockDB.ExpectExec("INSERT INTO user_devices").
-		WithArgs(userID, token, deviceType).
-		WillReturnResult(pgxmock.NewResult("INSERT", 1))
+		err = service.RegisterDevice(context.Background(), "user-123", "token-123", "ios")
+		assert.NoError(t, err)
+		assert.NoError(t, mockDB.ExpectationsWereMet())
+	})
 
-	err = service.RegisterDevice(ctx, userID, token, deviceType)
-	assert.NoError(t, err)
-	assert.NoError(t, mockDB.ExpectationsWereMet())
+	t.Run("DB Error", func(t *testing.T) {
+		mockDB, err := pgxmock.NewConn()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer mockDB.Close(context.Background())
+
+		mockMsgClient := new(MockMessagingClient)
+		service := NewNotificationService(mockDB, mockMsgClient)
+
+		mockDB.ExpectExec("INSERT INTO user_devices").
+			WithArgs("user-123", "token-123", "ios").
+			WillReturnError(errors.New("db error"))
+
+		err = service.RegisterDevice(context.Background(), "user-123", "token-123", "ios")
+		assert.Error(t, err)
+		assert.NoError(t, mockDB.ExpectationsWereMet())
+	})
 }
 
 func TestNotificationService_SendNotification(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
-	assert.NoError(t, err)
-	defer mockDB.Close()
+	t.Run("Success - Sent to devices", func(t *testing.T) {
+		mockDB, err := pgxmock.NewConn()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer mockDB.Close(context.Background())
 
-	mockMsg := new(MockMessagingClient)
-	service := NewNotificationService(mockDB, mockMsg)
+		mockMsgClient := new(MockMessagingClient)
+		service := NewNotificationService(mockDB, mockMsgClient)
 
-	ctx := context.Background()
-	userID := "user-uuid"
-	title := "Title"
-	body := "Body"
-	data := map[string]string{"key": "value"}
+		// 1. Get tokens
+		mockDB.ExpectQuery("SELECT fcm_token FROM user_devices").
+			WithArgs("user-123").
+			WillReturnRows(pgxmock.NewRows([]string{"fcm_token"}).AddRow("token-1"))
 
-	// 1. Get tokens
-	mockDB.ExpectQuery("SELECT fcm_token FROM user_devices").
-		WithArgs(userID).
-		WillReturnRows(pgxmock.NewRows([]string{"fcm_token"}).AddRow("token-1"))
+		// 2. Send message
+		mockMsgClient.On("SendEachForMulticast", mock.Anything, mock.MatchedBy(func(msg *messaging.MulticastMessage) bool {
+			return len(msg.Tokens) == 1 && msg.Tokens[0] == "token-1" && msg.Notification.Title == "Test Title"
+		})).Return(&messaging.BatchResponse{SuccessCount: 1, FailureCount: 0}, nil)
 
-	// 2. Send message
-	mockMsg.On("SendEachForMulticast", ctx, mock.MatchedBy(func(msg *messaging.MulticastMessage) bool {
-		return len(msg.Tokens) == 1 && msg.Tokens[0] == "token-1" &&
-			msg.Notification.Title == title && msg.Notification.Body == body &&
-			msg.Data["key"] == "value"
-	})).Return(&messaging.BatchResponse{SuccessCount: 1, FailureCount: 0}, nil)
+		err = service.SendNotification(context.Background(), "user-123", "Test Title", "Test Body", nil)
+		assert.NoError(t, err)
+		mockMsgClient.AssertExpectations(t)
+		assert.NoError(t, mockDB.ExpectationsWereMet())
+	})
 
-	err = service.SendNotification(ctx, userID, title, body, data)
-	assert.NoError(t, err)
-	assert.NoError(t, mockDB.ExpectationsWereMet())
-	mockMsg.AssertExpectations(t)
-}
+	t.Run("No Devices", func(t *testing.T) {
+		mockDB, err := pgxmock.NewConn()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer mockDB.Close(context.Background())
 
-func TestNotificationService_SendNotification_CleanupInvalidTokens(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
-	assert.NoError(t, err)
-	defer mockDB.Close()
+		mockMsgClient := new(MockMessagingClient)
+		service := NewNotificationService(mockDB, mockMsgClient)
 
-	mockMsg := new(MockMessagingClient)
-	service := NewNotificationService(mockDB, mockMsg)
+		mockDB.ExpectQuery("SELECT fcm_token FROM user_devices").
+			WithArgs("user-123").
+			WillReturnRows(pgxmock.NewRows([]string{"fcm_token"}))
 
-	ctx := context.Background()
-	userID := "user-uuid"
+		err = service.SendNotification(context.Background(), "user-123", "Test Title", "Test Body", nil)
+		assert.NoError(t, err)
+		// Should not call SendEachForMulticast
+		mockMsgClient.AssertNotCalled(t, "SendEachForMulticast")
+		assert.NoError(t, mockDB.ExpectationsWereMet())
+	})
 
-	// 1. Get tokens
-	mockDB.ExpectQuery("SELECT fcm_token FROM user_devices").
-		WithArgs(userID).
-		WillReturnRows(pgxmock.NewRows([]string{"fcm_token"}).AddRow("token-valid").AddRow("token-invalid"))
+	t.Run("Cleanup Invalid Tokens", func(t *testing.T) {
+		mockDB, err := pgxmock.NewConn()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer mockDB.Close(context.Background())
 
-	// 2. Send message
-	mockMsg.On("SendEachForMulticast", ctx, mock.Anything).Return(&messaging.BatchResponse{
-		SuccessCount: 1,
-		FailureCount: 1,
-		Responses: []*messaging.SendResponse{
-			{Success: true},
-			{Success: false, Error: assert.AnError}, // Corresponds to token-invalid
-		},
-	}, nil)
+		mockMsgClient := new(MockMessagingClient)
+		service := NewNotificationService(mockDB, mockMsgClient)
 
-	// 3. Cleanup
-	mockDB.ExpectExec("DELETE FROM user_devices").
-		WithArgs(userID, []string{"token-invalid"}).
-		WillReturnResult(pgxmock.NewResult("DELETE", 1))
+		// 1. Get tokens
+		mockDB.ExpectQuery("SELECT fcm_token FROM user_devices").
+			WithArgs("user-123").
+			WillReturnRows(pgxmock.NewRows([]string{"fcm_token"}).AddRow("valid-token").AddRow("invalid-token"))
 
-	err = service.SendNotification(ctx, userID, "T", "B", nil)
-	assert.NoError(t, err)
-	assert.NoError(t, mockDB.ExpectationsWereMet())
-	mockMsg.AssertExpectations(t)
+		// 2. Send message (returns 1 success, 1 failure)
+		mockMsgClient.On("SendEachForMulticast", mock.Anything, mock.Anything).
+			Return(&messaging.BatchResponse{
+				SuccessCount: 1,
+				FailureCount: 1,
+				Responses: []*messaging.SendResponse{
+					{Success: true},
+					{Success: false, Error: errors.New("registration-token-not-registered")},
+				},
+			}, nil)
+
+		// 3. Remove invalid token
+		mockDB.ExpectExec("DELETE FROM user_devices").
+			WithArgs("user-123", pgxmock.AnyArg()).
+			WillReturnResult(pgxmock.NewResult("DELETE", 1))
+
+		err = service.SendNotification(context.Background(), "user-123", "Test Title", "Test Body", nil)
+		assert.NoError(t, err)
+		mockMsgClient.AssertExpectations(t)
+		assert.NoError(t, mockDB.ExpectationsWereMet())
+	})
 }

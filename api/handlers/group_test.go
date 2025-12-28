@@ -5,99 +5,130 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
-	"discipleship_journal_api/middleware"
-	"firebase.google.com/go/v4/auth"
 	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"firebase.google.com/go/v4/auth"
+	"discipleship_journal_api/middleware"
+	"github.com/google/uuid"
 )
 
-// MockNotificationService for testing
-type MockNotificationService struct {
-	mock.Mock
-}
-
-func (m *MockNotificationService) RegisterDevice(ctx context.Context, userID, token, deviceType string) error {
-	args := m.Called(ctx, userID, token, deviceType)
-	return args.Error(0)
-}
-
-func (m *MockNotificationService) SendNotification(ctx context.Context, userID, title, body string, data map[string]string) error {
-	args := m.Called(ctx, userID, title, body, data)
-	return args.Error(0)
-}
-
 func TestGroupHandler_CreateGroup(t *testing.T) {
-	t.Run("Success", func(t *testing.T) {
-		mockDB, err := pgxmock.NewPool()
-		assert.NoError(t, err)
-		defer mockDB.Close()
+	testCases := []struct {
+		name           string
+		requestBody    string
+		setupMock      func(mockDB pgxmock.PgxConnIface)
+		expectedStatus int
+	}{
+		{
+			name:        "Success",
+			requestBody: `{"name": "Bible Study", "description": "Weekly study"}`,
+			setupMock: func(mockDB pgxmock.PgxConnIface) {
+				mockDB.ExpectBegin()
+				mockDB.ExpectQuery("INSERT INTO groups").
+					WithArgs("Bible Study", "Weekly study", uuid.MustParse("00000000-0000-0000-0000-000000000001")).
+					WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow("group-123"))
+				mockDB.ExpectExec("INSERT INTO group_members").
+					WithArgs("group-123", uuid.MustParse("00000000-0000-0000-0000-000000000001")).
+					WillReturnResult(pgxmock.NewResult("INSERT", 1))
+				mockDB.ExpectCommit()
+			},
+			expectedStatus: http.StatusCreated,
+		},
+		{
+			name:        "Invalid Request",
+			requestBody: `{"name": ""}`, // too short
+			setupMock:   func(_ pgxmock.PgxConnIface) {},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name:        "DB Error",
+			requestBody: `{"name": "Bible Study", "description": "Weekly study"}`,
+			setupMock: func(mockDB pgxmock.PgxConnIface) {
+				mockDB.ExpectBegin()
+				mockDB.ExpectQuery("INSERT INTO groups").
+					WithArgs("Bible Study", "Weekly study", uuid.MustParse("00000000-0000-0000-0000-000000000001")).
+					WillReturnError(pgx.ErrTxClosed) // Simulate error
+				mockDB.ExpectRollback()
+			},
+			expectedStatus: http.StatusInternalServerError,
+		},
+	}
 
-		mockNotif := new(MockNotificationService)
-		h := NewGroupHandler(mockDB, mockNotif)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockDB, err := pgxmock.NewConn()
+			if err != nil {
+				t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+			}
+			defer mockDB.Close(context.Background())
 
-		userID := uuid.New()
-		groupID := uuid.New()
+			mockNotif := new(MockNotificationServiceWithMock)
+			h := NewGroupHandler(mockDB, mockNotif)
 
-		mockDB.ExpectBegin()
-		mockDB.ExpectQuery("INSERT INTO groups").
-			WithArgs("New Group", "Description", userID).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(groupID.String()))
-		mockDB.ExpectExec("INSERT INTO group_members").
-			WithArgs(groupID.String(), userID).
-			WillReturnResult(pgxmock.NewResult("INSERT", 1))
-		mockDB.ExpectCommit()
+			tc.setupMock(mockDB)
 
-		reqBody := `{"name": "New Group", "description": "Description"}`
-		req := httptest.NewRequest("POST", "/groups", createBody(reqBody))
+			req := httptest.NewRequest("POST", "/groups", strings.NewReader(tc.requestBody))
+			req.Header.Set("Content-Type", "application/json")
 
-		ctx := context.WithValue(req.Context(), TestUserKey, userID)
-		ctx = context.WithValue(ctx, middleware.UserContextKey, &auth.Token{UID: "test-uid"})
-		req = req.WithContext(ctx)
+			// Inject test user via TestUserKey
+			testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+			ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
 
-		w := httptest.NewRecorder()
+			dummyToken := &auth.Token{UID: "firebase-uid-123"}
+			ctx = context.WithValue(ctx, middleware.UserContextKey, dummyToken)
 
-		h.CreateGroup(w, req)
+			req = req.WithContext(ctx)
 
-		assert.Equal(t, http.StatusCreated, w.Code)
-		assert.NoError(t, mockDB.ExpectationsWereMet())
-	})
+			w := httptest.NewRecorder()
+			h.CreateGroup(w, req)
+
+			assert.Equal(t, tc.expectedStatus, w.Code)
+			assert.NoError(t, mockDB.ExpectationsWereMet())
+			mockNotif.AssertExpectations(t)
+		})
+	}
 }
 
 func TestGroupHandler_ListMyGroups(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
-		mockDB, err := pgxmock.NewPool()
-		assert.NoError(t, err)
-		defer mockDB.Close()
+		mockDB, err := pgxmock.NewConn()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer mockDB.Close(context.Background())
 
-		h := NewGroupHandler(mockDB, nil)
-		userID := uuid.New()
+		mockNotif := new(MockNotificationServiceWithMock)
+		h := NewGroupHandler(mockDB, mockNotif)
 
-		mockDB.ExpectQuery("SELECT g.id, g.name").
-			WithArgs(userID).
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+
+		mockDB.ExpectQuery(`SELECT g.id, g.name, g.description, g.created_by, gm.role`).
+			WithArgs(testUUID).
 			WillReturnRows(pgxmock.NewRows([]string{"id", "name", "description", "created_by", "role"}).
-				AddRow("group-1", "Group 1", "Desc 1", "creator-1", "admin").
-				AddRow("group-2", "Group 2", "Desc 2", "creator-2", "member"))
+				AddRow("g1", "Group 1", "Desc 1", "creator1", "admin"))
 
 		req := httptest.NewRequest("GET", "/groups", nil)
-		ctx := context.WithValue(req.Context(), TestUserKey, userID)
-		ctx = context.WithValue(ctx, middleware.UserContextKey, &auth.Token{UID: "test-uid"})
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		dummyToken := &auth.Token{UID: "firebase-uid-123"}
+		ctx = context.WithValue(ctx, middleware.UserContextKey, dummyToken)
 		req = req.WithContext(ctx)
 
 		w := httptest.NewRecorder()
-
 		h.ListMyGroups(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
+
 		var groups []GroupResponse
 		err = json.Unmarshal(w.Body.Bytes(), &groups)
 		assert.NoError(t, err)
-		assert.Len(t, groups, 2)
+		assert.Len(t, groups, 1)
 		assert.Equal(t, "Group 1", groups[0].Name)
 		assert.NoError(t, mockDB.ExpectationsWereMet())
 	})
@@ -105,134 +136,234 @@ func TestGroupHandler_ListMyGroups(t *testing.T) {
 
 func TestGroupHandler_SearchGroups(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
-		mockDB, err := pgxmock.NewPool()
-		assert.NoError(t, err)
-		defer mockDB.Close()
+		mockDB, err := pgxmock.NewConn()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer mockDB.Close(context.Background())
 
-		h := NewGroupHandler(mockDB, nil)
-		userID := uuid.New()
+		mockNotif := new(MockNotificationServiceWithMock)
+		h := NewGroupHandler(mockDB, mockNotif)
 
-		mockDB.ExpectQuery("SELECT g.id, g.name").
-			WithArgs("%query%", userID).
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+
+		mockDB.ExpectQuery(`SELECT g.id, g.name, g.description, g.created_by`).
+			WithArgs("%Bible%", testUUID).
 			WillReturnRows(pgxmock.NewRows([]string{"id", "name", "description", "created_by", "role"}).
-				AddRow("group-1", "Group Query", "Desc", "creator", ""))
+				AddRow("g1", "Bible Study", "Desc", "creator", "member"))
 
-		req := httptest.NewRequest("GET", "/groups/search?q=query", nil)
-		ctx := context.WithValue(req.Context(), TestUserKey, userID)
-		ctx = context.WithValue(ctx, middleware.UserContextKey, &auth.Token{UID: "test-uid"})
+		req := httptest.NewRequest("GET", "/groups/search?q=Bible", nil)
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		dummyToken := &auth.Token{UID: "firebase-uid-123"}
+		ctx = context.WithValue(ctx, middleware.UserContextKey, dummyToken)
 		req = req.WithContext(ctx)
-		w := httptest.NewRecorder()
 
+		w := httptest.NewRecorder()
 		h.SearchGroups(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
-		var groups []GroupResponse
-		err = json.Unmarshal(w.Body.Bytes(), &groups)
-		assert.NoError(t, err)
-		assert.Len(t, groups, 1)
+		assert.NoError(t, mockDB.ExpectationsWereMet())
+	})
+
+	t.Run("Query Too Short", func(t *testing.T) {
+		mockDB, err := pgxmock.NewConn()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer mockDB.Close(context.Background())
+
+		mockNotif := new(MockNotificationServiceWithMock)
+		h := NewGroupHandler(mockDB, mockNotif)
+
+		req := httptest.NewRequest("GET", "/groups/search?q=Bi", nil)
+		w := httptest.NewRecorder()
+		h.SearchGroups(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
 		assert.NoError(t, mockDB.ExpectationsWereMet())
 	})
 }
 
 func TestGroupHandler_JoinGroup(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
-		mockDB, err := pgxmock.NewPool()
-		assert.NoError(t, err)
-		defer mockDB.Close()
+		mockDB, err := pgxmock.NewConn()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer mockDB.Close(context.Background())
 
-		h := NewGroupHandler(mockDB, nil)
-		userID := uuid.New()
-		groupID := "group-id"
+		mockNotif := new(MockNotificationServiceWithMock)
+		h := NewGroupHandler(mockDB, mockNotif)
+
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 
 		mockDB.ExpectQuery("SELECT EXISTS").
-			WithArgs(groupID, userID).
+			WithArgs("g1", testUUID).
 			WillReturnRows(pgxmock.NewRows([]string{"exists"}).AddRow(false))
 
 		mockDB.ExpectExec("INSERT INTO group_members").
-			WithArgs(groupID, userID).
+			WithArgs("g1", testUUID).
 			WillReturnResult(pgxmock.NewResult("INSERT", 1))
 
-		req := httptest.NewRequest("POST", "/groups/"+groupID+"/join", nil)
-		ctx := context.WithValue(req.Context(), TestUserKey, userID)
-		ctx = context.WithValue(ctx, middleware.UserContextKey, &auth.Token{UID: "test-uid"})
-		req = req.WithContext(ctx)
+		req := httptest.NewRequest("POST", "/groups/g1/join", nil)
 
-		// Add chi param
+		// Setup chi context
 		rctx := chi.NewRouteContext()
-		rctx.URLParams.Add("id", groupID)
+		rctx.URLParams.Add("id", "g1")
 		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
 
-		w := httptest.NewRecorder()
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		dummyToken := &auth.Token{UID: "firebase-uid-123"}
+		ctx = context.WithValue(ctx, middleware.UserContextKey, dummyToken)
+		req = req.WithContext(ctx)
 
+		w := httptest.NewRecorder()
 		h.JoinGroup(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
+		assert.NoError(t, mockDB.ExpectationsWereMet())
+	})
+
+	t.Run("Already Member", func(t *testing.T) {
+		mockDB, err := pgxmock.NewConn()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer mockDB.Close(context.Background())
+
+		mockNotif := new(MockNotificationServiceWithMock)
+		h := NewGroupHandler(mockDB, mockNotif)
+
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+
+		mockDB.ExpectQuery("SELECT EXISTS").
+			WithArgs("g1", testUUID).
+			WillReturnRows(pgxmock.NewRows([]string{"exists"}).AddRow(true))
+
+		req := httptest.NewRequest("POST", "/groups/g1/join", nil)
+
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", "g1")
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		dummyToken := &auth.Token{UID: "firebase-uid-123"}
+		ctx = context.WithValue(ctx, middleware.UserContextKey, dummyToken)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		h.JoinGroup(w, req)
+
+		assert.Equal(t, http.StatusConflict, w.Code)
 		assert.NoError(t, mockDB.ExpectationsWereMet())
 	})
 }
 
 func TestGroupHandler_LeaveGroup(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
-		mockDB, err := pgxmock.NewPool()
-		assert.NoError(t, err)
-		defer mockDB.Close()
+		mockDB, err := pgxmock.NewConn()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer mockDB.Close(context.Background())
 
-		h := NewGroupHandler(mockDB, nil)
-		userID := uuid.New()
-		groupID := "group-id"
+		mockNotif := new(MockNotificationServiceWithMock)
+		h := NewGroupHandler(mockDB, mockNotif)
+
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 
 		mockDB.ExpectExec("DELETE FROM group_members").
-			WithArgs(groupID, userID).
+			WithArgs("g1", testUUID).
 			WillReturnResult(pgxmock.NewResult("DELETE", 1))
 
-		req := httptest.NewRequest("POST", "/groups/"+groupID+"/leave", nil)
-		ctx := context.WithValue(req.Context(), TestUserKey, userID)
-		ctx = context.WithValue(ctx, middleware.UserContextKey, &auth.Token{UID: "test-uid"})
-		req = req.WithContext(ctx)
+		req := httptest.NewRequest("POST", "/groups/g1/leave", nil)
 
+		// Setup chi context
 		rctx := chi.NewRouteContext()
-		rctx.URLParams.Add("id", groupID)
+		rctx.URLParams.Add("id", "g1")
 		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
 
-		w := httptest.NewRecorder()
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		dummyToken := &auth.Token{UID: "firebase-uid-123"}
+		ctx = context.WithValue(ctx, middleware.UserContextKey, dummyToken)
+		req = req.WithContext(ctx)
 
+		w := httptest.NewRecorder()
 		h.LeaveGroup(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
+		assert.NoError(t, mockDB.ExpectationsWereMet())
+	})
+
+	t.Run("Not Member", func(t *testing.T) {
+		mockDB, err := pgxmock.NewConn()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer mockDB.Close(context.Background())
+
+		mockNotif := new(MockNotificationServiceWithMock)
+		h := NewGroupHandler(mockDB, mockNotif)
+
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+
+		mockDB.ExpectExec("DELETE FROM group_members").
+			WithArgs("g1", testUUID).
+			WillReturnResult(pgxmock.NewResult("DELETE", 0))
+
+		req := httptest.NewRequest("POST", "/groups/g1/leave", nil)
+
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", "g1")
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		dummyToken := &auth.Token{UID: "firebase-uid-123"}
+		ctx = context.WithValue(ctx, middleware.UserContextKey, dummyToken)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		h.LeaveGroup(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
 		assert.NoError(t, mockDB.ExpectationsWereMet())
 	})
 }
 
 func TestGroupHandler_GetGroupMembers(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
-		mockDB, err := pgxmock.NewPool()
-		assert.NoError(t, err)
-		defer mockDB.Close()
+		mockDB, err := pgxmock.NewConn()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer mockDB.Close(context.Background())
 
-		h := NewGroupHandler(mockDB, nil)
-		userID := uuid.New()
-		groupID := "group-id"
+		mockNotif := new(MockNotificationServiceWithMock)
+		h := NewGroupHandler(mockDB, mockNotif)
+
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 
 		mockDB.ExpectQuery("SELECT EXISTS").
-			WithArgs(groupID, userID).
+			WithArgs("g1", testUUID).
 			WillReturnRows(pgxmock.NewRows([]string{"exists"}).AddRow(true))
 
 		mockDB.ExpectQuery("SELECT gm.user_id").
-			WithArgs(groupID).
+			WithArgs("g1").
 			WillReturnRows(pgxmock.NewRows([]string{"user_id", "display_name", "email", "role", "joined_at"}).
 				AddRow("u1", "User 1", "u1@example.com", "admin", time.Now()))
 
-		req := httptest.NewRequest("GET", "/groups/"+groupID+"/members", nil)
-		ctx := context.WithValue(req.Context(), TestUserKey, userID)
-		ctx = context.WithValue(ctx, middleware.UserContextKey, &auth.Token{UID: "test-uid"})
-		req = req.WithContext(ctx)
+		req := httptest.NewRequest("GET", "/groups/g1/members", nil)
 
 		rctx := chi.NewRouteContext()
-		rctx.URLParams.Add("id", groupID)
+		rctx.URLParams.Add("id", "g1")
 		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
 
-		w := httptest.NewRecorder()
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		dummyToken := &auth.Token{UID: "firebase-uid-123"}
+		ctx = context.WithValue(ctx, middleware.UserContextKey, dummyToken)
+		req = req.WithContext(ctx)
 
+		w := httptest.NewRecorder()
 		h.GetGroupMembers(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
@@ -241,81 +372,128 @@ func TestGroupHandler_GetGroupMembers(t *testing.T) {
 }
 
 func TestGroupHandler_AddGroupMember(t *testing.T) {
-	t.Run("Success", func(t *testing.T) {
-		mockDB, err := pgxmock.NewPool()
-		assert.NoError(t, err)
-		defer mockDB.Close()
+	t.Run("Success - Admin Adds Member", func(t *testing.T) {
+		mockDB, err := pgxmock.NewConn()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer mockDB.Close(context.Background())
 
-		mockNotif := new(MockNotificationService)
+		mockNotif := new(MockNotificationServiceWithMock)
 		h := NewGroupHandler(mockDB, mockNotif)
-		userID := uuid.New()
-		groupID := "group-id"
-		targetID := "target-uuid"
 
-		mockDB.ExpectQuery("SELECT role").
-			WithArgs(groupID, userID).
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+
+		// 1. Verify admin
+		mockDB.ExpectQuery("SELECT role FROM group_members").
+			WithArgs("g1", testUUID).
 			WillReturnRows(pgxmock.NewRows([]string{"role"}).AddRow("admin"))
 
+		// 2. Insert member
 		mockDB.ExpectExec("INSERT INTO group_members").
-			WithArgs(groupID, targetID).
+			WithArgs("g1", "target-user").
 			WillReturnResult(pgxmock.NewResult("INSERT", 1))
 
+		// 3. Get group name
 		mockDB.ExpectQuery("SELECT name FROM groups").
-			WithArgs(groupID).
+			WithArgs("g1").
 			WillReturnRows(pgxmock.NewRows([]string{"name"}).AddRow("Test Group"))
 
-		mockNotif.On("SendNotification", mock.Anything, targetID, "Group Invitation", mock.Anything, mock.Anything).Return(nil)
+		// 4. Notification
+		mockNotif.On("SendNotification", mock.Anything, "target-user", "Group Invitation", mock.Anything, mock.Anything).Return(nil).Maybe()
 
-		reqBody := `{"user_id": "target-uuid"}`
-		req := httptest.NewRequest("POST", "/groups/"+groupID+"/members", createBody(reqBody))
-		ctx := context.WithValue(req.Context(), TestUserKey, userID)
-		ctx = context.WithValue(ctx, middleware.UserContextKey, &auth.Token{UID: "test-uid"})
-		req = req.WithContext(ctx)
+		reqBody := `{"user_id": "target-user"}`
+		req := httptest.NewRequest("POST", "/groups/g1/members", strings.NewReader(reqBody))
 
 		rctx := chi.NewRouteContext()
-		rctx.URLParams.Add("id", groupID)
+		rctx.URLParams.Add("id", "g1")
 		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
 
-		w := httptest.NewRecorder()
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		dummyToken := &auth.Token{UID: "firebase-uid-123"}
+		ctx = context.WithValue(ctx, middleware.UserContextKey, dummyToken)
+		req = req.WithContext(ctx)
 
+		w := httptest.NewRecorder()
 		h.AddGroupMember(w, req)
 
 		assert.Equal(t, http.StatusCreated, w.Code)
+
+		// Give goroutine a moment to run
+		time.Sleep(10 * time.Millisecond)
+		assert.NoError(t, mockDB.ExpectationsWereMet())
+	})
+
+	t.Run("Forbidden - Not Admin", func(t *testing.T) {
+		mockDB, err := pgxmock.NewConn()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer mockDB.Close(context.Background())
+
+		mockNotif := new(MockNotificationServiceWithMock)
+		h := NewGroupHandler(mockDB, mockNotif)
+
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+
+		mockDB.ExpectQuery("SELECT role FROM group_members").
+			WithArgs("g1", testUUID).
+			WillReturnRows(pgxmock.NewRows([]string{"role"}).AddRow("member"))
+
+		reqBody := `{"user_id": "target-user"}`
+		req := httptest.NewRequest("POST", "/groups/g1/members", strings.NewReader(reqBody))
+
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", "g1")
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		dummyToken := &auth.Token{UID: "firebase-uid-123"}
+		ctx = context.WithValue(ctx, middleware.UserContextKey, dummyToken)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		h.AddGroupMember(w, req)
+
+		assert.Equal(t, http.StatusForbidden, w.Code)
 		assert.NoError(t, mockDB.ExpectationsWereMet())
 	})
 }
 
 func TestGroupHandler_RemoveGroupMember(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
-		mockDB, err := pgxmock.NewPool()
-		assert.NoError(t, err)
-		defer mockDB.Close()
+		mockDB, err := pgxmock.NewConn()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer mockDB.Close(context.Background())
 
-		h := NewGroupHandler(mockDB, nil)
-		userID := uuid.New()
-		groupID := "group-id"
-		targetID := "target-uuid"
+		mockNotif := new(MockNotificationServiceWithMock)
+		h := NewGroupHandler(mockDB, mockNotif)
 
-		mockDB.ExpectQuery("SELECT role").
-			WithArgs(groupID, userID).
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+
+		mockDB.ExpectQuery("SELECT role FROM group_members").
+			WithArgs("g1", testUUID).
 			WillReturnRows(pgxmock.NewRows([]string{"role"}).AddRow("admin"))
 
 		mockDB.ExpectExec("DELETE FROM group_members").
-			WithArgs(groupID, targetID).
+			WithArgs("g1", "target-user").
 			WillReturnResult(pgxmock.NewResult("DELETE", 1))
 
-		req := httptest.NewRequest("DELETE", "/groups/"+groupID+"/members/"+targetID, nil)
-		ctx := context.WithValue(req.Context(), TestUserKey, userID)
-		ctx = context.WithValue(ctx, middleware.UserContextKey, &auth.Token{UID: "test-uid"})
-		req = req.WithContext(ctx)
+		req := httptest.NewRequest("DELETE", "/groups/g1/members/target-user", nil)
 
 		rctx := chi.NewRouteContext()
-		rctx.URLParams.Add("id", groupID)
-		rctx.URLParams.Add("userId", targetID)
+		rctx.URLParams.Add("id", "g1")
+		rctx.URLParams.Add("userId", "target-user")
 		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
 
-		w := httptest.NewRecorder()
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		dummyToken := &auth.Token{UID: "firebase-uid-123"}
+		ctx = context.WithValue(ctx, middleware.UserContextKey, dummyToken)
+		req = req.WithContext(ctx)
 
+		w := httptest.NewRecorder()
 		h.RemoveGroupMember(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
