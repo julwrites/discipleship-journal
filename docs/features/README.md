@@ -8,7 +8,7 @@
 | **Bible Integration** | Implemented | Fetch Bible passages (`/api/bible/passage`). |
 | **AI Chat** | Implemented | Chat with an AI assistant (`/api/chat`). |
 | **AI Ask** | Implemented | Ask specific questions to AI (`/api/ai/ask`). |
-| **Connections** | Implemented | Connect with other users (`/api/connections`). |
+| **Connections** | Implemented | Connect with other users ([Details](connections.md)). |
 | **Social Groups** | Implemented | Create and join groups for discipleship ([Details](groups.md)). |
 | **Note Sharing** | Implemented | Share notes with groups (`/api/groups/{id}/shares`). |
 | **PWA Support** | Implemented | Installable app with offline capabilities. |
