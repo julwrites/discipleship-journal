@@ -1,6 +1,8 @@
 module discipleship_journal_api
 
-go 1.24.3
+go 1.24.0
+
+toolchain go1.24.3
 
 require (
 	firebase.google.com/go/v4 v4.18.0

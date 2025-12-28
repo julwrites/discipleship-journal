@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"discipleship_journal_api/database"
 	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/services"
 	"firebase.google.com/go/v4/auth"
@@ -59,7 +58,7 @@ func (h *GroupHandler) CreateGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tx, err := database.DB.Begin(r.Context())
+	tx, err := h.db.Begin(r.Context())
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return

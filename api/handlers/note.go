@@ -18,7 +18,7 @@ type Note struct {
 	ID        string          `json:"id"`
 	UserID    string          `json:"user_id"`
 	Title     string          `json:"title"`
-	Content   json.RawMessage `json:"content"`
+	Content   json.RawMessage `json:"content,omitempty"`
 	CreatedAt time.Time       `json:"created_at"`
 	UpdatedAt time.Time       `json:"updated_at"`
 }
@@ -60,13 +60,17 @@ type NotesResponse struct {
 
 // GetNotes godoc
 // @Summary Get all notes for user
-// @Description Fetch all notes belonging to the authenticated user, with pagination and search
+// @Description Fetch all notes belonging to the authenticated user, with pagination, search, and filtering
 // @Tags notes
 // @Accept json
 // @Produce json
 // @Param page query int false "Page number"
 // @Param limit query int false "Items per page"
 // @Param q query string false "Search query"
+// @Param startDate query string false "Start Date (RFC3339)"
+// @Param endDate query string false "End Date (RFC3339)"
+// @Param sortBy query string false "Sort By (updated_at, created_at, title)"
+// @Param sortOrder query string false "Sort Order (asc, desc)"
 // @Success 200 {object} NotesResponse
 // @Failure 404 {string} string "User not found"
 // @Failure 500 {string} string "Internal Server Error"
@@ -84,7 +88,6 @@ func (h *NoteHandler) GetNotes(w http.ResponseWriter, r *http.Request) {
 	// Pagination parameters
 	pageStr := r.URL.Query().Get("page")
 	limitStr := r.URL.Query().Get("limit")
-	searchQuery := r.URL.Query().Get("q")
 
 	page := 1
 	limit := 20
@@ -100,7 +103,25 @@ func (h *NoteHandler) GetNotes(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	serviceNotes, total, err := h.noteService.GetNotes(r.Context(), userUUID, page, limit, searchQuery)
+	// Filter parameters
+	filter := services.NoteFilter{
+		SearchQuery: r.URL.Query().Get("q"),
+		SortBy:      r.URL.Query().Get("sortBy"),
+		SortOrder:   r.URL.Query().Get("sortOrder"),
+	}
+
+	if startDateStr := r.URL.Query().Get("startDate"); startDateStr != "" {
+		if t, err := time.Parse(time.RFC3339, startDateStr); err == nil {
+			filter.StartDate = &t
+		}
+	}
+	if endDateStr := r.URL.Query().Get("endDate"); endDateStr != "" {
+		if t, err := time.Parse(time.RFC3339, endDateStr); err == nil {
+			filter.EndDate = &t
+		}
+	}
+
+	serviceNotes, total, err := h.noteService.GetNotes(r.Context(), userUUID, page, limit, filter)
 	if err != nil {
 		http.Error(w, "Failed to fetch notes", http.StatusInternalServerError)
 		return

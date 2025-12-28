@@ -14,12 +14,16 @@ type NotificationService interface {
 	SendNotification(ctx context.Context, userID, title, body string, data map[string]string) error
 }
 
-type notificationService struct {
-	db              database.DBInterface
-	messagingClient *messaging.Client
+type MessagingClientInterface interface {
+	SendEachForMulticast(ctx context.Context, message *messaging.MulticastMessage) (*messaging.BatchResponse, error)
 }
 
-func NewNotificationService(db database.DBInterface, msgClient *messaging.Client) NotificationService {
+type notificationService struct {
+	db              database.DBInterface
+	messagingClient MessagingClientInterface
+}
+
+func NewNotificationService(db database.DBInterface, msgClient MessagingClientInterface) NotificationService {
 	return &notificationService{
 		db:              db,
 		messagingClient: msgClient,

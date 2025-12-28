@@ -37,8 +37,8 @@ func (m *MockNoteService) GetNote(ctx context.Context, userID, noteID string) (*
 	return args.Get(0).(*services.Note), args.Error(1)
 }
 
-func (m *MockNoteService) GetNotes(ctx context.Context, userID string, page, limit int, searchQuery string) ([]services.Note, int, error) {
-	args := m.Called(ctx, userID, page, limit, searchQuery)
+func (m *MockNoteService) GetNotes(ctx context.Context, userID string, page, limit int, filter services.NoteFilter) ([]services.Note, int, error) {
+	args := m.Called(ctx, userID, page, limit, filter)
 	if args.Get(0) == nil {
 		return nil, args.Int(1), args.Error(2)
 	}

@@ -1,5 +1,5 @@
 /// <reference types="vitest" />
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import path from "path"
@@ -62,5 +62,4 @@ export default defineConfig({
     css: true,
     exclude: ['**/e2e/**', '**/node_modules/**'],
   },
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-} as any)
+})

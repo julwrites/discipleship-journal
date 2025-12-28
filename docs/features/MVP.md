@@ -26,7 +26,7 @@
 - **Fields**: Title, Content, Date, Bible Context.
 - **Editor**:
   - Markdown support.
-  - Rich media support: Images, GIFs, Emojis.
+  - Rich media support: Images (via URL with Popover UI), GIFs, Emojis.
 - **Context**:
   - User can select Bible passages to associate with the note.
 - **AI Assistance**:

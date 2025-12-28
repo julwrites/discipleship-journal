@@ -8,15 +8,17 @@
 | **Bible Integration** | Implemented | Fetch Bible passages (`/api/bible/passage`). |
 | **AI Chat** | Implemented | Chat with an AI assistant (`/api/chat`). |
 | **AI Ask** | Implemented | Ask specific questions to AI (`/api/ai/ask`). |
-| **Connections** | Implemented | Connect with other users (`/api/connections`). |
-| **Social Groups** | Implemented | Create and join groups for discipleship (`/api/groups`). |
-| **Note Sharing** | Implemented | Share notes with groups (`/api/groups/{id}/shares`). |
+| **Connections** | Implemented | Connect with other users ([Details](connections.md)). |
+| **Social Groups** | Implemented | Create and join groups for discipleship ([Details](groups.md)). |
+| **Note Sharing** | Implemented | Share notes with groups ([Details](groups.md#group-sharing)). |
 | **PWA Support** | Implemented | Installable app with offline capabilities. |
-| **Delete Notes** | Implemented | Delete notes via API and UI (Hard Delete currently). |
+| **Delete Notes** | Implemented | Delete notes via API and UI (Soft Delete implemented). |
 | **Rich Text Editing** | Implemented | Markdown-based rich text editor (`Tiptap`). |
 | **Auto-Save** | Implemented | Debounced auto-save for notes. |
-| **Push Notifications** | Implemented | FCM notifications for groups and messages. |
+| **Push Notifications** | Implemented | FCM notifications for groups and messages ([Details](notifications.md)). |
 | **Bible Reading Plans** | Implemented | Subscribe to reading plans and track progress ([Details](reading_plans.md)). |
+| **Advanced Search** | Implemented | Filter notes by date, sort by title/date, and full-text search ([Details](search.md)). |
 
 ## Future Features
-*   Search/Filter notes (Debounced search implemented, advanced filtering pending).
+*   [Planned] Global Search (across notes, bible, groups).
+*   [Planned] Audio/Video Notes.

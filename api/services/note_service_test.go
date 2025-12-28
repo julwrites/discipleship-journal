@@ -75,9 +75,9 @@ func TestDeleteNote(t *testing.T) {
 	noteID := "note-123"
 
 	t.Run("success", func(t *testing.T) {
-		mock.ExpectExec("DELETE FROM notes").
+		mock.ExpectExec("UPDATE notes SET deleted_at=.*").
 			WithArgs(noteID, userID).
-			WillReturnResult(pgxmock.NewResult("DELETE", 1))
+			WillReturnResult(pgxmock.NewResult("UPDATE", 1))
 
 		err := service.DeleteNote(ctx, userID, noteID)
 
@@ -85,9 +85,9 @@ func TestDeleteNote(t *testing.T) {
 	})
 
 	t.Run("not found", func(t *testing.T) {
-		mock.ExpectExec("DELETE FROM notes").
+		mock.ExpectExec("UPDATE notes SET deleted_at=.*").
 			WithArgs(noteID, userID).
-			WillReturnResult(pgxmock.NewResult("DELETE", 0))
+			WillReturnResult(pgxmock.NewResult("UPDATE", 0))
 
 		err := service.DeleteNote(ctx, userID, noteID)
 
@@ -96,7 +96,7 @@ func TestDeleteNote(t *testing.T) {
 	})
 
 	t.Run("database error", func(t *testing.T) {
-		mock.ExpectExec("DELETE FROM notes").
+		mock.ExpectExec("UPDATE notes SET deleted_at=.*").
 			WithArgs(noteID, userID).
 			WillReturnError(errors.New("db error"))
 
@@ -180,10 +180,10 @@ func TestGetNote(t *testing.T) {
 	now := time.Now()
 
 	t.Run("success", func(t *testing.T) {
-		mock.ExpectQuery("SELECT id, user_id, title, content, created_at, updated_at FROM notes").
+		mock.ExpectQuery("SELECT id, user_id, title, content, created_at, updated_at, deleted_at FROM notes").
 			WithArgs(noteID, userID).
-			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "created_at", "updated_at"}).
-				AddRow(noteID, userID, title, content, now, now))
+			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "created_at", "updated_at", "deleted_at"}).
+				AddRow(noteID, userID, title, content, now, now, nil))
 
 		note, err := service.GetNote(ctx, userID, noteID)
 
@@ -194,7 +194,7 @@ func TestGetNote(t *testing.T) {
 	})
 
 	t.Run("not found", func(t *testing.T) {
-		mock.ExpectQuery("SELECT id, user_id, title, content, created_at, updated_at FROM notes").
+		mock.ExpectQuery("SELECT id, user_id, title, content, created_at, updated_at, deleted_at FROM notes").
 			WithArgs(noteID, userID).
 			WillReturnError(pgx.ErrNoRows)
 
@@ -206,7 +206,7 @@ func TestGetNote(t *testing.T) {
 	})
 
 	t.Run("database error", func(t *testing.T) {
-		mock.ExpectQuery("SELECT id, user_id, title, content, created_at, updated_at FROM notes").
+		mock.ExpectQuery("SELECT id, user_id, title, content, created_at, updated_at, deleted_at FROM notes").
 			WithArgs(noteID, userID).
 			WillReturnError(errors.New("db error"))
 
@@ -234,7 +234,6 @@ func TestGetNotes(t *testing.T) {
 	ctx := context.Background()
 	userID := "user-123"
 	title := "Test Note"
-	content := json.RawMessage(`{"text": "hello"}`)
 	now := time.Now()
 	page := 1
 	limit := 10
@@ -244,12 +243,12 @@ func TestGetNotes(t *testing.T) {
 			WithArgs(userID).
 			WillReturnRows(pgxmock.NewRows([]string{"count"}).AddRow(1))
 
-		mock.ExpectQuery("SELECT id, user_id, title, content, created_at, updated_at FROM notes").
+		mock.ExpectQuery("SELECT id, user_id, title, created_at, updated_at, deleted_at FROM notes").
 			WithArgs(userID).
-			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "created_at", "updated_at"}).
-				AddRow("note-123", userID, title, content, now, now))
+			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "created_at", "updated_at", "deleted_at"}).
+				AddRow("note-123", userID, title, now, now, nil))
 
-		notes, total, err := service.GetNotes(ctx, userID, page, limit, "")
+		notes, total, err := service.GetNotes(ctx, userID, page, limit, NoteFilter{})
 
 		assert.NoError(t, err)
 		assert.Len(t, notes, 1)
@@ -263,12 +262,12 @@ func TestGetNotes(t *testing.T) {
 			WithArgs(userID, "%"+searchQuery+"%").
 			WillReturnRows(pgxmock.NewRows([]string{"count"}).AddRow(1))
 
-		mock.ExpectQuery("SELECT id, user_id, title, content, created_at, updated_at FROM notes").
+		mock.ExpectQuery("SELECT id, user_id, title, created_at, updated_at, deleted_at FROM notes").
 			WithArgs(userID, "%"+searchQuery+"%").
-			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "created_at", "updated_at"}).
-				AddRow("note-123", userID, title, content, now, now))
+			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "created_at", "updated_at", "deleted_at"}).
+				AddRow("note-123", userID, title, now, now, nil))
 
-		notes, total, err := service.GetNotes(ctx, userID, page, limit, searchQuery)
+		notes, total, err := service.GetNotes(ctx, userID, page, limit, NoteFilter{SearchQuery: searchQuery})
 
 		assert.NoError(t, err)
 		assert.Len(t, notes, 1)
@@ -280,7 +279,7 @@ func TestGetNotes(t *testing.T) {
 			WithArgs(userID).
 			WillReturnError(errors.New("count error"))
 
-		notes, total, err := service.GetNotes(ctx, userID, page, limit, "")
+		notes, total, err := service.GetNotes(ctx, userID, page, limit, NoteFilter{})
 
 		assert.Error(t, err)
 		assert.Nil(t, notes)

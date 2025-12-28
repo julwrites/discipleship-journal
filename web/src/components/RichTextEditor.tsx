@@ -1,14 +1,18 @@
 import { useEditor, EditorContent, Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
+import Image from '@tiptap/extension-image'
 import Placeholder from '@tiptap/extension-placeholder'
 import { Markdown } from '@tiptap/markdown'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
     Bold, Italic, List, ListOrdered, Heading1, Heading2,
-    Quote, Link as LinkIcon, Undo, Redo
+    Quote, Link as LinkIcon, Undo, Redo, Image as ImageIcon
 } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 interface RichTextEditorProps {
     content: string;
@@ -29,6 +33,7 @@ export default function RichTextEditor({
             Link.configure({
                 openOnClick: false,
             }),
+            Image,
             Placeholder.configure({
                 placeholder,
             }),
@@ -45,32 +50,6 @@ export default function RichTextEditor({
     // Update editor content when prop changes
     useEffect(() => {
         if (editor && content !== (editor as Editor & { getMarkdown: () => string }).getMarkdown()) {
-            // Only update if content is different to avoid cursor jumps and loops
-            // However, getMarkdown() might return slightly different format than input content.
-            // A better check might be needed or just accept that external updates reset cursor.
-            // Since this is mainly for initial load, it should be fine.
-            // For real-time collaboration it would be harder.
-
-            // Check if the editor is empty and we are setting content (initial load)
-            // or if the content is drastically different.
-
-            // Simple approach: Only set if editor is not focused?
-            // Or try to detect if change came from us.
-
-            // NoteEditor loads content once usually.
-            // But user typing triggers setMarkdown -> content prop update.
-            // We need to prevent re-setting content if we just emitted it.
-
-            // Let's rely on the check: content !== currentMarkdown
-            // But markdown conversion might not be stable (e.g. whitespace).
-            // This is a known issue with controlled inputs in Tiptap.
-            // Usually simpler to use `onCreate` for initial content
-            // and `useEffect` with dependency on `content` ONLY if we want to support external updates (like real-time or reset).
-
-            // For this app, `markdown` state in NoteEditor IS the source of truth.
-            // But we can just set content once if it was empty?
-            // Or compare stringified versions.
-
             editor.commands.setContent(content);
         }
     }, [content, editor]);
@@ -92,35 +71,25 @@ export default function RichTextEditor({
     const toggleBulletList = () => editor.chain().focus().toggleBulletList().run();
     const toggleOrderedList = () => editor.chain().focus().toggleOrderedList().run();
     const toggleBlockquote = () => editor.chain().focus().toggleBlockquote().run();
-    const setLink = () => {
-        const previousUrl = editor.getAttributes('link').href
-        const url = window.prompt('URL', previousUrl)
-        if (url === null) return
-        if (url === '') {
-            editor.chain().focus().extendMarkRange('link').unsetLink().run()
-            return
-        }
-        editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
-    }
 
     return (
         <div className="flex flex-col h-full border rounded-lg overflow-hidden">
             {editable && (
-                <div className="bg-slate-50 dark:bg-muted border-b p-2 flex gap-1 flex-wrap">
+                <div className="bg-muted border-b p-2 flex gap-1 flex-wrap">
                     <Button variant={editor.isActive('bold') ? "secondary" : "ghost"} size="sm" onClick={toggleBold} title="Bold">
                         <Bold className="w-4 h-4" />
                     </Button>
                     <Button variant={editor.isActive('italic') ? "secondary" : "ghost"} size="sm" onClick={toggleItalic} title="Italic">
                         <Italic className="w-4 h-4" />
                     </Button>
-                    <div className="w-px h-6 bg-slate-300 dark:bg-border mx-1" />
+                    <div className="w-px h-6 bg-border mx-1" />
                     <Button variant={editor.isActive('heading', { level: 1 }) ? "secondary" : "ghost"} size="sm" onClick={toggleHeading1} title="Heading 1">
                         <Heading1 className="w-4 h-4" />
                     </Button>
                     <Button variant={editor.isActive('heading', { level: 2 }) ? "secondary" : "ghost"} size="sm" onClick={toggleHeading2} title="Heading 2">
                         <Heading2 className="w-4 h-4" />
                     </Button>
-                    <div className="w-px h-6 bg-slate-300 dark:bg-border mx-1" />
+                    <div className="w-px h-6 bg-border mx-1" />
                     <Button variant={editor.isActive('bulletList') ? "secondary" : "ghost"} size="sm" onClick={toggleBulletList} title="Bullet List">
                         <List className="w-4 h-4" />
                     </Button>
@@ -130,10 +99,11 @@ export default function RichTextEditor({
                     <Button variant={editor.isActive('blockquote') ? "secondary" : "ghost"} size="sm" onClick={toggleBlockquote} title="Quote">
                         <Quote className="w-4 h-4" />
                     </Button>
-                    <div className="w-px h-6 bg-slate-300 dark:bg-border mx-1" />
-                    <Button variant={editor.isActive('link') ? "secondary" : "ghost"} size="sm" onClick={setLink} title="Link">
-                        <LinkIcon className="w-4 h-4" />
-                    </Button>
+                    <div className="w-px h-6 bg-border mx-1" />
+
+                    <LinkPopover editor={editor} />
+                    <ImagePopover editor={editor} />
+
                     <div className="flex-1" />
                     <Button variant="ghost" size="sm" onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo">
                         <Undo className="w-4 h-4" />
@@ -143,7 +113,7 @@ export default function RichTextEditor({
                     </Button>
                 </div>
             )}
-            <EditorContent editor={editor} className="flex-1 overflow-auto p-4 prose prose-slate dark:prose-invert max-w-none focus:outline-none" />
+            <EditorContent editor={editor} className="flex-1 overflow-auto p-4 prose dark:prose-invert max-w-none focus:outline-none" />
             <style>{`
                 .ProseMirror {
                     outline: none;
@@ -156,7 +126,122 @@ export default function RichTextEditor({
                     height: 0;
                     pointer-events: none;
                 }
+                .ProseMirror img {
+                    display: block;
+                    max-width: 100%;
+                    height: auto;
+                    border-radius: 0.5rem;
+                }
+                .ProseMirror img.ProseMirror-selectednode {
+                    outline: 2px solid var(--ring);
+                    outline-offset: 2px;
+                }
             `}</style>
         </div>
+    )
+}
+
+function LinkPopover({ editor }: { editor: Editor }) {
+    const [url, setUrl] = useState('')
+    const [open, setOpen] = useState(false)
+
+    // Handle opening/closing state
+    const onOpenChange = (newOpen: boolean) => {
+        if (newOpen) {
+            setUrl(editor.getAttributes('link').href || '')
+        }
+        setOpen(newOpen)
+    }
+
+    const setLink = () => {
+        if (url === '') {
+            editor.chain().focus().extendMarkRange('link').unsetLink().run()
+        } else {
+            editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
+        }
+        setOpen(false)
+    }
+
+    return (
+        <Popover open={open} onOpenChange={onOpenChange}>
+            <PopoverTrigger asChild>
+                <Button variant={editor.isActive('link') ? "secondary" : "ghost"} size="sm" title="Link">
+                    <LinkIcon className="w-4 h-4" />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80">
+                <div className="grid gap-4">
+                    <div className="space-y-2">
+                        <h4 className="font-medium leading-none">Set Link</h4>
+                        <p className="text-sm text-muted-foreground">
+                            Enter the URL for the link.
+                        </p>
+                    </div>
+                    <div className="grid gap-2">
+                        <div className="grid grid-cols-3 items-center gap-4">
+                            <Label htmlFor="url">URL</Label>
+                            <Input
+                                id="url"
+                                value={url}
+                                onChange={(e) => setUrl(e.target.value)}
+                                className="col-span-2 h-8"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') setLink()
+                                }}
+                            />
+                        </div>
+                        <Button onClick={setLink}>Save</Button>
+                    </div>
+                </div>
+            </PopoverContent>
+        </Popover>
+    )
+}
+
+function ImagePopover({ editor }: { editor: Editor }) {
+    const [url, setUrl] = useState('')
+    const [open, setOpen] = useState(false)
+
+    const addImage = () => {
+        if (url) {
+            editor.chain().focus().setImage({ src: url }).run()
+        }
+        setOpen(false)
+        setUrl('')
+    }
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <Button variant={editor.isActive('image') ? "secondary" : "ghost"} size="sm" title="Image">
+                    <ImageIcon className="w-4 h-4" />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80">
+                <div className="grid gap-4">
+                    <div className="space-y-2">
+                        <h4 className="font-medium leading-none">Add Image</h4>
+                        <p className="text-sm text-muted-foreground">
+                            Enter the URL of the image.
+                        </p>
+                    </div>
+                    <div className="grid gap-2">
+                        <div className="grid grid-cols-3 items-center gap-4">
+                            <Label htmlFor="img-url">URL</Label>
+                            <Input
+                                id="img-url"
+                                value={url}
+                                onChange={(e) => setUrl(e.target.value)}
+                                className="col-span-2 h-8"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') addImage()
+                                }}
+                            />
+                        </div>
+                        <Button onClick={addImage}>Add Image</Button>
+                    </div>
+                </div>
+            </PopoverContent>
+        </Popover>
     )
 }
