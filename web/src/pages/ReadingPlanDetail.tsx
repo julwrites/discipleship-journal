@@ -97,7 +97,7 @@ export default function ReadingPlanDetail() {
                         <Card key={day.id} className={`transition-colors ${isCompleted ? 'bg-muted/50' : 'bg-card'}`}>
                             <CardContent className="flex items-center justify-between p-4">
                                 <div className="flex items-center gap-4">
-                                    <div className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-sm ${isCompleted ? 'bg-green-100 text-green-700' : 'bg-secondary text-secondary-foreground'}`}>
+                                    <div className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-sm ${isCompleted ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : 'bg-secondary text-secondary-foreground'}`}>
                                         {day.day_number}
                                     </div>
                                     <div>
@@ -106,7 +106,7 @@ export default function ReadingPlanDetail() {
                                     </div>
                                 </div>
                                 {isCompleted ? (
-                                    <Button variant="ghost" size="icon" disabled className="text-green-600">
+                                    <Button variant="ghost" size="icon" disabled className="text-green-600 dark:text-green-400">
                                         <CheckCircle className="h-6 w-6" />
                                     </Button>
                                 ) : (
