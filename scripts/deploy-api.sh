@@ -3,8 +3,10 @@ set -e
 
 # Configuration
 PROJECT_ID=${PROJECT_ID:-"discipleship-journal-pwa"}
-REGION=${REGION:-"asia-southeast1"}
-SERVICE_NAME="discipleship-journal-api"
+# Use GCP_REGION from GitHub Actions if available, fallback to REGION or default
+REGION=${GCP_REGION:-${REGION:-"asia-southeast1"}}
+# Use GCP_SERVICE_NAME from GitHub Actions if available, fallback to default
+SERVICE_NAME=${GCP_SERVICE_NAME:-"discipleship-journal-api"}
 IMAGE_NAME="gcr.io/$PROJECT_ID/$SERVICE_NAME"
 
 echo "Deploying Backend to Cloud Run ($PROJECT_ID)..."
