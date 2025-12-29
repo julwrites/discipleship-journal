@@ -6,7 +6,7 @@ priority: medium
 created: 2025-12-23 03:30:44
 category: foundation
 dependencies:
-type: optimization
+type: task
 ---
 
 # Optimize GetNotes to exclude content

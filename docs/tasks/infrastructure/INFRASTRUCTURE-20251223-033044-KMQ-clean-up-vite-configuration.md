@@ -6,7 +6,7 @@ priority: low
 created: 2025-12-23 03:30:44
 category: infrastructure
 dependencies:
-type: chore
+type: task
 ---
 
 # Clean up Vite configuration
