@@ -6,7 +6,7 @@ priority: low
 created: 2025-12-23 03:30:43
 category: testing
 dependencies:
-type: chore
+type: task
 ---
 
 # Fix duplicate key warnings in Dashboard tests
