@@ -82,7 +82,15 @@ export default function NoteEditor() {
         } catch (e) {
             console.error(e);
             setSaveError(true);
-            if (manual) toast.error("Failed to save");
+            if (manual) {
+                const message = e instanceof Error ? e.message : "Failed to save";
+                // If it's a TypeError (usually network/CORS), it often lacks details, but we can hint at it.
+                if (message === "Failed to fetch" || (e instanceof TypeError && message.includes("fetch"))) {
+                    toast.error("Network error: Cannot reach server. Please check your connection.");
+                } else {
+                    toast.error(`Failed to save: ${message}`);
+                }
+            }
         } finally {
             setSaving(false);
         }
