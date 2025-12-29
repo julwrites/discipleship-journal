@@ -3,7 +3,7 @@ set -e
 
 # Configuration
 PROJECT_ID=${PROJECT_ID:-"discipleship-journal-pwa"}
-REGION=${REGION:-"us-central1"}
+REGION=${REGION:-"asia-southeast1"}
 SERVICE_NAME="discipleship-journal-api"
 IMAGE_NAME="gcr.io/$PROJECT_ID/$SERVICE_NAME"
 
