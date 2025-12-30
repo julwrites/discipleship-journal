@@ -31,9 +31,10 @@ func (m *MockBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 	}
 
 	// Extract prompt from payload for dynamic mock response if needed
+	// New payload structure: "prompt", "verses", "themes", "context"
 	var prompt string
-	if msgs, ok := payload["messages"].([]map[string]string); ok && len(msgs) > 0 {
-		prompt = msgs[len(msgs)-1]["content"]
+	if p, ok := payload["prompt"].(string); ok {
+		prompt = p
 	}
 
 	return map[string]interface{}{
