@@ -64,7 +64,9 @@ func (h *ChatHandler) ChatWithAI(w http.ResponseWriter, r *http.Request) {
 		if choices, ok := aiResult["choices"].([]interface{}); ok && len(choices) > 0 {
 			if choice, ok := choices[0].(map[string]interface{}); ok {
 				if msg, ok := choice["message"].(map[string]interface{}); ok {
-					answer, _ = msg["content"].(string)
+					if content, ok := msg["content"].(string); ok {
+						answer = content
+					}
 				}
 			}
 		} else if content, ok := aiResult["text"].(string); ok {
@@ -151,7 +153,9 @@ func (h *ChatHandler) AskAI(w http.ResponseWriter, r *http.Request) {
 		if choices, ok := aiResult["choices"].([]interface{}); ok && len(choices) > 0 {
 			if choice, ok := choices[0].(map[string]interface{}); ok {
 				if msg, ok := choice["message"].(map[string]interface{}); ok {
-					answer, _ = msg["content"].(string)
+					if content, ok := msg["content"].(string); ok {
+						answer = content
+					}
 				}
 			}
 		} else if content, ok := aiResult["text"].(string); ok {

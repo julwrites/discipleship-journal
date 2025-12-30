@@ -87,8 +87,14 @@ func (c *RealBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 	//   "context": { "verses": [...], "user": { "version": "ESV" } }
 	// }
 
-	prompt, _ := payload["prompt"].(string)
-	verses, _ := payload["verses"].([]string)
+	prompt, ok := payload["prompt"].(string)
+	if !ok {
+		prompt = ""
+	}
+	verses, ok := payload["verses"].([]string)
+	if !ok {
+		verses = []string{}
+	}
 
 	// If themes are present, append to prompt
 	if themes, ok := payload["themes"].([]string); ok && len(themes) > 0 {
