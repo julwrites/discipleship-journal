@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
@@ -123,6 +124,7 @@ func (h *NoteHandler) GetNotes(w http.ResponseWriter, r *http.Request) {
 
 	serviceNotes, total, err := h.noteService.GetNotes(r.Context(), userUUID, page, limit, filter)
 	if err != nil {
+		slog.Error("Failed to fetch notes", "error", err, "user_id", userUUID)
 		http.Error(w, "Failed to fetch notes", http.StatusInternalServerError)
 		return
 	}
@@ -160,6 +162,7 @@ func (h *NoteHandler) GetNotes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		slog.Error("Failed to encode response", "error", err)
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 	}
 }
@@ -193,6 +196,7 @@ func (h *NoteHandler) DeleteNote(w http.ResponseWriter, r *http.Request) {
 		if err == models.ErrNotFound {
 			http.Error(w, "Note not found or unauthorized", http.StatusNotFound)
 		} else {
+			slog.Error("Failed to delete note", "error", err, "note_id", noteID)
 			http.Error(w, "Database error", http.StatusInternalServerError)
 		}
 		return
@@ -236,12 +240,14 @@ func (h *NoteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
 
 	note, err := h.noteService.CreateNote(r.Context(), userUUID, req.Title, contentJSON)
 	if err != nil {
+		slog.Error("Failed to create note", "error", err, "user_id", userUUID)
 		http.Error(w, "Failed to create note", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(map[string]string{"id": note.ID}); err != nil {
+		slog.Error("Failed to encode response", "error", err)
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 	}
 }
@@ -287,6 +293,7 @@ func (h *NoteHandler) UpdateNote(w http.ResponseWriter, r *http.Request) {
 		if err == models.ErrNotFound {
 			http.Error(w, "Note not found", http.StatusNotFound)
 		} else {
+			slog.Error("Failed to update note", "error", err, "note_id", noteID)
 			http.Error(w, "Failed to update note", http.StatusInternalServerError)
 		}
 		return
@@ -323,6 +330,7 @@ func (h *NoteHandler) GetNote(w http.ResponseWriter, r *http.Request) {
 		if err == models.ErrNotFound {
 			http.Error(w, "Note not found", http.StatusNotFound)
 		} else {
+			slog.Error("Failed to get note", "error", err, "note_id", noteID)
 			http.Error(w, "Database error", http.StatusInternalServerError)
 		}
 		return
@@ -338,6 +346,7 @@ func (h *NoteHandler) GetNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewEncoder(w).Encode(note); err != nil {
+		slog.Error("Failed to encode response", "error", err)
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 	}
 }

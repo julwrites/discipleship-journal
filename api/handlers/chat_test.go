@@ -62,10 +62,9 @@ func TestChatWithAI(t *testing.T) {
 				t.Error("Real API returned empty response")
 			}
 		} else {
-			// The mock returns "This is a mocked AI response to: " + constructed_prompt
-			// The handler constructs prompt as: fmt.Sprintf("Context: %s. Question: %s", req.Context, req.Prompt)
-			expectedPrompt := "Context: I am feeling happy today.. Question: What is happiness?"
-			expected := "This is a mocked AI response to: " + expectedPrompt
+			// The mock returns "This is a mocked AI response to: " + prompt
+			// With the new implementation, AskAI sends req.Prompt as "prompt"
+			expected := "This is a mocked AI response to: " + reqBody["prompt"]
 			if resp.Response != expected {
 				t.Errorf("Got unexpected mock response: %v\nExpected: %v", resp.Response, expected)
 			}

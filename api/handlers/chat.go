@@ -48,12 +48,11 @@ func (h *ChatHandler) ChatWithAI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Updated payload structure for RealBibleAIClient adapter
 	payload := map[string]interface{}{
-		"model": "bible-model",
-		"messages": []map[string]string{
-			{"role": "system", "content": "You are a helpful Bible assistant."},
-			{"role": "user", "content": fmt.Sprintf("Context: %s. Themes: %v. Question: %s", req.Passage, req.Themes, req.Prompt)},
-		},
+		"prompt": req.Prompt,
+		"verses": []string{req.Passage},
+		"themes": req.Themes,
 	}
 
 	var answer string
@@ -65,9 +64,15 @@ func (h *ChatHandler) ChatWithAI(w http.ResponseWriter, r *http.Request) {
 		if choices, ok := aiResult["choices"].([]interface{}); ok && len(choices) > 0 {
 			if choice, ok := choices[0].(map[string]interface{}); ok {
 				if msg, ok := choice["message"].(map[string]interface{}); ok {
-					answer, _ = msg["content"].(string)
+					if content, ok := msg["content"].(string); ok {
+						answer = content
+					}
 				}
 			}
+		} else if content, ok := aiResult["text"].(string); ok {
+			answer = content
+		} else if content, ok := aiResult["response"].(string); ok {
+			answer = content
 		}
 	}
 
@@ -133,12 +138,10 @@ func (h *ChatHandler) AskAI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Updated payload structure for RealBibleAIClient adapter
 	payload := map[string]interface{}{
-		"model": "bible-model",
-		"messages": []map[string]string{
-			{"role": "system", "content": "You are a helpful assistant analyzing a journal note."},
-			{"role": "user", "content": fmt.Sprintf("Context: %s. Question: %s", req.Context, req.Prompt)},
-		},
+		"prompt":  req.Prompt,
+		"context": req.Context,
 	}
 
 	var answer string
@@ -150,9 +153,15 @@ func (h *ChatHandler) AskAI(w http.ResponseWriter, r *http.Request) {
 		if choices, ok := aiResult["choices"].([]interface{}); ok && len(choices) > 0 {
 			if choice, ok := choices[0].(map[string]interface{}); ok {
 				if msg, ok := choice["message"].(map[string]interface{}); ok {
-					answer, _ = msg["content"].(string)
+					if content, ok := msg["content"].(string); ok {
+						answer = content
+					}
 				}
 			}
+		} else if content, ok := aiResult["text"].(string); ok {
+			answer = content
+		} else if content, ok := aiResult["response"].(string); ok {
+			answer = content
 		}
 	}
 
