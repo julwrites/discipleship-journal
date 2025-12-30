@@ -9,12 +9,18 @@ import (
 	"firebase.google.com/go/v4/auth"
 )
 
+// FirebaseAuthClient is an interface that matches the method signature of auth.Client.VerifyIDToken
+// This allows us to mock the client for testing.
+type FirebaseAuthClient interface {
+	VerifyIDToken(ctx context.Context, idToken string) (*auth.Token, error)
+}
+
 type AuthMiddleware struct {
-	AuthClient *auth.Client
+	AuthClient FirebaseAuthClient
 }
 
 // NewAuthMiddlewareFromClient creates a new AuthMiddleware with an existing Auth Client.
-func NewAuthMiddlewareFromClient(client *auth.Client) *AuthMiddleware {
+func NewAuthMiddlewareFromClient(client FirebaseAuthClient) *AuthMiddleware {
 	return &AuthMiddleware{AuthClient: client}
 }
 
