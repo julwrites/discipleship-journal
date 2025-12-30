@@ -155,16 +155,6 @@ func (c *RealBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 		content = txt
 	} else if respStr, ok := result["response"].(string); ok {
 		content = respStr
-	} else {
-		// Fallback: dump the whole result as string if structure is unknown
-		// or just pass it through if it matches
-		// content = fmt.Sprintf("%v", result)
-		// But let's try to be smart.
-
-		// If the result IS the structure we want, great.
-		// If not, we construct the OpenAI-like structure so ChatHandler works.
-		// But wait, if I can't verify the API response structure, this is risky.
-		// However, standardizing on the return value of THIS function is safer.
 	}
 
 	// If we found content, wrap it.
