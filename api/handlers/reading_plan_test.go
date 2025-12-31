@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/go-chi/chi/v5"
@@ -136,5 +137,80 @@ func TestSubscribe_Handler(t *testing.T) {
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusCreated, w.Code)
+	mockService.AssertExpectations(t)
+}
+
+func TestGetUserPlans_Handler(t *testing.T) {
+	mockService := new(MockReadingPlanService)
+	handler := NewReadingPlanHandler(mockService)
+
+	userID := uuid.New()
+
+	mockService.On("GetUserPlans", mock.Anything, userID).Return([]*models.UserReadingPlan{
+		{UserID: userID, Status: "active"},
+	}, nil)
+
+	r := chi.NewRouter()
+	r.Get("/api/my-reading-plans", handler.GetUserPlans)
+
+	req := httptest.NewRequest("GET", "/api/my-reading-plans", nil)
+	ctx := context.WithValue(req.Context(), TestUserKey, userID)
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
+
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockService.AssertExpectations(t)
+}
+
+func TestMarkDayComplete_Handler(t *testing.T) {
+	mockService := new(MockReadingPlanService)
+	handler := NewReadingPlanHandler(mockService)
+
+	planID := uuid.New()
+	userID := uuid.New()
+	dayNumber := 1
+
+	mockService.On("MarkDayComplete", mock.Anything, userID, planID, dayNumber).Return(nil)
+
+	r := chi.NewRouter()
+	r.Post("/api/my-reading-plans/{id}/progress", handler.MarkDayComplete)
+
+	reqBody := `{"day_number": 1}`
+	req := httptest.NewRequest("POST", "/api/my-reading-plans/"+planID.String()+"/progress", strings.NewReader(reqBody))
+	ctx := context.WithValue(req.Context(), TestUserKey, userID)
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
+
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockService.AssertExpectations(t)
+}
+
+func TestGetPlanProgress_Handler(t *testing.T) {
+	mockService := new(MockReadingPlanService)
+	handler := NewReadingPlanHandler(mockService)
+
+	planID := uuid.New()
+	userID := uuid.New()
+
+	mockService.On("GetPlanProgress", mock.Anything, userID, planID).Return([]int{1, 2, 3}, nil)
+
+	r := chi.NewRouter()
+	r.Get("/api/my-reading-plans/{id}/progress", handler.GetPlanProgress)
+
+	req := httptest.NewRequest("GET", "/api/my-reading-plans/"+planID.String()+"/progress", nil)
+	ctx := context.WithValue(req.Context(), TestUserKey, userID)
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
+
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
 	mockService.AssertExpectations(t)
 }

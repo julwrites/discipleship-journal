@@ -34,6 +34,55 @@ func TestGetAllPlans(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestGetPlanProgress(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	assert.NoError(t, err)
+	defer mock.Close()
+
+	service := NewReadingPlanService(mock)
+	userID := uuid.New()
+	planID := uuid.New()
+	userPlanID := uuid.New()
+
+	// Mock find active plan
+	mock.ExpectQuery(`SELECT id FROM user_reading_plans`).
+		WithArgs(userID, planID).
+		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(userPlanID))
+
+	// Mock get progress
+	mock.ExpectQuery(`SELECT day_number FROM user_reading_plan_progress`).
+		WithArgs(userPlanID).
+		WillReturnRows(mock.NewRows([]string{"day_number"}).AddRow(1).AddRow(2).AddRow(5))
+
+	days, err := service.GetPlanProgress(context.Background(), userID, planID)
+	assert.NoError(t, err)
+	assert.Len(t, days, 3)
+	assert.Equal(t, []int{1, 2, 5}, days)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestGetPlanProgress_PlanNotFound(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	assert.NoError(t, err)
+	defer mock.Close()
+
+	service := NewReadingPlanService(mock)
+	userID := uuid.New()
+	planID := uuid.New()
+
+	// Mock find active plan - Not found
+	mock.ExpectQuery(`SELECT id FROM user_reading_plans`).
+		WithArgs(userID, planID).
+		WillReturnError(pgx.ErrNoRows)
+
+	_, err = service.GetPlanProgress(context.Background(), userID, planID)
+	assert.Error(t, err)
+	assert.Equal(t, models.ErrNotFound, err)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestMarkDayComplete_NotFound(t *testing.T) {
 	mock, err := pgxmock.NewPool()
 	assert.NoError(t, err)

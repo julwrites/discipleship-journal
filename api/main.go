@@ -102,6 +102,7 @@ func main() {
 	bibleHandler := handlers.NewBibleHandler(bibleAIClient)
 	chatHandler := handlers.NewChatHandler(bibleAIClient, noteService, database.DB)
 	noteHandler := handlers.NewNoteHandler(database.DB, noteService)
+	userHandler := handlers.NewUserHandler(database.DB)
 
 	// Update handlers to use notification service
 	connectionHandler := handlers.NewConnectionHandler(database.DB, notificationService)
@@ -179,8 +180,9 @@ func main() {
 		if authMiddleware != nil {
 			r.Use(authMiddleware.VerifyToken)
 		}
-		r.Post("/api/users/me", handlers.CreateOrUpdateUser)
-		r.Put("/api/users/me", handlers.UpdateUser)
+		r.Post("/api/users/me", userHandler.CreateOrUpdateUser)
+		r.Put("/api/users/me", userHandler.UpdateUser)
+		r.Get("/api/users/me", userHandler.GetMe)
 
 		r.Get("/api/notes", noteHandler.GetNotes)
 		r.Post("/api/notes", noteHandler.CreateNote)

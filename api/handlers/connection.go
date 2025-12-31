@@ -52,32 +52,50 @@ func (h *ConnectionHandler) SearchUsers(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	requesterUID := token.UID
+	requesterUUID, err := h.getUserUUID(r.Context(), requesterUID)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	rows, err := h.db.Query(r.Context(),
-		"SELECT id, email, display_name, username FROM users WHERE email ILIKE $1 OR display_name ILIKE $1 OR username ILIKE $1 LIMIT 10",
-		"%"+query+"%")
+		"SELECT id, email, full_name, avatar_url FROM users WHERE (email ILIKE $1 OR full_name ILIKE $1) AND id != $2 LIMIT 20",
+		"%"+query+"%", requesterUUID)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
 
-	var users []map[string]string
+	users := []map[string]string{}
 	for rows.Next() {
-		var id, email, displayName, username string
-		// username might be null in DB if not set, so handle that
-		var usernameNull *string
-		if err := rows.Scan(&id, &email, &displayName, &usernameNull); err != nil {
+		var id, email string
+		var fullName, avatarURL *string
+		if err := rows.Scan(&id, &email, &fullName, &avatarURL); err != nil {
 			continue
 		}
-		if usernameNull != nil {
-			username = *usernameNull
+
+		user := map[string]string{
+			"id":    id,
+			"email": email,
 		}
-		users = append(users, map[string]string{
-			"id":           id,
-			"email":        email,
-			"display_name": displayName,
-			"username":     username,
-		})
+		if fullName != nil {
+			user["full_name"] = *fullName
+		} else {
+			user["full_name"] = ""
+		}
+		if avatarURL != nil {
+			user["avatar_url"] = *avatarURL
+		} else {
+			user["avatar_url"] = ""
+		}
+		users = append(users, user)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -93,7 +111,11 @@ func (h *ConnectionHandler) SendConnectionRequest(w http.ResponseWriter, r *http
 		return
 	}
 
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
+	token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	requesterUID := token.UID
 	requesterUUID, err := h.getUserUUID(r.Context(), requesterUID)
 	if err != nil {
@@ -159,7 +181,11 @@ func (h *ConnectionHandler) SendConnectionRequest(w http.ResponseWriter, r *http
 
 // ListConnections lists all connections for the current user
 func (h *ConnectionHandler) ListConnections(w http.ResponseWriter, r *http.Request) {
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
+	token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	uid := token.UID
 	userUUID, err := h.getUserUUID(r.Context(), uid)
 	if err != nil {
@@ -199,7 +225,11 @@ func (h *ConnectionHandler) ListConnections(w http.ResponseWriter, r *http.Reque
 func (h *ConnectionHandler) AcceptConnectionRequest(w http.ResponseWriter, r *http.Request) {
 	connID := chi.URLParam(r, "id")
 
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
+	token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	uid := token.UID
 	userUUID, err := h.getUserUUID(r.Context(), uid)
 	if err != nil {
@@ -231,7 +261,11 @@ func (h *ConnectionHandler) AcceptConnectionRequest(w http.ResponseWriter, r *ht
 func (h *ConnectionHandler) DeleteConnectionRequest(w http.ResponseWriter, r *http.Request) {
 	connID := chi.URLParam(r, "id")
 
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
+	token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	uid := token.UID
 	userUUID, err := h.getUserUUID(r.Context(), uid)
 	if err != nil {
