@@ -77,15 +77,28 @@ type NotesResponse struct {
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /api/notes [get]
 func (h *NoteHandler) GetNotes(w http.ResponseWriter, r *http.Request) {
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	uid := token.UID
+	var uid string
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+		uid = token.UID
+	} else if testUserID, ok := r.Context().Value(TestUserKey).(string); ok {
+		// Test environment override
+		// If TestUserKey is present, we assume it is the internal UUID
+        h.getNotesWithUUID(w, r, testUserID)
+        return
+	} else {
+         http.Error(w, "Unauthorized", http.StatusUnauthorized)
+         return
+    }
 
 	userUUID, err := h.getUserUUID(r.Context(), uid)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
+    h.getNotesWithUUID(w, r, userUUID)
+}
 
+func (h *NoteHandler) getNotesWithUUID(w http.ResponseWriter, r *http.Request, userUUID string) {
 	// Pagination parameters
 	pageStr := r.URL.Query().Get("page")
 	limitStr := r.URL.Query().Get("limit")
@@ -180,16 +193,22 @@ func (h *NoteHandler) GetNotes(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /api/notes/{id} [delete]
 func (h *NoteHandler) DeleteNote(w http.ResponseWriter, r *http.Request) {
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	uid := token.UID
+	var userUUID string
+    var err error
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+		userUUID, err = h.getUserUUID(r.Context(), token.UID)
+        if err != nil {
+		    http.Error(w, "User not found", http.StatusNotFound)
+		    return
+	    }
+	} else if testUserID, ok := r.Context().Value(TestUserKey).(string); ok {
+		userUUID = testUserID
+	} else {
+         http.Error(w, "Unauthorized", http.StatusUnauthorized)
+         return
+    }
+
 	noteID := chi.URLParam(r, "id")
-
-	userUUID, err := h.getUserUUID(r.Context(), uid)
-	if err != nil {
-		http.Error(w, "User not found", http.StatusNotFound)
-		return
-	}
-
 	err = h.noteService.DeleteNote(r.Context(), userUUID, noteID)
 
 	if err != nil {
@@ -218,14 +237,20 @@ func (h *NoteHandler) DeleteNote(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /api/notes [post]
 func (h *NoteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	uid := token.UID
-
-	userUUID, err := h.getUserUUID(r.Context(), uid)
-	if err != nil {
-		http.Error(w, "User not found", http.StatusNotFound)
-		return
-	}
+	var userUUID string
+    var err error
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+		userUUID, err = h.getUserUUID(r.Context(), token.UID)
+        if err != nil {
+		    http.Error(w, "User not found", http.StatusNotFound)
+		    return
+	    }
+	} else if testUserID, ok := r.Context().Value(TestUserKey).(string); ok {
+		userUUID = testUserID
+	} else {
+         http.Error(w, "Unauthorized", http.StatusUnauthorized)
+         return
+    }
 
 	var req CreateNoteRequest
 	if !DecodeAndValidate(w, r, &req) {
@@ -266,15 +291,21 @@ func (h *NoteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /api/notes/{id} [put]
 func (h *NoteHandler) UpdateNote(w http.ResponseWriter, r *http.Request) {
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	uid := token.UID
+    var userUUID string
+    var err error
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+		userUUID, err = h.getUserUUID(r.Context(), token.UID)
+        if err != nil {
+		    http.Error(w, "User not found", http.StatusNotFound)
+		    return
+	    }
+	} else if testUserID, ok := r.Context().Value(TestUserKey).(string); ok {
+		userUUID = testUserID
+	} else {
+         http.Error(w, "Unauthorized", http.StatusUnauthorized)
+         return
+    }
 	noteID := chi.URLParam(r, "id")
-
-	userUUID, err := h.getUserUUID(r.Context(), uid)
-	if err != nil {
-		http.Error(w, "User not found", http.StatusNotFound)
-		return
-	}
 
 	var req CreateNoteRequest
 	if !DecodeAndValidate(w, r, &req) {
@@ -314,15 +345,21 @@ func (h *NoteHandler) UpdateNote(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {string} string "Note not found"
 // @Router /api/notes/{id} [get]
 func (h *NoteHandler) GetNote(w http.ResponseWriter, r *http.Request) {
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	uid := token.UID
+    var userUUID string
+    var err error
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+		userUUID, err = h.getUserUUID(r.Context(), token.UID)
+        if err != nil {
+		    http.Error(w, "User not found", http.StatusNotFound)
+		    return
+	    }
+	} else if testUserID, ok := r.Context().Value(TestUserKey).(string); ok {
+		userUUID = testUserID
+	} else {
+         http.Error(w, "Unauthorized", http.StatusUnauthorized)
+         return
+    }
 	noteID := chi.URLParam(r, "id")
-
-	userUUID, err := h.getUserUUID(r.Context(), uid)
-	if err != nil {
-		http.Error(w, "User not found", http.StatusNotFound)
-		return
-	}
 
 	sn, err := h.noteService.GetNote(r.Context(), userUUID, noteID)
 

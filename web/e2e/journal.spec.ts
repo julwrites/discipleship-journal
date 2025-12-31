@@ -37,7 +37,12 @@ test.describe('Journaling (Mocked)', () => {
         const method = route.request().method();
 
         if (method === 'GET') {
-             await route.fulfill({ json: notes });
+             await route.fulfill({
+                 json: {
+                     data: notes,
+                     meta: { total: notes.length, page: 1, limit: 20, total_pages: 1 }
+                 }
+             });
         } else if (method === 'POST') {
             resolveRequest(route.request());
             const body = route.request().postDataJSON();
@@ -50,7 +55,7 @@ test.describe('Journaling (Mocked)', () => {
             };
             notes = [newNote]; // Update state
             await route.fulfill({
-                json: newNote
+                json: { id: newNote.id }
             });
         } else {
              await route.fallback();
