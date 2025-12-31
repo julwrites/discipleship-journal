@@ -128,7 +128,7 @@ func main() {
 	r.Use(cors.Handler(cors.Options{
 		AllowOriginFunc: func(r *http.Request, origin string) bool {
 			// Allow local development
-			if origin == "http://localhost:5173" || origin == "http://localhost:4173" || origin == "http://localhost:8080" {
+			if origin == "http://localhost:5173" || origin == "http://localhost:4173" || origin == "http://localhost:8080" || origin == "http://localhost:3000" {
 				return true
 			}
 			// Allow production domains
