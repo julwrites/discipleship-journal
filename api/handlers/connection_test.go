@@ -71,6 +71,54 @@ func TestSendConnectionRequest(t *testing.T) {
 	}
 }
 
+func TestSearchUsers(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
+
+	mockNotification := services.NewMockNotificationService()
+	handler := NewConnectionHandler(mock, mockNotification)
+
+	uid := "firebase-uid-1"
+	userUUID := "user-uuid-1"
+
+	mock.ExpectQuery("SELECT id FROM users WHERE firebase_uid=").
+		WithArgs(uid).
+		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+
+	// Expect search query
+	fullName := "John Doe"
+	avatarURL := "http://example.com/avatar.jpg"
+	mock.ExpectQuery(`SELECT id, email, full_name, avatar_url FROM users WHERE \(email ILIKE \$1 OR full_name ILIKE \$1\) AND id != \$2 LIMIT 20`).
+		WithArgs("%john%", userUUID).
+		WillReturnRows(pgxmock.NewRows([]string{"id", "email", "full_name", "avatar_url"}).
+			AddRow("u2", "john@example.com", &fullName, &avatarURL))
+
+	req := httptest.NewRequest("GET", "/api/users/search?q=john", nil)
+	token := &auth.Token{UID: uid}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
+
+	handler.SearchUsers(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	// Parse response
+	var resp []map[string]interface{}
+	err = json.Unmarshal(w.Body.Bytes(), &resp)
+	assert.NoError(t, err)
+	assert.Len(t, resp, 1)
+	assert.Equal(t, "john@example.com", resp[0]["email"])
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
 func TestListConnections(t *testing.T) {
 	mock, err := pgxmock.NewPool()
 	if err != nil {
