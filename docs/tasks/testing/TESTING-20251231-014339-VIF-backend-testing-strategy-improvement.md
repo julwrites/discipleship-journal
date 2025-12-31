@@ -23,22 +23,22 @@ To achieve "100% certainty" in backend releases, we will implement a multi-layer
 ## Plan
 
 ### 1. Enable Integration Testing Infrastructure
-*   [ ] Add `testcontainers-go` and `pgx/v5/stdlib` (if needed) to `api/go.mod`.
-*   [ ] Create a `api/tests/integration` package.
-*   [ ] Implement a `SetupIntegrationDB` helper that spins up a Postgres container, applies migrations, and returns a connection pool.
-*   [ ] **Constraint**: Ensure these tests are skipped if Docker is not available (using `testing.Short()` or build tags).
+*   [x] Add `testcontainers-go` and `pgx/v5/stdlib` (if needed) to `api/go.mod`.
+*   [x] Create a `api/tests/integration` package.
+*   [x] Implement a `SetupIntegrationDB` helper that spins up a Postgres container, applies migrations, and returns a connection pool.
+*   [x] **Constraint**: Ensure these tests are skipped if Docker is not available (using `testing.Short()` or build tags).
 
 ### 2. Implement Service Integration Tests
-*   [ ] Port key `NoteService` tests to run against the real DB.
+*   [x] Port key `NoteService` tests to run against the real DB.
 *   [ ] Port `GroupService` (logic in handlers currently, might need refactoring or direct handler integration testing) tests.
-*   [ ] Verify complex queries (e.g., full-text search, date filtering) which are hard to mock accurately with `pgxmock`.
+*   [x] Verify complex queries (e.g., full-text search, date filtering) which are hard to mock accurately with `pgxmock`.
 
 ### 3. Implement "Frontend Contract" API Tests
-*   [ ] Create a new test suite `api/tests/contract` (or within `integration`).
-*   [ ] These tests will use `httptest` to spin up the `chi` router.
-*   [ ] **Crucial**: The test payloads (JSON bodies) must be copied *verbatim* or derived directly from `web/src/services/api.ts` logic.
-*   [ ] **Crucial**: The assertions must verify that the response JSON structure matches exactly what `web/src/services/api.ts` expects (e.g., field names, date formats, nullability).
-*   [ ] Cover the "Happy Path" for all major entities: Notes, Groups, Connections, Reading Plans.
+*   [x] Create a new test suite `api/tests/contract` (or within `integration`).
+*   [x] These tests will use `httptest` to spin up the `chi` router.
+*   [x] **Crucial**: The test payloads (JSON bodies) must be copied *verbatim* or derived directly from `web/src/services/api.ts` logic.
+*   [x] **Crucial**: The assertions must verify that the response JSON structure matches exactly what `web/src/services/api.ts` expects (e.g., field names, date formats, nullability).
+*   [x] Cover the "Happy Path" for all major entities: Notes (Done), Groups (Todo), Connections (Todo), Reading Plans (Todo).
 
 ### 4. Review and Refine Unit Tests
 *   [ ] Audit existing `api/handlers/*_test.go`.
@@ -105,5 +105,5 @@ By running these tests in CI (where Docker is available), we will catch:
 *   Logic errors in complex queries.
 
 ## Next Steps
-1.  Approve this plan.
-2.  Begin with Step 1 (Infrastructure).
+1.  Port GroupService tests.
+2.  Add Contract tests for Groups, Connections, Reading Plans.
