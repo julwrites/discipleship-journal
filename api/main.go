@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
-	"strings"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -76,10 +77,36 @@ func main() {
 	// Set DATABASE_URL environment variable for database.Connect()
 	if databaseURL != "" {
 		os.Setenv("DATABASE_URL", databaseURL)
+
+		// Log masked database URL for debugging
+		maskedURL := databaseURL
+		u, err := url.Parse(databaseURL)
+		if err == nil {
+			maskedURL = u.Redacted()
+		} else {
+			// Fallback masking if parsing fails
+			if strings.Contains(maskedURL, "@") {
+				parts := strings.Split(maskedURL, "@")
+				if len(parts) > 1 {
+					maskedURL = "***@" + parts[1]
+				}
+			} else {
+				maskedURL = "Invalid URL format (hidden)"
+			}
+		}
+		logger.Info("Attempting to connect to database", "url", maskedURL)
+	} else {
+		logger.Error("DATABASE_URL is empty")
 	}
 
 	if err := database.Connect(); err != nil {
-		logger.Error("Database connection failed", "error", err)
+		// Log the error but be careful not to log the raw error if it contains the connection string
+		// pgx errors might contain the connection string
+		errStr := err.Error()
+		if databaseURL != "" && strings.Contains(errStr, databaseURL) {
+			errStr = strings.ReplaceAll(errStr, databaseURL, "***")
+		}
+		logger.Error("Database connection failed", "error", errStr)
 		// In production, we might want to exit here
 		if os.Getenv("APP_ENV") == "production" {
 			logger.Error("Exiting due to database connection failure in production")

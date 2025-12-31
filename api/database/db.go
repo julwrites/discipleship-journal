@@ -32,7 +32,11 @@ func Connect() error {
 		return fmt.Errorf("unable to create connection pool: %w", err)
 	}
 
-	if err := DB.Ping(context.Background()); err != nil {
+	// Create a context with a timeout for the initial ping
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := DB.Ping(ctx); err != nil {
 		return fmt.Errorf("unable to ping database: %w", err)
 	}
 
