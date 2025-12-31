@@ -62,7 +62,7 @@ func (c *RealBibleAIClient) GetPassage(ctx context.Context, reference string) (m
 	}
 
 	// resty sometimes fails to parse JSON, so fall back to manual parsing
-	if result == nil || len(result) == 0 {
+	if len(result) == 0 {
 		body := resp.String()
 		var manualResult map[string]interface{}
 		if err := json.Unmarshal([]byte(body), &manualResult); err != nil {
@@ -151,7 +151,7 @@ func (c *RealBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 	}
 
 	// resty sometimes fails to parse JSON, so fall back to manual parsing
-	if result == nil || len(result) == 0 {
+	if len(result) == 0 {
 		body := resp.String()
 		var manualResult map[string]interface{}
 		if err := json.Unmarshal([]byte(body), &manualResult); err != nil {
