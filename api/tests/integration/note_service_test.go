@@ -148,6 +148,11 @@ func TestNoteService_Integration(t *testing.T) {
 			if n.ID == n2.ID { foundN2 = true }
 			if n.ID == n3.ID { foundN3 = true }
 		}
+
+		assert.True(t, foundN1, "N1 should be found")
+		assert.True(t, foundN2, "N2 should be found")
+		assert.True(t, foundN3, "N3 should be found")
+
 		// With pagination 10, we should see them if total is small.
 		if len(notes) >= 3 {
              // Check relative order of our notes
