@@ -76,14 +76,26 @@ func (h *ChatHandler) ChatWithAI(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Create a new Journal Note with the conversation
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	uid := token.UID
-
+	// Get user ID from context (supports both real Firebase auth and mock auth)
 	var userUUID uuid.UUID
-	err = h.DB.QueryRow(r.Context(), "SELECT id FROM users WHERE firebase_uid=$1", uid).Scan(&userUUID)
-	if err != nil {
-		http.Error(w, "User not found for saving note", http.StatusNotFound)
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+		// Real Firebase auth
+		uid := token.UID
+		err = h.DB.QueryRow(r.Context(), "SELECT id FROM users WHERE firebase_uid=$1", uid).Scan(&userUUID)
+		if err != nil {
+			http.Error(w, "User not found for saving note", http.StatusNotFound)
+			return
+		}
+	} else if testUserID, ok := r.Context().Value(TestUserKey).(string); ok {
+		// Mock auth - testUserID is already the internal UUID
+		var err error
+		userUUID, err = uuid.Parse(testUserID)
+		if err != nil {
+			http.Error(w, "Invalid test user ID", http.StatusUnauthorized)
+			return
+		}
+	} else {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 

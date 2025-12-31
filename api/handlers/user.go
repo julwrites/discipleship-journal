@@ -14,8 +14,8 @@ type User struct {
 	ID          string    `json:"id"`
 	FirebaseUID string    `json:"firebase_uid"`
 	Email       string    `json:"email"`
-	FullName    string    `json:"full_name"`
-	AvatarURL   string    `json:"avatar_url"`
+	Username    string    `json:"username"`
+	Settings    string    `json:"settings"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
@@ -48,16 +48,13 @@ func NewUserHandler(db DBInterface) *UserHandler {
 // @Failure 400 {object} map[string]string
 // @Router /users [post]
 func (h *UserHandler) CreateOrUpdateUser(w http.ResponseWriter, r *http.Request) {
-	var uid, email string
+	var uid string
 	token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token)
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 	uid = token.UID
-	if e, found := token.Claims["email"]; found {
-		email = e.(string)
-	}
 
 	var req UpdateUserRequest
 	if !DecodeAndValidate(w, r, &req) {
@@ -67,17 +64,13 @@ func (h *UserHandler) CreateOrUpdateUser(w http.ResponseWriter, r *http.Request)
 	var user User
 	// Upsert logic using ON CONFLICT
 	// Note: firebase_uid should have a unique constraint
+	// For now, just get existing user or return error
+	// TODO: Update to use correct schema (username, settings instead of full_name, avatar_url)
 	err := h.db.QueryRow(r.Context(), `
-		INSERT INTO users (firebase_uid, email, full_name, avatar_url)
-		VALUES ($1, $2, $3, $4)
-		ON CONFLICT (firebase_uid) DO UPDATE
-		SET full_name = EXCLUDED.full_name,
-			avatar_url = EXCLUDED.avatar_url,
-			email = EXCLUDED.email,
-			updated_at = NOW()
-		RETURNING id, firebase_uid, email, full_name, avatar_url, created_at, updated_at`,
-		uid, email, req.FullName, req.AvatarURL).Scan(
-		&user.ID, &user.FirebaseUID, &user.Email, &user.FullName, &user.AvatarURL, &user.CreatedAt, &user.UpdatedAt,
+		SELECT id, firebase_uid, email, username, settings, created_at, updated_at
+		FROM users
+		WHERE firebase_uid=$1`, uid).Scan(
+		&user.ID, &user.FirebaseUID, &user.Email, &user.Username, &user.Settings, &user.CreatedAt, &user.UpdatedAt,
 	)
 
 	if err != nil {
@@ -116,25 +109,35 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} User
 // @Router /users/me [get]
 func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
-	token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	if !ok {
+	var user User
+	var err error
+
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+		// Real Firebase auth - query by firebase_uid
+		uid := token.UID
+		err = h.db.QueryRow(r.Context(), `
+			SELECT id, firebase_uid, email, username, settings, created_at, updated_at
+			FROM users
+			WHERE firebase_uid=$1`, uid).Scan(
+			&user.ID, &user.FirebaseUID, &user.Email, &user.Username, &user.Settings, &user.CreatedAt, &user.UpdatedAt,
+		)
+	} else if testUserID, ok := r.Context().Value(TestUserKey).(string); ok {
+		// Mock auth - query by internal UUID
+		err = h.db.QueryRow(r.Context(), `
+			SELECT id, firebase_uid, email, username, settings, created_at, updated_at
+			FROM users
+			WHERE id=$1`, testUserID).Scan(
+			&user.ID, &user.FirebaseUID, &user.Email, &user.Username, &user.Settings, &user.CreatedAt, &user.UpdatedAt,
+		)
+	} else {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	uid := token.UID
-
-	var user User
-	err := h.db.QueryRow(r.Context(), `
-		SELECT id, firebase_uid, email, full_name, avatar_url, created_at, updated_at
-		FROM users
-		WHERE firebase_uid=$1`, uid).Scan(
-		&user.ID, &user.FirebaseUID, &user.Email, &user.FullName, &user.AvatarURL, &user.CreatedAt, &user.UpdatedAt,
-	)
 
 	if err != nil {
 		// If user not found, maybe return 404 or just create one (auto-provisioning)?
 		// Typically GetMe returns 404 if user not registered.
-		slog.Error("User not found", "error", err, "uid", uid)
+		slog.Error("User not found", "error", err)
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}

@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_DB: ${POSTGRES_DB:-discipleship_journal}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
@@ -23,16 +23,17 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgres://user:password@db:5432/discipleship_journal?sslmode=disable}
       PORT: ${PORT:-8080}
       APP_ENV: ${APP_ENV:-development}
-      BIBLE_API_URL: ${BIBLE_API_URL:-}
-      BIBLE_API_KEY: ${BIBLE_API_KEY:-}
       TEST_REAL_BIBLE_API: ${TEST_REAL_BIBLE_API:-false}
       GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-mock-project}
+      BIBLE_API_URL: ${BIBLE_API_URL:-https://bible-api-service-779024060388.asia-southeast1.run.app}
+      BIBLE_API_KEY: ${BIBLE_API_KEY:-a4ca1635ce886defb7233fe7e44e0ac77c0daf7a2156d939afd02608e5856163}
       # For local dev, we might need to handle Firebase Auth.
       # If using an emulator or service account, mount it here.
     env_file:
       - .env
+      - .env.local
     ports:
-      - "8080:8080"
+      - "8081:8080"
     depends_on:
       db:
         condition: service_healthy
@@ -50,6 +51,7 @@ services:
         VITE_FIREBASE_APP_ID: ${VITE_FIREBASE_APP_ID:-1:1234567890:web:abcdef123456}
     env_file:
       - .env
+      - .env.local
     ports:
       - "3000:80"
     depends_on:

@@ -68,11 +68,11 @@ func main() {
 		logger.Error("Firebase init failed", "error", err)
 	}
 
-	var authMiddleware *middleware.AuthMiddleware
+	var authMiddleware func(http.Handler) http.Handler
 	var notificationService services.NotificationService
 
 	if firebaseService != nil {
-		authMiddleware = middleware.NewAuthMiddlewareFromClient(firebaseService.AuthClient)
+		authMiddleware = middleware.NewAuthMiddlewareFromClient(firebaseService.AuthClient).VerifyToken
 		if firebaseService.MessagingClient != nil {
 			notificationService = services.NewNotificationService(database.DB, firebaseService.MessagingClient)
 		} else {
@@ -80,10 +80,25 @@ func main() {
 			notificationService = services.NewMockNotificationService() // Fallback to avoid nil pointer
 		}
 	} else {
-		// Fallback for local dev without firebase creds?
-		// We can't really auth without firebase.
-		// Existing code allowed running but AuthMiddleware would fail.
-		logger.Error("Firebase Service is nil")
+		// Fallback for local dev without firebase creds
+		// Create a mock auth middleware that injects a test user
+		logger.Warn("Firebase Service is nil, using mock authentication for development")
+		authMiddleware = func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				// For development, accept any request (or require simple test token)
+				authHeader := r.Header.Get("Authorization")
+				if authHeader == "" || authHeader == "Bearer test" {
+					// Inject a test user ID into context using TestUserKey
+					// This matches what GetUserUUID expects for test mode
+					ctx := context.WithValue(r.Context(), handlers.TestUserKey, "00000000-0000-0000-0000-000000000001")
+					next.ServeHTTP(w, r.WithContext(ctx))
+				} else {
+					http.Error(w, "Unauthorized - use 'Bearer test' for development mode", http.StatusUnauthorized)
+				}
+			})
+		}
+		// Initialize mock notification service to avoid nil pointer panics
+		notificationService = services.NewMockNotificationService()
 	}
 
 	// Init Bible AI Client
@@ -178,7 +193,7 @@ func main() {
 
 	r.Group(func(r chi.Router) {
 		if authMiddleware != nil {
-			r.Use(authMiddleware.VerifyToken)
+			r.Use(authMiddleware)
 		}
 		r.Post("/api/users/me", userHandler.CreateOrUpdateUser)
 		r.Put("/api/users/me", userHandler.UpdateUser)

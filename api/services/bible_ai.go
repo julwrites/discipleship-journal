@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -53,11 +54,21 @@ func (c *RealBibleAIClient) GetPassage(ctx context.Context, reference string) (m
 		Post(c.APIURL + "/query")
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("resty request error: %v", err)
 	}
 
 	if resp.IsError() {
-		return nil, fmt.Errorf("bible API error: %s", resp.Status())
+		return nil, fmt.Errorf("bible API error: %s, body: %s", resp.Status(), resp.String())
+	}
+
+	// resty sometimes fails to parse JSON, so fall back to manual parsing
+	if result == nil || len(result) == 0 {
+		body := resp.String()
+		var manualResult map[string]interface{}
+		if err := json.Unmarshal([]byte(body), &manualResult); err != nil {
+			return nil, fmt.Errorf("failed to parse Bible API response: %v", err)
+		}
+		result = manualResult
 	}
 
 	// The API returns the result. We might need to transform it to match the
@@ -137,6 +148,16 @@ func (c *RealBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 
 	if resp.IsError() {
 		return nil, fmt.Errorf("bible API error: %s", resp.Status())
+	}
+
+	// resty sometimes fails to parse JSON, so fall back to manual parsing
+	if result == nil || len(result) == 0 {
+		body := resp.String()
+		var manualResult map[string]interface{}
+		if err := json.Unmarshal([]byte(body), &manualResult); err != nil {
+			return nil, fmt.Errorf("failed to parse Bible API response: %v", err)
+		}
+		result = manualResult
 	}
 
 	// Transform response to match OpenAI style if ChatHandler expects it?
