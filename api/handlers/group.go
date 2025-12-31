@@ -113,8 +113,23 @@ func (h *GroupHandler) CreateGroup(w http.ResponseWriter, r *http.Request) {
 
 // ListMyGroups lists groups the user belongs to
 func (h *GroupHandler) ListMyGroups(w http.ResponseWriter, r *http.Request) {
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	userUUID, err := GetUserUUID(r.Context(), token.UID)
+	var userUUID uuid.UUID
+	var err error
+
+	// Check for test user first
+	if testUserID := r.Context().Value(TestUserKey); testUserID != nil {
+		if idStr, ok := testUserID.(string); ok {
+			userUUID, err = uuid.Parse(idStr)
+		} else if id, ok := testUserID.(uuid.UUID); ok {
+			userUUID = id
+		}
+	} else if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+		// Regular auth flow
+		userUUID, err = GetUserUUID(r.Context(), token.UID)
+	} else {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
 		return

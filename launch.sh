@@ -12,6 +12,8 @@ echo "========================================="
 # Check if .env file exists
 if [ ! -f .env ]; then
     echo "⚠️  No .env file found. Creating from template..."
+    cp .env.example .env
+    echo "✅ Created .env file."
     echo ""
     echo "Please edit the .env file with your configuration:"
     echo "1. Update Firebase credentials (get from Firebase Console)"
