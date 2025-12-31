@@ -51,8 +51,40 @@ func main() {
 	}
 	slog.SetDefault(logger)
 
+	// Initialize Secret Loader
+	secretLoader, err := services.NewSecretLoader(context.Background(), "")
+	if err != nil {
+		logger.Error("Failed to initialize secret loader", "error", err)
+		// Continue anyway - secret loader will fall back to env vars
+	}
+	if secretLoader != nil {
+		defer secretLoader.Close()
+	}
+
+	// Load database URL from Secret Manager or environment variable
+	var databaseURL string
+	if secretLoader != nil {
+		databaseURL, err = secretLoader.LoadSecret(context.Background(), "DATABASE_URL")
+		if err != nil {
+			logger.Error("Failed to load DATABASE_URL secret", "error", err)
+			// Don't exit - let database.Connect() handle the empty URL
+		}
+	} else {
+		databaseURL = os.Getenv("DATABASE_URL")
+	}
+
+	// Set DATABASE_URL environment variable for database.Connect()
+	if databaseURL != "" {
+		os.Setenv("DATABASE_URL", databaseURL)
+	}
+
 	if err := database.Connect(); err != nil {
 		logger.Error("Database connection failed", "error", err)
+		// In production, we might want to exit here
+		if os.Getenv("APP_ENV") == "production" {
+			logger.Error("Exiting due to database connection failure in production")
+			os.Exit(1)
+		}
 	}
 	defer database.Close()
 
@@ -103,12 +135,22 @@ func main() {
 
 	// Init Bible AI Client
 	var bibleAIClient services.BibleAIClient
-	bibleAPIURL := os.Getenv("BIBLE_API_URL")
 
-	if bibleAPIURL != "" {
-		bibleAIClient = services.NewRealBibleAIClient(bibleAPIURL, os.Getenv("BIBLE_API_KEY"))
+	// Load Bible API secrets from Secret Manager or environment variables
+	var bibleAPIURL, bibleAPIKey string
+	if secretLoader != nil {
+		bibleAPIURL, _ = secretLoader.LoadSecret(context.Background(), "BIBLE_API_URL")
+		bibleAPIKey, _ = secretLoader.LoadSecret(context.Background(), "BIBLE_API_KEY")
 	} else {
-		logger.Info("BIBLE_API_URL not set, using MockBibleAIClient")
+		bibleAPIURL = os.Getenv("BIBLE_API_URL")
+		bibleAPIKey = os.Getenv("BIBLE_API_KEY")
+	}
+
+	if bibleAPIURL != "" && bibleAPIKey != "" {
+		bibleAIClient = services.NewRealBibleAIClient(bibleAPIURL, bibleAPIKey)
+		logger.Info("Using RealBibleAIClient", "url", bibleAPIURL)
+	} else {
+		logger.Info("BIBLE_API_URL or BIBLE_API_KEY not set, using MockBibleAIClient")
 		bibleAIClient = services.NewMockBibleAIClient()
 	}
 
