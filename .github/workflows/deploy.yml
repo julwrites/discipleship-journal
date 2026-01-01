@@ -84,7 +84,12 @@ jobs:
           env_vars: |
             APP_ENV=production
             GOOGLE_CLOUD_PROJECT=${{ env.GCP_PROJECT_ID }}
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            # Database configuration - individual components only
+            DB_USERNAME=${{ secrets.DB_USERNAME }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_NAME=${{ secrets.DB_NAME }}
+            CLOUD_SQL_INSTANCE=${{ secrets.CLOUD_SQL_INSTANCE }}
+            # Other secrets
             BIBLE_API_URL=${{ secrets.BIBLE_API_URL }}
             BIBLE_API_KEY=${{ secrets.BIBLE_API_KEY }}
 

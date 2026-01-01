@@ -49,5 +49,5 @@ This project includes pre-commit hooks for secret scanning to prevent accidental
 
 **Important**: Never commit API keys, passwords, or tokens. Always use environment variables.
 
-## CI/CD Pipeline
-This project uses GitHub Actions for continuous deployment to Google Cloud Run (backend) and Firebase Hosting (frontend).
+## Secrets Configuration
+See [SECRETS_SETUP.md](SECRETS_SETUP.md) for detailed instructions on setting up database and API secrets for both local development and production deployment.
