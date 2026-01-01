@@ -50,8 +50,9 @@ func TestGetBiblePassage(t *testing.T) {
 
 		if useReal {
 			// Real API checks (might be flaky if API changes)
-			if _, ok := resp["text"]; !ok {
-				t.Error("Real API response missing 'text'")
+			// API returns {"verse": "John 3:16 (ESV) For God so loved the world..."}
+			if _, ok := resp["verse"]; !ok {
+				t.Error("Real API response missing 'verse'")
 			}
 		} else {
 			// Mock checks

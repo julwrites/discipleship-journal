@@ -71,9 +71,20 @@ func (c *RealBibleAIClient) GetPassage(ctx context.Context, reference string) (m
 		result = manualResult
 	}
 
-	// The API returns the result. We might need to transform it to match the
-	// expected interface (reference, text).
-	// For now, return the raw result. The API likely returns a list of verses.
+	// The API returns {"verse": "John 3:16 (ESV) For God so loved the world..."}
+	// Extract the verse text from the response
+	if verse, ok := result["verse"].(string); ok {
+		return map[string]interface{}{
+			"verse": verse,
+		}, nil
+	}
+
+	// Check for error response
+	if errObj, ok := result["error"].(map[string]interface{}); ok {
+		return nil, fmt.Errorf("bible API error: %v", errObj)
+	}
+
+	// Return raw result if verse not found (for backward compatibility)
 	return result, nil
 }
 
@@ -118,19 +129,22 @@ func (c *RealBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 		prompt += fmt.Sprintf(" Context: %s.", ctxText)
 	}
 
-	apiPayload := map[string]interface{}{
-		"query": map[string]interface{}{
-			"prompt": prompt,
-		},
-		"context": map[string]interface{}{
-			"user": map[string]interface{}{
-				"version": "ESV", // Default to ESV
-			},
+	// Build context object
+	contextObj := map[string]interface{}{
+		"user": map[string]interface{}{
+			"version": "ESV", // Default to ESV
 		},
 	}
 
 	if len(verses) > 0 {
-		apiPayload["context"].(map[string]interface{})["verses"] = verses
+		contextObj["verses"] = verses
+	}
+
+	apiPayload := map[string]interface{}{
+		"query": map[string]interface{}{
+			"prompt": prompt,
+		},
+		"context": contextObj,
 	}
 
 	var result map[string]interface{}
@@ -160,17 +174,20 @@ func (c *RealBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 		result = manualResult
 	}
 
-	// Transform response to match OpenAI style if ChatHandler expects it?
-	// ChatHandler expects:
-	// result["choices"][0]["message"]["content"]
+	// BibleAIAPI response structure for LLM queries:
+	// {
+	//   "text": "Response text...",
+	//   "references": [
+	//     {"verse": "John 3:16", "url": "..."}
+	//   ]
+	// }
 	//
-	// BibleAIAPI response structure for LLM is likely just the text or a structured object.
-	// We need to wrap it to avoid breaking ChatHandler, OR update ChatHandler.
-	// Let's assume the API returns `{"text": "response"}` or similar.
-	// We'll wrap it to mimic OpenAI format for minimal disruption in handlers,
-	// or we can rely on `result` having the data.
+	// Check for error response first
+	if errObj, ok := result["error"].(map[string]interface{}); ok {
+		return nil, fmt.Errorf("bible API error: %v", errObj)
+	}
 
-	// If the API returns key "response" or "text":
+	// Extract text from response
 	var content string
 	if txt, ok := result["text"].(string); ok {
 		content = txt
@@ -178,20 +195,30 @@ func (c *RealBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 		content = respStr
 	}
 
-	// If we found content, wrap it.
-	if content != "" {
-		return map[string]interface{}{
-			"choices": []interface{}{
-				map[string]interface{}{
-					"message": map[string]interface{}{
-						"content": content,
-					},
-				},
-			},
-		}, nil
+	// Extract references if present
+	var references []interface{}
+	if refs, ok := result["references"].([]interface{}); ok {
+		references = refs
 	}
 
-	// If we didn't find "text" or "response", maybe it is already in the format?
-	// Or maybe it's just the map. Return it and let Handler fail or succeed.
-	return result, nil
+	// Return structured response that handlers can parse
+	response := map[string]interface{}{
+		"text": content,
+	}
+	if len(references) > 0 {
+		response["references"] = references
+	}
+
+	// Also wrap in OpenAI format for backward compatibility with ChatHandler
+	if content != "" {
+		response["choices"] = []interface{}{
+			map[string]interface{}{
+				"message": map[string]interface{}{
+					"content": content,
+				},
+			},
+		}
+	}
+
+	return response, nil
 }
