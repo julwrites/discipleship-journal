@@ -48,3 +48,6 @@ This project includes pre-commit hooks for secret scanning to prevent accidental
 ```
 
 **Important**: Never commit API keys, passwords, or tokens. Always use environment variables.
+
+## CI/CD Pipeline
+This project uses GitHub Actions for continuous deployment to Google Cloud Run (backend) and Firebase Hosting (frontend).
