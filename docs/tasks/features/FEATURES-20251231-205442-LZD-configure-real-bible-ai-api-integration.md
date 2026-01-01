@@ -21,18 +21,49 @@ The application currently only returns mock data from the Bible AI API instead o
 4. Update documentation with configuration steps
 
 ## Steps
-1. Sign up for Bible API service (e.g., scripture.api.bible)
-2. Obtain API key
-3. Update Cloud Run environment variables:
-   - `BIBLE_API_URL`: https://api.scripture.api.bible
-   - `BIBLE_API_KEY`: [actual API key]
-4. Test integration locally with real API
-5. Deploy to production
-6. Verify real Bible passages are returned
+1. **Verify current configuration**: The project already uses a custom BibleAIAPI service
+   - **API URL**: `https://bible-api-service-779024060388.asia-southeast1.run.app`
+   - **API Key**: `a4ca1635ce886defb7233fe7e44e0ac77c0daf7a2156d939afd02608e5856163`
+   - **Location**: Configured in `.env.local` and `docker-compose.yml`
+
+2. **Fix API integration issues** (prerequisite: see task `DOMAIN-20260101-100010-IWD`):
+   - Correct request/response handling in `api/services/bible_ai.go`
+   - Test with real API using cURL examples
+
+3. **Configure production environment**:
+   - Ensure `BIBLE_API_URL` and `BIBLE_API_KEY` are set in Cloud Run
+   - Use Google Secret Manager for production secrets
+
+4. **Test integration**:
+   - Use cURL commands to verify API connectivity
+   - Test GetPassage endpoint with real Bible references
+   - Test AI chat endpoints with sample prompts
+
+5. **Alternative service** (if needed):
+   - Scripture API Bible: `https://api.scripture.api.bible`
+   - Requires separate API key registration
+   - May require different request/response format
+
+## Bible AI API Documentation
+See task `DOMAIN-20260101-100010-IWD` for complete API documentation including:
+- Request/response formats
+- Example cURL commands
+- Authentication details
+- Error handling patterns
 
 ## Acceptance Criteria
-- [ ] Real Bible API credentials obtained
-- [ ] Environment variables configured in production
-- [ ] Real Bible passages returned in API responses
-- [ ] AI chat uses real Bible context
-- [ ] Documentation updated with configuration guide
+- [ ] **API integration fixed** (dependency: task `DOMAIN-20260101-100010-IWD`)
+- [ ] **Current BibleAIAPI service verified** and working
+- [ ] **Production environment** configured with correct secrets
+- [ ] **Real Bible passages** returned in API responses
+- [ ] **AI chat** uses real Bible context
+- [ ] **Documentation updated** with actual configuration (not scripture.api.bible)
+
+## Current Status
+- ✅ **Credentials already exist**: API key configured in `.env.local`
+- ✅ **API URL configured**: BibleAIAPI service URL set
+- ❌ **Integration broken**: Request/response handling needs fixing
+- ❌ **Production verification**: Need to test with real API
+
+## Prerequisite Task
+Complete `DOMAIN-20260101-100010-IWD` first to fix the API integration issues before configuring production deployment.
