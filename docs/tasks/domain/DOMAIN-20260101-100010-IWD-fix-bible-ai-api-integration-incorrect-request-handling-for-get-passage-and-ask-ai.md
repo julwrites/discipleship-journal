@@ -61,7 +61,7 @@ The API requests are likely using incorrect endpoints, payload formats, or respo
 - Might be parsing wrong fields or expecting wrong structure
 
 ### 4. **API Configuration**
-- Default URL: `https://bible-api-service-779024060388.asia-southeast1.run.app`
+- Default URL: `https://mock-bible-api.example.com`
 - Might be wrong or outdated
 - Alternative reference in `.env`: `https://api.scripture.api.bible`
 
@@ -88,7 +88,7 @@ Based on exploration of `~/julwrites/bibleaiapi` and `~/julwrites/ScriptureBot`:
 ### **API Overview**
 - **Single Endpoint**: `POST /query` (both GetPassage and ChatCompletion use this)
 - **Authentication**: `X-API-KEY` header
-- **Base URL**: `https://bible-api-service-779024060388.asia-southeast1.run.app` (production)
+- **Base URL**: `https://mock-bible-api.example.com` (production)
 - **Local URL**: `http://localhost:8080`
 
 ### **Request Format**
