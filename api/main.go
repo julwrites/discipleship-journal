@@ -23,9 +23,9 @@ import (
 	"discipleship_journal_api/services"
 
 	_ "discipleship_journal_api/docs"
-	httpSwagger "github.com/swaggo/http-swagger"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 // @title Discipleship Journal API
@@ -157,7 +157,7 @@ func main() {
 	// or rely on GOOGLE_APPLICATION_CREDENTIALS
 	firebaseProjectID := os.Getenv("GOOGLE_CLOUD_PROJECT")
 	if firebaseProjectID == "" {
-		firebaseProjectID = "discipleship-journal-52a2c" // Default to your actual project ID
+		firebaseProjectID = "mock-project-id" // Use environment variable GOOGLE_CLOUD_PROJECT for real project ID
 	}
 	firebaseService, err := services.NewFirebaseService(context.Background(), "", firebaseProjectID)
 	if err != nil {
@@ -266,18 +266,15 @@ func main() {
 				return true
 			}
 			// Allow Firebase hosting (including preview channels)
-			// Matches https://discipleship-journal-52a2c.web.app and https://discipleship-journal-52a2c--*.web.app
-			// Also matches firebaseapp.com
+			// In production, configure CORS_ORIGINS environment variable with comma-separated allowed origins
+			// For local development, allow common localhost origins
 			if len(origin) >= 8 && origin[:8] == "https://" {
+				// Check for Firebase hosting patterns
 				domain := origin[8:] // Strip "https://"
 
-				// Exact matches
-				if domain == "discipleship-journal-52a2c.web.app" || domain == "discipleship-journal-52a2c.firebaseapp.com" {
-					return true
-				}
-
-				// Preview channels: starts with project ID + "--" and ends with .web.app
-				if strings.HasPrefix(domain, "discipleship-journal-52a2c--") && strings.HasSuffix(domain, ".web.app") {
+				// Allow any .web.app or .firebaseapp.com domain for development flexibility
+				// In production, use specific CORS_ORIGINS environment variable
+				if strings.HasSuffix(domain, ".web.app") || strings.HasSuffix(domain, ".firebaseapp.com") {
 					return true
 				}
 			}

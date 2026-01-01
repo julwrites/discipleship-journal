@@ -7,11 +7,11 @@ import (
 	"strings"
 	"testing"
 
+	"discipleship_journal_api/models"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"discipleship_journal_api/models"
 )
 
 // MockReadingPlanService is a mock implementation of ReadingPlanService

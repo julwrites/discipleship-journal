@@ -74,7 +74,7 @@ func TestSecretLoader_LoadSecret_WithClientButNoProjectID(t *testing.T) {
 	// Note: We can't easily create a real client in tests, so we'll test the error path
 	// In practice, if client is set, projectID should also be set
 	loader := &SecretLoader{
-		projectID: "", // Empty project ID
+		projectID: "",  // Empty project ID
 		client:    nil, // Can't create real client in test
 	}
 

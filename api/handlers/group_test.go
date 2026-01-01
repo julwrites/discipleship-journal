@@ -9,14 +9,14 @@ import (
 	"testing"
 	"time"
 
+	"discipleship_journal_api/middleware"
+	"firebase.google.com/go/v4/auth"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"firebase.google.com/go/v4/auth"
-	"discipleship_journal_api/middleware"
-	"github.com/google/uuid"
 )
 
 func TestGroupHandler_CreateGroup(t *testing.T) {
@@ -42,9 +42,9 @@ func TestGroupHandler_CreateGroup(t *testing.T) {
 			expectedStatus: http.StatusCreated,
 		},
 		{
-			name:        "Invalid Request",
-			requestBody: `{"name": ""}`, // too short
-			setupMock:   func(_ pgxmock.PgxConnIface) {},
+			name:           "Invalid Request",
+			requestBody:    `{"name": ""}`, // too short
+			setupMock:      func(_ pgxmock.PgxConnIface) {},
 			expectedStatus: http.StatusBadRequest,
 		},
 		{

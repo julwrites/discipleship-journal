@@ -62,38 +62,38 @@ func SetupIntegrationDB(t *testing.T) (*pgxpool.Pool, func()) {
 	// Helper to find migrations folder.
 	// If running from api/tests/integration, it is ../../../migrations
 	// If running from api/tests/contract, it is ../../../migrations
-    // We'll search up to 5 levels up.
-    migrationsPath := ""
-    checkPath := wd
-    for i := 0; i < 5; i++ {
-        candidate := filepath.Join(checkPath, "migrations")
-        if _, err := os.Stat(candidate); err == nil {
-            migrationsPath = candidate
-            break
-        }
-        checkPath = filepath.Dir(checkPath)
-    }
+	// We'll search up to 5 levels up.
+	migrationsPath := ""
+	checkPath := wd
+	for i := 0; i < 5; i++ {
+		candidate := filepath.Join(checkPath, "migrations")
+		if _, err := os.Stat(candidate); err == nil {
+			migrationsPath = candidate
+			break
+		}
+		checkPath = filepath.Dir(checkPath)
+	}
 
-    if migrationsPath == "" {
-        // Fallback: assume we are in api root context if the above failed (unlikely)
-        migrationsPath = "migrations"
-    }
+	if migrationsPath == "" {
+		// Fallback: assume we are in api root context if the above failed (unlikely)
+		migrationsPath = "migrations"
+	}
 
 	m, err := migrate.New(
 		"file://"+migrationsPath,
 		connStr,
 	)
 	if err != nil {
-        // Try absolute path if relative failed
-        absPath, _ := filepath.Abs("../../../migrations")
+		// Try absolute path if relative failed
+		absPath, _ := filepath.Abs("../../../migrations")
 		t.Logf("Migration path lookup failed, trying hardcoded relative path: %s", absPath)
-         m, err = migrate.New(
-            "file://"+absPath,
-            connStr,
-        )
-        if err != nil {
-		    t.Fatalf("failed to create migrate instance (path: %s): %s", migrationsPath, err)
-        }
+		m, err = migrate.New(
+			"file://"+absPath,
+			connStr,
+		)
+		if err != nil {
+			t.Fatalf("failed to create migrate instance (path: %s): %s", migrationsPath, err)
+		}
 	}
 
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
