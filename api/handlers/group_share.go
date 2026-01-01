@@ -124,9 +124,9 @@ func (h *GroupShareHandler) ShareNoteToGroup(w http.ResponseWriter, r *http.Requ
 			if err := rows.Scan(&memberID); err == nil {
 				// Send to each member
 				err := h.notificationService.SendNotification(ctx, memberID, "New Shared Note", sharerName+" shared a note in "+groupName, map[string]string{
-					"type": "note_share",
+					"type":     "note_share",
 					"group_id": groupID,
-					"note_id": req.NoteID,
+					"note_id":  req.NoteID,
 				})
 				if err != nil {
 					slog.Error("Failed to send notification", "user_id", memberID, "error", err)

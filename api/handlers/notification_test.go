@@ -7,11 +7,11 @@ import (
 	"strings"
 	"testing"
 
+	"discipleship_journal_api/middleware"
+	"firebase.google.com/go/v4/auth"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"firebase.google.com/go/v4/auth"
-	"discipleship_journal_api/middleware"
-	"github.com/google/uuid"
 )
 
 func TestNotificationHandler_RegisterDevice(t *testing.T) {
@@ -34,9 +34,9 @@ func TestNotificationHandler_RegisterDevice(t *testing.T) {
 			expectedStatus: http.StatusOK,
 		},
 		{
-			name:        "Invalid Request",
-			requestBody: `{"token": ""}`,
-			setupMock:   func(mockNotif *MockNotificationServiceWithMock) {},
+			name:           "Invalid Request",
+			requestBody:    `{"token": ""}`,
+			setupMock:      func(mockNotif *MockNotificationServiceWithMock) {},
 			expectedStatus: http.StatusBadRequest,
 		},
 	}

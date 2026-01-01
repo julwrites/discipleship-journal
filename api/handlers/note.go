@@ -83,19 +83,19 @@ func (h *NoteHandler) GetNotes(w http.ResponseWriter, r *http.Request) {
 	} else if testUserID, ok := r.Context().Value(TestUserKey).(string); ok {
 		// Test environment override
 		// If TestUserKey is present, we assume it is the internal UUID
-        h.getNotesWithUUID(w, r, testUserID)
-        return
+		h.getNotesWithUUID(w, r, testUserID)
+		return
 	} else {
-         http.Error(w, "Unauthorized", http.StatusUnauthorized)
-         return
-    }
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
 	userUUID, err := h.getUserUUID(r.Context(), uid)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
-    h.getNotesWithUUID(w, r, userUUID)
+	h.getNotesWithUUID(w, r, userUUID)
 }
 
 func (h *NoteHandler) getNotesWithUUID(w http.ResponseWriter, r *http.Request, userUUID string) {
@@ -194,19 +194,19 @@ func (h *NoteHandler) getNotesWithUUID(w http.ResponseWriter, r *http.Request, u
 // @Router /api/notes/{id} [delete]
 func (h *NoteHandler) DeleteNote(w http.ResponseWriter, r *http.Request) {
 	var userUUID string
-    var err error
+	var err error
 	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
 		userUUID, err = h.getUserUUID(r.Context(), token.UID)
-        if err != nil {
-		    http.Error(w, "User not found", http.StatusNotFound)
-		    return
-	    }
+		if err != nil {
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
 	} else if testUserID, ok := r.Context().Value(TestUserKey).(string); ok {
 		userUUID = testUserID
 	} else {
-         http.Error(w, "Unauthorized", http.StatusUnauthorized)
-         return
-    }
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
 	noteID := chi.URLParam(r, "id")
 	err = h.noteService.DeleteNote(r.Context(), userUUID, noteID)
@@ -238,19 +238,19 @@ func (h *NoteHandler) DeleteNote(w http.ResponseWriter, r *http.Request) {
 // @Router /api/notes [post]
 func (h *NoteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
 	var userUUID string
-    var err error
+	var err error
 	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
 		userUUID, err = h.getUserUUID(r.Context(), token.UID)
-        if err != nil {
-		    http.Error(w, "User not found", http.StatusNotFound)
-		    return
-	    }
+		if err != nil {
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
 	} else if testUserID, ok := r.Context().Value(TestUserKey).(string); ok {
 		userUUID = testUserID
 	} else {
-         http.Error(w, "Unauthorized", http.StatusUnauthorized)
-         return
-    }
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
 	var req CreateNoteRequest
 	if !DecodeAndValidate(w, r, &req) {
@@ -291,20 +291,20 @@ func (h *NoteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /api/notes/{id} [put]
 func (h *NoteHandler) UpdateNote(w http.ResponseWriter, r *http.Request) {
-    var userUUID string
-    var err error
+	var userUUID string
+	var err error
 	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
 		userUUID, err = h.getUserUUID(r.Context(), token.UID)
-        if err != nil {
-		    http.Error(w, "User not found", http.StatusNotFound)
-		    return
-	    }
+		if err != nil {
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
 	} else if testUserID, ok := r.Context().Value(TestUserKey).(string); ok {
 		userUUID = testUserID
 	} else {
-         http.Error(w, "Unauthorized", http.StatusUnauthorized)
-         return
-    }
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	noteID := chi.URLParam(r, "id")
 
 	var req CreateNoteRequest
@@ -345,20 +345,20 @@ func (h *NoteHandler) UpdateNote(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {string} string "Note not found"
 // @Router /api/notes/{id} [get]
 func (h *NoteHandler) GetNote(w http.ResponseWriter, r *http.Request) {
-    var userUUID string
-    var err error
+	var userUUID string
+	var err error
 	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
 		userUUID, err = h.getUserUUID(r.Context(), token.UID)
-        if err != nil {
-		    http.Error(w, "User not found", http.StatusNotFound)
-		    return
-	    }
+		if err != nil {
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
 	} else if testUserID, ok := r.Context().Value(TestUserKey).(string); ok {
 		userUUID = testUserID
 	} else {
-         http.Error(w, "Unauthorized", http.StatusUnauthorized)
-         return
-    }
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	noteID := chi.URLParam(r, "id")
 
 	sn, err := h.noteService.GetNote(r.Context(), userUUID, noteID)

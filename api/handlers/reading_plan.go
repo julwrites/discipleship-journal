@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 	"discipleship_journal_api/models"
 	"discipleship_journal_api/services"
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 type ReadingPlanHandler struct {
@@ -131,7 +131,7 @@ func (h *ReadingPlanHandler) GetPlan(w http.ResponseWriter, r *http.Request) {
 	}{
 		ID:          plan.ID,
 		Title:       plan.Title,
-		Description:       plan.Description,
+		Description: plan.Description,
 		TotalDays:   plan.Days,
 		CreatedAt:   plan.CreatedAt,
 		UpdatedAt:   plan.UpdatedAt,

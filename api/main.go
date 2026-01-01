@@ -23,9 +23,9 @@ import (
 	"discipleship_journal_api/services"
 
 	_ "discipleship_journal_api/docs"
-	httpSwagger "github.com/swaggo/http-swagger"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 // @title Discipleship Journal API

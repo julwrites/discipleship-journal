@@ -24,13 +24,13 @@ type ReadingPlanDay struct {
 }
 
 type UserReadingPlan struct {
-	ID            uuid.UUID `json:"id"`
-	UserID        uuid.UUID `json:"user_id"`
-	ReadingPlanID uuid.UUID `json:"reading_plan_id"`
-	StartDate     time.Time `json:"start_date"`
-	Status        string    `json:"status"` // active, completed
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
+	ID            uuid.UUID    `json:"id"`
+	UserID        uuid.UUID    `json:"user_id"`
+	ReadingPlanID uuid.UUID    `json:"reading_plan_id"`
+	StartDate     time.Time    `json:"start_date"`
+	Status        string       `json:"status"` // active, completed
+	CreatedAt     time.Time    `json:"created_at"`
+	UpdatedAt     time.Time    `json:"updated_at"`
 	Plan          *ReadingPlan `json:"plan,omitempty"`
 }
 
