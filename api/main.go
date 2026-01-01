@@ -24,6 +24,8 @@ import (
 
 	_ "discipleship_journal_api/docs"
 	httpSwagger "github.com/swaggo/http-swagger"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 // @title Discipleship Journal API
@@ -36,6 +38,36 @@ import (
 
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// mockDatabase implements services.DBInterface but returns errors for all operations
+// Used when database connection fails
+type mockDatabase struct {
+	connected bool
+}
+
+func (m *mockDatabase) Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error) {
+	return nil, fmt.Errorf("database not connected")
+}
+
+func (m *mockDatabase) QueryRow(ctx context.Context, sql string, args ...any) pgx.Row {
+	// Return a mock row that will error on Scan
+	return &mockRow{}
+}
+
+func (m *mockDatabase) Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error) {
+	return pgconn.CommandTag{}, fmt.Errorf("database not connected")
+}
+
+func (m *mockDatabase) Begin(ctx context.Context) (pgx.Tx, error) {
+	return nil, fmt.Errorf("database not connected")
+}
+
+// mockRow implements pgx.Row but returns error on Scan
+type mockRow struct{}
+
+func (m *mockRow) Scan(dest ...any) error {
+	return fmt.Errorf("database not connected")
+}
 
 // @host localhost:8080
 // @BasePath /
@@ -186,21 +218,30 @@ func main() {
 		bibleAIClient = services.NewMockBibleAIClient()
 	}
 
-	noteService := services.NewNoteService(database.DB)
+	// Create a safe database wrapper that handles nil database connection
+	var dbWrapper services.DBInterface
+	if database.DB != nil {
+		dbWrapper = database.DB
+	} else {
+		// Create a mock database that returns errors for all operations
+		dbWrapper = &mockDatabase{connected: false}
+	}
+
+	noteService := services.NewNoteService(dbWrapper)
 
 	bibleHandler := handlers.NewBibleHandler(bibleAIClient)
-	chatHandler := handlers.NewChatHandler(bibleAIClient, noteService, database.DB)
-	noteHandler := handlers.NewNoteHandler(database.DB, noteService)
-	userHandler := handlers.NewUserHandler(database.DB)
+	chatHandler := handlers.NewChatHandler(bibleAIClient, noteService, dbWrapper)
+	noteHandler := handlers.NewNoteHandler(dbWrapper, noteService)
+	userHandler := handlers.NewUserHandler(dbWrapper)
 
 	// Update handlers to use notification service
-	connectionHandler := handlers.NewConnectionHandler(database.DB, notificationService)
-	groupHandler := handlers.NewGroupHandler(database.DB, notificationService)
-	groupShareHandler := handlers.NewGroupShareHandler(database.DB, notificationService)
+	connectionHandler := handlers.NewConnectionHandler(dbWrapper, notificationService)
+	groupHandler := handlers.NewGroupHandler(dbWrapper, notificationService)
+	groupShareHandler := handlers.NewGroupShareHandler(dbWrapper, notificationService)
 	notificationHandler := handlers.NewNotificationHandler(notificationService)
 
 	// Reading Plans
-	readingPlanService := services.NewReadingPlanService(database.DB)
+	readingPlanService := services.NewReadingPlanService(dbWrapper)
 	readingPlanHandler := handlers.NewReadingPlanHandler(readingPlanService)
 
 	port := os.Getenv("PORT")
