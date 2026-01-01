@@ -99,6 +99,9 @@ func main() {
 		logger.Error("DATABASE_URL is empty")
 	}
 
+	// Try to connect to database, but don't exit immediately in production
+	// Cloud Run needs the container to start listening on the port first
+	dbConnected := false
 	if err := database.Connect(); err != nil {
 		// Log the error but be careful not to log the raw error if it contains the connection string
 		// pgx errors might contain the connection string
@@ -107,13 +110,15 @@ func main() {
 			errStr = strings.ReplaceAll(errStr, databaseURL, "***")
 		}
 		logger.Error("Database connection failed", "error", errStr)
-		// In production, we might want to exit here
+		// Don't exit immediately - let the server start and health check will fail
+		// This allows Cloud Run to properly start the container
 		if os.Getenv("APP_ENV") == "production" {
-			logger.Error("Exiting due to database connection failure in production")
-			os.Exit(1)
+			logger.Warn("Database connection failed in production, but continuing to start server")
 		}
+	} else {
+		dbConnected = true
+		defer database.Close()
 	}
-	defer database.Close()
 
 	// Init Firebase Service
 	// Pass empty string for saKey to use default credentials (production)
@@ -246,9 +251,21 @@ func main() {
 
 	// Routes
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		if !dbConnected {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			logger.Error("Health check failed: DB not connected")
+			if _, err := w.Write([]byte("DATABASE_CONNECTION_FAILED")); err != nil {
+				logger.Error("Failed to write health check response", "error", err)
+			}
+			return
+		}
+
 		if err := database.DB.Ping(r.Context()); err != nil {
 			w.WriteHeader(http.StatusServiceUnavailable)
-			logger.Error("Health check failed: DB not connected", "error", err)
+			logger.Error("Health check failed: DB ping failed", "error", err)
+			if _, err := w.Write([]byte("DATABASE_PING_FAILED")); err != nil {
+				logger.Error("Failed to write health check response", "error", err)
+			}
 			return
 		}
 
