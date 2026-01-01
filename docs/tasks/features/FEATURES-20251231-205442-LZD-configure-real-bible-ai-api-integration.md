@@ -22,8 +22,8 @@ The application currently only returns mock data from the Bible AI API instead o
 
 ## Steps
 1. **Verify current configuration**: The project already uses a custom BibleAIAPI service
-   - **API URL**: `https://bible-api-service-779024060388.asia-southeast1.run.app`
-   - **API Key**: `a4ca1635ce886defb7233fe7e44e0ac77c0daf7a2156d939afd02608e5856163`
+   - **API URL**: `https://mock-bible-api.example.com`
+   - **API Key**: `REPLACE_WITH_YOUR_BIBLE_API_KEY`
    - **Location**: Configured in `.env.local` and `docker-compose.yml`
 
 2. **Fix API integration issues** (prerequisite: see task `DOMAIN-20260101-100010-IWD`):

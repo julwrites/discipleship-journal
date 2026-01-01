@@ -133,7 +133,7 @@ SERVICE_ACCOUNT_KEY='{"type": "service_account", "project_id": "...", ...}'
 ```
 
 #### Step 3: Update API Configuration
-The backend needs to know which Firebase project to use. The code has been updated to read from the `GOOGLE_CLOUD_PROJECT` environment variable, with a fallback to `"discipleship-journal-52a2c"`.
+The backend needs to know which Firebase project to use. The code has been updated to read from the `GOOGLE_CLOUD_PROJECT` environment variable, with a fallback to a mock project ID.
 
 If you need to change the project ID, you can either:
 1. Set the `GOOGLE_CLOUD_PROJECT` environment variable to your Firebase project ID
@@ -143,7 +143,7 @@ The current configuration in `api/main.go:61-65`:
 ```go
 firebaseProjectID := os.Getenv("GOOGLE_CLOUD_PROJECT")
 if firebaseProjectID == "" {
-    firebaseProjectID = "discipleship-journal-52a2c" // Default to your actual project ID
+    firebaseProjectID = "YOUR_FIREBASE_PROJECT_ID" // Default to your actual project ID
 }
 firebaseService, err := services.NewFirebaseService(context.Background(), "", firebaseProjectID)
 ```
@@ -315,9 +315,9 @@ These are baked into the JavaScript during `npm run build`:
 **Example values** (from your `.env.local`):
 ```bash
 VITE_FIREBASE_API_KEY=AIzaSyCQoQ4pAL4fa3IG_rmzWbWhXtgqBcTw2ns
-VITE_FIREBASE_AUTH_DOMAIN=discipleship-journal-52a2c.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=discipleship-journal-52a2c
-VITE_FIREBASE_STORAGE_BUCKET=discipleship-journal-52a2c.firebasestorage.app
+VITE_FIREBASE_AUTH_DOMAIN=YOUR_FIREBASE_PROJECT_ID.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=YOUR_FIREBASE_PROJECT_ID
+VITE_FIREBASE_STORAGE_BUCKET=YOUR_FIREBASE_PROJECT_ID.firebasestorage.app
 VITE_FIREBASE_MESSAGING_SENDER_ID=995319008345
 VITE_FIREBASE_APP_ID=1:995319008345:web:ba91b8f5eb3d521e98f548
 
@@ -348,11 +348,11 @@ These secrets are used by GitHub Actions to deploy:
 |--------|---------|---------------|--------------|
 | `GCP_SA_KEY` | GCP Service Account JSON key | `{ "type": "service_account", ... }` | GitHub Secrets |
 | `FIREBASE_SERVICE_ACCOUNT_DISCIPLESHIP_JOURNAL` | Firebase service account | `{ "type": "service_account", ... }` | GitHub Secrets |
-| `GCP_PROJECT_ID` | GCP Project ID | `discipleship-journal-52a2c` (same as Firebase) | GitHub Secrets |
+| `GCP_PROJECT_ID` | GCP Project ID | `YOUR_FIREBASE_PROJECT_ID` (same as Firebase) | GitHub Secrets |
 | `GCP_REGION` | GCP Region | `asia-southeast1` | GitHub Secrets |
 | `GCP_SERVICE_NAME` | Cloud Run service name | `discipleship-journal-api` | GitHub Secrets |
 | `GCP_ARTIFACT_REPOSITORY` | Artifact Registry repo | `discipleship-journal-repo` | GitHub Secrets |
-| `VITE_FIREBASE_PROJECT_ID` | Firebase Project ID | `discipleship-journal-52a2c` | GitHub Secrets |
+| `VITE_FIREBASE_PROJECT_ID` | Firebase Project ID | `YOUR_FIREBASE_PROJECT_ID` | GitHub Secrets |
 | `DATABASE_URL` | PostgreSQL connection string | `postgres://...` | GitHub Secrets |
 
 ### 🚀 Step-by-Step Deployment Guide
@@ -449,10 +449,10 @@ Now that you have the backend URL:
 
 #### Scenario 1: Default Firebase Domain
 ```
-Frontend: https://discipleship-journal-52a2c.web.app
+Frontend: https://YOUR_FIREBASE_PROJECT_ID.web.app
 Backend API: https://discipleship-journal-api-uc-a.run.app/api
 VITE_API_URL: https://discipleship-journal-api-uc-a.run.app/api
-VITE_FIREBASE_AUTH_DOMAIN: discipleship-journal-52a2c.firebaseapp.com
+VITE_FIREBASE_AUTH_DOMAIN: YOUR_FIREBASE_PROJECT_ID.firebaseapp.com
 ```
 
 #### Scenario 2: Custom Domain (journal.navteens.org)
