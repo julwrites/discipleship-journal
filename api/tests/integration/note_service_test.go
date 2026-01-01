@@ -144,9 +144,15 @@ func TestNoteService_Integration(t *testing.T) {
 
 		var foundN1, foundN2, foundN3 bool
 		for _, n := range notes {
-			if n.ID == n1.ID { foundN1 = true }
-			if n.ID == n2.ID { foundN2 = true }
-			if n.ID == n3.ID { foundN3 = true }
+			if n.ID == n1.ID {
+				foundN1 = true
+			}
+			if n.ID == n2.ID {
+				foundN2 = true
+			}
+			if n.ID == n3.ID {
+				foundN3 = true
+			}
 		}
 
 		assert.True(t, foundN1, "N1 should be found")
@@ -155,17 +161,23 @@ func TestNoteService_Integration(t *testing.T) {
 
 		// With pagination 10, we should see them if total is small.
 		if len(notes) >= 3 {
-             // Check relative order of our notes
-             idx1, idx2, idx3 := -1, -1, -1
-             for i, n := range notes {
-                 if n.ID == n1.ID { idx1 = i }
-                 if n.ID == n2.ID { idx2 = i }
-                 if n.ID == n3.ID { idx3 = i }
-             }
-             if idx1 != -1 && idx2 != -1 && idx3 != -1 {
-                 assert.True(t, idx1 < idx2, "N1 should be before N2")
-                 assert.True(t, idx2 < idx3, "N2 should be before N3")
-             }
+			// Check relative order of our notes
+			idx1, idx2, idx3 := -1, -1, -1
+			for i, n := range notes {
+				if n.ID == n1.ID {
+					idx1 = i
+				}
+				if n.ID == n2.ID {
+					idx2 = i
+				}
+				if n.ID == n3.ID {
+					idx3 = i
+				}
+			}
+			if idx1 != -1 && idx2 != -1 && idx3 != -1 {
+				assert.True(t, idx1 < idx2, "N1 should be before N2")
+				assert.True(t, idx2 < idx3, "N2 should be before N3")
+			}
 		}
 
 		// Test Date Filtering
@@ -179,9 +191,15 @@ func TestNoteService_Integration(t *testing.T) {
 		foundN2 = false
 		foundN3 = false
 		for _, n := range notes {
-			if n.ID == n1.ID { foundN1 = true }
-			if n.ID == n2.ID { foundN2 = true }
-			if n.ID == n3.ID { foundN3 = true }
+			if n.ID == n1.ID {
+				foundN1 = true
+			}
+			if n.ID == n2.ID {
+				foundN2 = true
+			}
+			if n.ID == n3.ID {
+				foundN3 = true
+			}
 		}
 		assert.False(t, foundN1, "N1 (48h old) should be excluded")
 		assert.True(t, foundN2, "N2 (24h old) should be included")

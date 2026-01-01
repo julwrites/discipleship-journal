@@ -5,10 +5,10 @@ import (
 	"errors"
 	"testing"
 
+	"firebase.google.com/go/v4/messaging"
 	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"firebase.google.com/go/v4/messaging"
 )
 
 // MockMessagingClient is a mock for MessagingClientInterface

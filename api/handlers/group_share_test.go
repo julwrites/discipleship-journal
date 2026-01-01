@@ -99,9 +99,9 @@ func TestShareNoteToGroup(t *testing.T) {
 			WillReturnRows(mockDB.NewRows([]string{"user_id"}).AddRow(memberID.String()))
 
 		mockNotify.On("SendNotification", mock.Anything, memberID.String(), "New Shared Note", "Test User shared a note in Test Group", map[string]string{
-			"type": "note_share",
+			"type":     "note_share",
 			"group_id": groupID.String(),
-			"note_id": noteID.String(),
+			"note_id":  noteID.String(),
 		}).Return(nil)
 
 		handler.ShareNoteToGroup(w, req)

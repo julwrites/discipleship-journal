@@ -11,7 +11,7 @@ import (
 	"discipleship_journal_api/services"
 	"firebase.google.com/go/v4/auth"
 	chi "github.com/go-chi/chi/v5"
-    "github.com/google/uuid"
+	"github.com/google/uuid"
 	pgx "github.com/jackc/pgx/v5"
 )
 
@@ -52,22 +52,22 @@ func (h *GroupHandler) CreateGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    var userUUID string
-    var err error
+	var userUUID string
+	var err error
 	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
-        var id uuid.UUID
+		var id uuid.UUID
 		id, err = GetUserUUID(r.Context(), token.UID)
-        if err != nil {
-		    http.Error(w, "User not found", http.StatusInternalServerError)
-		    return
-	    }
-        userUUID = id.String()
+		if err != nil {
+			http.Error(w, "User not found", http.StatusInternalServerError)
+			return
+		}
+		userUUID = id.String()
 	} else if testUserID, ok := r.Context().Value(TestUserKey).(string); ok {
 		userUUID = testUserID
 	} else {
-         http.Error(w, "Unauthorized", http.StatusUnauthorized)
-         return
-    }
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
 	tx, err := h.db.Begin(r.Context())
 	if err != nil {

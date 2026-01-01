@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
+	"discipleship_journal_api/models"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"discipleship_journal_api/models"
 )
 
 type ReadingPlanService interface {
