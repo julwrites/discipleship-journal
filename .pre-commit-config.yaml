@@ -1,0 +1,66 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+      - id: check-merge-conflict
+      - id: detect-private-key
+
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: |
+          (?x)^(
+            .*\.lock|
+            .*\.min\.(js|css)|
+            .*\.svg|
+            .*\.png|
+            .*\.jpg|
+            .*\.jpeg|
+            .*\.gif|
+            .*\.ico|
+            .*\.pdf|
+            .*\.zip|
+            .*\.tar\.gz|
+            node_modules/.*|
+            dist/.*|
+            build/.*|
+            .git/.*
+          )$
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.2
+    hooks:
+      - id: gitleaks
+        args: ['--verbose', '--redact']
+
+  - repo: local
+    hooks:
+      - id: check-for-secrets
+        name: Check for common secret patterns
+        entry: bash -c '
+          echo "🔍 Running custom secret pattern checks..."
+          PATTERNS=(
+            "password[[:space:]]*=[[:space:]]*[\"'"'"']?[^\"'"'"'[:space:]]+"
+            "api[_-]?key[[:space:]]*=[[:space:]]*[\"'"'"']?[^\"'"'"'[:space:]]+"
+            "secret[[:space:]]*=[[:space:]]*[\"'"'"']?[^\"'"'"'[:space:]]+"
+            "token[[:space:]]*=[[:space:]]*[\"'"'"']?[^\"'"'"'[:space:]]+"
+            "credential[[:space:]]*=[[:space:]]*[\"'"'"']?[^\"'"'"'[:space:]]+"
+          )
+          for pattern in "${PATTERNS[@]}"; do
+            if git diff --cached --name-only | xargs grep -n -E "$pattern" 2>/dev/null; then
+              echo "❌ Found potential secret matching pattern: $pattern"
+              echo "   Please remove or properly secure any secrets before committing."
+              exit 1
+            fi
+          done
+          echo "✅ No obvious secrets found in staged files"
+        '
+        language: system
+        stages: [commit]

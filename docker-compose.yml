@@ -25,8 +25,8 @@ services:
       APP_ENV: ${APP_ENV:-development}
       TEST_REAL_BIBLE_API: ${TEST_REAL_BIBLE_API:-false}
       GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-mock-project}
-      BIBLE_API_URL: ${BIBLE_API_URL:-https://bible-api-service-779024060388.asia-southeast1.run.app}
-      BIBLE_API_KEY: ${BIBLE_API_KEY:-a4ca1635ce886defb7233fe7e44e0ac77c0daf7a2156d939afd02608e5856163}
+      BIBLE_API_URL: ${BIBLE_API_URL:-https://mock-bible-api.example.com}
+      BIBLE_API_KEY: ${BIBLE_API_KEY:-REPLACE_WITH_YOUR_BIBLE_API_KEY}
       # For local dev, we might need to handle Firebase Auth.
       # If using an emulator or service account, mount it here.
     env_file:
