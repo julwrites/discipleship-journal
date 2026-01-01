@@ -38,3 +38,13 @@ See `web/README.md` for frontend-specific instructions.
 See `docs/tasks/` for the task board and status.
 See `docs/features/` for feature details.
 See `docs/architecture/` for design docs.
+See `SECURITY.md` for security practices and guidelines.
+
+## Security
+This project includes pre-commit hooks for secret scanning to prevent accidental commits of sensitive information. To set up:
+
+```bash
+./scripts/setup-pre-commit.sh
+```
+
+**Important**: Never commit API keys, passwords, or tokens. Always use environment variables.
