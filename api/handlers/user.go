@@ -182,9 +182,6 @@ func (h *UserHandler) CreateOrUpdateUser(w http.ResponseWriter, r *http.Request)
 			http.Error(w, "Database error", http.StatusInternalServerError)
 			return
 		}
-	} else {
-		// Even if no update, we still need to populate settings map from settingsBytes we fetched in SELECT
-		// We already did fetch, but need to unmarshal settingsBytes
 	}
 
 	if len(settingsBytes) > 0 {
