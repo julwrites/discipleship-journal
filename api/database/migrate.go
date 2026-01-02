@@ -8,7 +8,8 @@ import (
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
+	"discipleship_journal_api/migrations"
 )
 
 // RunMigrations applies all pending database migrations
@@ -77,9 +78,13 @@ func RunMigrations() error {
 
 	slog.Info("Running database migrations...", "url_masked", maskedURL)
 
-	// Source URL: file://migrations
-	// This assumes the migrations folder is in the current working directory
-	m, err := migrate.New("file://migrations", dbURL)
+	// Use embedded migrations
+	sourceDriver, err := iofs.New(migrations.FS, ".")
+	if err != nil {
+		return fmt.Errorf("failed to create iofs source driver: %w", err)
+	}
+
+	m, err := migrate.NewWithSourceInstance("iofs", sourceDriver, dbURL)
 	if err != nil {
 		return fmt.Errorf("failed to initialize migrate: %w", err)
 	}
