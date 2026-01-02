@@ -22,6 +22,11 @@ if [ -n "$GCP_SERVICE_ACCOUNT" ]; then
   DEPLOY_ARGS="--service-account $GCP_SERVICE_ACCOUNT"
 fi
 
+if [ -n "$CLOUD_SQL_INSTANCE" ]; then
+  echo "Using Cloud SQL instance: $CLOUD_SQL_INSTANCE"
+  DEPLOY_ARGS="$DEPLOY_ARGS --set-cloudsql-instances $CLOUD_SQL_INSTANCE"
+fi
+
 gcloud run deploy $SERVICE_NAME \
   --image $IMAGE_NAME \
   --platform managed \
