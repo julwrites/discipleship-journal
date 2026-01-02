@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -24,16 +25,30 @@ func BuildConnectionString() (string, error) {
 		return "", fmt.Errorf("DB_USERNAME, DB_PASSWORD, and DB_NAME environment variables are required")
 	}
 
+	// URL encode the user info
+	userInfo := url.UserPassword(username, password)
+
 	// Check if we're using Cloud SQL (Unix socket) or standard TCP
 	cloudSQLInstance := os.Getenv("CLOUD_SQL_INSTANCE")
 
 	if cloudSQLInstance != "" {
 		// Cloud SQL Unix socket connection
 		// Format: postgres://username:password@/dbname?host=/cloudsql/project:region:instance&sslmode=disable
-		return fmt.Sprintf(
-			"postgres://%s:%s@/%s?host=/cloudsql/%s&sslmode=disable",
-			username, password, dbName, cloudSQLInstance,
-		), nil
+		// We use url.URL to construct this safely, but Cloud SQL format is specific about host param
+		// The standard format often used is parsing the host query param.
+
+		// To be safe and cleaner, we can construct the URL struct
+		u := url.URL{
+			Scheme: "postgres",
+			User:   userInfo,
+			Path:   "/" + dbName,
+		}
+		q := u.Query()
+		q.Set("host", "/cloudsql/"+cloudSQLInstance)
+		q.Set("sslmode", "disable")
+		u.RawQuery = q.Encode()
+
+		return u.String(), nil
 	} else {
 		// Standard TCP connection (local/dev)
 		host := os.Getenv("DB_HOST")
@@ -46,11 +61,17 @@ func BuildConnectionString() (string, error) {
 			port = "5432"
 		}
 
-		// Format: postgres://username:password@host:port/dbname?sslmode=disable
-		return fmt.Sprintf(
-			"postgres://%s:%s@%s:%s/%s?sslmode=disable",
-			username, password, host, port, dbName,
-		), nil
+		u := url.URL{
+			Scheme: "postgres",
+			User:   userInfo,
+			Host:   fmt.Sprintf("%s:%s", host, port),
+			Path:   "/" + dbName,
+		}
+		q := u.Query()
+		q.Set("sslmode", "disable")
+		u.RawQuery = q.Encode()
+
+		return u.String(), nil
 	}
 }
 
