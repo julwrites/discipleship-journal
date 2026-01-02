@@ -29,29 +29,37 @@ func TestUserHandler_CreateOrUpdateUser(t *testing.T) {
 	userUUID := uuid.New()
 	firebaseUID := "test-firebase-uid"
 	email := "test@example.com"
-	reqBody := `{"full_name": "Test User", "avatar_url": "http://example.com/avatar.jpg"}`
+	// Updated request body to match new struct and validation (alphanum)
+	reqBody := `{"username": "TestUser", "settings": {"theme": "dark"}}`
 
-	t.Run("Create User (Upsert)", func(t *testing.T) {
+	t.Run("Create User (Upsert - New User)", func(t *testing.T) {
 		req, _ := http.NewRequest("POST", "/users", strings.NewReader(reqBody))
 
-		// Mock context with user token
 		token := &auth.Token{
 			UID: firebaseUID,
 			Claims: map[string]interface{}{
 				"email": email,
 			},
 		}
-		// Manually inject context as middleware.WithUser is not exported or available
 		ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
 		req = req.WithContext(ctx)
 
 		w := httptest.NewRecorder()
 
-		// Expect SELECT (handler doesn't actually insert/update, just reads)
+		// 1. SELECT returns No Rows
 		mockDB.ExpectQuery(regexp.QuoteMeta("SELECT id, firebase_uid, email, username, settings, created_at, updated_at FROM users WHERE firebase_uid=$1")).
 			WithArgs(firebaseUID).
-			WillReturnRows(pgxmock.NewRows([]string{"id", "firebase_uid", "email", "username", "settings", "created_at", "updated_at"}).
-				AddRow(userUUID.String(), firebaseUID, email, "Test User", "{}", time.Now(), time.Now()))
+			WillReturnError(pgx.ErrNoRows)
+
+		// 2. INSERT
+		settingsJSON := []byte(`{"theme":"dark"}`)
+		testUser := "TestUser"
+		rows := pgxmock.NewRows([]string{"id", "firebase_uid", "email", "username", "settings", "created_at", "updated_at"}).
+			AddRow(userUUID.String(), firebaseUID, email, &testUser, settingsJSON, time.Now(), time.Now())
+
+		mockDB.ExpectQuery(regexp.QuoteMeta("INSERT INTO users (firebase_uid, email, username, settings)")).
+			WithArgs(firebaseUID, email, pgxmock.AnyArg(), pgxmock.AnyArg()).
+			WillReturnRows(rows)
 
 		handler.CreateOrUpdateUser(w, req)
 
@@ -61,10 +69,11 @@ func TestUserHandler_CreateOrUpdateUser(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, userUUID.String(), user.ID)
 		assert.Equal(t, firebaseUID, user.FirebaseUID)
-		assert.Equal(t, "Test User", user.Username)
+		assert.NotNil(t, user.Username)
+		assert.Equal(t, "TestUser", *user.Username)
 	})
 
-	t.Run("Update User Handler", func(t *testing.T) {
+	t.Run("Update User Handler (Existing User)", func(t *testing.T) {
 		req, _ := http.NewRequest("PUT", "/users", strings.NewReader(reqBody))
 
 		token := &auth.Token{
@@ -78,15 +87,33 @@ func TestUserHandler_CreateOrUpdateUser(t *testing.T) {
 
 		w := httptest.NewRecorder()
 
-		// Expect SELECT (handler doesn't actually insert/update, just reads)
+		// 1. SELECT returns User
+		oldUser := "OldName"
+		settingsJSON := []byte("{}")
+		rows := pgxmock.NewRows([]string{"id", "firebase_uid", "email", "username", "settings", "created_at", "updated_at"}).
+			AddRow(userUUID.String(), firebaseUID, email, &oldUser, settingsJSON, time.Now(), time.Now())
+
 		mockDB.ExpectQuery(regexp.QuoteMeta("SELECT id, firebase_uid, email, username, settings, created_at, updated_at FROM users WHERE firebase_uid=$1")).
 			WithArgs(firebaseUID).
-			WillReturnRows(pgxmock.NewRows([]string{"id", "firebase_uid", "email", "username", "settings", "created_at", "updated_at"}).
-				AddRow(userUUID.String(), firebaseUID, email, "Test User", "{}", time.Now(), time.Now()))
+			WillReturnRows(rows)
+
+		// 2. UPDATE
+		updatedUser := "TestUser"
+		updatedSettings := []byte(`{"theme":"dark"}`)
+		updatedRows := pgxmock.NewRows([]string{"id", "firebase_uid", "email", "username", "settings", "created_at", "updated_at"}).
+			AddRow(userUUID.String(), firebaseUID, email, &updatedUser, updatedSettings, time.Now(), time.Now())
+
+		mockDB.ExpectQuery(regexp.QuoteMeta("UPDATE users SET updated_at = NOW(), username = $1, settings = $2 WHERE firebase_uid = $3 RETURNING")).
+			WithArgs(pgxmock.AnyArg(), pgxmock.AnyArg(), firebaseUID).
+			WillReturnRows(updatedRows)
 
 		handler.UpdateUser(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
+		var user User
+		err := json.NewDecoder(w.Body).Decode(&user)
+		assert.NoError(t, err)
+		assert.Equal(t, "TestUser", *user.Username)
 	})
 
 	t.Run("Unauthorized", func(t *testing.T) {
@@ -121,10 +148,12 @@ func TestUserHandler_GetMe(t *testing.T) {
 
 		w := httptest.NewRecorder()
 
+		testUser := "TestUser"
+		settingsJSON := []byte("{}")
 		mockDB.ExpectQuery(regexp.QuoteMeta("SELECT id, firebase_uid, email, username, settings, created_at, updated_at FROM users WHERE firebase_uid=$1")).
 			WithArgs(firebaseUID).
 			WillReturnRows(pgxmock.NewRows([]string{"id", "firebase_uid", "email", "username", "settings", "created_at", "updated_at"}).
-				AddRow(userUUID.String(), firebaseUID, "test@example.com", "Test User", "{}", time.Now(), time.Now()))
+				AddRow(userUUID.String(), firebaseUID, "test@example.com", &testUser, settingsJSON, time.Now(), time.Now()))
 
 		handler.GetMe(w, req)
 
@@ -133,6 +162,7 @@ func TestUserHandler_GetMe(t *testing.T) {
 		err := json.NewDecoder(w.Body).Decode(&user)
 		assert.NoError(t, err)
 		assert.Equal(t, userUUID.String(), user.ID)
+		assert.Equal(t, "TestUser", *user.Username)
 	})
 
 	t.Run("Not Found", func(t *testing.T) {
