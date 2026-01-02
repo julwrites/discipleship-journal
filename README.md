@@ -31,14 +31,20 @@ This will start:
 - **Postgres DB**: localhost:5432
 - **Migrations**: Auto-run on startup
 
+For detailed setup instructions, see:
+- [Docker Setup](docs/setup/docker.md)
+- [Firebase Setup](docs/setup/firebase.md)
+- [Secrets Setup](docs/setup/secrets.md)
+
 ### Manual Setup
 See `web/README.md` for frontend-specific instructions.
 
 ## Documentation
-See `docs/tasks/` for the task board and status.
-See `docs/features/` for feature details.
-See `docs/architecture/` for design docs.
-See `SECURITY.md` for security practices and guidelines.
+- **Tasks & Status**: `docs/tasks/`
+- **Features**: `docs/features/`
+- **Architecture**: `docs/architecture/`
+- **Testing**: `docs/testing/`
+- **Security**: `docs/security/practices.md`
 
 ## Security
 This project includes pre-commit hooks for secret scanning to prevent accidental commits of sensitive information. To set up:
@@ -50,4 +56,4 @@ This project includes pre-commit hooks for secret scanning to prevent accidental
 **Important**: Never commit API keys, passwords, or tokens. Always use environment variables.
 
 ## Secrets Configuration
-See [SECRETS_SETUP.md](SECRETS_SETUP.md) for detailed instructions on setting up database and API secrets for both local development and production deployment.
+See [Secrets Setup](docs/setup/secrets.md) for detailed instructions on setting up database and API secrets for both local development and production deployment.
