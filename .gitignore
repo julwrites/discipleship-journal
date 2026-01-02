@@ -29,3 +29,6 @@ yarn-error.log*
 # Build artifacts
 coverage/
 test-results/
+
+# Go binaries
+*/discipleship_journal_api

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"net/url"
 	"os"
 	"os/signal"
 	"strings"
@@ -94,54 +93,40 @@ func main() {
 		defer secretLoader.Close()
 	}
 
-	// Load database URL from Secret Manager or environment variable
-	var databaseURL string
-	if secretLoader != nil {
-		databaseURL, err = secretLoader.LoadSecret(context.Background(), "DATABASE_URL")
-		if err != nil {
-			logger.Error("Failed to load DATABASE_URL secret", "error", err)
-			// Don't exit - let database.Connect() handle the empty URL
+	// Load database configuration from Secret Manager or environment variables
+	loadDatabaseSecret := func(secretName string) string {
+		var value string
+		if secretLoader != nil {
+			value, _ = secretLoader.LoadSecret(context.Background(), secretName)
+			if value == "" {
+				value = os.Getenv(secretName)
+			}
+		} else {
+			value = os.Getenv(secretName)
 		}
-	} else {
-		databaseURL = os.Getenv("DATABASE_URL")
+		return value
 	}
 
-	// Set DATABASE_URL environment variable for database.Connect()
-	if databaseURL != "" {
-		os.Setenv("DATABASE_URL", databaseURL)
-
-		// Log masked database URL for debugging
-		maskedURL := databaseURL
-		u, err := url.Parse(databaseURL)
-		if err == nil {
-			maskedURL = u.Redacted()
-		} else {
-			// Fallback masking if parsing fails
-			if strings.Contains(maskedURL, "@") {
-				parts := strings.Split(maskedURL, "@")
-				if len(parts) > 1 {
-					maskedURL = "***@" + parts[1]
-				}
+	// Load individual database components
+	dbSecrets := []string{"DB_USERNAME", "DB_PASSWORD", "DB_NAME", "DB_HOST", "DB_PORT", "CLOUD_SQL_INSTANCE"}
+	for _, secret := range dbSecrets {
+		value := loadDatabaseSecret(secret)
+		if value != "" {
+			os.Setenv(secret, value)
+			// Mask password in logs
+			if secret == "DB_PASSWORD" {
+				logger.Info("Loaded database secret", "secret", secret, "value", "***")
 			} else {
-				maskedURL = "Invalid URL format (hidden)"
+				logger.Info("Loaded database secret", "secret", secret, "value", value)
 			}
 		}
-		logger.Info("Attempting to connect to database", "url", maskedURL)
-	} else {
-		logger.Error("DATABASE_URL is empty")
 	}
 
 	// Try to connect to database, but don't exit immediately in production
 	// Cloud Run needs the container to start listening on the port first
 	dbConnected := false
 	if err := database.Connect(); err != nil {
-		// Log the error but be careful not to log the raw error if it contains the connection string
-		// pgx errors might contain the connection string
-		errStr := err.Error()
-		if databaseURL != "" && strings.Contains(errStr, databaseURL) {
-			errStr = strings.ReplaceAll(errStr, databaseURL, "***")
-		}
-		logger.Error("Database connection failed", "error", errStr)
+		logger.Error("Database connection failed", "error", err)
 		// Don't exit immediately - let the server start and health check will fail
 		// This allows Cloud Run to properly start the container
 		if os.Getenv("APP_ENV") == "production" {

@@ -20,7 +20,14 @@ services:
   api:
     build: ./api
     environment:
-      DATABASE_URL: ${DATABASE_URL:-postgres://user:password@db:5432/discipleship_journal?sslmode=disable}
+      # Database configuration - individual components only
+      DB_USERNAME: ${DB_USERNAME:-user}
+      DB_PASSWORD: ${DB_PASSWORD:-password}
+      DB_NAME: ${DB_NAME:-discipleship_journal}
+      DB_HOST: ${DB_HOST:-db}
+      DB_PORT: ${DB_PORT:-5432}
+      CLOUD_SQL_INSTANCE: ${CLOUD_SQL_INSTANCE:-}
+      # Other configuration
       PORT: ${PORT:-8080}
       APP_ENV: ${APP_ENV:-development}
       TEST_REAL_BIBLE_API: ${TEST_REAL_BIBLE_API:-false}
@@ -61,10 +68,18 @@ services:
     image: migrate/migrate
     volumes:
       - ./api/migrations:/migrations
+      - ./scripts:/scripts
+    env_file:
+      - .env
+      - .env.local
     command:
-      - -path=/migrations
-      - -database=${DATABASE_URL:-postgres://user:password@db:5432/discipleship_journal?sslmode=disable}
-      - up
+      - sh
+      - -c
+      - |
+        # Build DATABASE_URL from individual components
+        DATABASE_URL=$(/scripts/build-db-url.sh)
+        echo "Using database URL: $(echo $DATABASE_URL | sed 's/:[^:]*@/:***@/')"
+        migrate -path=/migrations -database="$DATABASE_URL" up
     depends_on:
       db:
         condition: service_healthy

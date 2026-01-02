@@ -48,3 +48,6 @@ This project includes pre-commit hooks for secret scanning to prevent accidental
 ```
 
 **Important**: Never commit API keys, passwords, or tokens. Always use environment variables.
+
+## Secrets Configuration
+See [SECRETS_SETUP.md](SECRETS_SETUP.md) for detailed instructions on setting up database and API secrets for both local development and production deployment.
