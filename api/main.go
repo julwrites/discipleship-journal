@@ -135,6 +135,14 @@ func main() {
 	} else {
 		dbConnected = true
 		defer database.Close()
+
+		// Run database migrations if connected
+		if err := database.RunMigrations(); err != nil {
+			logger.Error("Database migrations failed", "error", err)
+			// In production, we might want to exit if migrations fail as schema might be incompatible.
+			// However, for robustness, we'll log and continue, unless it's a critical error.
+			// The user can check logs.
+		}
 	}
 
 	// Init Firebase Service
