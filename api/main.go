@@ -239,7 +239,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "8088"
 	}
 
 	r := chi.NewRouter()
@@ -250,16 +250,22 @@ func main() {
 	r.Use(chimiddleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
 		AllowOriginFunc: func(r *http.Request, origin string) bool {
+			// Check env var first for explicit allowed origins
+			if allowedOrigins := os.Getenv("CORS_ALLOWED_ORIGINS"); allowedOrigins != "" {
+				for _, allowed := range strings.Split(allowedOrigins, ",") {
+					if strings.TrimSpace(allowed) == origin {
+						return true
+					}
+				}
+			}
+
 			// Allow local development
-			if origin == "http://localhost:5173" || origin == "http://localhost:4173" || origin == "http://localhost:8080" || origin == "http://localhost:3000" {
+			if origin == "http://localhost:5173" || origin == "http://localhost:4173" || origin == "http://localhost:8080" || origin == "http://localhost:8088" || origin == "http://localhost:3000" {
 				return true
 			}
-			// Allow production domains
-			if origin == "https://journal.tehj.io" {
-				return true
-			}
+
 			// Allow Firebase hosting (including preview channels)
-			// In production, configure CORS_ORIGINS environment variable with comma-separated allowed origins
+			// In production, configure CORS_ALLOWED_ORIGINS environment variable with comma-separated allowed origins
 			// For local development, allow common localhost origins
 			if len(origin) >= 8 && origin[:8] == "https://" {
 				// Check for Firebase hosting patterns
