@@ -94,17 +94,17 @@ echo ""
 echo "🔍 Checking API Configuration..."
 
 # Check API URL
-if [ -n "$VITE_API_URL" ]; then
-    echo "✅ VITE_API_URL: $VITE_API_URL"
+if [ -n "$GCP_API_URL" ]; then
+    echo "✅ GCP_API_URL: $GCP_API_URL"
 
     # Check if it's a local URL
-    if [[ "$VITE_API_URL" == *"localhost"* ]] || [[ "$VITE_API_URL" == *"127.0.0.1"* ]]; then
+    if [[ "$GCP_API_URL" == *"localhost"* ]] || [[ "$GCP_API_URL" == *"127.0.0.1"* ]]; then
         echo "ℹ️  Using local API URL (for development)"
     else
         echo "ℹ️  Using remote API URL (for production)"
     fi
 else
-    echo "❌ VITE_API_URL: Not set"
+    echo "❌ GCP_API_URL: Not set"
 fi
 
 echo ""
