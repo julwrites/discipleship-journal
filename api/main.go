@@ -139,9 +139,8 @@ func main() {
 		// Run database migrations if connected
 		if err := database.RunMigrations(); err != nil {
 			logger.Error("Database migrations failed", "error", err)
-			// In production, we might want to exit if migrations fail as schema might be incompatible.
-			// However, for robustness, we'll log and continue, unless it's a critical error.
-			// The user can check logs.
+			// Migration failure is critical - the application cannot function without the correct schema.
+			os.Exit(1)
 		}
 	}
 
