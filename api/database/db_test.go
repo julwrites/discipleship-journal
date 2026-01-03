@@ -64,7 +64,7 @@ func TestBuildConnectionString(t *testing.T) {
 			dbName:        "postgres",
 			cloudInstance: "project:region:instance",
 			wantContains: []string{
-				"postgres://postgres:yd%25%5E9VLMi%5BJ=%25d%3Axxxxxx@cloudsql/postgres",
+				"postgres://postgres:yd%25%5E9VLMi%5BJ=%25d%3Axxxxxx@127.0.0.1/postgres",
 				"sslmode=disable",
 			},
 		},
@@ -76,7 +76,7 @@ func TestBuildConnectionString(t *testing.T) {
 			cloudInstance: "project:region:instance",
 			wantContains: []string{
 				// User only, no password
-				"postgres://sa-email%40project.iam@cloudsql/mydb",
+				"postgres://sa-email%40project.iam@127.0.0.1/mydb",
 				"sslmode=disable",
 			},
 		},

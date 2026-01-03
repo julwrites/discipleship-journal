@@ -57,7 +57,7 @@ func BuildConnectionString() (string, error) {
 		u := url.URL{
 			Scheme: "postgres",
 			User:   userInfo,
-			Host:   "cloudsql", // Placeholder
+			Host:   "127.0.0.1", // Placeholder
 			Path:   "/" + dbName,
 		}
 		q := u.Query()
