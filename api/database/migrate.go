@@ -1,82 +1,60 @@
 package database
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
-	"net/url"
+	"net"
 	"os"
 
-	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	"github.com/golang-migrate/migrate/v4/source/iofs"
+	"cloud.google.com/go/cloudsqlconn"
 	"discipleship_journal_api/migrations"
+	"github.com/golang-migrate/migrate/v4"
+	pgx_migrate "github.com/golang-migrate/migrate/v4/database/pgx/v5"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/stdlib"
 )
 
 // RunMigrations applies all pending database migrations
 func RunMigrations() error {
-	dbHost := os.Getenv("DB_HOST")
-	dbPort := os.Getenv("DB_PORT")
-	dbUser := os.Getenv("DB_USER")
-	if dbUser == "" {
-		dbUser = os.Getenv("DB_USERNAME") // Fallback
+	// 1. Build connection string using shared logic
+	dbURL, err := BuildConnectionString()
+	if err != nil {
+		return fmt.Errorf("failed to build connection string for migrations: %w", err)
 	}
-	dbPassword := os.Getenv("DB_PASSWORD")
-	dbName := os.Getenv("DB_NAME")
+
+	// 2. Parse config for pgx
+	config, err := pgx.ParseConfig(dbURL)
+	if err != nil {
+		return fmt.Errorf("failed to parse config from connection string: %w", err)
+	}
+
+	// 3. Configure Cloud SQL Connector if needed
 	cloudSQLInstance := os.Getenv("CLOUD_SQL_INSTANCE")
-
-	// Construct connection string securely with URL encoding
-	userInfo := url.UserPassword(dbUser, dbPassword)
-	var dbURL string
-
-	// Check if we are using Cloud SQL via Unix socket (common in Cloud Run)
 	if cloudSQLInstance != "" {
-		// Socket connection format: postgres://user:password@localhost/dbname?host=/cloudsql/instance
-		socketPath := fmt.Sprintf("/cloudsql/%s", cloudSQLInstance)
+		// Initialize the connector dialer with IAM AuthN
+		d, err := cloudsqlconn.NewDialer(context.Background(), cloudsqlconn.WithIAMAuthN())
+		if err != nil {
+			return fmt.Errorf("failed to initialize Cloud SQL dialer for migrations: %w", err)
+		}
+		defer d.Close()
 
-		// Build URL query parameters
-		query := url.Values{}
-		query.Add("host", socketPath)
-		query.Add("sslmode", "disable")
-
-		u := url.URL{
-			Scheme:   "postgres",
-			User:     userInfo,
-			Host:     "localhost", // Host is ignored when using unix socket in query, but required for URL parsing
-			Path:     dbName,
-			RawQuery: query.Encode(),
+		config.DialFunc = func(ctx context.Context, network, addr string) (net.Conn, error) {
+			return d.Dial(ctx, cloudSQLInstance)
 		}
-		dbURL = u.String()
-	} else {
-		// Standard TCP connection
-		if dbHost == "" {
-			dbHost = "localhost"
-		}
-		if dbPort == "" {
-			dbPort = "5432"
-		}
-
-		u := url.URL{
-			Scheme:   "postgres",
-			User:     userInfo,
-			Host:     fmt.Sprintf("%s:%s", dbHost, dbPort),
-			Path:     dbName,
-			RawQuery: "sslmode=disable",
-		}
-		dbURL = u.String()
 	}
 
-	// We mask the password for logging purposes (although url.UserPassword might handle stringification safely, being explicit is safer)
-	maskedUserInfo := url.UserPassword(dbUser, "***")
-	var maskedURL string
-	if cloudSQLInstance != "" {
-		u := url.URL{Scheme: "postgres", User: maskedUserInfo, Host: "localhost", Path: dbName, RawQuery: fmt.Sprintf("host=/cloudsql/%s", cloudSQLInstance)}
-		maskedURL = u.String()
-	} else {
-		u := url.URL{Scheme: "postgres", User: maskedUserInfo, Host: fmt.Sprintf("%s:%s", dbHost, dbPort), Path: dbName}
-		maskedURL = u.String()
+	// 4. Open database connection using pgx stdlib
+	db := stdlib.OpenDB(*config)
+	defer db.Close()
+
+	// 5. Verify connection before starting migrate
+	if err := db.Ping(); err != nil {
+		return fmt.Errorf("failed to ping database before migrations: %w", err)
 	}
 
-	slog.Info("Running database migrations...", "url_masked", maskedURL)
+	slog.Info("Starting database migrations...", "instance", cloudSQLInstance)
 
 	// Use embedded migrations
 	sourceDriver, err := iofs.New(migrations.FS, ".")
@@ -84,11 +62,17 @@ func RunMigrations() error {
 		return fmt.Errorf("failed to create iofs source driver: %w", err)
 	}
 
-	m, err := migrate.NewWithSourceInstance("iofs", sourceDriver, dbURL)
+	// Create migrate driver from existing DB connection
+	driver, err := pgx_migrate.WithInstance(db, &pgx_migrate.Config{})
+	if err != nil {
+		return fmt.Errorf("failed to create migrate driver: %w", err)
+	}
+
+	// Use NewWithInstance instead of NewWithDatabaseInstance to support source driver
+	m, err := migrate.NewWithInstance("iofs", sourceDriver, "pgx", driver)
 	if err != nil {
 		return fmt.Errorf("failed to initialize migrate: %w", err)
 	}
-	defer m.Close()
 
 	if err := m.Up(); err != nil {
 		if err == migrate.ErrNoChange {
