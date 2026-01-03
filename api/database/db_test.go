@@ -64,9 +64,19 @@ func TestBuildConnectionString(t *testing.T) {
 			dbName:        "postgres",
 			cloudInstance: "project:region:instance",
 			wantContains: []string{
-				"postgres://postgres:yd%25%5E9VLMi%5BJ=%25d%3Axxxxxx@/postgres",
-				// url.URL encodes the query parameter values, so / and : become %2F and %3A
-				"host=%2Fcloudsql%2Fproject%3Aregion%3Ainstance",
+				"postgres://postgres:yd%25%5E9VLMi%5BJ=%25d%3Axxxxxx@cloudsql/postgres",
+				"sslmode=disable",
+			},
+		},
+		{
+			name:          "Cloud SQL with IAM Auth (No Password)",
+			username:      "sa-email@project.iam",
+			password:      "",
+			dbName:        "mydb",
+			cloudInstance: "project:region:instance",
+			wantContains: []string{
+				// User only, no password
+				"postgres://sa-email%40project.iam@cloudsql/mydb",
 				"sslmode=disable",
 			},
 		},
@@ -98,9 +108,12 @@ func TestBuildConnectionString(t *testing.T) {
 				t.Fatalf("Result is not a valid URL: %v", err)
 			}
 
-			gotPass, _ := u.User.Password()
-			if gotPass != tt.password {
-				t.Errorf("Decoded password = %v, want %v", gotPass, tt.password)
+			// Only check password if it was provided
+			if tt.password != "" {
+				gotPass, _ := u.User.Password()
+				if gotPass != tt.password {
+					t.Errorf("Decoded password = %v, want %v", gotPass, tt.password)
+				}
 			}
 
 			// Check raw string components
