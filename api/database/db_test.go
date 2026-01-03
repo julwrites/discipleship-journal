@@ -80,6 +80,18 @@ func TestBuildConnectionString(t *testing.T) {
 				"sslmode=disable",
 			},
 		},
+		{
+			name:          "Cloud SQL with IAM Auth (Auto-fix username)",
+			username:      "sa-email@project", // Missing .iam
+			password:      "",
+			dbName:        "mydb",
+			cloudInstance: "project:region:instance",
+			wantContains: []string{
+				// Should have appended .iam
+				"postgres://sa-email%40project.iam@127.0.0.1/mydb",
+				"sslmode=disable",
+			},
+		},
 	}
 
 	for _, tt := range tests {

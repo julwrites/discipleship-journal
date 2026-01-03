@@ -37,6 +37,14 @@ func BuildConnectionString() (string, error) {
 		return "", fmt.Errorf("DB_PASSWORD is required for local development")
 	}
 
+	if cloudSQLInstance != "" {
+		// Auto-correct IAM username if needed
+		// Service accounts need .iam suffix, but sometimes users provide just the email
+		if strings.Contains(username, "@") && !strings.HasSuffix(username, ".iam") {
+			username += ".iam"
+		}
+	}
+
 	// URL encode the user info
 	var userInfo *url.Userinfo
 	if password != "" {
