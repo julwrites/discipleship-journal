@@ -7,6 +7,8 @@ import (
 	"log"
 	"strings"
 
+	"golang.org/x/net/html"
+
 	"github.com/go-resty/resty/v2"
 )
 
@@ -78,6 +80,92 @@ type ErrorResponse struct {
 	} `json:"error"`
 }
 
+// parsePassageFromHTML converts HTML from Bible API to markdown format.
+// It handles common tags found in Bible passages: p, span, b, i, sup, br, h1-h4.
+func parsePassageFromHTML(htmlStr string) (string, error) {
+	doc, err := html.Parse(strings.NewReader(htmlStr))
+	if err != nil {
+		return "", fmt.Errorf("failed to parse HTML: %v", err)
+	}
+
+	var result strings.Builder
+	var parseNode func(*html.Node)
+
+	parseNode = func(n *html.Node) {
+		switch n.Type {
+		case html.TextNode:
+			result.WriteString(n.Data)
+		case html.ElementNode:
+			switch n.Data {
+			case "b", "strong":
+				result.WriteString("**")
+				for c := n.FirstChild; c != nil; c = c.NextSibling {
+					parseNode(c)
+				}
+				result.WriteString("**")
+			case "i", "em":
+				result.WriteString("*")
+				for c := n.FirstChild; c != nil; c = c.NextSibling {
+					parseNode(c)
+				}
+				result.WriteString("*")
+			case "sup":
+				result.WriteString("^")
+				for c := n.FirstChild; c != nil; c = c.NextSibling {
+					parseNode(c)
+				}
+				result.WriteString("^")
+			case "br":
+				result.WriteString("\n")
+			case "p":
+				// Add newline before paragraph (except first)
+				if result.Len() > 0 {
+					result.WriteString("\n\n")
+				}
+				for c := n.FirstChild; c != nil; c = c.NextSibling {
+					parseNode(c)
+				}
+			case "h1", "h2", "h3", "h4":
+				if result.Len() > 0 {
+					result.WriteString("\n\n")
+				}
+				result.WriteString("**")
+				for c := n.FirstChild; c != nil; c = c.NextSibling {
+					parseNode(c)
+				}
+				result.WriteString("**")
+			case "span":
+				// Span just passes through
+				for c := n.FirstChild; c != nil; c = c.NextSibling {
+					parseNode(c)
+				}
+			default:
+				// Unknown element, process children
+				for c := n.FirstChild; c != nil; c = c.NextSibling {
+					parseNode(c)
+				}
+			}
+		default:
+			for c := n.FirstChild; c != nil; c = c.NextSibling {
+				parseNode(c)
+			}
+		}
+	}
+
+	// Start from the document root - recursion will handle skipping non-content nodes
+	start := doc
+
+	parseNode(start)
+
+	// Clean up extra whitespace
+	text := result.String()
+	text = strings.TrimSpace(text)
+	text = strings.ReplaceAll(text, "  ", " ")
+	text = strings.ReplaceAll(text, "\n\n\n", "\n\n")
+
+	return text, nil
+}
+
 // GetPassage fetches a bible passage from the external API.
 func (c *RealBibleAIClient) GetPassage(ctx context.Context, reference string) (map[string]interface{}, error) {
 	if c.APIURL == "" {
@@ -126,9 +214,20 @@ func (c *RealBibleAIClient) GetPassage(ctx context.Context, reference string) (m
 		}
 	}
 
+	// Convert HTML to markdown for display and insertion
+	verseText := result.Verse
+	if verseText != "" {
+		markdown, err := parsePassageFromHTML(verseText)
+		if err != nil {
+			log.Printf("Failed to convert HTML to markdown: %v. Using original text.", err)
+		} else {
+			verseText = markdown
+		}
+	}
+
 	return map[string]interface{}{
-		"verse": result.Verse,
-		"text":  result.Verse,
+		"verse": verseText,
+		"text":  verseText,
 	}, nil
 }
 
