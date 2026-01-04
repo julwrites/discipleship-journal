@@ -4,7 +4,6 @@ import NoteEditor from './NoteEditor';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import * as api from '@/services/api';
 import { toast } from 'sonner';
-import { useEffect } from 'react';
 
 // Mock sonner
 vi.mock('sonner', () => ({
@@ -14,17 +13,22 @@ vi.mock('sonner', () => ({
     }
 }));
 
-// Mock RichTextEditor to avoid complex Tiptap interaction in integration tests
-vi.mock('@/components/RichTextEditor', () => ({
-    default: ({ initialContent, onChange, editable, onEditorReady }: { initialContent: string, onChange: (value: string) => void, editable: boolean, onEditorReady: (editor: any) => void }) => {
-        // We need a local state to track content for the text area, initialized from initialContent
-        // In the real app, Tiptap handles its own state. Here we need to mimic it.
-        // But since we are mocking, we can just use the props passed from parent if parent updates it.
-        // HOWEVER, NoteEditor is now uncontrolled-ish for the editor. It passes initialContent only once.
-        // But it DOES listen to onChange.
-        // For the tests to see "updates", we need the mock to call onChange.
+// Mock RichTextEditor
+// We define the mock component inside the factory to avoid hoisting issues.
+vi.mock('@/components/RichTextEditor', async () => {
+    // We can't access top-level variables.
+    // We will dynamically import react to be safe, although in vitest environment it might work.
+    const React = await import('react');
+    const { useEffect, useRef, useState } = React;
 
-        // Let's create a fake editor instance to pass back to parent
+    const MockRichTextEditor = ({ initialContent, onChange, editable, onEditorReady }: { initialContent: string, onChange: (v: string) => void, editable: boolean, onEditorReady?: (e: { chain: () => { focus: () => { insertContent: (html: string) => { run: () => void } } } }) => void }) => {
+        const [content, setContent] = useState(initialContent);
+        const contentRef = useRef(content);
+
+        useEffect(() => {
+            contentRef.current = content;
+        }, [content]);
+
         useEffect(() => {
             if (onEditorReady) {
                 const mockEditor = {
@@ -32,16 +36,9 @@ vi.mock('@/components/RichTextEditor', () => ({
                         focus: () => ({
                             insertContent: (html: string) => ({
                                 run: () => {
-                                    // Simulate Tiptap inserting content by appending to the current content
-                                    // and calling onChange
-                                    // Note: We don't have easy access to the *current* content here inside the closure
-                                    // if we just use initialContent.
-                                    // But we can approximate by assuming the test setup.
-                                    // A better way is to fire the onChange with the NEW combined content.
-                                    // Since we don't track state inside this mock properly, let's just
-                                    // call onChange with the inserted content appended to a placeholder or similar,
-                                    // OR, simpler: just call onChange with the HTML so the test sees it.
-                                    onChange(initialContent + html);
+                                    const newContent = contentRef.current + html;
+                                    setContent(newContent);
+                                    onChange(newContent);
                                 }
                             })
                         })
@@ -49,18 +46,26 @@ vi.mock('@/components/RichTextEditor', () => ({
                 };
                 onEditorReady(mockEditor);
             }
-        }, [onEditorReady, initialContent, onChange]);
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, []); // Run once on mount
 
         return (
             <textarea
                 data-testid="rich-text-editor"
-                value={initialContent}
-                onChange={(e) => onChange(e.target.value)}
+                value={content}
+                onChange={(e) => {
+                    setContent(e.target.value);
+                    onChange(e.target.value);
+                }}
                 disabled={!editable}
             />
         );
-    }
-}));
+    };
+
+    return {
+        default: MockRichTextEditor
+    };
+});
 
 // Mock the API
 vi.mock('@/services/api', () => ({
@@ -106,18 +111,7 @@ describe('NoteEditor', () => {
         await screen.findByDisplayValue('Test Note');
         expect(mockGetNote).toHaveBeenCalledWith('123');
 
-        // Switch to fake timers
         vi.useFakeTimers();
-
-        // Note: The textarea value will be 'Initial content' because we use initialContent prop.
-        // Changing it fires onChange which updates parent 'markdown' state.
-        // But parent 'markdown' state does NOT flow back into 'initialContent' prop of RichTextEditor
-        // because we removed that sync.
-        // However, the test uses fireEvent.change on the textarea. The mock textarea uses `value={initialContent}`.
-        // If parent re-renders, does it pass new initialContent?
-        // No, NoteEditor uses `markdown` state as `initialContent`.
-        // So when `setMarkdown` is called, `NoteEditor` re-renders, passing new `markdown` as `initialContent`.
-        // So the textarea SHOULD update.
 
         const textarea = screen.getByDisplayValue('Initial content');
         fireEvent.change(textarea, { target: { value: 'Updated content' } });
@@ -126,7 +120,6 @@ describe('NoteEditor', () => {
             vi.advanceTimersByTime(2000);
         });
 
-        // Switch back to real timers to allow waitFor to function correctly
         vi.useRealTimers();
 
         await waitFor(() => {
@@ -135,7 +128,7 @@ describe('NoteEditor', () => {
     });
 
     it('shows error when auto-save fails', async () => {
-        const mockGetNote = vi.mocked(api.getNote).mockResolvedValue({
+        vi.mocked(api.getNote).mockResolvedValue({
             id: '123',
             title: 'Test Note',
             content: { markdown: 'Initial content' }
@@ -153,7 +146,6 @@ describe('NoteEditor', () => {
         );
 
         await screen.findByDisplayValue('Test Note');
-        expect(mockGetNote).toHaveBeenCalledWith('123');
 
         vi.useFakeTimers();
 
@@ -246,8 +238,8 @@ describe('NoteEditor', () => {
         fireEvent.click(insertBtn);
 
         await waitFor(() => {
-            const textarea = screen.getByDisplayValue((content) => content.includes('For God so loved the world...'));
-            expect(textarea).toBeInTheDocument();
+            const textarea = screen.getByTestId('rich-text-editor') as HTMLTextAreaElement;
+            expect(textarea.value).toContain('For God so loved the world...');
         });
     });
 
@@ -288,9 +280,10 @@ describe('NoteEditor', () => {
         fireEvent.click(insertBtn);
 
         await waitFor(() => {
-            const textarea = screen.getByTestId('rich-text-editor');
-            expect(textarea).toHaveValue(expect.stringMatching(/AI Answer/));
-            expect(textarea).toHaveValue(expect.stringMatching(/Question: Explain this/));
+            const textarea = screen.getByTestId('rich-text-editor') as HTMLTextAreaElement;
+            expect(textarea.value).toMatch(/AI Answer/);
+            expect(textarea.value).toMatch(/Question: Explain this/);
+            expect(textarea.value).toMatch(/Content/);
         });
     });
 
