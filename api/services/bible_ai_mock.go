@@ -19,9 +19,11 @@ func (m *MockBibleAIClient) GetPassage(ctx context.Context, reference string) (m
 	if m.ShouldError {
 		return nil, fmt.Errorf("mock error")
 	}
+	verseText := "For God so loved the world... (Mocked)"
 	return map[string]interface{}{
 		"reference": reference,
-		"text":      "For God so loved the world... (Mocked)",
+		"text":      verseText,
+		"verse":     verseText,
 	}, nil
 }
 

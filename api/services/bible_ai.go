@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/go-resty/resty/v2"
@@ -112,16 +113,22 @@ func (c *RealBibleAIClient) GetPassage(ctx context.Context, reference string) (m
 	// Helper for parsing if resty failed to unmarshal into result automatically
 	// (Though SetResult usually handles it, sometimes API returns different structure)
 	if result.Verse == "" {
+		log.Printf("Bible API response status %s, body length %d", resp.Status(), len(resp.Body()))
 		// Fallback manual check in case it didn't unmarshal
 		var raw map[string]interface{}
 		_ = json.Unmarshal(resp.Body(), &raw)
 		if v, ok := raw["verse"].(string); ok {
 			result.Verse = v
+		} else if t, ok := raw["text"].(string); ok {
+			result.Verse = t
+		} else {
+			log.Printf("Bible API response body: %s", resp.Body())
 		}
 	}
 
 	return map[string]interface{}{
 		"verse": result.Verse,
+		"text":  result.Verse,
 	}, nil
 }
 

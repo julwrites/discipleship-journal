@@ -177,7 +177,7 @@ describe('NoteEditor', () => {
             title: 'Test Note',
             content: { markdown: 'Initial content' }
         });
-        vi.mocked(api.getBiblePassage).mockResolvedValue({ text: 'For God so loved the world...' });
+        vi.mocked(api.getBiblePassage).mockResolvedValue({ verse: 'For God so loved the world...', text: 'For God so loved the world...' });
 
         render(
             <MemoryRouter initialEntries={['/notes/123']}>
@@ -251,7 +251,7 @@ describe('NoteEditor', () => {
             title: 'Test Note',
             content: { markdown: 'Initial content' }
         });
-        vi.mocked(api.getBiblePassage).mockResolvedValue({ text: 'In the beginning...' });
+        vi.mocked(api.getBiblePassage).mockResolvedValue({ verse: 'In the beginning...', text: 'In the beginning...' });
 
         render(
             <MemoryRouter initialEntries={['/notes/123']}>

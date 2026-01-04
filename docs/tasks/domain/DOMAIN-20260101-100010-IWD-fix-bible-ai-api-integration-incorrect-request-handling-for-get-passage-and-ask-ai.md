@@ -1,6 +1,6 @@
 ---
 id: DOMAIN-20260101-100010-IWD
-status: in_progress
+status: review_requested
 title: Fix Bible AI API integration: incorrect request handling for get passage and ask AI
 priority: medium
 created: 2026-01-01 10:00:10
@@ -283,3 +283,25 @@ queryPayload := map[string]interface{}{
 - **Broken Feature**: Bible passage lookup and AI chat not working
 - **User Experience**: API errors or incorrect responses
 - **Data Integrity**: Might receive wrong Bible passages or AI responses
+
+## Implementation Notes (2026-01-04)
+
+### Root Cause Identified
+1. **Frontend/Backend Response Field Mismatch**: Frontend expected `text` or `content` field, but backend returned `verse` field (as per Bible AI API response format).
+2. **Mock vs Real API Inconsistency**: Mock client returns `text` field, real API returns `verse` field, causing frontend to show "Passage found but no text returned" when using real API.
+
+### Fixes Applied
+1. **Frontend (`web/src/pages/NoteEditor.tsx`)**: Updated to check `verse` first, then `text`, then `content`.
+2. **Backend Real Client (`api/services/bible_ai.go`)**: Added `text` field to response (duplicate of `verse`) for compatibility.
+3. **Backend Mock Client (`api/services/bible_ai_mock.go`)**: Added `verse` field (duplicate of `text`) for consistency.
+4. **Tests Updated**: Updated frontend test mocks to include both `verse` and `text` fields.
+
+### Additional Improvements
+- Added logging in `GetPassage` method to aid debugging when verse is empty.
+- Added fallback parsing to check for `text` field in API response for robustness.
+
+### Verification
+- Backend tests pass.
+- Frontend tests pass.
+- Frontend build succeeds.
+- Response format now compatible with both mock and real API.
