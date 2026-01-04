@@ -162,8 +162,8 @@ export default function NoteEditor() {
         setLoadingPassage(true);
         try {
             const res = await getBiblePassage(passageRef);
-            // Assuming res.text or res.content. Adjust based on API response
-            const text = res.text || res.content || "Passage found but no text returned.";
+            // API returns "verse" (real) or "text" (mock). Support both.
+            const text = res.verse || res.text || res.content || "Passage found but no text returned.";
             setBibleText(text);
         } catch (e) {
             console.error(e);

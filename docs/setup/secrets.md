@@ -34,6 +34,7 @@ The following secrets must be created in Google Secret Manager within the GCP Pr
 *   `DB_NAME`
 *   `BIBLE_API_KEY`
 *   `BIBLE_API_URL`
+*   `CORS_ALLOWED_ORIGINS` (Comma-separated list of allowed origins, e.g., `https://journal.tehj.io,http://localhost:5173`)
 
 ### Frontend Secrets
 *Fetched by GitHub Actions during the build process and baked into the static assets.*
