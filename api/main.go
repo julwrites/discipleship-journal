@@ -93,8 +93,8 @@ func main() {
 		defer secretLoader.Close()
 	}
 
-	// Load database configuration from Secret Manager or environment variables
-	loadDatabaseSecret := func(secretName string) string {
+	// Load configuration from Secret Manager or environment variables
+	loadSecret := func(secretName string) string {
 		var value string
 		if secretLoader != nil {
 			value, _ = secretLoader.LoadSecret(context.Background(), secretName)
@@ -110,16 +110,23 @@ func main() {
 	// Load individual database components
 	dbSecrets := []string{"DB_USERNAME", "DB_PASSWORD", "DB_NAME", "DB_HOST", "DB_PORT", "CLOUD_SQL_INSTANCE"}
 	for _, secret := range dbSecrets {
-		value := loadDatabaseSecret(secret)
+		value := loadSecret(secret)
 		if value != "" {
 			os.Setenv(secret, value)
 			// Mask password in logs
 			if secret == "DB_PASSWORD" {
-				logger.Info("Loaded database secret", "secret", secret, "value", "***")
+				logger.Info("Loaded secret", "secret", secret, "value", "***")
 			} else {
-				logger.Info("Loaded database secret", "secret", secret, "value", value)
+				logger.Info("Loaded secret", "secret", secret, "value", value)
 			}
 		}
+	}
+
+	// Load CORS allowed origins from Secret Manager
+	corsOrigins := loadSecret("CORS_ALLOWED_ORIGINS")
+	if corsOrigins != "" {
+		os.Setenv("CORS_ALLOWED_ORIGINS", corsOrigins)
+		logger.Info("Loaded CORS allowed origins", "value", corsOrigins)
 	}
 
 	// Try to connect to database, but don't exit immediately in production
@@ -256,25 +263,6 @@ func main() {
 					if strings.TrimSpace(allowed) == origin {
 						return true
 					}
-				}
-			}
-
-			// Allow local development
-			if origin == "http://localhost:5173" || origin == "http://localhost:4173" || origin == "http://localhost:8080" || origin == "http://localhost:8088" || origin == "http://localhost:3000" {
-				return true
-			}
-
-			// Allow Firebase hosting (including preview channels)
-			// In production, configure CORS_ALLOWED_ORIGINS environment variable with comma-separated allowed origins
-			// For local development, allow common localhost origins
-			if len(origin) >= 8 && origin[:8] == "https://" {
-				// Check for Firebase hosting patterns
-				domain := origin[8:] // Strip "https://"
-
-				// Allow any .web.app or .firebaseapp.com domain for development flexibility
-				// In production, use specific CORS_ORIGINS environment variable
-				if strings.HasSuffix(domain, ".web.app") || strings.HasSuffix(domain, ".firebaseapp.com") {
-					return true
 				}
 			}
 			return false
