@@ -31,26 +31,74 @@ func NewRealBibleAIClient(apiURL, apiKey string) *RealBibleAIClient {
 	}
 }
 
+// Structures based on OpenAPI Spec
+
+type QueryRequest struct {
+	Query   QueryPayload  `json:"query"`
+	Context *QueryContext `json:"context,omitempty"`
+}
+
+type QueryPayload struct {
+	Verses []string `json:"verses,omitempty"`
+	Words  []string `json:"words,omitempty"`
+	Prompt string   `json:"prompt,omitempty"`
+}
+
+type QueryContext struct {
+	History []string     `json:"history,omitempty"`
+	Schema  string       `json:"schema,omitempty"`
+	Verses  []string     `json:"verses,omitempty"`
+	Words   []string     `json:"words,omitempty"`
+	User    *UserContext `json:"user,omitempty"`
+}
+
+type UserContext struct {
+	Version string `json:"version,omitempty"`
+}
+
+type VerseResponse struct {
+	Verse string `json:"verse"`
+}
+
+type Reference struct {
+	Verse string `json:"verse"`
+	URL   string `json:"url"`
+}
+
+type OQueryResponse struct {
+	Text       string      `json:"text"`
+	References []Reference `json:"references"`
+}
+
+type ErrorResponse struct {
+	Error struct {
+		Code    int    `json:"code"`
+		Message string `json:"message"`
+	} `json:"error"`
+}
+
 // GetPassage fetches a bible passage from the external API.
 func (c *RealBibleAIClient) GetPassage(ctx context.Context, reference string) (map[string]interface{}, error) {
 	if c.APIURL == "" {
 		return nil, fmt.Errorf("bible API not configured")
 	}
 
-	// Construct payload for BibleAIAPI: POST /query with {"query": {"verses": [ref]}}
-	payload := map[string]interface{}{
-		"query": map[string]interface{}{
-			"verses": []string{reference},
+	reqPayload := QueryRequest{
+		Query: QueryPayload{
+			Verses: []string{reference},
 		},
 	}
 
-	var result map[string]interface{}
+	var result VerseResponse
+	var errorResult ErrorResponse
+
 	resp, err := c.Client.R().
 		SetContext(ctx).
 		SetHeader("X-API-KEY", c.APIKey).
 		SetHeader("Content-Type", "application/json").
-		SetBody(payload).
+		SetBody(reqPayload).
 		SetResult(&result).
+		SetError(&errorResult).
 		Post(c.APIURL + "/query")
 
 	if err != nil {
@@ -58,34 +106,23 @@ func (c *RealBibleAIClient) GetPassage(ctx context.Context, reference string) (m
 	}
 
 	if resp.IsError() {
-		return nil, fmt.Errorf("bible API error: %s, body: %s", resp.Status(), resp.String())
+		return nil, fmt.Errorf("bible API error: %s, message: %s", resp.Status(), errorResult.Error.Message)
 	}
 
-	// resty sometimes fails to parse JSON, so fall back to manual parsing
-	if len(result) == 0 {
-		body := resp.String()
-		var manualResult map[string]interface{}
-		if err := json.Unmarshal([]byte(body), &manualResult); err != nil {
-			return nil, fmt.Errorf("failed to parse Bible API response: %v", err)
+	// Helper for parsing if resty failed to unmarshal into result automatically
+	// (Though SetResult usually handles it, sometimes API returns different structure)
+	if result.Verse == "" {
+		// Fallback manual check in case it didn't unmarshal
+		var raw map[string]interface{}
+		_ = json.Unmarshal(resp.Body(), &raw)
+		if v, ok := raw["verse"].(string); ok {
+			result.Verse = v
 		}
-		result = manualResult
 	}
 
-	// The API returns {"verse": "John 3:16 (ESV) For God so loved the world..."}
-	// Extract the verse text from the response
-	if verse, ok := result["verse"].(string); ok {
-		return map[string]interface{}{
-			"verse": verse,
-		}, nil
-	}
-
-	// Check for error response
-	if errObj, ok := result["error"].(map[string]interface{}); ok {
-		return nil, fmt.Errorf("bible API error: %v", errObj)
-	}
-
-	// Return raw result if verse not found (for backward compatibility)
-	return result, nil
+	return map[string]interface{}{
+		"verse": result.Verse,
+	}, nil
 }
 
 // ChatCompletion sends a chat completion request to the external API.
@@ -94,66 +131,52 @@ func (c *RealBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 		return nil, fmt.Errorf("bible API not configured")
 	}
 
-	// Transform generic payload to BibleAIAPI payload
-	// Expected input payload (from ChatHandler):
-	// {
-	//    "prompt": "User question...",
-	//    "verses": ["John 3:16"],
-	//    "themes": ["Love"],
-	//    "context": "Previous context..." (optional)
-	// }
-	//
-	// Output payload for BibleAIAPI:
-	// {
-	//   "query": { "prompt": "..." },
-	//   "context": { "verses": [...], "user": { "version": "ESV" } }
-	// }
-
 	prompt, ok := payload["prompt"].(string)
 	if !ok {
 		prompt = ""
 	}
-	verses, ok := payload["verses"].([]string)
-	if !ok {
-		verses = []string{}
+
+	// Prepare Context
+	queryContext := &QueryContext{
+		User: &UserContext{
+			Version: "ESV",
+		},
 	}
 
-	// If themes are present, append to prompt
+	// Map 'verses' from payload to context.verses
+	if verses, ok := payload["verses"].([]string); ok && len(verses) > 0 {
+		queryContext.Verses = verses
+	}
+
+	// Map 'themes' from payload to context.words
 	if themes, ok := payload["themes"].([]string); ok && len(themes) > 0 {
+		queryContext.Words = themes
+		// Also optionally append to prompt to ensure LLM focuses on them
 		prompt += fmt.Sprintf(" Focus on themes: %s.", strings.Join(themes, ", "))
 	}
 
-	// If context/text is present (for general AskAI), append to prompt or handle differently
-	// The API supports "words" in context, or we can just shove it in the prompt.
+	// Handle 'context' string (generic text) - API doesn't have a field for this, so append to prompt
 	if ctxText, ok := payload["context"].(string); ok && ctxText != "" {
 		prompt += fmt.Sprintf(" Context: %s.", ctxText)
 	}
 
-	// Build context object
-	contextObj := map[string]interface{}{
-		"user": map[string]interface{}{
-			"version": "ESV", // Default to ESV
+	reqPayload := QueryRequest{
+		Query: QueryPayload{
+			Prompt: prompt,
 		},
+		Context: queryContext,
 	}
 
-	if len(verses) > 0 {
-		contextObj["verses"] = verses
-	}
+	var result OQueryResponse
+	var errorResult ErrorResponse
 
-	apiPayload := map[string]interface{}{
-		"query": map[string]interface{}{
-			"prompt": prompt,
-		},
-		"context": contextObj,
-	}
-
-	var result map[string]interface{}
 	resp, err := c.Client.R().
 		SetContext(ctx).
 		SetHeader("X-API-KEY", c.APIKey).
 		SetHeader("Content-Type", "application/json").
-		SetBody(apiPayload).
+		SetBody(reqPayload).
 		SetResult(&result).
+		SetError(&errorResult).
 		Post(c.APIURL + "/query")
 
 	if err != nil {
@@ -161,60 +184,21 @@ func (c *RealBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 	}
 
 	if resp.IsError() {
-		return nil, fmt.Errorf("bible API error: %s", resp.Status())
+		return nil, fmt.Errorf("bible API error: %s, message: %s", resp.Status(), errorResult.Error.Message)
 	}
 
-	// resty sometimes fails to parse JSON, so fall back to manual parsing
-	if len(result) == 0 {
-		body := resp.String()
-		var manualResult map[string]interface{}
-		if err := json.Unmarshal([]byte(body), &manualResult); err != nil {
-			return nil, fmt.Errorf("failed to parse Bible API response: %v", err)
-		}
-		result = manualResult
-	}
-
-	// BibleAIAPI response structure for LLM queries:
-	// {
-	//   "text": "Response text...",
-	//   "references": [
-	//     {"verse": "John 3:16", "url": "..."}
-	//   ]
-	// }
-	//
-	// Check for error response first
-	if errObj, ok := result["error"].(map[string]interface{}); ok {
-		return nil, fmt.Errorf("bible API error: %v", errObj)
-	}
-
-	// Extract text from response
-	var content string
-	if txt, ok := result["text"].(string); ok {
-		content = txt
-	} else if respStr, ok := result["response"].(string); ok {
-		content = respStr
-	}
-
-	// Extract references if present
-	var references []interface{}
-	if refs, ok := result["references"].([]interface{}); ok {
-		references = refs
-	}
-
-	// Return structured response that handlers can parse
+	// Construct return map
 	response := map[string]interface{}{
-		"text": content,
-	}
-	if len(references) > 0 {
-		response["references"] = references
+		"text":       result.Text,
+		"references": result.References,
 	}
 
-	// Also wrap in OpenAI format for backward compatibility with ChatHandler
-	if content != "" {
+	// Backward compatibility for ChatHandler which expects OpenAI format
+	if result.Text != "" {
 		response["choices"] = []interface{}{
 			map[string]interface{}{
 				"message": map[string]interface{}{
-					"content": content,
+					"content": result.Text,
 				},
 			},
 		}
