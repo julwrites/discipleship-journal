@@ -183,7 +183,9 @@ export default function NoteEditor() {
     }, [debouncedPassageRef]);
 
     const handleAddPassage = () => {
-        const newContent = `${markdown}\n\n> **${passageRef}**\n> ${bibleText}\n`;
+        // Prefix each line of bibleText with '> ' for proper blockquote formatting
+        const formattedText = bibleText.split('\n').map(line => `> ${line}`).join('\n');
+        const newContent = `${markdown}\n\n> **${passageRef}**\n${formattedText}\n`;
         setMarkdown(newContent);
         setPassageRef("");
         setBibleText("");
@@ -201,6 +203,17 @@ export default function NoteEditor() {
         } finally {
             setAskingAI(false);
         }
+    };
+
+    const handleAddAIResponse = () => {
+        if (!aiResponse) return;
+
+        // Prefix each line of aiResponse with '> ' for proper blockquote formatting
+        const formattedResponse = aiResponse.split('\n').map(line => `> ${line}`).join('\n');
+        const newContent = `${markdown}\n\n> **AI Response**\n${formattedResponse}\n> \n> *Question: ${aiPrompt}*\n`;
+        setMarkdown(newContent);
+        setAiPrompt("");
+        setAiResponse("");
     };
 
     return (
@@ -263,10 +276,15 @@ export default function NoteEditor() {
                                     </Button>
                                 </div>
                                 {aiResponse && (
-                                    <div className="p-4 bg-muted border rounded max-h-60 overflow-auto text-sm">
-                                        <p className="font-semibold mb-2">Answer:</p>
-                                        <ReactMarkdown>{aiResponse}</ReactMarkdown>
-                                    </div>
+                                    <>
+                                        <div className="p-4 bg-muted border rounded max-h-60 overflow-auto text-sm">
+                                            <p className="font-semibold mb-2">Answer:</p>
+                                            <ReactMarkdown>{aiResponse}</ReactMarkdown>
+                                        </div>
+                                        <Button onClick={handleAddAIResponse} className="w-full">
+                                            Insert into Note
+                                        </Button>
+                                    </>
                                 )}
                             </div>
                         </DialogContent>

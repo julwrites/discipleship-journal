@@ -211,7 +211,7 @@ describe('NoteEditor', () => {
         expect(textarea).toBeInTheDocument();
     });
 
-    it('asks AI', async () => {
+    it('asks AI and inserts response into note', async () => {
         vi.mocked(api.getNote).mockResolvedValue({
             id: '123',
             title: 'Test Note',
@@ -242,6 +242,20 @@ describe('NoteEditor', () => {
         await waitFor(() => {
             expect(api.askAI).toHaveBeenCalledWith('Content', 'Explain this');
             expect(within(dialog).getByText('AI Answer')).toBeInTheDocument();
+        });
+
+        // Click the "Insert into Note" button
+        const insertBtn = within(dialog).getByRole('button', { name: 'Insert into Note' });
+        fireEvent.click(insertBtn);
+
+        // Verify the AI response was inserted into the note (wait for state update)
+        await waitFor(() => {
+            const textarea = screen.getByTestId('rich-text-editor');
+            // Use regex matching to be more flexible with formatting
+            expect(textarea).toHaveValue(expect.stringMatching(/AI Answer/));
+            expect(textarea).toHaveValue(expect.stringMatching(/Question: Explain this/));
+            // Verify the original content is still there
+            expect(textarea).toHaveValue(expect.stringContaining('Content'));
         });
     });
 
