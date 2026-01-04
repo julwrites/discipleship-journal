@@ -13,17 +13,59 @@ vi.mock('sonner', () => ({
     }
 }));
 
-// Mock RichTextEditor to avoid complex Tiptap interaction in integration tests
-vi.mock('@/components/RichTextEditor', () => ({
-    default: ({ content, onChange, editable }: { content: string, onChange: (value: string) => void, editable: boolean }) => (
-        <textarea
-            data-testid="rich-text-editor"
-            value={content}
-            onChange={(e) => onChange(e.target.value)}
-            disabled={!editable}
-        />
-    )
-}));
+// Mock RichTextEditor
+// We define the mock component inside the factory to avoid hoisting issues.
+vi.mock('@/components/RichTextEditor', async () => {
+    // We can't access top-level variables.
+    // We will dynamically import react to be safe, although in vitest environment it might work.
+    const React = await import('react');
+    const { useEffect, useRef, useState } = React;
+
+    const MockRichTextEditor = ({ initialContent, onChange, editable, onEditorReady }: { initialContent: string, onChange: (v: string) => void, editable: boolean, onEditorReady?: (e: { chain: () => { focus: () => { insertContent: (html: string) => { run: () => void } } } }) => void }) => {
+        const [content, setContent] = useState(initialContent);
+        const contentRef = useRef(content);
+
+        useEffect(() => {
+            contentRef.current = content;
+        }, [content]);
+
+        useEffect(() => {
+            if (onEditorReady) {
+                const mockEditor = {
+                    chain: () => ({
+                        focus: () => ({
+                            insertContent: (html: string) => ({
+                                run: () => {
+                                    const newContent = contentRef.current + html;
+                                    setContent(newContent);
+                                    onChange(newContent);
+                                }
+                            })
+                        })
+                    })
+                };
+                onEditorReady(mockEditor);
+            }
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, []); // Run once on mount
+
+        return (
+            <textarea
+                data-testid="rich-text-editor"
+                value={content}
+                onChange={(e) => {
+                    setContent(e.target.value);
+                    onChange(e.target.value);
+                }}
+                disabled={!editable}
+            />
+        );
+    };
+
+    return {
+        default: MockRichTextEditor
+    };
+});
 
 // Mock the API
 vi.mock('@/services/api', () => ({
@@ -69,7 +111,6 @@ describe('NoteEditor', () => {
         await screen.findByDisplayValue('Test Note');
         expect(mockGetNote).toHaveBeenCalledWith('123');
 
-        // Switch to fake timers
         vi.useFakeTimers();
 
         const textarea = screen.getByDisplayValue('Initial content');
@@ -79,7 +120,6 @@ describe('NoteEditor', () => {
             vi.advanceTimersByTime(2000);
         });
 
-        // Switch back to real timers to allow waitFor to function correctly
         vi.useRealTimers();
 
         await waitFor(() => {
@@ -88,7 +128,7 @@ describe('NoteEditor', () => {
     });
 
     it('shows error when auto-save fails', async () => {
-        const mockGetNote = vi.mocked(api.getNote).mockResolvedValue({
+        vi.mocked(api.getNote).mockResolvedValue({
             id: '123',
             title: 'Test Note',
             content: { markdown: 'Initial content' }
@@ -106,7 +146,6 @@ describe('NoteEditor', () => {
         );
 
         await screen.findByDisplayValue('Test Note');
-        expect(mockGetNote).toHaveBeenCalledWith('123');
 
         vi.useFakeTimers();
 
@@ -122,10 +161,6 @@ describe('NoteEditor', () => {
         await waitFor(() => {
              const errorIndicator = screen.queryByText(/Error saving/i) || screen.queryByText(/Failed to save/i);
              expect(errorIndicator).toBeInTheDocument();
-             // In auto-save, we usually don't show a toast/alert unless manual save,
-             // but checking the code: if (!manual) return; in catch block?
-             // The code is: if (manual) toast.error("Failed to save");
-             // So no toast should be called for auto-save failure.
              expect(toast.error).not.toHaveBeenCalled();
         });
 
@@ -151,16 +186,11 @@ describe('NoteEditor', () => {
 
         await screen.findByDisplayValue('Test Note');
 
-        // Click Delete trigger button
-        // We use getAllByText because the confirm button also says "Delete" but it's not visible yet?
-        // Actually, trigger is visible.
         const deleteTrigger = screen.getByRole('button', { name: 'Delete' });
         fireEvent.click(deleteTrigger);
 
-        // Check for confirmation dialog text
         expect(await screen.findByText(/Are you sure you want to delete/i)).toBeInTheDocument();
 
-        // Use within to find the button inside the dialog
         const dialog = await screen.findByRole('dialog');
         const confirmBtn = within(dialog).getByRole('button', { name: 'Delete' });
         fireEvent.click(confirmBtn);
@@ -207,8 +237,10 @@ describe('NoteEditor', () => {
         const insertBtn = within(dialog).getByRole('button', { name: 'Insert into Note' });
         fireEvent.click(insertBtn);
 
-        const textarea = screen.getByDisplayValue(/For God so loved the world.../);
-        expect(textarea).toBeInTheDocument();
+        await waitFor(() => {
+            const textarea = screen.getByTestId('rich-text-editor') as HTMLTextAreaElement;
+            expect(textarea.value).toContain('For God so loved the world...');
+        });
     });
 
     it('asks AI and inserts response into note', async () => {
@@ -244,18 +276,14 @@ describe('NoteEditor', () => {
             expect(within(dialog).getByText('AI Answer')).toBeInTheDocument();
         });
 
-        // Click the "Insert into Note" button
         const insertBtn = within(dialog).getByRole('button', { name: 'Insert into Note' });
         fireEvent.click(insertBtn);
 
-        // Verify the AI response was inserted into the note (wait for state update)
         await waitFor(() => {
-            const textarea = screen.getByTestId('rich-text-editor');
-            // Use regex matching to be more flexible with formatting
-            expect(textarea).toHaveValue(expect.stringMatching(/AI Answer/));
-            expect(textarea).toHaveValue(expect.stringMatching(/Question: Explain this/));
-            // Verify the original content is still there
-            expect(textarea).toHaveValue(expect.stringContaining('Content'));
+            const textarea = screen.getByTestId('rich-text-editor') as HTMLTextAreaElement;
+            expect(textarea.value).toMatch(/AI Answer/);
+            expect(textarea.value).toMatch(/Question: Explain this/);
+            expect(textarea.value).toMatch(/Content/);
         });
     });
 
@@ -286,7 +314,6 @@ describe('NoteEditor', () => {
         vi.useFakeTimers();
         fireEvent.change(input, { target: { value: 'Gen 1:1' } });
 
-        // Fast forward
         act(() => {
             vi.advanceTimersByTime(600);
         });
