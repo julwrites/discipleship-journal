@@ -305,3 +305,29 @@ queryPayload := map[string]interface{}{
 - Frontend tests pass.
 - Frontend build succeeds.
 - Response format now compatible with both mock and real API.
+
+### HTML to Markdown Conversion Fix (2026-01-04)
+
+#### Root Cause Identified
+1. **Bible AI API returns HTML-formatted verses**: The API returns verses with HTML tags (`<p>`, `<b>`, `<i>`, `<sup>`, etc.) for formatting.
+2. **Frontend preview showed raw HTML tags**: The preview dialog displayed HTML tags instead of formatted text because the backend was returning HTML without conversion.
+
+#### Fixes Applied
+1. **Added `parsePassageFromHTML` function** in `api/services/bible_ai.go`:
+   - Converts common Bible HTML tags to Markdown equivalents:
+     - `<b>`, `<strong>` → `**bold**`
+     - `<i>`, `<em>` → `*italic*`
+     - `<sup>` → `^superscript^`
+     - `<br>` → newline
+     - `<p>` → paragraph separation with blank lines
+     - `<h1>-<h4>` → bold headings with proper spacing
+   - Handles nested tags and unknown elements gracefully.
+2. **Updated `GetPassage` method** to convert HTML to Markdown before returning verses.
+3. **Enhanced frontend preview** to use `ReactMarkdown` for proper rendering of Markdown formatting.
+4. **Added comprehensive tests** for HTML parsing function with various tag combinations.
+
+#### Verification
+- Backend tests pass (including new HTML parsing tests).
+- Frontend tests pass with updated mock responses.
+- HTML tags are now converted to Markdown formatting.
+- Preview dialog displays formatted text instead of raw HTML.

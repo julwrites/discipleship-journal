@@ -126,11 +126,14 @@ func parsePassageFromHTML(htmlStr string) (string, error) {
 					parseNode(c)
 				}
 			case "h1", "h2", "h3", "h4":
-				result.WriteString("\n\n**")
+				if result.Len() > 0 {
+					result.WriteString("\n\n")
+				}
+				result.WriteString("**")
 				for c := n.FirstChild; c != nil; c = c.NextSibling {
 					parseNode(c)
 				}
-				result.WriteString("**\n")
+				result.WriteString("**")
 			case "span":
 				// Span just passes through
 				for c := n.FirstChild; c != nil; c = c.NextSibling {
@@ -142,21 +145,15 @@ func parsePassageFromHTML(htmlStr string) (string, error) {
 					parseNode(c)
 				}
 			}
+		default:
+			for c := n.FirstChild; c != nil; c = c.NextSibling {
+				parseNode(c)
+			}
 		}
 	}
 
-	// Find body or start from root
-	var start *html.Node
-	if doc.Type == html.DocumentNode && doc.FirstChild != nil && doc.FirstChild.NextSibling != nil {
-		// Skip doctype and html, go to body
-		htmlNode := doc.FirstChild.NextSibling
-		if htmlNode.FirstChild != nil {
-			start = htmlNode.FirstChild.NextSibling // body
-		}
-	}
-	if start == nil {
-		start = doc
-	}
+	// Start from the document root - recursion will handle skipping non-content nodes
+	start := doc
 
 	parseNode(start)
 
