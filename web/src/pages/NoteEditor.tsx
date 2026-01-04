@@ -229,7 +229,11 @@ export default function NoteEditor() {
                                 </div>
                                 {bibleText && (
                                     <div className="p-2 bg-muted border rounded max-h-40 overflow-auto text-sm italic">
-                                        {bibleText}
+                                        <div className="prose prose-sm dark:prose-invert max-w-none">
+                                            <ReactMarkdown>
+                                                {bibleText}
+                                            </ReactMarkdown>
+                                        </div>
                                     </div>
                                 )}
                                 {bibleText && (
