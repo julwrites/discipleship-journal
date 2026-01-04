@@ -74,8 +74,12 @@ func (c *RealBibleAIClient) GetPassage(ctx context.Context, reference string) (m
 	// The API returns {"verse": "John 3:16 (ESV) For God so loved the world..."}
 	// Extract the verse text from the response
 	if verse, ok := result["verse"].(string); ok {
+		// Map 'verse' to 'text' and 'content' for frontend compatibility
+		// Frontend checks for res.text || res.content
 		return map[string]interface{}{
-			"verse": verse,
+			"verse":   verse,
+			"text":    verse,
+			"content": verse,
 		}, nil
 	}
 
@@ -193,6 +197,15 @@ func (c *RealBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 		content = txt
 	} else if respStr, ok := result["response"].(string); ok {
 		content = respStr
+	} else if choiceArr, ok := result["choices"].([]interface{}); ok && len(choiceArr) > 0 {
+		// Fallback for OpenAI-style responses if the API passes them through
+		if choice, ok := choiceArr[0].(map[string]interface{}); ok {
+			if msg, ok := choice["message"].(map[string]interface{}); ok {
+				if c, ok := msg["content"].(string); ok {
+					content = c
+				}
+			}
+		}
 	}
 
 	// Extract references if present
