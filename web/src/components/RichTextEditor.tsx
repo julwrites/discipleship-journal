@@ -15,17 +15,19 @@ import {
 import { useEffect, useState } from 'react'
 
 interface RichTextEditorProps {
-    content: string;
+    initialContent: string;
     onChange: (markdown: string) => void;
     editable?: boolean;
     placeholder?: string;
+    onEditorReady?: (editor: Editor) => void;
 }
 
 export default function RichTextEditor({
-    content,
+    initialContent,
     onChange,
     editable = true,
-    placeholder = "Write something..."
+    placeholder = "Write something...",
+    onEditorReady
 }: RichTextEditorProps) {
     const editor = useEditor({
         extensions: [
@@ -39,26 +41,27 @@ export default function RichTextEditor({
             }),
             Markdown,
         ],
-        content: content,
+        content: initialContent,
         editable: editable,
         onUpdate: ({ editor }) => {
             const markdownOutput = (editor as Editor & { getMarkdown: () => string }).getMarkdown();
             onChange(markdownOutput);
         },
-    });
-
-    // Update editor content when prop changes
-    useEffect(() => {
-        if (editor && content !== (editor as Editor & { getMarkdown: () => string }).getMarkdown()) {
-            editor.commands.setContent(content);
+        onCreate: ({ editor }) => {
+            if (onEditorReady) {
+                onEditorReady(editor);
+            }
         }
-    }, [content, editor]);
+    });
 
     useEffect(() => {
         if (editor) {
             editor.setEditable(editable);
         }
     }, [editable, editor]);
+
+    // Note: We intentionally do NOT use useEffect to sync `initialContent` to editor.
+    // The content is only seeded initially. Updates should happen via the editor instance.
 
     if (!editor) {
         return null;
