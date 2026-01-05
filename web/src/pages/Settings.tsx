@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { syncUser, updateUser } from "@/services/api";
 import { useTheme } from "@/components/ThemeProvider";
 import { useNotifications } from "@/hooks/useNotifications";
-import { Moon, Sun, Laptop, Palette, Bell } from "lucide-react";
+import { Moon, Sun, Laptop, Palette, Bell, ArrowLeft } from "lucide-react";
 
 export default function Settings() {
   const [username, setUsername] = useState("");
@@ -44,8 +44,13 @@ export default function Settings() {
   return (
     <div className="p-4 md:p-8 max-w-2xl mx-auto space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Manage your account settings and preferences.</p>
+        <div className="flex items-center gap-3 mb-2">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+                <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-3xl font-bold">Settings</h1>
+        </div>
+        <p className="text-muted-foreground ml-12">Manage your account settings and preferences.</p>
       </div>
 
       <div className="space-y-6">

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { auth } from "@/lib/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useDebounce } from "@/hooks/useDebounce";
+import { ArrowLeft } from "lucide-react";
 import {
     getConnections,
     searchUsers as apiSearchUsers,
@@ -30,6 +32,7 @@ interface Connection {
 }
 
 export default function ConnectionsPage() {
+    const navigate = useNavigate();
     const [user] = useAuthState(auth);
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearch = useDebounce(searchQuery, 500);
@@ -100,7 +103,12 @@ export default function ConnectionsPage() {
 
     return (
         <div className="p-8 max-w-4xl mx-auto space-y-6">
-            <h1 className="text-3xl font-bold">Connections</h1>
+            <div className="flex items-center gap-3">
+                <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+                    <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <h1 className="text-3xl font-bold">Connections</h1>
+            </div>
 
             <Tabs defaultValue="connections">
                 <TabsList>

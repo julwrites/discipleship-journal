@@ -26,7 +26,7 @@ type User struct {
 }
 
 type UpdateUserRequest struct {
-	Username *string                `json:"username" validate:"omitempty,min=3,max=30,alphanum"`
+	Username *string                `json:"username" validate:"omitempty,max=30"`
 	Settings map[string]interface{} `json:"settings" validate:"omitempty"`
 }
 
@@ -115,11 +115,16 @@ func (h *UserHandler) CreateOrUpdateUser(w http.ResponseWriter, r *http.Request)
 				settingsJSON = []byte("{}")
 			}
 
+			var usernameVal interface{} = req.Username
+			if req.Username != nil && *req.Username == "" {
+				usernameVal = nil
+			}
+
 			err = h.db.QueryRow(r.Context(), `
 				INSERT INTO users (firebase_uid, email, username, settings)
 				VALUES ($1, $2, $3, $4)
 				RETURNING id, firebase_uid, email, username, settings, created_at, updated_at`,
-				uid, email, req.Username, settingsJSON).Scan(
+				uid, email, usernameVal, settingsJSON).Scan(
 				&user.ID, &user.FirebaseUID, &user.Email, &user.Username, &settingsBytes, &user.CreatedAt, &user.UpdatedAt,
 			)
 			if err != nil {
@@ -157,7 +162,11 @@ func (h *UserHandler) CreateOrUpdateUser(w http.ResponseWriter, r *http.Request)
 
 	if req.Username != nil {
 		updateQuery += fmt.Sprintf(", username = $%d", argIdx)
-		args = append(args, req.Username)
+		var val interface{} = req.Username
+		if *req.Username == "" {
+			val = nil
+		}
+		args = append(args, val)
 		argIdx++
 		shouldUpdate = true
 	}

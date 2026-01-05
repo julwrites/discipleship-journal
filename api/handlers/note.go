@@ -26,7 +26,7 @@ type Note struct {
 
 type CreateNoteRequest struct {
 	Title   string                 `json:"title" validate:"required,min=1,max=100"`
-	Content map[string]interface{} `json:"content" validate:"required"`
+	Content interface{} `json:"content" validate:"required"`
 }
 
 type NoteHandler struct {
