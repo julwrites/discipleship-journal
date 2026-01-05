@@ -60,7 +60,7 @@ export async function fetchNotes(page = 1, limit = 20, filter: NoteFilter | stri
   return res.json();
 }
 
-export async function createNote(title: string, content: Record<string, unknown>) {
+export async function createNote(title: string, content: any) {
   const headers = await getHeaders();
   const res = await fetch(`${API_URL}/notes`, {
     method: "POST",
@@ -78,7 +78,7 @@ export async function getNote(id: string) {
     return res.json();
 }
 
-export async function updateNote(id: string, title: string, content: Record<string, unknown>) {
+export async function updateNote(id: string, title: string, content: any) {
     const headers = await getHeaders();
     const res = await fetch(`${API_URL}/notes/${id}`, {
         method: "PUT",
