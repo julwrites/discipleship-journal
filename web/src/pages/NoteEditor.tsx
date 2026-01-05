@@ -74,7 +74,12 @@ export default function NoteEditor() {
             setLoading(true);
             getNote(id).then(note => {
                 setTitle(note.title);
-                setContent(note.content || "");
+                // Handle legacy content format (object with markdown)
+                let noteContent = note.content || "";
+                if (typeof noteContent === 'object' && noteContent.markdown) {
+                    noteContent = noteContent.markdown;
+                }
+                setContent(noteContent);
                 setLastSaved("Loaded");
             }).catch(e => {
                 console.error(e);
