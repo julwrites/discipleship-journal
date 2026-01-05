@@ -96,7 +96,7 @@ describe('NoteEditor', () => {
         const mockGetNote = vi.mocked(api.getNote).mockResolvedValue({
             id: '123',
             title: 'Test Note',
-            content: { markdown: 'Initial content' }
+            content: 'Initial content'
         });
         const mockUpdateNote = vi.mocked(api.updateNote).mockResolvedValue(undefined);
 
@@ -123,7 +123,7 @@ describe('NoteEditor', () => {
         vi.useRealTimers();
 
         await waitFor(() => {
-            expect(mockUpdateNote).toHaveBeenCalledWith('123', 'Test Note', { markdown: 'Updated content' });
+            expect(mockUpdateNote).toHaveBeenCalledWith('123', 'Test Note', 'Updated content');
         });
     });
 
@@ -131,7 +131,7 @@ describe('NoteEditor', () => {
         vi.mocked(api.getNote).mockResolvedValue({
             id: '123',
             title: 'Test Note',
-            content: { markdown: 'Initial content' }
+            content: 'Initial content'
         });
         vi.mocked(api.updateNote).mockRejectedValue(new Error('Network error'));
 
@@ -171,7 +171,7 @@ describe('NoteEditor', () => {
         vi.mocked(api.getNote).mockResolvedValue({
             id: '123',
             title: 'Test Note',
-            content: { markdown: 'Initial content' }
+            content: 'Initial content'
         });
         const mockDeleteNote = vi.mocked(api.deleteNote).mockResolvedValue(undefined);
 
@@ -205,7 +205,7 @@ describe('NoteEditor', () => {
         vi.mocked(api.getNote).mockResolvedValue({
             id: '123',
             title: 'Test Note',
-            content: { markdown: 'Initial content' }
+            content: 'Initial content'
         });
         vi.mocked(api.getBiblePassage).mockResolvedValue({ verse: 'For God so loved the world...', text: 'For God so loved the world...' });
 
@@ -247,7 +247,7 @@ describe('NoteEditor', () => {
         vi.mocked(api.getNote).mockResolvedValue({
             id: '123',
             title: 'Test Note',
-            content: { markdown: 'Content' }
+            content: 'Content'
         });
         vi.mocked(api.askAI).mockResolvedValue({ response: 'AI Answer' });
 
@@ -291,7 +291,7 @@ describe('NoteEditor', () => {
         vi.mocked(api.getNote).mockResolvedValue({
             id: '123',
             title: 'Test Note',
-            content: { markdown: 'Initial content' }
+            content: 'Initial content'
         });
         vi.mocked(api.getBiblePassage).mockResolvedValue({ verse: 'In the beginning...', text: 'In the beginning...' });
 

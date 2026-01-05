@@ -24,6 +24,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { useDebounce } from "@/hooks/useDebounce";
 import {
     DropdownMenu,
@@ -38,7 +39,7 @@ export default function NoteEditor() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [title, setTitle] = useState("");
-    const [markdown, setMarkdown] = useState("");
+    const [content, setContent] = useState("");
     const [mode, setMode] = useState<"edit" | "preview">("edit");
     const [saving, setSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<string | null>(null);
@@ -74,7 +75,12 @@ export default function NoteEditor() {
             setLoading(true);
             getNote(id).then(note => {
                 setTitle(note.title);
-                setMarkdown(note.content.markdown || "");
+                // Handle legacy content format (object with markdown)
+                let noteContent = note.content || "";
+                if (typeof noteContent === 'object' && noteContent.markdown) {
+                    noteContent = noteContent.markdown;
+                }
+                setContent(noteContent);
                 setLastSaved("Loaded");
             }).catch(e => {
                 console.error(e);
@@ -91,7 +97,6 @@ export default function NoteEditor() {
         setSaving(true);
         setSaveError(false);
         try {
-            const content = { markdown };
             if (id === "new") {
                 if (!manual) return; // Don't auto-save new notes until title/content exists or manual save
                 const res = await createNote(title, content);
@@ -123,14 +128,14 @@ export default function NoteEditor() {
         if (!id || id === "new") return;
 
         const timer = setTimeout(() => {
-            if (title || markdown) {
+            if (title || content) {
                 handleSave(false);
             }
         }, 2000); // 2 second debounce
 
         return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [title, markdown, id]);
+    }, [title, content, id]);
 
     const handleDelete = () => {
         if (!id || id === "new") return;
@@ -223,7 +228,7 @@ export default function NoteEditor() {
         setAskingAI(true);
         setAiResponse("");
         try {
-            const res = await askAI(markdown, aiPrompt);
+            const res = await askAI(content, aiPrompt);
             setAiResponse(res.response);
         } catch (e) {
             console.error(e);
@@ -339,13 +344,14 @@ export default function NoteEditor() {
                         <DialogTitle>Add Bible Passage</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4">
-                        <div className="flex gap-2">
-                            <Input
+                        <div className="flex flex-col gap-2">
+                            <Textarea
                                 placeholder="e.g. John 3:16"
                                 value={passageRef}
                                 onChange={(e) => setPassageRef(e.target.value)}
+                                className="min-h-[100px]"
                             />
-                            <Button onClick={handleFetchPassage} disabled={loadingPassage}>
+                            <Button onClick={handleFetchPassage} disabled={loadingPassage} className="w-full">
                                 {loadingPassage ? "..." : "Search"}
                             </Button>
                         </div>
@@ -372,12 +378,12 @@ export default function NoteEditor() {
                     </DialogHeader>
                     <div className="space-y-4">
                         <div className="flex flex-col gap-2">
-                            <Input
+                            <Textarea
                                 placeholder="Ask a question..."
                                 value={aiPrompt}
                                 onChange={(e) => setAiPrompt(e.target.value)}
                             />
-                            <Button onClick={handleAskAI} disabled={askingAI || !markdown}>
+                            <Button onClick={handleAskAI} disabled={askingAI || !content}>
                                 {askingAI ? "Thinking..." : "Ask"}
                             </Button>
                         </div>
@@ -437,15 +443,15 @@ export default function NoteEditor() {
                 {mode === "edit" ? (
                     !loading && (
                         <RichTextEditor
-                            initialContent={markdown}
-                            onChange={setMarkdown}
+                            initialContent={content}
+                            onChange={setContent}
                             editable={true}
                             onEditorReady={(editor) => { editorRef.current = editor; }}
                         />
                     )
                 ) : (
                     <div className="flex-1 border rounded-lg overflow-auto p-4 prose dark:prose-invert max-w-none bg-muted">
-                        <ReactMarkdown>{markdown}</ReactMarkdown>
+                        <div dangerouslySetInnerHTML={{ __html: content }} />
                     </div>
                 )}
             </div>

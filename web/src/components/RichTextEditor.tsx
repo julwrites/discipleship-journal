@@ -44,8 +44,7 @@ export default function RichTextEditor({
         content: initialContent,
         editable: editable,
         onUpdate: ({ editor }) => {
-            const markdownOutput = (editor as Editor & { getMarkdown: () => string }).getMarkdown();
-            onChange(markdownOutput);
+            onChange(editor.getHTML());
         },
         onCreate: ({ editor }) => {
             if (onEditorReady) {
