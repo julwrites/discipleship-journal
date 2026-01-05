@@ -53,6 +53,7 @@ func (h *ChatHandler) ChatWithAI(w http.ResponseWriter, r *http.Request) {
 		"prompt": req.Prompt,
 		"verses": []string{req.Passage},
 		"themes": req.Themes,
+		"type":   "ask",
 	}
 
 	var answer string
@@ -104,13 +105,24 @@ func (h *ChatHandler) ChatWithAI(w http.ResponseWriter, r *http.Request) {
 		noteTitle = noteTitle[:47] + "..."
 	}
 
-	noteContent := map[string]interface{}{
-		"markdown": fmt.Sprintf("# %s\n\n**Passage:** %s\n**Themes:** %v\n\n**Q:** %s\n\n**AI:** %s",
-			noteTitle, req.Passage, req.Themes, req.Prompt, answer),
-		"type": "chat_log",
-	}
+	// Construct HTML content for the note
+	// Assuming answer is HTML as requested by system prompt
+	htmlContent := fmt.Sprintf("<h1>%s</h1><p><strong>Passage:</strong> %s</p><p><strong>Themes:</strong> %v</p><p><strong>Q:</strong> %s</p><div class=\"ai-response\"><strong>AI:</strong> %s</div>",
+		noteTitle, req.Passage, req.Themes, req.Prompt, answer)
 
-	contentJSON, err := json.Marshal(noteContent)
+	// NoteService expects content as a string which is then marshaled to JSON.
+	// But wait, createNote handler usually takes a JSON object?
+	// NoteService.CreateNote signature is (ctx, userID, title, content []byte).
+	// The DB expects JSONB. So we wrap the HTML string in quotes to make it a valid JSON string.
+	// Or simply pass the raw HTML string if the service/db handles it?
+	// The `Note` struct in `api/services/note_service.go` defines `Content interface{}`.
+	// However, `CreateNote` accepts `content []byte`.
+	// Let's check how NoteHandler does it.
+	// NoteHandler receives `CreateNoteRequest` with `Content string`.
+	// Then calls `json.Marshal(req.Content)`.
+	// So we should do the same: marshal the string to a JSON string literal.
+
+	contentJSON, err := json.Marshal(htmlContent)
 	if err != nil {
 		http.Error(w, "Failed to marshal content", http.StatusInternalServerError)
 		return
@@ -154,6 +166,7 @@ func (h *ChatHandler) AskAI(w http.ResponseWriter, r *http.Request) {
 	payload := map[string]interface{}{
 		"prompt":  req.Prompt,
 		"context": req.Context,
+		"type":    "ask",
 	}
 
 	var answer string
