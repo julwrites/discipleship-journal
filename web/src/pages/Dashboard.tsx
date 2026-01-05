@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import ReactMarkdown from "react-markdown";
 
 export default function Dashboard() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -475,8 +474,8 @@ export default function Dashboard() {
                         {aiResponse && (
                             <div className="p-4 bg-muted border rounded max-h-60 overflow-auto text-sm">
                                 <p className="font-semibold mb-2">Answer:</p>
-                                <div className="prose prose-sm dark:prose-invert max-w-none">
-                                    <ReactMarkdown>{aiResponse}</ReactMarkdown>
+                                <div className="prose prose-sm dark:prose-invert max-w-none break-words">
+                                    <div dangerouslySetInnerHTML={{ __html: aiResponse }} />
                                 </div>
                             </div>
                         )}

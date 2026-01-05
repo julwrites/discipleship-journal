@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html"
 	"log"
 	"regexp"
 	"strings"
@@ -136,8 +137,8 @@ func (c *RealBibleAIClient) GetPassage(ctx context.Context, reference string) (m
 		}
 	}
 
-	// Return raw HTML from the API
-	verseText := result.Verse
+	// Return raw HTML from the API, unescaping it in case it was escaped in the JSON response
+	verseText := html.UnescapeString(result.Verse)
 
 	return map[string]interface{}{
 		"verse": verseText,
@@ -237,7 +238,9 @@ func (c *RealBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 		return nil, fmt.Errorf("bible API error: %s, message: %s", resp.Status(), errorResult.Error.Message)
 	}
 
-	cleanedText := cleanHTML(result.Text)
+	// Unescape the text before cleaning
+	unescapedText := html.UnescapeString(result.Text)
+	cleanedText := cleanHTML(unescapedText)
 
 	// Construct return map
 	response := map[string]interface{}{
