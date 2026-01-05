@@ -69,7 +69,8 @@ type UserContext struct {
 }
 
 type VerseResponse struct {
-	Verse string `json:"verse"`
+	Verse     string `json:"verse"`
+	Reference string `json:"reference,omitempty"`
 }
 
 type Reference struct {
@@ -141,8 +142,9 @@ func (c *RealBibleAIClient) GetPassage(ctx context.Context, reference string) (m
 	verseText := html.UnescapeString(result.Verse)
 
 	return map[string]interface{}{
-		"verse": verseText,
-		"text":  verseText,
+		"verse":     verseText,
+		"text":      verseText,
+		"reference": result.Reference,
 	}, nil
 }
 

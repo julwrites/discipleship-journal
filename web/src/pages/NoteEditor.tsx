@@ -192,6 +192,10 @@ export default function NoteEditor() {
             // API returns "verse" (real) or "text" (mock). Support both.
             const text = res.verse || res.text || res.content || "Passage found but no text returned.";
             setBibleText(text);
+
+            if (res.reference) {
+                setPassageRef(res.reference);
+            }
         } catch (e) {
             console.error(e);
             setBibleText("Error fetching passage.");
@@ -214,8 +218,7 @@ export default function NoteEditor() {
 
         // Build HTML for the passage
         // Backend returns HTML, so we don't need to manually wrap paragraphs unless it's a legacy response
-        // But we want to wrap it in a blockquote for styling
-        const html = `<blockquote><p><strong>${passageRef}</strong></p>${bibleText}</blockquote><p></p>`;
+        const html = `<p><strong>${passageRef}</strong></p>${bibleText}<p></p>`;
 
         editorRef.current.chain().focus().insertContent(html).run();
 
@@ -242,7 +245,7 @@ export default function NoteEditor() {
         if (!aiResponse || !editorRef.current) return;
 
         // Backend returns HTML now (via system prompt to LLM), so we insert directly
-        const html = `<blockquote><p><strong>AI Response</strong></p>${aiResponse}<p><em>Question: ${aiPrompt}</em></p></blockquote><p></p>`;
+        const html = `<p><em>Question: ${aiPrompt}</em></p>${aiResponse}<p></p>`;
 
         editorRef.current.chain().focus().insertContent(html).run();
 

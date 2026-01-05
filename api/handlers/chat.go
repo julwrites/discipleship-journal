@@ -107,8 +107,8 @@ func (h *ChatHandler) ChatWithAI(w http.ResponseWriter, r *http.Request) {
 
 	// Construct HTML content for the note
 	// Assuming answer is HTML as requested by system prompt
-	htmlContent := fmt.Sprintf("<h1>%s</h1><p><strong>Passage:</strong> %s</p><p><strong>Themes:</strong> %v</p><p><strong>Q:</strong> %s</p><div class=\"ai-response\"><strong>AI:</strong> %s</div>",
-		noteTitle, req.Passage, req.Themes, req.Prompt, answer)
+	htmlContent := fmt.Sprintf("<p><strong>Passage:</strong> %s</p><p><strong>Themes:</strong> %v</p><p><strong>Q:</strong> %s</p><div class=\"ai-response\"><strong>AI:</strong> %s</div>",
+		req.Passage, req.Themes, req.Prompt, answer)
 
 	// NoteService expects content as a string which is then marshaled to JSON.
 	// But wait, createNote handler usually takes a JSON object?
