@@ -3,7 +3,7 @@ import { auth } from "@/lib/firebase";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { fetchNotes, syncUser, NoteFilter } from "@/services/api";
+import { fetchNotes, syncUser, NoteFilter, deleteNote, getGroups, shareNote, getNote, askAI } from "@/services/api";
 import { Link } from "react-router-dom";
 import { Settings, Users, BookOpen, Filter, CalendarIcon } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -11,12 +11,18 @@ import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-
-interface Note {
-  id: string;
-  title: string;
-  updated_at: string;
-}
+import { NoteCard, Note } from "@/components/NoteCard";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
+import ReactMarkdown from "react-markdown";
 
 export default function Dashboard() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -35,6 +41,28 @@ export default function Dashboard() {
 
   // Ref to track if filters changed to reset page
   const prevFilterRef = useRef({ startDate, endDate, sortBy, sortOrder });
+
+  // --- Actions State ---
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+
+  // Delete State
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  // Share State
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const [myGroups, setMyGroups] = useState<{ id: string, name: string }[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState("");
+  const [shareComment, setShareComment] = useState("");
+
+  // AI State
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [askingAI, setAskingAI] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiResponse, setAiResponse] = useState("");
+  const [aiNoteContent, setAiNoteContent] = useState("");
+  const [loadingNoteContent, setLoadingNoteContent] = useState(false);
 
   useEffect(() => {
     syncUser();
@@ -78,7 +106,6 @@ export default function Dashboard() {
               };
               const response = await fetchNotes(page, 20, filter);
               if (!ignore) {
-                  // Check if response has data/meta structure or is just array (for backward compat if needed, though we updated API)
                   const newNotes = response.data || response;
 
                   if (page === 1) {
@@ -90,7 +117,6 @@ export default function Dashboard() {
                   if (response.meta) {
                       setHasMore(page < response.meta.total_pages);
                   } else {
-                      // Fallback
                       if (newNotes.length < 20) {
                           setHasMore(false);
                       } else {
@@ -117,6 +143,102 @@ export default function Dashboard() {
       setEndDate(undefined);
       setSortBy("updated_at");
       setSortOrder("desc");
+  };
+
+  // --- Handlers ---
+
+  const handleDeleteClick = (note: Note) => {
+      setSelectedNote(note);
+      setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+      if (!selectedNote) return;
+      setDeleting(true);
+      try {
+          await deleteNote(selectedNote.id);
+          setNotes(prev => prev.filter(n => n.id !== selectedNote.id));
+          toast.success("Note deleted");
+          setDeleteDialogOpen(false);
+      } catch (e) {
+          console.error(e);
+          toast.error("Failed to delete note");
+      } finally {
+          setDeleting(false);
+      }
+  };
+
+  const handleShareClick = async (note: Note) => {
+      setSelectedNote(note);
+      setShareDialogOpen(true);
+      setShareComment("");
+      setSelectedGroupId("");
+
+      // Fetch groups if not already fetched (or refetch to be safe)
+      try {
+          const groups = await getGroups();
+          setMyGroups(groups || []);
+      } catch (e) {
+          console.error(e);
+          toast.error("Failed to load groups");
+      }
+  };
+
+  const confirmShare = async () => {
+      if (!selectedNote || !selectedGroupId) return;
+      setSharing(true);
+      try {
+          await shareNote(selectedGroupId, selectedNote.id, shareComment);
+          toast.success("Note shared successfully");
+          setShareDialogOpen(false);
+      } catch (e) {
+          console.error(e);
+          toast.error("Failed to share note");
+      } finally {
+          setSharing(false);
+      }
+  };
+
+  const handleAskAIClick = (note: Note) => {
+      setSelectedNote(note);
+      setAiDialogOpen(true);
+      setAiPrompt("");
+      setAiResponse("");
+      setAiNoteContent("");
+      setLoadingNoteContent(true);
+
+      // Fetch full content
+      getNote(note.id).then(fullNote => {
+          let content = fullNote.content || "";
+          // Handle legacy format if needed, though getNote usually returns normalized object if we adjusted it,
+          // but based on NoteEditor it might return object with markdown
+          if (typeof content === 'object' && content.markdown) {
+              content = content.markdown;
+          } else if (typeof content === 'object') {
+              content = JSON.stringify(content); // Fallback
+          }
+          setAiNoteContent(content);
+      }).catch(e => {
+          console.error(e);
+          toast.error("Failed to load note content for AI");
+          setAiDialogOpen(false);
+      }).finally(() => {
+          setLoadingNoteContent(false);
+      });
+  };
+
+  const confirmAskAI = async () => {
+      if (!aiNoteContent || !aiPrompt) return;
+      setAskingAI(true);
+      try {
+          const res = await askAI(aiNoteContent, aiPrompt);
+          setAiResponse(res.response);
+      } catch (e) {
+          console.error(e);
+          toast.error("Failed to get AI response");
+      } finally {
+          setAskingAI(false);
+      }
   };
 
   return (
@@ -247,12 +369,13 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {notes.length === 0 && !loading && <p className="text-muted-foreground col-span-full">No notes found.</p>}
         {notes.map((note) => (
-          <Link key={note.id} to={`/notes/${note.id}`} className="block">
-            <div className="p-6 bg-card hover:bg-accent/50 text-card-foreground transition rounded-lg shadow border h-40 flex flex-col">
-                <h3 className="font-semibold mb-2 line-clamp-2">{note.title || "Untitled Note"}</h3>
-                <p className="text-muted-foreground text-xs mt-auto">{new Date(note.updated_at).toLocaleDateString()}</p>
-            </div>
-          </Link>
+          <NoteCard
+            key={note.id}
+            note={note}
+            onDelete={handleDeleteClick}
+            onShare={handleShareClick}
+            onAskAI={handleAskAIClick}
+          />
         ))}
       </div>
 
@@ -276,6 +399,93 @@ export default function Dashboard() {
             </Button>
         </Link>
       </div>
+
+      {/* Delete Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent>
+              <DialogHeader>
+                  <DialogTitle>Delete Note</DialogTitle>
+                  <DialogDescription>
+                      Are you sure you want to delete "{selectedNote?.title}"? This action cannot be undone.
+                  </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                  <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+                  <Button variant="destructive" onClick={confirmDelete} disabled={deleting}>
+                      {deleting ? "Deleting..." : "Delete"}
+                  </Button>
+              </DialogFooter>
+          </DialogContent>
+      </Dialog>
+
+      {/* Share Dialog */}
+      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+          <DialogContent>
+              <DialogHeader>
+                  <DialogTitle>Share to Group</DialogTitle>
+                  <DialogDescription>Share "{selectedNote?.title}" with your study group.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                  <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
+                      <SelectTrigger>
+                          <SelectValue placeholder="Select a Group..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                          {myGroups.map(g => (
+                              <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+                          ))}
+                      </SelectContent>
+                  </Select>
+                  <Input
+                      placeholder="Add a comment (optional)..."
+                      value={shareComment}
+                      onChange={(e) => setShareComment(e.target.value)}
+                  />
+                  <Button onClick={confirmShare} disabled={sharing || !selectedGroupId} className="w-full">
+                      {sharing ? "Sharing..." : "Share Note"}
+                  </Button>
+              </div>
+          </DialogContent>
+      </Dialog>
+
+      {/* AI Dialog */}
+      <Dialog open={aiDialogOpen} onOpenChange={setAiDialogOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                  <DialogTitle>Ask AI</DialogTitle>
+                  <DialogDescription>
+                      Ask a question about "{selectedNote?.title}".
+                  </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                  {loadingNoteContent ? (
+                      <div className="text-center py-4 text-muted-foreground">Loading note content...</div>
+                  ) : (
+                      <>
+                        <div className="flex flex-col gap-2">
+                            <Textarea
+                                placeholder="Ask a question..."
+                                value={aiPrompt}
+                                onChange={(e) => setAiPrompt(e.target.value)}
+                            />
+                            <Button onClick={confirmAskAI} disabled={askingAI || !aiNoteContent}>
+                                {askingAI ? "Thinking..." : "Ask"}
+                            </Button>
+                        </div>
+                        {aiResponse && (
+                            <div className="p-4 bg-muted border rounded max-h-60 overflow-auto text-sm">
+                                <p className="font-semibold mb-2">Answer:</p>
+                                <div className="prose prose-sm dark:prose-invert max-w-none">
+                                    <ReactMarkdown>{aiResponse}</ReactMarkdown>
+                                </div>
+                            </div>
+                        )}
+                      </>
+                  )}
+              </div>
+          </DialogContent>
+      </Dialog>
+
     </div>
   );
 }
