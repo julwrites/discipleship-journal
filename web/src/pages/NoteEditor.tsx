@@ -24,6 +24,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { useDebounce } from "@/hooks/useDebounce";
 import {
     DropdownMenu,
@@ -339,13 +340,14 @@ export default function NoteEditor() {
                         <DialogTitle>Add Bible Passage</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4">
-                        <div className="flex gap-2">
-                            <Input
+                        <div className="flex flex-col gap-2">
+                            <Textarea
                                 placeholder="e.g. John 3:16"
                                 value={passageRef}
                                 onChange={(e) => setPassageRef(e.target.value)}
+                                className="min-h-[100px]"
                             />
-                            <Button onClick={handleFetchPassage} disabled={loadingPassage}>
+                            <Button onClick={handleFetchPassage} disabled={loadingPassage} className="w-full">
                                 {loadingPassage ? "..." : "Search"}
                             </Button>
                         </div>
@@ -372,7 +374,7 @@ export default function NoteEditor() {
                     </DialogHeader>
                     <div className="space-y-4">
                         <div className="flex flex-col gap-2">
-                            <Input
+                            <Textarea
                                 placeholder="Ask a question..."
                                 value={aiPrompt}
                                 onChange={(e) => setAiPrompt(e.target.value)}

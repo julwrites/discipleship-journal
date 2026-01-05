@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { chatWithAI } from "@/services/api";
 import { useNavigate } from "react-router-dom";
 
@@ -35,7 +36,7 @@ export default function ChatPage() {
 
             <div className="space-y-2">
                 <label className="text-sm font-medium">Bible Passage(s)</label>
-                <Input
+                <Textarea
                     placeholder="e.g. Romans 8, Psalm 23"
                     value={passage}
                     onChange={(e) => setPassage(e.target.value)}
@@ -53,7 +54,7 @@ export default function ChatPage() {
 
             <div className="space-y-2">
                 <label className="text-sm font-medium">Your Question / Prompt</label>
-                <Input
+                <Textarea
                     placeholder="What does this say about..."
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
