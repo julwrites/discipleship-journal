@@ -7,8 +7,6 @@ import (
 	"log"
 	"strings"
 
-	"golang.org/x/net/html"
-
 	"github.com/go-resty/resty/v2"
 )
 
@@ -20,17 +18,26 @@ type BibleAIClient interface {
 
 // RealBibleAIClient is the production implementation using the real API.
 type RealBibleAIClient struct {
-	APIURL string
-	APIKey string
-	Client *resty.Client
+	APIURL        string
+	APIKey        string
+	Client        *resty.Client
+	SystemPrompts map[string]string
 }
 
 // NewRealBibleAIClient creates a new instance of RealBibleAIClient.
-func NewRealBibleAIClient(apiURL, apiKey string) *RealBibleAIClient {
+func NewRealBibleAIClient(apiURL, apiKey, systemPromptsJSON string) *RealBibleAIClient {
+	prompts := make(map[string]string)
+	if systemPromptsJSON != "" {
+		if err := json.Unmarshal([]byte(systemPromptsJSON), &prompts); err != nil {
+			log.Printf("Failed to parse system prompts JSON: %v", err)
+		}
+	}
+
 	return &RealBibleAIClient{
-		APIURL: apiURL,
-		APIKey: apiKey,
-		Client: resty.New(),
+		APIURL:        apiURL,
+		APIKey:        apiKey,
+		Client:        resty.New(),
+		SystemPrompts: prompts,
 	}
 }
 
@@ -78,92 +85,6 @@ type ErrorResponse struct {
 		Code    int    `json:"code"`
 		Message string `json:"message"`
 	} `json:"error"`
-}
-
-// parsePassageFromHTML converts HTML from Bible API to markdown format.
-// It handles common tags found in Bible passages: p, span, b, i, sup, br, h1-h4.
-func parsePassageFromHTML(htmlStr string) (string, error) {
-	doc, err := html.Parse(strings.NewReader(htmlStr))
-	if err != nil {
-		return "", fmt.Errorf("failed to parse HTML: %v", err)
-	}
-
-	var result strings.Builder
-	var parseNode func(*html.Node)
-
-	parseNode = func(n *html.Node) {
-		switch n.Type {
-		case html.TextNode:
-			result.WriteString(n.Data)
-		case html.ElementNode:
-			switch n.Data {
-			case "b", "strong":
-				result.WriteString("**")
-				for c := n.FirstChild; c != nil; c = c.NextSibling {
-					parseNode(c)
-				}
-				result.WriteString("**")
-			case "i", "em":
-				result.WriteString("*")
-				for c := n.FirstChild; c != nil; c = c.NextSibling {
-					parseNode(c)
-				}
-				result.WriteString("*")
-			case "sup":
-				result.WriteString("^")
-				for c := n.FirstChild; c != nil; c = c.NextSibling {
-					parseNode(c)
-				}
-				result.WriteString("^")
-			case "br":
-				result.WriteString("\n")
-			case "p":
-				// Add newline before paragraph (except first)
-				if result.Len() > 0 {
-					result.WriteString("\n\n")
-				}
-				for c := n.FirstChild; c != nil; c = c.NextSibling {
-					parseNode(c)
-				}
-			case "h1", "h2", "h3", "h4":
-				if result.Len() > 0 {
-					result.WriteString("\n\n")
-				}
-				result.WriteString("**")
-				for c := n.FirstChild; c != nil; c = c.NextSibling {
-					parseNode(c)
-				}
-				result.WriteString("**")
-			case "span":
-				// Span just passes through
-				for c := n.FirstChild; c != nil; c = c.NextSibling {
-					parseNode(c)
-				}
-			default:
-				// Unknown element, process children
-				for c := n.FirstChild; c != nil; c = c.NextSibling {
-					parseNode(c)
-				}
-			}
-		default:
-			for c := n.FirstChild; c != nil; c = c.NextSibling {
-				parseNode(c)
-			}
-		}
-	}
-
-	// Start from the document root - recursion will handle skipping non-content nodes
-	start := doc
-
-	parseNode(start)
-
-	// Clean up extra whitespace
-	text := result.String()
-	text = strings.TrimSpace(text)
-	text = strings.ReplaceAll(text, "  ", " ")
-	text = strings.ReplaceAll(text, "\n\n\n", "\n\n")
-
-	return text, nil
 }
 
 // GetPassage fetches a bible passage from the external API.
@@ -214,16 +135,8 @@ func (c *RealBibleAIClient) GetPassage(ctx context.Context, reference string) (m
 		}
 	}
 
-	// Convert HTML to markdown for display and insertion
+	// Return raw HTML from the API
 	verseText := result.Verse
-	if verseText != "" {
-		markdown, err := parsePassageFromHTML(verseText)
-		if err != nil {
-			log.Printf("Failed to convert HTML to markdown: %v. Using original text.", err)
-		} else {
-			verseText = markdown
-		}
-	}
 
 	return map[string]interface{}{
 		"verse": verseText,
@@ -242,6 +155,12 @@ func (c *RealBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 		prompt = ""
 	}
 
+	// Handle optional context by appending it to the prompt variable
+	// This ensures it is included even if the template doesn't explicitly use {CONTEXT}
+	if ctxText, ok := payload["context"].(string); ok && ctxText != "" {
+		prompt += fmt.Sprintf(" Context: %s.", ctxText)
+	}
+
 	// Prepare Context
 	queryContext := &QueryContext{
 		User: &UserContext{
@@ -249,26 +168,50 @@ func (c *RealBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 		},
 	}
 
-	// Map 'verses' from payload to context.verses
-	if verses, ok := payload["verses"].([]string); ok && len(verses) > 0 {
+	var themes []string
+	if ts, ok := payload["themes"].([]string); ok {
+		themes = ts
+	}
+	if len(themes) > 0 {
+		queryContext.Words = themes
+	}
+
+	var verses []string
+	if vs, ok := payload["verses"].([]string); ok {
+		verses = vs
+	}
+	if len(verses) > 0 {
 		queryContext.Verses = verses
 	}
 
-	// Map 'themes' from payload to context.words
-	if themes, ok := payload["themes"].([]string); ok && len(themes) > 0 {
-		queryContext.Words = themes
-		// Also optionally append to prompt to ensure LLM focuses on them
-		prompt += fmt.Sprintf(" Focus on themes: %s.", strings.Join(themes, ", "))
+	// Select prompt template
+	promptType, _ := payload["type"].(string)
+	if promptType == "" {
+		promptType = "ask"
 	}
 
-	// Handle 'context' string (generic text) - API doesn't have a field for this, so append to prompt
-	if ctxText, ok := payload["context"].(string); ok && ctxText != "" {
-		prompt += fmt.Sprintf(" Context: %s.", ctxText)
+	template := c.SystemPrompts[promptType]
+
+	finalPrompt := prompt
+	if template != "" {
+		// Replace tags: {PROMPT}, {WORDS}, {PASSAGE}
+		r := strings.NewReplacer(
+			"{PROMPT}", prompt,
+			"{WORDS}", strings.Join(themes, ", "),
+			"{PASSAGE}", strings.Join(verses, "\n"),
+		)
+		finalPrompt = r.Replace(template)
+	} else {
+		// Fallback/Legacy behavior: append context manually if prompt template not found
+		// (though we already appended context to prompt above, so just add themes)
+		if len(themes) > 0 {
+			finalPrompt += fmt.Sprintf(" Focus on themes: %s.", strings.Join(themes, ", "))
+		}
 	}
 
 	reqPayload := QueryRequest{
 		Query: QueryPayload{
-			Prompt: prompt,
+			Prompt: finalPrompt,
 		},
 		Context: queryContext,
 	}

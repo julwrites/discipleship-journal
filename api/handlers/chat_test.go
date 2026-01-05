@@ -22,7 +22,7 @@ func TestChatWithAI(t *testing.T) {
 	useReal := os.Getenv("TEST_REAL_BIBLE_API") == "true"
 	var client services.BibleAIClient
 	if useReal {
-		client = services.NewRealBibleAIClient(os.Getenv("BIBLE_API_URL"), os.Getenv("BIBLE_API_KEY"))
+		client = services.NewRealBibleAIClient(os.Getenv("BIBLE_API_URL"), os.Getenv("BIBLE_API_KEY"), os.Getenv("LLM_SYSTEM_PROMPTS"))
 	} else {
 		client = services.NewMockBibleAIClient()
 	}
