@@ -12,7 +12,6 @@ import {
     getGroups,
     shareNote
 } from "@/services/api";
-import ReactMarkdown from "react-markdown";
 import RichTextEditor from "@/components/RichTextEditor";
 import { Editor } from "@tiptap/react";
 import {
