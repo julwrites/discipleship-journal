@@ -357,7 +357,7 @@ export default function NoteEditor() {
                         </div>
                         {bibleText && (
                             <div className="p-2 bg-muted border rounded max-h-40 overflow-auto text-sm italic">
-                                <div className="prose prose-sm dark:prose-invert max-w-none">
+                                <div className="prose prose-sm dark:prose-invert max-w-none break-words">
                                     <div dangerouslySetInnerHTML={{ __html: bibleText }} />
                                 </div>
                             </div>
@@ -389,7 +389,9 @@ export default function NoteEditor() {
                             <>
                                 <div className="p-4 bg-muted border rounded max-h-60 overflow-auto text-sm">
                                     <p className="font-semibold mb-2">Answer:</p>
-                                    <div dangerouslySetInnerHTML={{ __html: aiResponse }} />
+                                    <div className="prose prose-sm dark:prose-invert max-w-none break-words">
+                                        <div dangerouslySetInnerHTML={{ __html: aiResponse }} />
+                                    </div>
                                 </div>
                                 <Button onClick={handleAddAIResponse} className="w-full">
                                     Insert into Note
