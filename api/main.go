@@ -201,17 +201,19 @@ func main() {
 	var bibleAIClient services.BibleAIClient
 
 	// Load Bible API secrets from Secret Manager or environment variables
-	var bibleAPIURL, bibleAPIKey string
+	var bibleAPIURL, bibleAPIKey, llmSystemPrompts string
 	if secretLoader != nil {
 		bibleAPIURL, _ = secretLoader.LoadSecret(context.Background(), "BIBLE_API_URL")
 		bibleAPIKey, _ = secretLoader.LoadSecret(context.Background(), "BIBLE_API_KEY")
+		llmSystemPrompts, _ = secretLoader.LoadSecret(context.Background(), "LLM_SYSTEM_PROMPTS")
 	} else {
 		bibleAPIURL = os.Getenv("BIBLE_API_URL")
 		bibleAPIKey = os.Getenv("BIBLE_API_KEY")
+		llmSystemPrompts = os.Getenv("LLM_SYSTEM_PROMPTS")
 	}
 
 	if bibleAPIURL != "" && bibleAPIKey != "" {
-		bibleAIClient = services.NewRealBibleAIClient(bibleAPIURL, bibleAPIKey)
+		bibleAIClient = services.NewRealBibleAIClient(bibleAPIURL, bibleAPIKey, llmSystemPrompts)
 		logger.Info("Using RealBibleAIClient", "url", bibleAPIURL)
 	} else {
 		logger.Info("BIBLE_API_URL or BIBLE_API_KEY not set, using MockBibleAIClient")

@@ -214,8 +214,9 @@ export default function NoteEditor() {
         if (!editorRef.current) return;
 
         // Build HTML for the passage
-        const formattedText = bibleText.split('\n').map(line => `<p>${line}</p>`).join('');
-        const html = `<blockquote><p><strong>${passageRef}</strong></p>${formattedText}</blockquote><p></p>`;
+        // Backend returns HTML, so we don't need to manually wrap paragraphs unless it's a legacy response
+        // But we want to wrap it in a blockquote for styling
+        const html = `<blockquote><p><strong>${passageRef}</strong></p>${bibleText}</blockquote><p></p>`;
 
         editorRef.current.chain().focus().insertContent(html).run();
 
@@ -241,8 +242,8 @@ export default function NoteEditor() {
     const handleAddAIResponse = () => {
         if (!aiResponse || !editorRef.current) return;
 
-        const formattedResponse = aiResponse.split('\n').map(line => `<p>${line}</p>`).join('');
-        const html = `<blockquote><p><strong>AI Response</strong></p>${formattedResponse}<p><em>Question: ${aiPrompt}</em></p></blockquote><p></p>`;
+        // Backend returns HTML now (via system prompt to LLM), so we insert directly
+        const html = `<blockquote><p><strong>AI Response</strong></p>${aiResponse}<p><em>Question: ${aiPrompt}</em></p></blockquote><p></p>`;
 
         editorRef.current.chain().focus().insertContent(html).run();
 
@@ -358,9 +359,7 @@ export default function NoteEditor() {
                         {bibleText && (
                             <div className="p-2 bg-muted border rounded max-h-40 overflow-auto text-sm italic">
                                 <div className="prose prose-sm dark:prose-invert max-w-none">
-                                    <ReactMarkdown>
-                                        {bibleText}
-                                    </ReactMarkdown>
+                                    <div dangerouslySetInnerHTML={{ __html: bibleText }} />
                                 </div>
                             </div>
                         )}
@@ -391,7 +390,7 @@ export default function NoteEditor() {
                             <>
                                 <div className="p-4 bg-muted border rounded max-h-60 overflow-auto text-sm">
                                     <p className="font-semibold mb-2">Answer:</p>
-                                    <ReactMarkdown>{aiResponse}</ReactMarkdown>
+                                    <div dangerouslySetInnerHTML={{ __html: aiResponse }} />
                                 </div>
                                 <Button onClick={handleAddAIResponse} className="w-full">
                                     Insert into Note
