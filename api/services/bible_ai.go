@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 
 	"github.com/go-resty/resty/v2"
@@ -236,22 +237,39 @@ func (c *RealBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 		return nil, fmt.Errorf("bible API error: %s, message: %s", resp.Status(), errorResult.Error.Message)
 	}
 
+	cleanedText := cleanHTML(result.Text)
+
 	// Construct return map
 	response := map[string]interface{}{
-		"text":       result.Text,
+		"text":       cleanedText,
 		"references": result.References,
 	}
 
 	// Backward compatibility for ChatHandler which expects OpenAI format
-	if result.Text != "" {
+	if cleanedText != "" {
 		response["choices"] = []interface{}{
 			map[string]interface{}{
 				"message": map[string]interface{}{
-					"content": result.Text,
+					"content": cleanedText,
 				},
 			},
 		}
 	}
 
 	return response, nil
+}
+
+var (
+	emptyParaRegex = regexp.MustCompile(`(?i)<p[^>]*>(\s|&nbsp;|<br\s*/?>)*</p>`)
+	newlineRegex   = regexp.MustCompile(`[\r\n]+`)
+)
+
+func cleanHTML(input string) string {
+	// Replace newlines with space to avoid word concatenation if used in text
+	s := newlineRegex.ReplaceAllString(input, " ")
+
+	// Remove empty paragraphs
+	s = emptyParaRegex.ReplaceAllString(s, "")
+
+	return strings.TrimSpace(s)
 }
