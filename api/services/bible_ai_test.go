@@ -74,17 +74,19 @@ func TestRealBibleAIClient_Unescape(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.URL.Path == "/query" {
 			var req QueryRequest
-			json.NewDecoder(r.Body).Decode(&req)
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				return
+			}
 
 			// Check if it's a verse request or chat/prompt
 			if len(req.Query.Verses) > 0 {
 				// Return escaped HTML for verse
-				json.NewEncoder(w).Encode(VerseResponse{
+				_ = json.NewEncoder(w).Encode(VerseResponse{
 					Verse: "&lt;h3&gt;Title&lt;/h3&gt;&lt;p&gt;Verse Text&lt;/p&gt;",
 				})
 			} else {
 				// Return escaped HTML for prompt
-				json.NewEncoder(w).Encode(OQueryResponse{
+				_ = json.NewEncoder(w).Encode(OQueryResponse{
 					Text: "&lt;p&gt;AI Response&lt;/p&gt;",
 				})
 			}
