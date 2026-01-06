@@ -287,7 +287,7 @@ describe('NoteEditor', () => {
         });
     });
 
-    it('auto-searches bible passage after delay', async () => {
+    it('does not auto-search bible passage, but searches on click', async () => {
         vi.mocked(api.getNote).mockResolvedValue({
             id: '123',
             title: 'Test Note',
@@ -319,6 +319,13 @@ describe('NoteEditor', () => {
         });
 
         vi.useRealTimers();
+
+        // Should NOT have called it yet
+        expect(api.getBiblePassage).not.toHaveBeenCalled();
+
+        // Click search
+        const searchBtn = within(dialog).getByRole('button', { name: 'Search' });
+        fireEvent.click(searchBtn);
 
         await waitFor(() => {
             expect(api.getBiblePassage).toHaveBeenCalledWith('Gen 1:1');

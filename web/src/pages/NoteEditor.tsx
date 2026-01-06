@@ -24,7 +24,6 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { useDebounce } from "@/hooks/useDebounce";
 import {
     DropdownMenu,
     DropdownMenuTrigger,
@@ -48,7 +47,6 @@ export default function NoteEditor() {
 
     // Bible Passage State
     const [passageRef, setPassageRef] = useState("");
-    const debouncedPassageRef = useDebounce(passageRef, 500);
     const [bibleText, setBibleText] = useState("");
     const [loadingPassage, setLoadingPassage] = useState(false);
     const [passageDialogOpen, setPassageDialogOpen] = useState(false);
@@ -204,21 +202,12 @@ export default function NoteEditor() {
         }
     };
 
-    useEffect(() => {
-        if (debouncedPassageRef && debouncedPassageRef.length > 2) {
-            handleFetchPassage();
-        } else if (!debouncedPassageRef) {
-            setBibleText("");
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [debouncedPassageRef]);
-
     const handleAddPassage = () => {
         if (!editorRef.current) return;
 
         // Build HTML for the passage
         // Backend returns HTML, so we don't need to manually wrap paragraphs unless it's a legacy response
-        const html = `<p><strong>${passageRef}</strong></p>${bibleText}<p></p>`;
+        const html = `<blockquote><p><strong>${passageRef}</strong></p>${bibleText}</blockquote><p></p>`;
 
         editorRef.current.chain().focus().insertContent(html).run();
 
@@ -245,7 +234,7 @@ export default function NoteEditor() {
         if (!aiResponse || !editorRef.current) return;
 
         // Backend returns HTML now (via system prompt to LLM), so we insert directly
-        const html = `<p><em>Question: ${aiPrompt}</em></p>${aiResponse}<p></p>`;
+        const html = `<blockquote><p><em>Question: ${aiPrompt}</em></p>${aiResponse}</blockquote><p></p>`;
 
         editorRef.current.chain().focus().insertContent(html).run();
 

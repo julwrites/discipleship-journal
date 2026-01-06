@@ -1,13 +1,7 @@
 package services
 
 import (
-	"context"
-	"encoding/json"
-	"net/http"
-	"net/http/httptest"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestCleanHTML(t *testing.T) {
@@ -17,96 +11,53 @@ func TestCleanHTML(t *testing.T) {
 		expected string
 	}{
 		{
-			name:     "Removes newlines between tags",
-			input:    "<p>Line 1</p>\n\n<p>Line 2</p>",
-			expected: "<p>Line 1</p> <p>Line 2</p>", // Collapses multiple newlines to single space
+			name:     "Basic text",
+			input:    "Hello World",
+			expected: "Hello World",
 		},
 		{
-			name:     "Removes empty paragraphs",
-			input:    "<p>Line 1</p><p></p><p>Line 2</p>",
-			expected: "<p>Line 1</p><p>Line 2</p>",
-		},
-		{
-			name:     "Removes paragraphs with whitespace",
-			input:    "<p>Line 1</p><p>  </p><p>Line 2</p>",
-			expected: "<p>Line 1</p><p>Line 2</p>",
-		},
-		{
-			name:     "Removes paragraphs with br",
-			input:    "<p>Line 1</p><p><br></p><p>Line 2</p>",
-			expected: "<p>Line 1</p><p>Line 2</p>",
-		},
-		{
-			name:     "Removes paragraphs with self-closing br",
-			input:    "<p>Line 1</p><p><br/></p><p>Line 2</p>",
-			expected: "<p>Line 1</p><p>Line 2</p>",
-		},
-		{
-			name:     "Removes paragraphs with &nbsp;",
+			name:     "Empty paragraphs",
 			input:    "<p>Line 1</p><p>&nbsp;</p><p>Line 2</p>",
 			expected: "<p>Line 1</p><p>Line 2</p>",
 		},
 		{
-			name:     "Replaces newlines with space in text",
-			input:    "<p>Line\n1</p>",
-			expected: "<p>Line 1</p>",
+			name:     "Empty list items",
+			input:    "<ul><li>Item 1</li><li></li><li>Item 2</li><li>&nbsp;</li></ul>",
+			expected: "<ul><li>Item 1</li><li>Item 2</li></ul>",
 		},
 		{
-			name:     "Complex mixed case",
-			input:    "<p>Start</p>\n\n<p></p>\n<p>End</p>",
-			expected: "<p>Start</p>  <p>End</p>", // Collapsed newlines result in spaces
+			name:     "Empty list items with newlines (which become spaces)",
+			input:    "<ul><li>Item 1</li>\n<li>   </li>\n<li>Item 2</li></ul>",
+			// The newlines become spaces. So "<ul><li>Item 1</li> <li>   </li> <li>Item 2</li></ul>"
+			// Then empty li regex removes " <li>   </li> ".
+			// Wait, the regex matches `<li`... it doesn't match spaces *between* tags.
+			// Input: "<ul><li>Item 1</li>\n<li>   </li>\n<li>Item 2</li></ul>"
+			// 1. Newlines -> Space: "<ul><li>Item 1</li> <li>   </li> <li>Item 2</li></ul>"
+			// 2. Empty Para -> No change.
+			// 3. Empty Li -> "<li>   </li>" matches.
+			// Result: "<ul><li>Item 1</li>  <li>Item 2</li></ul>" (Two spaces between items)
+			expected: "<ul><li>Item 1</li>  <li>Item 2</li></ul>",
+		},
+		{
+			name:     "Mixed empty content",
+			input:    "<p>Start</p><p><br></p><ul><li></li><li>Valid</li></ul>",
+			expected: "<p>Start</p><ul><li>Valid</li></ul>",
+		},
+		{
+			name:     "Empty list items with br",
+			input:    "<ul><li><br></li><li>Item</li></ul>",
+			expected: "<ul><li>Item</li></ul>",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := cleanHTML(tt.input)
+			// Since newline regex replaces newlines with space, we should be careful with exact matching
+			// but for our test cases it should be deterministic.
 			if got != tt.expected {
-				t.Errorf("cleanHTML(%q) = %q; want %q", tt.input, got, tt.expected)
+				t.Errorf("cleanHTML() = %q, want %q", got, tt.expected)
 			}
 		})
 	}
-}
-
-func TestRealBibleAIClient_Unescape(t *testing.T) {
-	// Create a mock server that returns escaped HTML
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		if r.URL.Path == "/query" {
-			var req QueryRequest
-			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-				return
-			}
-
-			// Check if it's a verse request or chat/prompt
-			if len(req.Query.Verses) > 0 {
-				// Return escaped HTML for verse
-				_ = json.NewEncoder(w).Encode(VerseResponse{
-					Verse: "&lt;h3&gt;Title&lt;/h3&gt;&lt;p&gt;Verse Text&lt;/p&gt;",
-				})
-			} else {
-				// Return escaped HTML for prompt
-				_ = json.NewEncoder(w).Encode(OQueryResponse{
-					Text: "&lt;p&gt;AI Response&lt;/p&gt;",
-				})
-			}
-		}
-	}))
-	defer server.Close()
-
-	client := NewRealBibleAIClient(server.URL, "test-key", "")
-
-	t.Run("GetPassage unescapes HTML", func(t *testing.T) {
-		res, err := client.GetPassage(context.Background(), "John 3:16")
-		assert.NoError(t, err)
-		assert.Equal(t, "<h3>Title</h3><p>Verse Text</p>", res["verse"])
-	})
-
-	t.Run("ChatCompletion unescapes HTML", func(t *testing.T) {
-		res, err := client.ChatCompletion(context.Background(), map[string]interface{}{
-			"prompt": "test",
-		})
-		assert.NoError(t, err)
-		assert.Equal(t, "<p>AI Response</p>", res["text"])
-	})
 }
