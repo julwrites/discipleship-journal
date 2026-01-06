@@ -139,8 +139,10 @@ export default function RichTextEditor({
                     outline-offset: 2px;
                 }
                 .ProseMirror blockquote {
-                    border-left: 3px solid var(--primary);
-                    padding-left: 1rem;
+                    border-left: none;
+                    background-color: var(--muted);
+                    border-radius: 0.5rem;
+                    padding: 1rem;
                     color: var(--foreground);
                     font-style: normal;
                     margin-left: 0;
@@ -154,6 +156,12 @@ export default function RichTextEditor({
                     content: none !important;
                 }
                 .ProseMirror blockquote::after {
+                    content: none !important;
+                }
+                .ProseMirror blockquote p::before {
+                    content: none !important;
+                }
+                .ProseMirror blockquote p::after {
                     content: none !important;
                 }
             `}</style>
