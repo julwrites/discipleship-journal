@@ -265,9 +265,10 @@ func (c *RealBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 }
 
 var (
-	emptyParaRegex = regexp.MustCompile(`(?i)<p[^>]*>(\s|&nbsp;|<br\s*/?>)*</p>`)
-	emptyLiRegex   = regexp.MustCompile(`(?i)<li[^>]*>(\s|&nbsp;|<br\s*/?>)*</li>`)
-	newlineRegex   = regexp.MustCompile(`[\r\n]+`)
+	emptyParaRegex      = regexp.MustCompile(`(?i)<p[^>]*>(\s|&nbsp;|<br\s*/?>)*</p>`)
+	emptyLiRegex        = regexp.MustCompile(`(?i)<li[^>]*>(\s|&nbsp;|<br\s*/?>)*</li>`)
+	newlineRegex        = regexp.MustCompile(`[\r\n]+`)
+	listWhitespaceRegex = regexp.MustCompile(`(?i)(</?ul[^>]*>|</?ol[^>]*>|</?li[^>]*>)\s+(</?ul[^>]*>|</?ol[^>]*>|</?li[^>]*>)`)
 )
 
 func cleanHTML(input string) string {
@@ -279,6 +280,16 @@ func cleanHTML(input string) string {
 
 	// Remove empty list items
 	s = emptyLiRegex.ReplaceAllString(s, "")
+
+	// Remove whitespace between list tags
+	// Loop to handle consecutive matches (e.g., </li> <li> <li>)
+	for {
+		cleaned := listWhitespaceRegex.ReplaceAllString(s, "$1$2")
+		if cleaned == s {
+			break
+		}
+		s = cleaned
+	}
 
 	return strings.TrimSpace(s)
 }
