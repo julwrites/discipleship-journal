@@ -26,17 +26,13 @@ func TestCleanHTML(t *testing.T) {
 			expected: "<ul><li>Item 1</li><li>Item 2</li></ul>",
 		},
 		{
-			name:     "Empty list items with newlines (which become spaces)",
+			name:     "Empty list items with newlines",
 			input:    "<ul><li>Item 1</li>\n<li>   </li>\n<li>Item 2</li></ul>",
-			// The newlines become spaces. So "<ul><li>Item 1</li> <li>   </li> <li>Item 2</li></ul>"
-			// Then empty li regex removes " <li>   </li> ".
-			// Wait, the regex matches `<li`... it doesn't match spaces *between* tags.
-			// Input: "<ul><li>Item 1</li>\n<li>   </li>\n<li>Item 2</li></ul>"
-			// 1. Newlines -> Space: "<ul><li>Item 1</li> <li>   </li> <li>Item 2</li></ul>"
-			// 2. Empty Para -> No change.
-			// 3. Empty Li -> "<li>   </li>" matches.
-			// Result: "<ul><li>Item 1</li>  <li>Item 2</li></ul>" (Two spaces between items)
-			expected: "<ul><li>Item 1</li>  <li>Item 2</li></ul>",
+            // Explanation of change:
+            // 1. Newlines -> Space: "<ul><li>Item 1</li> <li>   </li> <li>Item 2</li></ul>"
+            // 2. Empty Li -> Removes `<li>   </li>`. Result: "<ul><li>Item 1</li>  <li>Item 2</li></ul>"
+            // 3. List Whitespace -> Collapses "</li>  <li>". Result: "<ul><li>Item 1</li><li>Item 2</li></ul>"
+			expected: "<ul><li>Item 1</li><li>Item 2</li></ul>",
 		},
 		{
 			name:     "Mixed empty content",
@@ -53,8 +49,6 @@ func TestCleanHTML(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := cleanHTML(tt.input)
-			// Since newline regex replaces newlines with space, we should be careful with exact matching
-			// but for our test cases it should be deterministic.
 			if got != tt.expected {
 				t.Errorf("cleanHTML() = %q, want %q", got, tt.expected)
 			}
