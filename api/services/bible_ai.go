@@ -266,6 +266,7 @@ func (c *RealBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 
 var (
 	emptyParaRegex = regexp.MustCompile(`(?i)<p[^>]*>(\s|&nbsp;|<br\s*/?>)*</p>`)
+	emptyLiRegex   = regexp.MustCompile(`(?i)<li[^>]*>(\s|&nbsp;|<br\s*/?>)*</li>`)
 	newlineRegex   = regexp.MustCompile(`[\r\n]+`)
 )
 
@@ -275,6 +276,9 @@ func cleanHTML(input string) string {
 
 	// Remove empty paragraphs
 	s = emptyParaRegex.ReplaceAllString(s, "")
+
+	// Remove empty list items
+	s = emptyLiRegex.ReplaceAllString(s, "")
 
 	return strings.TrimSpace(s)
 }
