@@ -1,0 +1,1 @@
+DELETE FROM reading_plans WHERE title = 'M''Cheyne';

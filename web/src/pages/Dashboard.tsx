@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchNotes, syncUser, NoteFilter, deleteNote, getGroups, shareNote, getNote, askAI } from "@/services/api";
 import { Link } from "react-router-dom";
-import { Settings, Users, BookOpen, Filter, CalendarIcon } from "lucide-react";
+import { Settings, Users, BookOpen, Filter, CalendarIcon, User as UserIcon, Book, LogOut } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { NoteCard, Note } from "@/components/NoteCard";
@@ -250,19 +251,55 @@ export default function Dashboard() {
               <Users className="w-5 h-5" />
             </Button>
           </Link>
-          <Link to="/reading-plans">
-            <Button variant="ghost" size="icon" title="Reading Plans">
-              <BookOpen className="w-5 h-5" />
-            </Button>
-          </Link>
-          <Link to="/settings">
-            <Button variant="ghost" size="icon" title="Settings">
-              <Settings className="w-5 h-5" />
-            </Button>
-          </Link>
-          <Button variant="outline" onClick={() => auth.signOut()}>
-            Sign Out
-          </Button>
+
+          {/* Resources Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" title="Resources">
+                <BookOpen className="w-5 h-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Resources</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <Link to="/reading-plans">
+                <DropdownMenuItem className="cursor-pointer">
+                  <CalendarIcon className="mr-2 h-4 w-4" /> Reading Plans
+                </DropdownMenuItem>
+              </Link>
+              <Link to="/memory-verses">
+                <DropdownMenuItem className="cursor-pointer">
+                  <Book className="mr-2 h-4 w-4" /> Memory Verses
+                </DropdownMenuItem>
+              </Link>
+              <Link to="/templates">
+                <DropdownMenuItem className="cursor-pointer">
+                  <Filter className="mr-2 h-4 w-4" /> Study Templates
+                </DropdownMenuItem>
+              </Link>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* User Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" title="User Menu">
+                <UserIcon className="w-5 h-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <Link to="/settings">
+                <DropdownMenuItem className="cursor-pointer">
+                  <Settings className="mr-2 h-4 w-4" /> Settings
+                </DropdownMenuItem>
+              </Link>
+              <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive" onClick={() => auth.signOut()}>
+                <LogOut className="mr-2 h-4 w-4" /> Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 

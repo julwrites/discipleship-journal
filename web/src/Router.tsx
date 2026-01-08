@@ -8,6 +8,9 @@ import ConnectionsPage from "@/pages/ConnectionsPage";
 import GroupsPage from "@/pages/GroupsPage";
 import ReadingPlansPage from "@/pages/ReadingPlansPage";
 import ReadingPlanDetail from "@/pages/ReadingPlanDetail";
+import MemoryVersesPage from "@/pages/MemoryVersesPage";
+import TemplatesPage from "@/pages/TemplatesPage";
+import TemplateEditor from "@/pages/TemplateEditor";
 import Settings from "@/pages/Settings";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
@@ -85,6 +88,22 @@ export const router = createBrowserRouter([
       {
         path: "/reading-plans/:id",
         element: <ReadingPlanDetail />,
+      },
+      {
+        path: "/memory-verses",
+        element: <MemoryVersesPage />,
+      },
+      {
+        path: "/templates",
+        element: <TemplatesPage />,
+      },
+      {
+        path: "/templates/:id/edit",
+        element: <TemplateEditor />,
+      },
+      {
+        path: "/templates/new",
+        element: <TemplateEditor />,
       },
     ],
   },

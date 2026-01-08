@@ -10,7 +10,9 @@ import {
     getBiblePassage,
     askAI,
     getGroups,
-    shareNote
+    shareNote,
+    searchMemoryVerses,
+    MemoryVerse
 } from "@/services/api";
 import RichTextEditor from "@/components/RichTextEditor";
 import { Editor } from "@tiptap/react";
@@ -41,7 +43,8 @@ import {
     DropdownMenuItem,
     DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Book, Sparkles, Share2, Trash2 } from "lucide-react";
+import { MoreVertical, Book, Sparkles, Share2, Trash2, Quote } from "lucide-react";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export default function NoteEditor() {
     const { id } = useParams();
@@ -51,6 +54,10 @@ export default function NoteEditor() {
     const [initialTitle, setInitialTitle] = useState("");
     const [initialContent, setInitialContent] = useState("");
     const [mode, setMode] = useState<"edit" | "preview">("edit");
+
+    // Derived state for dirty check
+    const isDirty = (title !== initialTitle) || (content !== initialContent);
+
     const [saving, setSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
@@ -62,6 +69,13 @@ export default function NoteEditor() {
     const [bibleText, setBibleText] = useState("");
     const [loadingPassage, setLoadingPassage] = useState(false);
     const [passageDialogOpen, setPassageDialogOpen] = useState(false);
+
+    // Memory Verse State
+    const [verseDialogOpen, setVerseDialogOpen] = useState(false);
+    const [verseSearch, setVerseSearch] = useState("");
+    const [verses, setVerses] = useState<MemoryVerse[]>([]);
+    const [loadingVerses, setLoadingVerses] = useState(false);
+    const debouncedVerseSearch = useDebounce(verseSearch, 300);
 
     // AI State
     const [aiPrompt, setAiPrompt] = useState("");
@@ -109,26 +123,11 @@ export default function NoteEditor() {
         }
     }, [id]);
 
-    const isDirty = (title !== initialTitle) || (content !== initialContent);
-
-    // Block navigation if dirty
-    const blocker = useBlocker(
-        ({ currentLocation, nextLocation }) =>
-            !saving && isDirty && currentLocation.pathname !== nextLocation.pathname
-    );
-
-    // Block browser unload if dirty
     useEffect(() => {
-        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-            if (isDirty) {
-                e.preventDefault();
-                e.returnValue = ""; // Chrome requires returnValue to be set
-            }
-        };
-
-        window.addEventListener("beforeunload", handleBeforeUnload);
-        return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-    }, [isDirty]);
+        if (verseDialogOpen) {
+            handleSearchVerses(debouncedVerseSearch);
+        }
+    }, [debouncedVerseSearch, verseDialogOpen]);
 
     const handleSave = useCallback(async () => {
         setSaving(true);
@@ -137,14 +136,14 @@ export default function NoteEditor() {
             if (id === "new") {
                 const res = await createNote(title, content);
                 navigate(`/notes/${res.id}`, { replace: true });
+                setLastSaved(new Date().toLocaleTimeString());
                 setInitialTitle(title);
                 setInitialContent(content);
-                setLastSaved(new Date().toLocaleTimeString());
             } else if (id) {
                 await updateNote(id, title, content);
+                setLastSaved(new Date().toLocaleTimeString());
                 setInitialTitle(title);
                 setInitialContent(content);
-                setLastSaved(new Date().toLocaleTimeString());
             }
         } catch (e) {
             console.error(e);
@@ -172,6 +171,12 @@ export default function NoteEditor() {
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [handleSave]);
+
+    // Use useBlocker to warn about unsaved changes
+    const blocker = useBlocker(
+        ({ currentLocation, nextLocation }) =>
+            !saving && isDirty && currentLocation.pathname !== nextLocation.pathname
+    );
 
     const handleDelete = () => {
         if (!id || id === "new") return;
@@ -254,6 +259,25 @@ export default function NoteEditor() {
         setPassageDialogOpen(false);
     };
 
+    const handleSearchVerses = async (q: string) => {
+        setLoadingVerses(true);
+        try {
+            const res = await searchMemoryVerses(q);
+            setVerses(res.data || []);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoadingVerses(false);
+        }
+    };
+
+    const handleInsertVerse = (verse: MemoryVerse) => {
+        if (!editorRef.current) return;
+        const html = `<blockquote><p><strong>${verse.reference} (${verse.version})</strong></p><p>${verse.text}</p></blockquote><p></p>`;
+        editorRef.current.chain().focus().insertContent(html).run();
+        setVerseDialogOpen(false);
+    };
+
     const handleAskAI = async () => {
         setAskingAI(true);
         setAiResponse("");
@@ -296,8 +320,15 @@ export default function NoteEditor() {
 
                     {/* Desktop Toolbar Buttons */}
                     <div className="hidden md:flex items-center gap-2">
-                         <Button variant="outline" onClick={() => setPassageDialogOpen(true)}>Add Scripture</Button>
-                         <Button variant="outline" onClick={() => setAiDialogOpen(true)}>Ask AI</Button>
+                         <Button variant="outline" onClick={() => setPassageDialogOpen(true)} title="Lookup Bible Passage" aria-label="Add Scripture">
+                            <Book className="h-4 w-4" />
+                         </Button>
+                         <Button variant="outline" onClick={() => setVerseDialogOpen(true)} title="Insert Memory Verse" aria-label="Insert Memory Verse">
+                            <Quote className="h-4 w-4" />
+                         </Button>
+                         <Button variant="outline" onClick={() => setAiDialogOpen(true)} title="Ask AI" aria-label="Ask AI">
+                            <Sparkles className="h-4 w-4" />
+                         </Button>
 
                         {id && id !== "new" && (
                             <>
@@ -327,6 +358,9 @@ export default function NoteEditor() {
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={() => setPassageDialogOpen(true)}>
                                     <Book className="mr-2 h-4 w-4" /> Add Scripture
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setVerseDialogOpen(true)}>
+                                    <Quote className="mr-2 h-4 w-4" /> Add Memory Verse
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => setAiDialogOpen(true)}>
                                     <Sparkles className="mr-2 h-4 w-4" /> Ask AI
@@ -370,7 +404,7 @@ export default function NoteEditor() {
             )}
 
             <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-                <DialogContent>
+                <DialogContent aria-describedby={undefined}>
                     <DialogHeader>
                         <DialogTitle>Delete Note</DialogTitle>
                         <DialogDescription>
@@ -413,6 +447,39 @@ export default function NoteEditor() {
                         {bibleText && (
                             <Button onClick={handleAddPassage} className="w-full">Insert into Note</Button>
                         )}
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={verseDialogOpen} onOpenChange={setVerseDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Insert Memory Verse</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <Input
+                            placeholder="Search verses..."
+                            value={verseSearch}
+                            onChange={(e) => setVerseSearch(e.target.value)}
+                        />
+                        <div className="max-h-60 overflow-auto space-y-2">
+                            {loadingVerses ? (
+                                <div className="text-center text-sm text-muted-foreground">Loading...</div>
+                            ) : verses.length === 0 ? (
+                                <div className="text-center text-sm text-muted-foreground">No verses found</div>
+                            ) : (
+                                verses.map(v => (
+                                    <div
+                                        key={v.id}
+                                        className="p-2 border rounded hover:bg-muted cursor-pointer"
+                                        onClick={() => handleInsertVerse(v)}
+                                    >
+                                        <div className="font-semibold text-sm">{v.reference}</div>
+                                        <div className="text-xs text-muted-foreground line-clamp-2">{v.text}</div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
                     </div>
                 </DialogContent>
             </Dialog>
