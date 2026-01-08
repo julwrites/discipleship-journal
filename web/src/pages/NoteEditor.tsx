@@ -52,7 +52,10 @@ export default function NoteEditor() {
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [mode, setMode] = useState<"edit" | "preview">("edit");
-    const isDirty = (title !== "" && content !== "") && (id === "new" || true); // Simplified dirty check for now, can be improved
+
+    // Derived state for dirty check
+    const isDirty = (title !== initialTitle) || (content !== initialContent);
+
     const [saving, setSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
@@ -393,7 +396,7 @@ export default function NoteEditor() {
             )}
 
             <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-                <DialogContent>
+                <DialogContent aria-describedby={undefined}>
                     <DialogHeader>
                         <DialogTitle>Delete Note</DialogTitle>
                         <DialogDescription>
