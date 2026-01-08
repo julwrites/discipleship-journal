@@ -51,8 +51,6 @@ export default function NoteEditor() {
     const navigate = useNavigate();
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
-    const [initialTitle, setInitialTitle] = useState("");
-    const [initialContent, setInitialContent] = useState("");
     const [mode, setMode] = useState<"edit" | "preview">("edit");
 
     // Derived state for dirty check
@@ -98,7 +96,6 @@ export default function NoteEditor() {
             setLoading(true);
             getNote(id).then(note => {
                 setTitle(note.title);
-                setInitialTitle(note.title);
 
                 // Handle legacy content format (object with markdown)
                 let noteContent = note.content || "";
@@ -110,7 +107,6 @@ export default function NoteEditor() {
                     }
                 }
                 setContent(noteContent as string);
-                setInitialContent(noteContent as string);
                 setLastSaved("Loaded");
             }).catch(e => {
                 console.error(e);
@@ -136,13 +132,9 @@ export default function NoteEditor() {
             if (id === "new") {
                 const res = await createNote(title, content);
                 navigate(`/notes/${res.id}`, { replace: true });
-                setInitialTitle(title);
-                setInitialContent(content);
                 setLastSaved(new Date().toLocaleTimeString());
             } else if (id) {
                 await updateNote(id, title, content);
-                setInitialTitle(title);
-                setInitialContent(content);
                 setLastSaved(new Date().toLocaleTimeString());
             }
         } catch (e) {
