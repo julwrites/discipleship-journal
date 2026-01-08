@@ -14,7 +14,7 @@ export default function TemplateEditor() {
     const { id } = useParams();
     const navigate = useNavigate();
     const isEdit = id && id !== "new";
-    const [loading, setLoading] = useState(isEdit ? true : false);
+    const [loading, setLoading] = useState(isEdit);
 
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -22,14 +22,11 @@ export default function TemplateEditor() {
     const [systemPrompt, setSystemPrompt] = useState("");
     const [fields, setFields] = useState<TemplateField[]>([]);
 
-    // Simple structure editor (just keys for now, could be JSON editor)
-    // For simplicity, we just won't expose full JSON editing of 'structure' yet,
-    // relying on the prompt to guide structure.
-
     useEffect(() => {
         if (isEdit) {
             loadTemplate(id!);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     const loadTemplate = async (tmplId: string) => {
@@ -41,9 +38,10 @@ export default function TemplateEditor() {
             setFields(data.fields || []);
 
             if (data.prompts && typeof data.prompts === 'object') {
-                setSystemPrompt((data.prompts as any).system || "");
+                // @ts-ignore JSON unknown structure
+                setSystemPrompt(data.prompts.system || "");
             }
-        } catch (error) {
+        } catch {
             toast.error("Failed to load template");
             navigate("/templates");
         } finally {
@@ -72,7 +70,7 @@ export default function TemplateEditor() {
                 toast.success("Template created");
             }
             navigate("/templates");
-        } catch (error) {
+        } catch {
             toast.error("Failed to save template");
         }
     };
@@ -83,7 +81,7 @@ export default function TemplateEditor() {
 
     const updateField = (index: number, key: keyof TemplateField, value: string) => {
         const newFields = [...fields];
-        // @ts-ignore
+        // @ts-expect-error Dynamic access
         newFields[index][key] = value;
         setFields(newFields);
     };
@@ -117,7 +115,11 @@ export default function TemplateEditor() {
                         <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Brief description..." />
                     </div>
                     <div className="flex items-center gap-2">
-                        <Checkbox id="public" checked={isPublic} onCheckedChange={(c) => setIsPublic(!!c)} />
+                        <Checkbox
+                            id="public"
+                            checked={isPublic}
+                            onCheckedChange={(c: boolean | string) => setIsPublic(!!c)}
+                        />
                         <Label htmlFor="public">Make Public</Label>
                     </div>
                 </CardContent>

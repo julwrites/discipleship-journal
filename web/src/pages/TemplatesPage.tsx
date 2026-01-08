@@ -30,7 +30,7 @@ export default function TemplatesPage() {
             ]);
             setMyTemplates(myRes.data || []);
             setPublicTemplates(pubRes.data || []);
-        } catch (error) {
+        } catch {
             toast.error("Failed to load templates");
         } finally {
             setLoading(false);
@@ -43,7 +43,7 @@ export default function TemplatesPage() {
             await deleteTemplate(id);
             toast.success("Template deleted");
             loadData();
-        } catch (error) {
+        } catch {
             toast.error("Failed to delete");
         }
     };
@@ -54,7 +54,7 @@ export default function TemplatesPage() {
             toast.success("Template cloned to your library");
             loadData();
             setActiveTab("my");
-        } catch (error) {
+        } catch {
             toast.error("Failed to clone");
         }
     };

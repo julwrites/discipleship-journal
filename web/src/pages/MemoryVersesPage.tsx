@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
-import { searchMemoryVerses, createMemoryVerse, getMemoryVersePacks, MemoryVerse } from "@/services/api";
+import { searchMemoryVerses, createMemoryVerse, MemoryVerse } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,7 +15,6 @@ export default function MemoryVersesPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearch = useDebounce(searchQuery, 500);
     const [verses, setVerses] = useState<MemoryVerse[]>([]);
-    const [packs, setPacks] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
 
@@ -30,7 +29,6 @@ export default function MemoryVersesPage() {
     const [tagInput, setTagInput] = useState("");
 
     useEffect(() => {
-        loadPacks();
         doSearch("");
     }, []);
 
@@ -38,21 +36,12 @@ export default function MemoryVersesPage() {
         doSearch(debouncedSearch);
     }, [debouncedSearch]);
 
-    const loadPacks = async () => {
-        try {
-            const res = await getMemoryVersePacks();
-            setPacks(res.data || []);
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
     const doSearch = async (query: string) => {
         setLoading(true);
         try {
             const res = await searchMemoryVerses(query);
             setVerses(res.data || []);
-        } catch (error) {
+        } catch {
             toast.error("Failed to load verses");
         } finally {
             setLoading(false);
@@ -76,7 +65,7 @@ export default function MemoryVersesPage() {
                 tags: []
             });
             doSearch(debouncedSearch);
-        } catch (error) {
+        } catch {
             toast.error("Failed to create verse");
         }
     };

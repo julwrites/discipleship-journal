@@ -293,13 +293,13 @@ export default function NoteEditor() {
 
                     {/* Desktop Toolbar Buttons */}
                     <div className="hidden md:flex items-center gap-2">
-                         <Button variant="outline" onClick={() => setPassageDialogOpen(true)} title="Lookup Bible Passage">
+                         <Button variant="outline" onClick={() => setPassageDialogOpen(true)} title="Lookup Bible Passage" aria-label="Add Scripture">
                             <Book className="h-4 w-4" />
                          </Button>
-                         <Button variant="outline" onClick={() => setVerseDialogOpen(true)} title="Insert Memory Verse">
+                         <Button variant="outline" onClick={() => setVerseDialogOpen(true)} title="Insert Memory Verse" aria-label="Insert Memory Verse">
                             <Quote className="h-4 w-4" />
                          </Button>
-                         <Button variant="outline" onClick={() => setAiDialogOpen(true)} title="Ask AI">
+                         <Button variant="outline" onClick={() => setAiDialogOpen(true)} title="Ask AI" aria-label="Ask AI">
                             <Sparkles className="h-4 w-4" />
                          </Button>
 
