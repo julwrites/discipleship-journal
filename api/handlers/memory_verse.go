@@ -39,7 +39,9 @@ func (h *MemoryVerseHandler) SearchVerses(w http.ResponseWriter, r *http.Request
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{"data": verses})
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{"data": verses}); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func (h *MemoryVerseHandler) CreateVerse(w http.ResponseWriter, r *http.Request) {
@@ -73,7 +75,9 @@ func (h *MemoryVerseHandler) CreateVerse(w http.ResponseWriter, r *http.Request)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(verse)
+	if err := json.NewEncoder(w).Encode(verse); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func (h *MemoryVerseHandler) GetSystemPacks(w http.ResponseWriter, r *http.Request) {
@@ -83,5 +87,7 @@ func (h *MemoryVerseHandler) GetSystemPacks(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{"data": packs})
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{"data": packs}); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
