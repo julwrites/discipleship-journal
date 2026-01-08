@@ -54,6 +54,10 @@ export default function NoteEditor() {
     const [initialTitle, setInitialTitle] = useState("");
     const [initialContent, setInitialContent] = useState("");
     const [mode, setMode] = useState<"edit" | "preview">("edit");
+
+    // Derived state for dirty check
+    const isDirty = (title !== initialTitle) || (content !== initialContent);
+
     const [saving, setSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
@@ -125,7 +129,7 @@ export default function NoteEditor() {
         }
     }, [debouncedVerseSearch, verseDialogOpen]);
 
-    const handleSave = async (manual = true) => {
+    const handleSave = useCallback(async () => {
         setSaving(true);
         setSaveError(false);
         try {
@@ -167,6 +171,12 @@ export default function NoteEditor() {
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [handleSave]);
+
+    // Use useBlocker to warn about unsaved changes
+    const blocker = useBlocker(
+        ({ currentLocation, nextLocation }) =>
+            !saving && isDirty && currentLocation.pathname !== nextLocation.pathname
+    );
 
     const handleDelete = () => {
         if (!id || id === "new") return;
@@ -394,7 +404,7 @@ export default function NoteEditor() {
             )}
 
             <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-                <DialogContent>
+                <DialogContent aria-describedby={undefined}>
                     <DialogHeader>
                         <DialogTitle>Delete Note</DialogTitle>
                         <DialogDescription>

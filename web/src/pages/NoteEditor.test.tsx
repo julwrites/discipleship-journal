@@ -173,7 +173,10 @@ describe('NoteEditor', () => {
         const textarea = screen.getByDisplayValue('Initial content');
         fireEvent.change(textarea, { target: { value: 'Updated content' } });
 
-        expect(await screen.findByText('Unsaved changes')).toBeInTheDocument();
+        // useBlocker/isDirty might take a render cycle
+        await waitFor(() => {
+            expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
+        });
     });
 
     it('warns on navigation when dirty', async () => {
@@ -237,6 +240,8 @@ describe('NoteEditor', () => {
         expect(await screen.findByText(/Are you sure you want to delete/i)).toBeInTheDocument();
 
         const dialog = await screen.findByRole('dialog');
+        // In the dialog, we have "Delete Note" (title) and "Delete" (button)
+        // Or we can find by the button that is destructive
         const confirmBtn = within(dialog).getByRole('button', { name: 'Delete' });
         fireEvent.click(confirmBtn);
 
