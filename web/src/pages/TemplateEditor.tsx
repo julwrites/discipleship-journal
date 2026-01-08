@@ -38,8 +38,8 @@ export default function TemplateEditor() {
             setFields(data.fields || []);
 
             if (data.prompts && typeof data.prompts === 'object') {
-                // @ts-ignore JSON unknown structure
-                setSystemPrompt(data.prompts.system || "");
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                setSystemPrompt((data.prompts as any).system || "");
             }
         } catch {
             toast.error("Failed to load template");
