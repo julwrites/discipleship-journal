@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor, act, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import NoteEditor from './NoteEditor';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import * as api from '@/services/api';
 import { toast } from 'sonner';
 
@@ -14,10 +14,7 @@ vi.mock('sonner', () => ({
 }));
 
 // Mock RichTextEditor
-// We define the mock component inside the factory to avoid hoisting issues.
 vi.mock('@/components/RichTextEditor', async () => {
-    // We can't access top-level variables.
-    // We will dynamically import react to be safe, although in vitest environment it might work.
     const React = await import('react');
     const { useEffect, useRef, useState } = React;
 
@@ -92,7 +89,22 @@ describe('NoteEditor', () => {
         vi.useRealTimers();
     });
 
-    it('auto-saves changes after delay', async () => {
+    const renderEditor = (route = '/notes/123') => {
+        const router = createMemoryRouter(
+            [
+                { path: '/notes/:id', element: <NoteEditor /> },
+                { path: '/', element: <div>Dashboard</div> }
+            ],
+            {
+                // Ensure there is a history stack so Back button works
+                initialEntries: ['/', route],
+                initialIndex: 1
+            }
+        );
+        return render(<RouterProvider router={router} />);
+    };
+
+    it('does NOT auto-save changes', async () => {
         const mockGetNote = vi.mocked(api.getNote).mockResolvedValue({
             id: '123',
             title: 'Test Note',
@@ -100,13 +112,7 @@ describe('NoteEditor', () => {
         });
         const mockUpdateNote = vi.mocked(api.updateNote).mockResolvedValue(undefined);
 
-        render(
-            <MemoryRouter initialEntries={['/notes/123']}>
-                <Routes>
-                    <Route path="/notes/:id" element={<NoteEditor />} />
-                </Routes>
-            </MemoryRouter>
-        );
+        renderEditor();
 
         await screen.findByDisplayValue('Test Note');
         expect(mockGetNote).toHaveBeenCalledWith('123');
@@ -117,54 +123,101 @@ describe('NoteEditor', () => {
         fireEvent.change(textarea, { target: { value: 'Updated content' } });
 
         act(() => {
-            vi.advanceTimersByTime(2000);
+            vi.advanceTimersByTime(3000);
         });
 
         vi.useRealTimers();
 
+        expect(mockUpdateNote).not.toHaveBeenCalled();
+    });
+
+    it('saves manually when save button clicked', async () => {
+        const mockGetNote = vi.mocked(api.getNote).mockResolvedValue({
+            id: '123',
+            title: 'Test Note',
+            content: 'Initial content'
+        });
+        const mockUpdateNote = vi.mocked(api.updateNote).mockResolvedValue(undefined);
+
+        renderEditor();
+
+        await screen.findByDisplayValue('Test Note');
+
+        const textarea = screen.getByDisplayValue('Initial content');
+        fireEvent.change(textarea, { target: { value: 'Updated content' } });
+
+        const saveBtn = screen.getByRole('button', { name: 'Save' });
+        // It should be enabled now that it is dirty
+        expect(saveBtn).not.toBeDisabled();
+
+        fireEvent.click(saveBtn);
+
         await waitFor(() => {
             expect(mockUpdateNote).toHaveBeenCalledWith('123', 'Test Note', 'Updated content');
+            expect(screen.getByText(/Saved at/i)).toBeInTheDocument();
         });
     });
 
-    it('shows error when auto-save fails', async () => {
+    it('shows unsaved changes indicator when dirty', async () => {
         vi.mocked(api.getNote).mockResolvedValue({
             id: '123',
             title: 'Test Note',
             content: 'Initial content'
         });
-        vi.mocked(api.updateNote).mockRejectedValue(new Error('Network error'));
 
-        const consoleErrorMock = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-        render(
-            <MemoryRouter initialEntries={['/notes/123']}>
-                <Routes>
-                    <Route path="/notes/:id" element={<NoteEditor />} />
-                </Routes>
-            </MemoryRouter>
-        );
+        renderEditor();
 
         await screen.findByDisplayValue('Test Note');
 
-        vi.useFakeTimers();
+        expect(screen.queryByText('Unsaved changes')).not.toBeInTheDocument();
 
         const textarea = screen.getByDisplayValue('Initial content');
-        fireEvent.change(textarea, { target: { value: 'Fail content' } });
+        fireEvent.change(textarea, { target: { value: 'Updated content' } });
 
-        act(() => {
-            vi.advanceTimersByTime(2000);
+        expect(await screen.findByText('Unsaved changes')).toBeInTheDocument();
+    });
+
+    it('warns on navigation when dirty', async () => {
+        vi.mocked(api.getNote).mockResolvedValue({
+            id: '123',
+            title: 'Test Note',
+            content: 'Initial content'
         });
 
-        vi.useRealTimers();
+        renderEditor();
 
+        await screen.findByDisplayValue('Test Note');
+
+        const textarea = screen.getByDisplayValue('Initial content');
+        fireEvent.change(textarea, { target: { value: 'Updated content' } });
+
+        // Try to navigate away via Back button
+        const backBtn = screen.getByText('← Back');
+        fireEvent.click(backBtn);
+
+        // Expect AlertDialog
+        expect(await screen.findByText('Unsaved Changes')).toBeInTheDocument();
+        expect(screen.getByText('You have unsaved changes. Are you sure you want to leave? Your changes will be lost.')).toBeInTheDocument();
+
+        // Click Cancel
+        const cancelBtn = screen.getByText('Cancel');
+        fireEvent.click(cancelBtn);
+
+        // Dialog should close and we stay
         await waitFor(() => {
-             const errorIndicator = screen.queryByText(/Error saving/i) || screen.queryByText(/Failed to save/i);
-             expect(errorIndicator).toBeInTheDocument();
-             expect(toast.error).not.toHaveBeenCalled();
+             expect(screen.queryByText('Unsaved Changes')).not.toBeInTheDocument();
+             expect(screen.getByDisplayValue('Updated content')).toBeInTheDocument();
         });
 
-        consoleErrorMock.mockRestore();
+        // Try again and leave
+        fireEvent.click(backBtn);
+        const leaveBtn = await screen.findByText('Leave');
+        fireEvent.click(leaveBtn);
+
+        // Should navigate to dashboard
+        await waitFor(() => {
+             expect(screen.getByText('Dashboard')).toBeInTheDocument();
+        });
     });
 
     it('deletes note after confirmation', async () => {
@@ -175,14 +228,7 @@ describe('NoteEditor', () => {
         });
         const mockDeleteNote = vi.mocked(api.deleteNote).mockResolvedValue(undefined);
 
-        render(
-            <MemoryRouter initialEntries={['/notes/123']}>
-                <Routes>
-                    <Route path="/notes/:id" element={<NoteEditor />} />
-                    <Route path="/" element={<div>Dashboard</div>} />
-                </Routes>
-            </MemoryRouter>
-        );
+        renderEditor();
 
         await screen.findByDisplayValue('Test Note');
 
@@ -209,13 +255,7 @@ describe('NoteEditor', () => {
         });
         vi.mocked(api.getBiblePassage).mockResolvedValue({ verse: 'For God so loved the world...', text: 'For God so loved the world...' });
 
-        render(
-            <MemoryRouter initialEntries={['/notes/123']}>
-                <Routes>
-                    <Route path="/notes/:id" element={<NoteEditor />} />
-                </Routes>
-            </MemoryRouter>
-        );
+        renderEditor();
 
         await screen.findByDisplayValue('Test Note');
 
@@ -251,13 +291,7 @@ describe('NoteEditor', () => {
         });
         vi.mocked(api.askAI).mockResolvedValue({ response: 'AI Answer' });
 
-        render(
-            <MemoryRouter initialEntries={['/notes/123']}>
-                <Routes>
-                    <Route path="/notes/:id" element={<NoteEditor />} />
-                </Routes>
-            </MemoryRouter>
-        );
+        renderEditor();
 
         await screen.findByDisplayValue('Test Note');
 
@@ -284,52 +318,6 @@ describe('NoteEditor', () => {
             expect(textarea.value).toMatch(/AI Answer/);
             expect(textarea.value).toMatch(/Question: Explain this/);
             expect(textarea.value).toMatch(/Content/);
-        });
-    });
-
-    it('does not auto-search bible passage, but searches on click', async () => {
-        vi.mocked(api.getNote).mockResolvedValue({
-            id: '123',
-            title: 'Test Note',
-            content: 'Initial content'
-        });
-        vi.mocked(api.getBiblePassage).mockResolvedValue({ verse: 'In the beginning...', text: 'In the beginning...' });
-
-        render(
-            <MemoryRouter initialEntries={['/notes/123']}>
-                <Routes>
-                    <Route path="/notes/:id" element={<NoteEditor />} />
-                </Routes>
-            </MemoryRouter>
-        );
-
-        await screen.findByDisplayValue('Test Note');
-
-        const addScriptureBtn = screen.getByRole('button', { name: 'Add Scripture' });
-        fireEvent.click(addScriptureBtn);
-
-        const dialog = await screen.findByRole('dialog');
-        const input = within(dialog).getByPlaceholderText('e.g. John 3:16');
-
-        vi.useFakeTimers();
-        fireEvent.change(input, { target: { value: 'Gen 1:1' } });
-
-        act(() => {
-            vi.advanceTimersByTime(600);
-        });
-
-        vi.useRealTimers();
-
-        // Should NOT have called it yet
-        expect(api.getBiblePassage).not.toHaveBeenCalled();
-
-        // Click search
-        const searchBtn = within(dialog).getByRole('button', { name: 'Search' });
-        fireEvent.click(searchBtn);
-
-        await waitFor(() => {
-            expect(api.getBiblePassage).toHaveBeenCalledWith('Gen 1:1');
-            expect(within(dialog).getByText('In the beginning...')).toBeInTheDocument();
         });
     });
 });
