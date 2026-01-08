@@ -3,7 +3,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import NoteEditor from './NoteEditor';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import * as api from '@/services/api';
-import { toast } from 'sonner';
 
 // Mock sonner
 vi.mock('sonner', () => ({
@@ -132,7 +131,7 @@ describe('NoteEditor', () => {
     });
 
     it('saves manually when save button clicked', async () => {
-        const mockGetNote = vi.mocked(api.getNote).mockResolvedValue({
+        vi.mocked(api.getNote).mockResolvedValue({
             id: '123',
             title: 'Test Note',
             content: 'Initial content'

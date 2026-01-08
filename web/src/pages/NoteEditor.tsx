@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useParams, useNavigate, useBlocker, Blocker } from "react-router-dom";
+import { useParams, useNavigate, useBlocker } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -88,11 +88,15 @@ export default function NoteEditor() {
 
                 // Handle legacy content format (object with markdown)
                 let noteContent = note.content || "";
-                if (typeof noteContent === 'object' && (noteContent as any).markdown) {
-                    noteContent = (noteContent as any).markdown;
+                if (typeof noteContent === 'object') {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const anyContent = noteContent as any;
+                    if (anyContent.markdown) {
+                         noteContent = anyContent.markdown;
+                    }
                 }
-                setContent(noteContent);
-                setInitialContent(noteContent);
+                setContent(noteContent as string);
+                setInitialContent(noteContent as string);
                 setLastSaved("Loaded");
             }).catch(e => {
                 console.error(e);
@@ -110,7 +114,7 @@ export default function NoteEditor() {
     // Block navigation if dirty
     const blocker = useBlocker(
         ({ currentLocation, nextLocation }) =>
-            isDirty && currentLocation.pathname !== nextLocation.pathname
+            !saving && isDirty && currentLocation.pathname !== nextLocation.pathname
     );
 
     // Block browser unload if dirty
@@ -126,20 +130,7 @@ export default function NoteEditor() {
         return () => window.removeEventListener("beforeunload", handleBeforeUnload);
     }, [isDirty]);
 
-    // Handle Ctrl+S / Cmd+S
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-                e.preventDefault();
-                handleSave();
-            }
-        };
-
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [title, content, id]); // Dependencies needed for handleSave closure
-
-    const handleSave = async () => {
+    const handleSave = useCallback(async () => {
         setSaving(true);
         setSaveError(false);
         try {
@@ -167,7 +158,20 @@ export default function NoteEditor() {
         } finally {
             setSaving(false);
         }
-    };
+    }, [id, title, content, navigate]);
+
+    // Handle Ctrl+S / Cmd+S
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                handleSave();
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [handleSave]);
 
     const handleDelete = () => {
         if (!id || id === "new") return;
