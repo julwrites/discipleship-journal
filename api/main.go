@@ -246,6 +246,14 @@ func main() {
 	readingPlanService := services.NewReadingPlanService(dbWrapper)
 	readingPlanHandler := handlers.NewReadingPlanHandler(readingPlanService)
 
+	// Memory Verses
+	memoryVerseService := services.NewMemoryVerseService(dbWrapper)
+	memoryVerseHandler := handlers.NewMemoryVerseHandler(memoryVerseService)
+
+	// Study Templates
+	templateService := services.NewTemplateService(dbWrapper, bibleAIClient)
+	templateHandler := handlers.NewTemplateHandler(templateService)
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8088"
@@ -354,6 +362,21 @@ func main() {
 		r.Get("/api/my-reading-plans", readingPlanHandler.GetUserPlans)
 		r.Post("/api/my-reading-plans/{id}/progress", readingPlanHandler.MarkDayComplete)
 		r.Get("/api/my-reading-plans/{id}/progress", readingPlanHandler.GetPlanProgress)
+
+		// Memory Verses
+		r.Get("/api/memory-verses", memoryVerseHandler.SearchVerses)
+		r.Post("/api/memory-verses", memoryVerseHandler.CreateVerse)
+		r.Get("/api/memory-verses/packs", memoryVerseHandler.GetSystemPacks)
+
+		// Study Templates
+		r.Post("/api/templates", templateHandler.CreateTemplate)
+		r.Get("/api/templates", templateHandler.ListMyTemplates)
+		r.Get("/api/templates/public", templateHandler.ListPublicTemplates)
+		r.Get("/api/templates/{id}", templateHandler.GetTemplate)
+		r.Put("/api/templates/{id}", templateHandler.UpdateTemplate)
+		r.Delete("/api/templates/{id}", templateHandler.DeleteTemplate)
+		r.Post("/api/templates/{id}/clone", templateHandler.CloneTemplate)
+		r.Post("/api/templates/{id}/generate", templateHandler.Generate)
 	})
 
 	server := &http.Server{

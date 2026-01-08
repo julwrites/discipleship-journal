@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { syncUser, updateUser } from "@/services/api";
-import { useTheme } from "@/components/ThemeProvider";
+import { useTheme } from "@/components/theme/ThemeProvider";
 import { useNotifications } from "@/hooks/useNotifications";
 import { Moon, Sun, Laptop, Palette, Bell, ArrowLeft } from "lucide-react";
 

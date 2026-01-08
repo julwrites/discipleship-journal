@@ -125,6 +125,7 @@ func (h *ReadingPlanHandler) GetPlan(w http.ResponseWriter, r *http.Request) {
 		Title       string                   `json:"title"`
 		Description string                   `json:"description"`
 		TotalDays   int                      `json:"total_days"`
+		PlanType    string                   `json:"plan_type"`
 		CreatedAt   interface{}              `json:"created_at"`
 		UpdatedAt   interface{}              `json:"updated_at"`
 		Days        []*models.ReadingPlanDay `json:"days"`
@@ -133,6 +134,7 @@ func (h *ReadingPlanHandler) GetPlan(w http.ResponseWriter, r *http.Request) {
 		Title:       plan.Title,
 		Description: plan.Description,
 		TotalDays:   plan.Days,
+		PlanType:    plan.PlanType,
 		CreatedAt:   plan.CreatedAt,
 		UpdatedAt:   plan.UpdatedAt,
 		Days:        days,

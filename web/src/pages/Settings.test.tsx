@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 import Settings from './Settings';
-import { ThemeProvider } from '@/components/ThemeProvider';
+import { ThemeProvider } from '@/components/theme/ThemeProvider';
 import { BrowserRouter } from 'react-router-dom';
 
 // Mock API
