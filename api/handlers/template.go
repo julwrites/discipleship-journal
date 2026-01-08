@@ -42,7 +42,9 @@ func (h *TemplateHandler) CreateTemplate(w http.ResponseWriter, r *http.Request)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(created)
+	if err := json.NewEncoder(w).Encode(created); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func (h *TemplateHandler) GetTemplate(w http.ResponseWriter, r *http.Request) {
@@ -60,7 +62,9 @@ func (h *TemplateHandler) GetTemplate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(tmpl)
+	if err := json.NewEncoder(w).Encode(tmpl); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func (h *TemplateHandler) ListMyTemplates(w http.ResponseWriter, r *http.Request) {
@@ -77,7 +81,9 @@ func (h *TemplateHandler) ListMyTemplates(w http.ResponseWriter, r *http.Request
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{"data": list})
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{"data": list}); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func (h *TemplateHandler) ListPublicTemplates(w http.ResponseWriter, r *http.Request) {
@@ -88,7 +94,9 @@ func (h *TemplateHandler) ListPublicTemplates(w http.ResponseWriter, r *http.Req
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{"data": list})
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{"data": list}); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func (h *TemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.Request) {
@@ -119,7 +127,9 @@ func (h *TemplateHandler) UpdateTemplate(w http.ResponseWriter, r *http.Request)
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]bool{"success": true})
+	if err := json.NewEncoder(w).Encode(map[string]bool{"success": true}); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func (h *TemplateHandler) DeleteTemplate(w http.ResponseWriter, r *http.Request) {
@@ -142,7 +152,9 @@ func (h *TemplateHandler) DeleteTemplate(w http.ResponseWriter, r *http.Request)
 	}
 
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]bool{"success": true})
+	if err := json.NewEncoder(w).Encode(map[string]bool{"success": true}); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func (h *TemplateHandler) CloneTemplate(w http.ResponseWriter, r *http.Request) {
@@ -166,7 +178,9 @@ func (h *TemplateHandler) CloneTemplate(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(cloned)
+	if err := json.NewEncoder(w).Encode(cloned); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func (h *TemplateHandler) Generate(w http.ResponseWriter, r *http.Request) {
@@ -190,7 +204,9 @@ func (h *TemplateHandler) Generate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"content": content})
+	if err := json.NewEncoder(w).Encode(map[string]string{"content": content}); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func (h *TemplateHandler) getUserID(r *http.Request) (uuid.UUID, error) {

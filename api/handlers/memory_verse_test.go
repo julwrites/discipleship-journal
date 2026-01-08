@@ -59,7 +59,8 @@ func TestMemoryVerseHandler_SearchVerses(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	var response map[string][]*models.MemoryVerse
-	json.NewDecoder(w.Body).Decode(&response)
+	err := json.NewDecoder(w.Body).Decode(&response)
+	assert.NoError(t, err)
 	assert.Len(t, response["data"], 1)
 }
 

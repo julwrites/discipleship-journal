@@ -31,14 +31,12 @@ func (s *memoryVerseService) SearchVerses(ctx context.Context, userID uuid.UUID,
 		WHERE (user_id IS NULL OR user_id = $1)
 	`
 	args := []interface{}{userID}
-	argIdx := 2
 
 	if query != "" {
 		// PostgreSQL standard is $2, $3 etc.
 		// Since we append args, the index logic needs to match
 		baseQuery += " AND (reference ILIKE $2 OR text ILIKE $2 OR pack_name ILIKE $2)"
 		args = append(args, "%"+query+"%")
-		argIdx++
 	}
 
 	baseQuery += " ORDER BY pack_name ASC, reference ASC LIMIT 50"
