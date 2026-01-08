@@ -1,5 +1,5 @@
-import { useEffect, useState, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState, useRef, useCallback } from "react";
+import { useParams, useNavigate, useBlocker } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +24,16 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -41,6 +51,8 @@ export default function NoteEditor() {
     const navigate = useNavigate();
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
+    const [initialTitle, setInitialTitle] = useState("");
+    const [initialContent, setInitialContent] = useState("");
     const [mode, setMode] = useState<"edit" | "preview">("edit");
     const [saving, setSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<string | null>(null);
@@ -82,12 +94,19 @@ export default function NoteEditor() {
             setLoading(true);
             getNote(id).then(note => {
                 setTitle(note.title);
+                setInitialTitle(note.title);
+
                 // Handle legacy content format (object with markdown)
                 let noteContent = note.content || "";
-                if (typeof noteContent === 'object' && noteContent.markdown) {
-                    noteContent = noteContent.markdown;
+                if (typeof noteContent === 'object') {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const anyContent = noteContent as any;
+                    if (anyContent.markdown) {
+                         noteContent = anyContent.markdown;
+                    }
                 }
-                setContent(noteContent);
+                setContent(noteContent as string);
+                setInitialContent(noteContent as string);
                 setLastSaved("Loaded");
             }).catch(e => {
                 console.error(e);
@@ -111,44 +130,43 @@ export default function NoteEditor() {
         setSaveError(false);
         try {
             if (id === "new") {
-                if (!manual) return; // Don't auto-save new notes until title/content exists or manual save
                 const res = await createNote(title, content);
                 navigate(`/notes/${res.id}`, { replace: true });
+                setInitialTitle(title);
+                setInitialContent(content);
                 setLastSaved(new Date().toLocaleTimeString());
             } else if (id) {
                 await updateNote(id, title, content);
+                setInitialTitle(title);
+                setInitialContent(content);
                 setLastSaved(new Date().toLocaleTimeString());
             }
         } catch (e) {
             console.error(e);
             setSaveError(true);
-            if (manual) {
-                const message = e instanceof Error ? e.message : "Failed to save";
-                // If it's a TypeError (usually network/CORS), it often lacks details, but we can hint at it.
-                if (message === "Failed to fetch" || (e instanceof TypeError && message.includes("fetch"))) {
-                    toast.error("Network error: Cannot reach server. Please check your connection.");
-                } else {
-                    toast.error(`Failed to save: ${message}`);
-                }
+            const message = e instanceof Error ? e.message : "Failed to save";
+            if (message === "Failed to fetch" || (e instanceof TypeError && message.includes("fetch"))) {
+                toast.error("Network error: Cannot reach server. Please check your connection.");
+            } else {
+                toast.error(`Failed to save: ${message}`);
             }
         } finally {
             setSaving(false);
         }
-    };
+    }, [id, title, content, navigate]);
 
-    // Auto-save effect
+    // Handle Ctrl+S / Cmd+S
     useEffect(() => {
-        if (!id || id === "new") return;
-
-        const timer = setTimeout(() => {
-            if (title || content) {
-                handleSave(false);
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                handleSave();
             }
-        }, 2000); // 2 second debounce
+        };
 
-        return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [title, content, id]);
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [handleSave]);
 
     const handleDelete = () => {
         if (!id || id === "new") return;
@@ -222,7 +240,6 @@ export default function NoteEditor() {
         if (!editorRef.current) return;
 
         // Build HTML for the passage
-        // Backend returns HTML, so we don't need to manually wrap paragraphs unless it's a legacy response
         const html = `<blockquote><p><strong>${passageRef}</strong></p>${bibleText}</blockquote><p></p>`;
 
         editorRef.current.chain().focus().insertContent(html).run();
@@ -268,7 +285,6 @@ export default function NoteEditor() {
     const handleAddAIResponse = () => {
         if (!aiResponse || !editorRef.current) return;
 
-        // Backend returns HTML now (via system prompt to LLM), so we insert directly
         const html = `<blockquote><p><em>Question: ${aiPrompt}</em></p>${aiResponse}</blockquote><p></p>`;
 
         editorRef.current.chain().focus().insertContent(html).run();
@@ -286,10 +302,11 @@ export default function NoteEditor() {
                 <div className="flex items-center gap-2">
                     {saveError && <span className="text-sm text-destructive hidden sm:inline">Error saving</span>}
                     {!saveError && lastSaved && <span className="text-sm text-muted-foreground hidden sm:inline">{saving ? "Saving..." : `Saved at ${lastSaved}`}</span>}
+                    {isDirty && !saving && <span className="text-sm text-yellow-600 hidden sm:inline">Unsaved changes</span>}
 
                     <Button variant={mode === "edit" ? "default" : "outline"} onClick={() => setMode("edit")} className="hidden md:inline-flex">Edit</Button>
                     <Button variant={mode === "preview" ? "default" : "outline"} onClick={() => setMode("preview")} className="hidden md:inline-flex">Preview</Button>
-                    <Button onClick={() => handleSave(true)} disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
+                    <Button onClick={handleSave} disabled={saving || !isDirty}>{saving ? "Saving..." : "Save"}</Button>
 
                     {/* Desktop Toolbar Buttons */}
                     <div className="hidden md:flex items-center gap-2">
@@ -357,6 +374,24 @@ export default function NoteEditor() {
                     </div>
                 </div>
             </div>
+
+             {/* Unsaved Changes Blocker Dialog */}
+            {blocker.state === "blocked" && (
+                <AlertDialog open={true}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                You have unsaved changes. Are you sure you want to leave? Your changes will be lost.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel onClick={() => blocker.reset()}>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => blocker.proceed()}>Leave</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            )}
 
             <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
                 <DialogContent>
