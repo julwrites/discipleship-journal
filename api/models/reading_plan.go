@@ -11,6 +11,7 @@ type ReadingPlan struct {
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
 	Days        int       `json:"days"`
+	PlanType    string    `json:"plan_type"` // sequential, calendar
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }

@@ -356,3 +356,133 @@ export async function getPlanProgress(planId: string) {
     if (!res.ok) throw new Error("Failed to fetch plan progress");
     return res.json();
 }
+
+// --- Memory Verses ---
+
+export interface MemoryVerse {
+    id?: string;
+    pack_name: string;
+    reference: string;
+    text: string;
+    version: string;
+    tags: string[];
+}
+
+export async function searchMemoryVerses(query: string = "") {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/memory-verses?q=${encodeURIComponent(query)}`, { headers });
+    if (!res.ok) throw new Error("Failed to search verses");
+    return res.json();
+}
+
+export async function createMemoryVerse(verse: MemoryVerse) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/memory-verses`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(verse),
+    });
+    if (!res.ok) throw new Error("Failed to create memory verse");
+    return res.json();
+}
+
+export async function getMemoryVersePacks() {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/memory-verses/packs`, { headers });
+    if (!res.ok) throw new Error("Failed to get packs");
+    return res.json();
+}
+
+// --- Study Templates ---
+
+export interface TemplateField {
+    key: string;
+    label: string;
+    type: "text" | "textarea" | "select";
+    placeholder?: string;
+}
+
+export interface StudyTemplate {
+    id?: string;
+    creator_id?: string;
+    title: string;
+    description: string;
+    structure: Record<string, unknown>;
+    prompts: Record<string, unknown>;
+    fields: TemplateField[];
+    is_public: boolean;
+}
+
+export async function getMyTemplates() {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/templates`, { headers });
+    if (!res.ok) throw new Error("Failed to fetch templates");
+    return res.json();
+}
+
+export async function getPublicTemplates() {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/templates/public`, { headers });
+    if (!res.ok) throw new Error("Failed to fetch public templates");
+    return res.json();
+}
+
+export async function getTemplate(id: string) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/templates/${id}`, { headers });
+    if (!res.ok) throw new Error("Failed to fetch template");
+    return res.json();
+}
+
+export async function createTemplate(template: StudyTemplate) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/templates`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(template),
+    });
+    if (!res.ok) throw new Error("Failed to create template");
+    return res.json();
+}
+
+export async function updateTemplate(id: string, template: StudyTemplate) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/templates/${id}`, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify(template),
+    });
+    if (!res.ok) throw new Error("Failed to update template");
+    return res.json();
+}
+
+export async function deleteTemplate(id: string) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/templates/${id}`, {
+        method: "DELETE",
+        headers,
+    });
+    if (!res.ok) throw new Error("Failed to delete template");
+    return res.json();
+}
+
+export async function cloneTemplate(id: string) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/templates/${id}/clone`, {
+        method: "POST",
+        headers,
+    });
+    if (!res.ok) throw new Error("Failed to clone template");
+    return res.json();
+}
+
+export async function generateFromTemplate(id: string, inputs: Record<string, string>) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/templates/${id}/generate`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ inputs }),
+    });
+    if (!res.ok) throw new Error("Failed to generate content");
+    return res.json();
+}

@@ -8,6 +8,9 @@ import ConnectionsPage from "@/pages/ConnectionsPage";
 import GroupsPage from "@/pages/GroupsPage";
 import ReadingPlansPage from "@/pages/ReadingPlansPage";
 import ReadingPlanDetail from "@/pages/ReadingPlanDetail";
+import MemoryVersesPage from "@/pages/MemoryVersesPage";
+import TemplatesPage from "@/pages/TemplatesPage";
+import TemplateEditor from "@/pages/TemplateEditor";
 import Settings from "@/pages/Settings";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
@@ -44,6 +47,11 @@ function App() {
           <Route path="/groups" element={user ? <GroupsPage /> : <Navigate to="/login" />} />
           <Route path="/reading-plans" element={user ? <ReadingPlansPage /> : <Navigate to="/login" />} />
           <Route path="/reading-plans/:id" element={user ? <ReadingPlanDetail /> : <Navigate to="/login" />} />
+          <Route path="/memory-verses" element={user ? <MemoryVersesPage /> : <Navigate to="/login" />} />
+
+          <Route path="/templates" element={user ? <TemplatesPage /> : <Navigate to="/login" />} />
+          <Route path="/templates/:id/edit" element={user ? <TemplateEditor /> : <Navigate to="/login" />} />
+          <Route path="/templates/new" element={user ? <TemplateEditor /> : <Navigate to="/login" />} />
 
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
