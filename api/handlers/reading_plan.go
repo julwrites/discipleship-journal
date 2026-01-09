@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/models"
 	"discipleship_journal_api/services"
+	"firebase.google.com/go/v4/auth"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
@@ -149,23 +151,18 @@ func (h *ReadingPlanHandler) GetPlan(w http.ResponseWriter, r *http.Request) {
 // Helper to get userID from context (production) or test fallback
 func (h *ReadingPlanHandler) getUserID(r *http.Request) (uuid.UUID, error) {
 	// 1. Try production path (Firebase UID in context -> DB lookup)
-	uidStr, ok := r.Context().Value("user_id").(string)
-	if ok {
-		userID, err := GetUserUUID(r.Context(), uidStr)
-		if err == nil {
-			return userID, nil
-		}
-		// If DB lookup fails but we had a UID, we might log it, but here we fall through
-		// to see if it's a test scenario (or just return error if we want strictness).
-		// For now, consistent with previous code, we fall through.
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+		return GetUserUUID(r.Context(), token.UID)
 	}
 
 	// 2. Try test fallback
 	if val := r.Context().Value(TestUserKey); val != nil {
-		return val.(uuid.UUID), nil
+		if id, ok := val.(uuid.UUID); ok {
+			return id, nil
+		}
 	}
 
-	return uuid.Nil, models.ErrNotFound // Using generic error to signal "no user"
+	return uuid.Nil, models.ErrNotFound
 }
 
 // Subscribe godoc
