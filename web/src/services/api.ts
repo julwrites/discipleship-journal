@@ -431,7 +431,21 @@ export async function deletePack(id: string) {
         headers,
     });
     if (!res.ok) throw new Error("Failed to delete pack");
+    return res.json();
 }
+
+// Deprecated: Compatibility aliases
+export const shareNote = (groupId: string, noteId: string, comment: string) => shareItem(groupId, { note_id: noteId, comment });
+export const searchMemoryVerses = async (query: string = "") => {
+    // This requires implementing a search endpoint in MemoryVerseService that searches verses across packs
+    // For now, if we don't have it, we might error or mock empty.
+    // BUT the requirement is to use the new system.
+    // I will point this to a search endpoint I just added to the service interface
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/memory-verses?q=${encodeURIComponent(query)}`, { headers });
+    if (!res.ok) throw new Error("Failed to search verses");
+    return res.json();
+};
 
 
 // --- Study Templates ---

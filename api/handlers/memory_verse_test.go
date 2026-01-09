@@ -67,6 +67,14 @@ func (m *MockMemoryVerseService) DeletePack(ctx context.Context, packID uuid.UUI
 	return args.Error(0)
 }
 
+func (m *MockMemoryVerseService) SearchVerses(ctx context.Context, userID uuid.UUID, query string) ([]*models.MemoryVerse, error) {
+	args := m.Called(ctx, userID, query)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.MemoryVerse), args.Error(1)
+}
+
 func TestMemoryVerseHandler_GetPacks(t *testing.T) {
 	mockService := new(MockMemoryVerseService)
 	handler := NewMemoryVerseHandler(mockService)
@@ -142,4 +150,27 @@ func TestMemoryVerseHandler_CreateVerseInPack(t *testing.T) {
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusCreated, w.Code)
+}
+
+func TestMemoryVerseHandler_SearchVerses(t *testing.T) {
+	mockService := new(MockMemoryVerseService)
+	handler := NewMemoryVerseHandler(mockService)
+
+	userID := uuid.New()
+	ctx := context.WithValue(context.Background(), TestUserKey, userID.String())
+
+	req := httptest.NewRequest("GET", "/api/memory-verses?q=love", nil)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	verses := []*models.MemoryVerse{{Reference: "John 3:16"}}
+	mockService.On("SearchVerses", mock.Anything, userID, "love").Return(verses, nil)
+
+	handler.SearchVerses(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var response map[string][]*models.MemoryVerse
+	err := json.NewDecoder(w.Body).Decode(&response)
+	assert.NoError(t, err)
+	assert.Len(t, response["data"], 1)
 }

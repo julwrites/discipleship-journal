@@ -18,6 +18,8 @@ type MemoryVerseService interface {
 	CreateVerse(ctx context.Context, verse *models.MemoryVerse) (*models.MemoryVerse, error)
 	ClonePack(ctx context.Context, packID uuid.UUID, userID uuid.UUID, newTitle string) (*models.VersePack, error)
 	DeletePack(ctx context.Context, packID uuid.UUID, userID uuid.UUID) error
+	// SearchVerses searches for verses across all accessible packs (user's or system's)
+	SearchVerses(ctx context.Context, userID uuid.UUID, query string) ([]*models.MemoryVerse, error)
 }
 
 type memoryVerseService struct {
@@ -222,4 +224,36 @@ func (s *memoryVerseService) DeletePack(ctx context.Context, packID uuid.UUID, u
 		return models.ErrNotFound
 	}
 	return nil
+}
+
+func (s *memoryVerseService) SearchVerses(ctx context.Context, userID uuid.UUID, queryStr string) ([]*models.MemoryVerse, error) {
+	// Search in user's packs OR public packs
+	query := `
+		SELECT mv.id, mv.verse_pack_id, mv.reference, mv.version, mv.tags, mv.created_at, mv.updated_at
+		FROM memory_verses mv
+		JOIN verse_packs vp ON mv.verse_pack_id = vp.id
+		WHERE (vp.user_id = $1 OR vp.is_public = true)
+		AND (mv.reference ILIKE $2 OR vp.title ILIKE $2)
+		ORDER BY mv.reference ASC
+		LIMIT 20
+	`
+	rows, err := s.db.Query(ctx, query, userID, "%"+queryStr+"%")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var verses []*models.MemoryVerse
+	for rows.Next() {
+		var v models.MemoryVerse
+		var tagsBytes []byte
+		if err := rows.Scan(&v.ID, &v.VersePackID, &v.Reference, &v.Version, &tagsBytes, &v.CreatedAt, &v.UpdatedAt); err != nil {
+			return nil, err
+		}
+		if len(tagsBytes) > 0 {
+			_ = json.Unmarshal(tagsBytes, &v.Tags)
+		}
+		verses = append(verses, &v)
+	}
+	return verses, nil
 }

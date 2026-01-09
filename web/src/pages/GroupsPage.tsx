@@ -9,7 +9,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { useDebounce } from "@/hooks/useDebounce";
 import { ChevronDown, ChevronUp, UserPlus, Trash2, Copy, BookOpen } from "lucide-react";
-import ReactMarkdown from "react-markdown";
 import {
     getGroups,
     searchGroups,
@@ -83,7 +82,8 @@ export default function GroupsPage() {
     const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
 
     // Detailed view of shared item
-    const [viewingSharedItem, setViewingSharedItem] = useState<SharedItem & { content?: any } | null>(null);
+    // Use proper typing or omit any if complex
+    const [viewingSharedItem, setViewingSharedItem] = useState<SharedItem & { content?: { html?: string } | string } | null>(null);
     const [isClonePackOpen, setIsClonePackOpen] = useState(false);
     const [clonePackTitle, setClonePackTitle] = useState("");
 
@@ -243,6 +243,13 @@ export default function GroupsPage() {
         }
     };
 
+    const getSharedContent = () => {
+        if (!viewingSharedItem) return "No content";
+        const content = viewingSharedItem.content;
+        if (typeof content === 'string') return content;
+        return content?.html || "No content";
+    };
+
     return (
         <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6">
              {/* Shared Item Detail Dialog */}
@@ -268,7 +275,7 @@ export default function GroupsPage() {
 
                              {viewingSharedItem.type === "note" ? (
                                  <div className="prose dark:prose-invert max-w-none">
-                                     <div dangerouslySetInnerHTML={{ __html: viewingSharedItem.content?.html || viewingSharedItem.content || "No content" }} />
+                                     <div dangerouslySetInnerHTML={{ __html: getSharedContent() }} />
                                  </div>
                              ) : (
                                 <div className="space-y-2">

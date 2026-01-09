@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getVersePacks, createVersePack, VersePack, getPackDetails, deletePack, createVerseInPack, MemoryVerse, clonePack } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Plus, BookOpen, Trash2, ArrowLeft, Copy, Share2 } from "lucide-react";
+import { Plus, BookOpen, Trash2, ArrowLeft, Copy } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -44,11 +44,7 @@ function PackList({ type }: { type: "system" | "user" }) {
     const [newPackTitle, setNewPackTitle] = useState("");
     const navigate = useNavigate();
 
-    useEffect(() => {
-        loadPacks();
-    }, [type]);
-
-    const loadPacks = async () => {
+    const loadPacks = useCallback(async () => {
         setLoading(true);
         try {
             const res = await getVersePacks(type);
@@ -58,7 +54,11 @@ function PackList({ type }: { type: "system" | "user" }) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [type]);
+
+    useEffect(() => {
+        loadPacks();
+    }, [loadPacks]);
 
     const handleCreatePack = async () => {
         if (!newPackTitle.trim()) return;
@@ -167,11 +167,7 @@ export function VersePackDetail() {
     const [isCloneOpen, setIsCloneOpen] = useState(false);
     const [cloneTitle, setCloneTitle] = useState("");
 
-    useEffect(() => {
-        if (id) loadDetails();
-    }, [id]);
-
-    const loadDetails = async () => {
+    const loadDetails = useCallback(async () => {
         if (!id) return;
         setLoading(true);
         try {
@@ -184,11 +180,16 @@ export function VersePackDetail() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [id, navigate]);
+
+    useEffect(() => {
+        if (id) loadDetails();
+    }, [id, loadDetails]);
 
     const handleAddVerse = async () => {
         if (!id || !newVerse.reference) return;
         try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             await createVerseInPack(id, newVerse as any);
             toast.success("Verse added");
             setIsAddOpen(false);

@@ -209,9 +209,8 @@ func (h *MemoryVerseHandler) ClonePack(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Title string `json:"title"`
 	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		// Optional body
-	}
+	// Ignore error if body is empty or malformed, default values will be used
+	_ = json.NewDecoder(r.Body).Decode(&req)
 
 	pack, err := h.service.ClonePack(r.Context(), packID, userID, req.Title)
 	if err != nil {
@@ -257,4 +256,31 @@ func (h *MemoryVerseHandler) DeletePack(w http.ResponseWriter, r *http.Request) 
 
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(map[string]bool{"success": true})
+}
+
+// SearchVerses (for backward compatibility and global search)
+func (h *MemoryVerseHandler) SearchVerses(w http.ResponseWriter, r *http.Request) {
+	firebaseUID := ""
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+		firebaseUID = token.UID
+	}
+
+	userID, err := GetUserUUID(r.Context(), firebaseUID)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	query := r.URL.Query().Get("q")
+
+	verses, err := h.service.SearchVerses(r.Context(), userID, query)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{"data": verses}); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }

@@ -198,11 +198,14 @@ func (h *GroupShareHandler) sendNotifications(groupID, sharerID, resourceTitle, 
 	for rows.Next() {
 		var memberID string
 		if err := rows.Scan(&memberID); err == nil {
-			h.notificationService.SendNotification(ctx, memberID, "New Shared Item", msgBody, map[string]string{
+			err := h.notificationService.SendNotification(ctx, memberID, "New Shared Item", msgBody, map[string]string{
 				"type":        resourceType + "_share",
 				"group_id":    groupID,
 				"resource_id": resourceID,
 			})
+			if err != nil {
+				slog.Error("Failed to send notification", "user_id", memberID, "error", err)
+			}
 		}
 	}
 }
@@ -275,8 +278,7 @@ func (h *GroupShareHandler) ListGroupShares(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-// GetSharedNoteDetails fetches details of a shared note
-// Note: We keep this for backward compatibility or refactor to generic "GetSharedItemDetails"
+// GetSharedItemDetails fetches details of a shared note or pack
 func (h *GroupShareHandler) GetSharedItemDetails(w http.ResponseWriter, r *http.Request) {
 	groupID := chi.URLParam(r, "id")
 	shareID := chi.URLParam(r, "shareId")
