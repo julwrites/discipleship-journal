@@ -363,10 +363,13 @@ func main() {
 		r.Post("/api/my-reading-plans/{id}/progress", readingPlanHandler.MarkDayComplete)
 		r.Get("/api/my-reading-plans/{id}/progress", readingPlanHandler.GetPlanProgress)
 
-		// Memory Verses
-		r.Get("/api/memory-verses", memoryVerseHandler.SearchVerses)
-		r.Post("/api/memory-verses", memoryVerseHandler.CreateVerse)
-		r.Get("/api/memory-verses/packs", memoryVerseHandler.GetSystemPacks)
+		// Memory Verses (Refactored)
+		r.Get("/api/verse-packs", memoryVerseHandler.GetPacks)
+		r.Post("/api/verse-packs", memoryVerseHandler.CreatePack)
+		r.Get("/api/verse-packs/{id}", memoryVerseHandler.GetPackDetails)
+		r.Delete("/api/verse-packs/{id}", memoryVerseHandler.DeletePack)
+		r.Post("/api/verse-packs/{id}/verses", memoryVerseHandler.CreateVerseInPack)
+		r.Post("/api/verse-packs/{id}/clone", memoryVerseHandler.ClonePack)
 
 		// Study Templates
 		r.Post("/api/templates", templateHandler.CreateTemplate)
