@@ -17,7 +17,18 @@ vi.mock('@/components/RichTextEditor', async () => {
     const React = await import('react');
     const { useEffect, useRef, useState } = React;
 
-    const MockRichTextEditor = ({ initialContent, onChange, editable, onEditorReady }: { initialContent: string, onChange: (v: string) => void, editable: boolean, onEditorReady?: (e: any) => void }) => {
+    type MockChain = {
+        focus: () => MockChain;
+        insertContent: (html: string) => MockChain;
+        run: () => void;
+    };
+
+    const MockRichTextEditor = ({ initialContent, onChange, editable, onEditorReady }: { 
+        initialContent: string, 
+        onChange: (v: string) => void, 
+        editable: boolean, 
+        onEditorReady?: (e: { chain: () => MockChain }) => void 
+    }) => {
         const [content, setContent] = useState(initialContent);
         const contentRef = useRef(content);
 
