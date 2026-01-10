@@ -441,6 +441,7 @@ export default function NoteEditor() {
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Add Bible Passage</DialogTitle>
+                        <DialogDescription>Search for a bible passage to add to your note.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
                         <div className="flex flex-col gap-2">
@@ -472,6 +473,7 @@ export default function NoteEditor() {
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Insert Memory Verse</DialogTitle>
+                        <DialogDescription>Search for a memory verse to insert.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
                         <Input
@@ -518,6 +520,7 @@ export default function NoteEditor() {
                 <DialogContent className="sm:max-w-[500px]">
                     <DialogHeader>
                         <DialogTitle>Ask AI about this note</DialogTitle>
+                        <DialogDescription>Ask the AI questions about your note content.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
                         <div className="flex flex-col gap-2">
@@ -553,6 +556,7 @@ export default function NoteEditor() {
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Share to Group</DialogTitle>
+                        <DialogDescription>Share this note with your groups.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
                         <select
