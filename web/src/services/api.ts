@@ -375,6 +375,7 @@ export interface MemoryVerse {
     reference: string;
     version: string;
     tags: string[];
+    pack_title?: string;
 }
 
 export async function getVersePacks(type: "system" | "user" = "user") {
@@ -448,7 +449,7 @@ export const searchMemoryVerses = async (query: string = "") => {
 };
 
 
-// --- Study Templates ---
+// --- Templates ---
 
 export interface TemplateField {
     key: string;

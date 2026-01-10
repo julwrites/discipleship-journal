@@ -64,7 +64,7 @@ test('dashboard resources and user dropdowns', async ({ page }) => {
 
   await expect(page.getByRole('menuitem', { name: 'Reading Plans' })).toBeVisible();
   await expect(page.getByRole('menuitem', { name: 'Memory Verses' })).toBeVisible();
-  await expect(page.getByRole('menuitem', { name: 'Study Templates' })).toBeVisible();
+  await expect(page.getByRole('menuitem', { name: 'Templates' })).toBeVisible();
 
   // Close menu
   await page.keyboard.press('Escape');

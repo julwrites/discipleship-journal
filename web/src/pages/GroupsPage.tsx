@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -265,6 +265,7 @@ export default function GroupsPage() {
                                     </span>
                                 )}
                              </DialogTitle>
+                             <DialogDescription>Details of the shared item.</DialogDescription>
                          </DialogHeader>
                          <div className="space-y-4">
                              <div className="bg-muted p-3 rounded text-sm text-muted-foreground">
@@ -291,6 +292,7 @@ export default function GroupsPage() {
                                             <DialogContent>
                                                 <DialogHeader>
                                                     <DialogTitle>Save Pack</DialogTitle>
+                                                    <DialogDescription>Save this verse pack to your library.</DialogDescription>
                                                 </DialogHeader>
                                                 <div className="py-4">
                                                     <Label>New Title (Optional)</Label>
@@ -323,6 +325,7 @@ export default function GroupsPage() {
                     <DialogContent>
                         <DialogHeader>
                             <DialogTitle>Create a New Group</DialogTitle>
+                            <DialogDescription>Create a new group to share notes and verses.</DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4">
                             <Input
@@ -405,6 +408,7 @@ export default function GroupsPage() {
                                                             <DialogContent>
                                                                 <DialogHeader>
                                                                     <DialogTitle>Add Member to {g.name}</DialogTitle>
+                                                                    <DialogDescription>Search for users to add to the group.</DialogDescription>
                                                                 </DialogHeader>
                                                                 <div className="space-y-4">
                                                                     <div className="flex gap-2">

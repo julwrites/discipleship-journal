@@ -75,6 +75,7 @@ export default function NoteEditor() {
     const [verseSearch, setVerseSearch] = useState("");
     const [verses, setVerses] = useState<MemoryVerse[]>([]);
     const [loadingVerses, setLoadingVerses] = useState(false);
+    const [insertingVerse, setInsertingVerse] = useState(false);
     const debouncedVerseSearch = useDebounce(verseSearch, 300);
 
     // AI State
@@ -252,7 +253,7 @@ export default function NoteEditor() {
         // Build HTML for the passage
         const html = `<blockquote><p><strong>${passageRef}</strong></p>${bibleText}</blockquote><p></p>`;
 
-        editorRef.current.chain().focus().insertContent(html).run();
+        editorRef.current.chain().insertContent(html).run();
 
         setPassageRef("");
         setBibleText("");
@@ -260,6 +261,10 @@ export default function NoteEditor() {
     };
 
     const handleSearchVerses = async (q: string) => {
+        if (!q || q.length === 0) {
+            setVerses([]);
+            return;
+        }
         setLoadingVerses(true);
         try {
             const res = await searchMemoryVerses(q);
@@ -271,12 +276,23 @@ export default function NoteEditor() {
         }
     };
 
-    const handleInsertVerse = (verse: MemoryVerse) => {
+    const handleInsertVerse = async (verse: MemoryVerse) => {
         if (!editorRef.current) return;
-        // Since we no longer store text, we just insert the reference
-        const html = `<blockquote><p><strong>${verse.reference} (${verse.version})</strong></p></blockquote><p></p>`;
-        editorRef.current.chain().focus().insertContent(html).run();
-        setVerseDialogOpen(false);
+        setInsertingVerse(true);
+        try {
+             const res = await getBiblePassage(verse.reference);
+             // API returns "verse" (real) or "text" (mock). Support both.
+             const text = res.verse || res.text || res.content || "Passage found but no text returned.";
+
+             const html = `<blockquote><p><strong>${verse.reference} (${verse.version})</strong></p>${text}</blockquote><p></p>`;
+             editorRef.current.chain().insertContent(html).run();
+             setVerseDialogOpen(false);
+        } catch (error) {
+            console.error("Failed to insert verse", error);
+            toast.error("Failed to load verse text.");
+        } finally {
+            setInsertingVerse(false);
+        }
     };
 
     const handleAskAI = async () => {
@@ -298,7 +314,7 @@ export default function NoteEditor() {
 
         const html = `<blockquote><p><em>Question: ${aiPrompt}</em></p>${aiResponse}</blockquote><p></p>`;
 
-        editorRef.current.chain().focus().insertContent(html).run();
+        editorRef.current.chain().insertContent(html).run();
 
         setAiPrompt("");
         setAiResponse("");
@@ -425,6 +441,7 @@ export default function NoteEditor() {
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Add Bible Passage</DialogTitle>
+                        <DialogDescription>Search for a bible passage to add to your note.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
                         <div className="flex flex-col gap-2">
@@ -456,10 +473,11 @@ export default function NoteEditor() {
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Insert Memory Verse</DialogTitle>
+                        <DialogDescription>Search for a memory verse to insert.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
                         <Input
-                            placeholder="Search verses..."
+                            placeholder="Search by reference, pack or tags..."
                             value={verseSearch}
                             onChange={(e) => setVerseSearch(e.target.value)}
                         />
@@ -467,17 +485,29 @@ export default function NoteEditor() {
                             {loadingVerses ? (
                                 <div className="text-center text-sm text-muted-foreground">Loading...</div>
                             ) : verses.length === 0 ? (
-                                <div className="text-center text-sm text-muted-foreground">No verses found</div>
+                                <div className="text-center text-sm text-muted-foreground">
+                                    {verseSearch.length > 0 ? "No verses found" : "Start typing to search..."}
+                                </div>
                             ) : (
                                 verses.map(v => (
                                     <div
                                         key={v.id}
-                                        className="p-2 border rounded hover:bg-muted cursor-pointer"
+                                        className={`p-2 border rounded hover:bg-muted cursor-pointer ${insertingVerse ? 'opacity-50 pointer-events-none' : ''}`}
                                         onClick={() => handleInsertVerse(v)}
                                     >
-                                        <div className="font-semibold text-sm">{v.reference}</div>
-                                        {/* Since text is no longer stored, we might want to fetch it or just show reference */}
-                                        <div className="text-xs text-muted-foreground">Click to insert</div>
+                                        <div className="flex justify-between items-start">
+                                            <div className="font-semibold text-sm">{v.reference}</div>
+                                            <span className="text-[10px] bg-secondary px-1.5 py-0.5 rounded text-secondary-foreground">
+                                                {v.pack_title || "Unknown Pack"}
+                                            </span>
+                                        </div>
+                                        {v.tags && v.tags.length > 0 && (
+                                            <div className="flex gap-1 mt-1 flex-wrap">
+                                                {v.tags.map(tag => (
+                                                    <span key={tag} className="text-[10px] text-muted-foreground">#{tag}</span>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 ))
                             )}
@@ -490,6 +520,7 @@ export default function NoteEditor() {
                 <DialogContent className="sm:max-w-[500px]">
                     <DialogHeader>
                         <DialogTitle>Ask AI about this note</DialogTitle>
+                        <DialogDescription>Ask the AI questions about your note content.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
                         <div className="flex flex-col gap-2">
@@ -525,6 +556,7 @@ export default function NoteEditor() {
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Share to Group</DialogTitle>
+                        <DialogDescription>Share this note with your groups.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
                         <select
