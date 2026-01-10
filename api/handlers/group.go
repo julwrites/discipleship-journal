@@ -54,19 +54,30 @@ func (h *GroupHandler) CreateGroup(w http.ResponseWriter, r *http.Request) {
 
 	var userUUID string
 	var err error
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
-		var id uuid.UUID
-		id, err = GetUserUUID(r.Context(), token.UID)
-		if err != nil {
-			http.Error(w, "User not found", http.StatusInternalServerError)
+
+	// Check for test override first to avoid DB lookup
+	if testUserID := r.Context().Value(TestUserKey); testUserID != nil {
+		if idStr, ok := testUserID.(string); ok {
+			userUUID = idStr
+		} else if id, ok := testUserID.(uuid.UUID); ok {
+			userUUID = id.String()
+		}
+	}
+
+	// If not found in test override, try standard auth
+	if userUUID == "" {
+		if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+			var id uuid.UUID
+			id, err = GetUserUUID(r.Context(), token.UID)
+			if err != nil {
+				http.Error(w, "User not found", http.StatusInternalServerError)
+				return
+			}
+			userUUID = id.String()
+		} else {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-		userUUID = id.String()
-	} else if testUserID, ok := r.Context().Value(TestUserKey).(string); ok {
-		userUUID = testUserID
-	} else {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
 	}
 
 	tx, err := h.db.Begin(r.Context())
