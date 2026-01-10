@@ -26,9 +26,10 @@ func SetupIntegrationDB(t *testing.T) (*pgxpool.Pool, func()) {
 		t.Skip("skipping integration test in short mode")
 	}
 
-	// Check if Docker is available
-	if err := exec.Command("docker", "info").Run(); err != nil {
-		t.Skipf("skipping integration test: docker not available: %v", err)
+	// Pre-check for Docker availability to avoid panics from testcontainers-go
+	cmd := exec.Command("docker", "info")
+	if err := cmd.Run(); err != nil {
+		t.Skipf("skipping integration test: docker not available or permission denied: %v", err)
 	}
 
 	ctx := context.Background()

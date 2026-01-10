@@ -10,7 +10,7 @@ import {
     getBiblePassage,
     askAI,
     getGroups,
-    shareNote,
+    shareItem,
     searchMemoryVerses,
     MemoryVerse
 } from "@/services/api";
@@ -213,7 +213,7 @@ export default function NoteEditor() {
         if (!selectedGroupId) return;
         setSharing(true);
         try {
-            await shareNote(selectedGroupId, id, shareComment);
+            await shareItem(selectedGroupId, { note_id: id, comment: shareComment });
             toast.success("Note shared!");
             setSelectedGroupId("");
             setShareComment("");
@@ -273,7 +273,8 @@ export default function NoteEditor() {
 
     const handleInsertVerse = (verse: MemoryVerse) => {
         if (!editorRef.current) return;
-        const html = `<blockquote><p><strong>${verse.reference} (${verse.version})</strong></p><p>${verse.text}</p></blockquote><p></p>`;
+        // Since we no longer store text, we just insert the reference
+        const html = `<blockquote><p><strong>${verse.reference} (${verse.version})</strong></p></blockquote><p></p>`;
         editorRef.current.chain().focus().insertContent(html).run();
         setVerseDialogOpen(false);
     };
@@ -475,7 +476,8 @@ export default function NoteEditor() {
                                         onClick={() => handleInsertVerse(v)}
                                     >
                                         <div className="font-semibold text-sm">{v.reference}</div>
-                                        <div className="text-xs text-muted-foreground line-clamp-2">{v.text}</div>
+                                        {/* Since text is no longer stored, we might want to fetch it or just show reference */}
+                                        <div className="text-xs text-muted-foreground">Click to insert</div>
                                     </div>
                                 ))
                             )}

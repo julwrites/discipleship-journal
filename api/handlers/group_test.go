@@ -221,6 +221,7 @@ func TestGroupHandler_JoinGroup(t *testing.T) {
 		h.JoinGroup(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
+		assert.JSONEq(t, `{"success": true}`, w.Body.String())
 		assert.NoError(t, mockDB.ExpectationsWereMet())
 	})
 
@@ -292,6 +293,7 @@ func TestGroupHandler_LeaveGroup(t *testing.T) {
 		h.LeaveGroup(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
+		assert.JSONEq(t, `{"success": true}`, w.Body.String())
 		assert.NoError(t, mockDB.ExpectationsWereMet())
 	})
 
@@ -418,6 +420,7 @@ func TestGroupHandler_AddGroupMember(t *testing.T) {
 		h.AddGroupMember(w, req)
 
 		assert.Equal(t, http.StatusCreated, w.Code)
+		assert.JSONEq(t, `{"success": true}`, w.Body.String())
 
 		// Give goroutine a moment to run
 		time.Sleep(10 * time.Millisecond)
@@ -497,6 +500,7 @@ func TestGroupHandler_RemoveGroupMember(t *testing.T) {
 		h.RemoveGroupMember(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
+		assert.JSONEq(t, `{"success": true}`, w.Body.String())
 		assert.NoError(t, mockDB.ExpectationsWereMet())
 	})
 }

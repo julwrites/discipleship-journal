@@ -8,7 +8,7 @@ import ConnectionsPage from "@/pages/ConnectionsPage";
 import GroupsPage from "@/pages/GroupsPage";
 import ReadingPlansPage from "@/pages/ReadingPlansPage";
 import ReadingPlanDetail from "@/pages/ReadingPlanDetail";
-import MemoryVersesPage from "@/pages/MemoryVersesPage";
+import MemoryVersesPage, { VersePackDetail } from "@/pages/MemoryVersesPage";
 import TemplatesPage from "@/pages/TemplatesPage";
 import TemplateEditor from "@/pages/TemplateEditor";
 import Settings from "@/pages/Settings";
@@ -92,6 +92,10 @@ export const router = createBrowserRouter([
       {
         path: "/memory-verses",
         element: <MemoryVersesPage />,
+      },
+      {
+        path: "/memory-verses/:id",
+        element: <VersePackDetail />,
       },
       {
         path: "/templates",

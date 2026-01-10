@@ -4,12 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { useDebounce } from "@/hooks/useDebounce";
-import { ChevronDown, ChevronUp, UserPlus, Trash2 } from "lucide-react";
-import ReactMarkdown from "react-markdown";
+import { ChevronDown, ChevronUp, UserPlus, Trash2, Copy, BookOpen } from "lucide-react";
 import {
     getGroups,
     searchGroups,
@@ -18,11 +17,14 @@ import {
     leaveGroup,
     getGroupMembers,
     getGroupShares,
-    getSharedNote,
+    getSharedItem,
     searchUsers as apiSearchUsers,
     addGroupMember,
-    removeGroupMember
+    removeGroupMember,
+    clonePack
 } from "@/services/api";
+import { useNavigate } from "react-router-dom";
+import { Label } from "@/components/ui/label";
 
 interface Group {
     id: string;
@@ -38,10 +40,13 @@ interface GroupMember {
     role: string;
 }
 
-interface SharedNote {
+interface SharedItem {
     id: string; // shareId
-    note_id: string;
+    note_id?: string;
+    verse_pack_id?: string;
     title: string;
+    subtitle?: string;
+    type: "note" | "verse_pack";
     shared_by: string;
     shared_at: string;
     comment: string;
@@ -56,6 +61,7 @@ interface UserSearchResult {
 
 export default function GroupsPage() {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [myGroups, setMyGroups] = useState<Group[]>([]);
 
     const [searchResults, setSearchResults] = useState<Group[]>([]);
@@ -66,7 +72,7 @@ export default function GroupsPage() {
     const [newGroup, setNewGroup] = useState({ name: "", description: "" });
     const [expandedGroupId, setExpandedGroupId] = useState<string | null>(null);
     const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
-    const [groupShares, setGroupShares] = useState<SharedNote[]>([]);
+    const [groupShares, setGroupShares] = useState<SharedItem[]>([]);
 
     const [userSearchQuery, setUserSearchQuery] = useState("");
     const debouncedUserSearchQuery = useDebounce(userSearchQuery, 500);
@@ -74,7 +80,12 @@ export default function GroupsPage() {
 
     const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
     const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
-    const [viewingSharedNote, setViewingSharedNote] = useState<SharedNote & { content: { markdown?: string } } | null>(null);
+
+    // Detailed view of shared item
+    // Use proper typing or omit any if complex
+    const [viewingSharedItem, setViewingSharedItem] = useState<SharedItem & { content?: { html?: string } | string } | null>(null);
+    const [isClonePackOpen, setIsClonePackOpen] = useState(false);
+    const [clonePackTitle, setClonePackTitle] = useState("");
 
     const fetchMyGroups = useCallback(async () => {
         if (!user) return;
@@ -147,10 +158,7 @@ export default function GroupsPage() {
         try {
             await joinGroup(id);
             toast.success("Joined group!");
-            // Refresh search results to show updated role
             fetchMyGroups();
-            // Re-trigger search if needed, but since it's debounced, manual call to searchGroups might be needed if we want immediate update
-            // For now, assume fetchMyGroups handles the "my groups" part, and search results might need refresh.
             if (debouncedSearchQuery.length >= 3) {
                  const data = await searchGroups(debouncedSearchQuery);
                  setSearchResults(data || []);
@@ -189,12 +197,26 @@ export default function GroupsPage() {
         }
     };
 
-    const viewSharedNote = async (groupId: string, shareId: string) => {
+    const viewSharedItem = async (groupId: string, shareId: string) => {
         try {
-            const data = await getSharedNote(groupId, shareId);
-            setViewingSharedNote(data);
+            const data = await getSharedItem(groupId, shareId);
+            setViewingSharedItem(data);
         } catch (error) {
-            console.error("Failed to fetch shared note", error);
+            console.error("Failed to fetch shared item", error);
+            toast.error("Failed to load details");
+        }
+    };
+
+    const handleClonePack = async () => {
+        if (!viewingSharedItem?.verse_pack_id) return;
+        try {
+            await clonePack(viewingSharedItem.verse_pack_id, clonePackTitle || undefined);
+            toast.success("Pack cloned to your library!");
+            setIsClonePackOpen(false);
+            setViewingSharedItem(null);
+            navigate("/memory-verses");
+        } catch {
+            toast.error("Failed to clone pack");
         }
     };
 
@@ -221,23 +243,72 @@ export default function GroupsPage() {
         }
     };
 
+    const getSharedContent = () => {
+        if (!viewingSharedItem) return "No content";
+        const content = viewingSharedItem.content;
+        if (typeof content === 'string') return content;
+        return content?.html || "No content";
+    };
+
     return (
-        <div className="p-8 max-w-4xl mx-auto space-y-6">
-             {viewingSharedNote && (
-                 <Dialog open={!!viewingSharedNote} onOpenChange={(o) => !o && setViewingSharedNote(null)}>
+        <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6">
+             {/* Shared Item Detail Dialog */}
+             {viewingSharedItem && (
+                 <Dialog open={!!viewingSharedItem} onOpenChange={(o) => !o && setViewingSharedItem(null)}>
                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                          <DialogHeader>
-                             <DialogTitle>{viewingSharedNote.title}</DialogTitle>
+                             <DialogTitle className="flex flex-col gap-1">
+                                <span>{viewingSharedItem.title}</span>
+                                {viewingSharedItem.subtitle && (
+                                    <span className="text-sm font-normal text-muted-foreground bg-muted w-fit px-2 py-0.5 rounded">
+                                        {viewingSharedItem.subtitle}
+                                    </span>
+                                )}
+                             </DialogTitle>
                          </DialogHeader>
                          <div className="space-y-4">
                              <div className="bg-muted p-3 rounded text-sm text-muted-foreground">
-                                 <p><strong>Shared by:</strong> {viewingSharedNote.shared_by}</p>
-                                 <p><strong>Date:</strong> {new Date(viewingSharedNote.shared_at).toLocaleString()}</p>
-                                 {viewingSharedNote.comment && <p className="mt-1 italic">"{viewingSharedNote.comment}"</p>}
+                                 <p><strong>Shared by:</strong> {viewingSharedItem.shared_by}</p>
+                                 <p><strong>Date:</strong> {new Date(viewingSharedItem.shared_at).toLocaleString()}</p>
+                                 {viewingSharedItem.comment && <p className="mt-1 italic">"{viewingSharedItem.comment}"</p>}
                              </div>
-                             <div className="prose dark:prose-invert max-w-none">
-                                 <ReactMarkdown>{viewingSharedNote.content?.markdown || "No content"}</ReactMarkdown>
-                             </div>
+
+                             {viewingSharedItem.type === "note" ? (
+                                 <div className="prose dark:prose-invert max-w-none">
+                                     <div dangerouslySetInnerHTML={{ __html: getSharedContent() }} />
+                                 </div>
+                             ) : (
+                                <div className="space-y-2">
+                                    <p className="text-sm text-muted-foreground">This is a shared verse pack.</p>
+                                    <div className="flex justify-end">
+                                        <Dialog open={isClonePackOpen} onOpenChange={setIsClonePackOpen}>
+                                            <DialogTrigger asChild>
+                                                <Button>
+                                                    <Copy className="mr-2 h-4 w-4" />
+                                                    Save to My Packs
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent>
+                                                <DialogHeader>
+                                                    <DialogTitle>Save Pack</DialogTitle>
+                                                </DialogHeader>
+                                                <div className="py-4">
+                                                    <Label>New Title (Optional)</Label>
+                                                    <Input
+                                                        value={clonePackTitle}
+                                                        onChange={e => setClonePackTitle(e.target.value)}
+                                                        placeholder={viewingSharedItem.title}
+                                                        className="mt-2"
+                                                    />
+                                                </div>
+                                                <DialogFooter>
+                                                    <Button onClick={handleClonePack}>Save</Button>
+                                                </DialogFooter>
+                                            </DialogContent>
+                                        </Dialog>
+                                    </div>
+                                </div>
+                             )}
                          </div>
                      </DialogContent>
                  </Dialog>
@@ -297,19 +368,22 @@ export default function GroupsPage() {
                                     <CardContent>
                                         <Tabs defaultValue="shares">
                                             <TabsList className="mb-4">
-                                                <TabsTrigger value="shares">Shared Notes</TabsTrigger>
+                                                <TabsTrigger value="shares">Shared Items</TabsTrigger>
                                                 <TabsTrigger value="members">Members</TabsTrigger>
                                             </TabsList>
 
                                             <TabsContent value="shares" className="space-y-4">
-                                                 {groupShares.length === 0 && <p className="text-sm text-muted-foreground">No notes shared yet.</p>}
+                                                 {groupShares.length === 0 && <p className="text-sm text-muted-foreground">No items shared yet.</p>}
                                                  {groupShares.map(s => (
-                                                     <Card key={s.id} className="bg-muted/50 cursor-pointer hover:bg-muted transition" onClick={() => viewSharedNote(g.id, s.id)}>
+                                                     <Card key={s.id} className="bg-muted/50 cursor-pointer hover:bg-muted transition" onClick={() => viewSharedItem(g.id, s.id)}>
                                                          <CardContent className="p-4">
                                                              <div className="flex justify-between items-start">
                                                                  <div>
-                                                                     <h4 className="font-bold text-md">{s.title}</h4>
-                                                                     <p className="text-xs text-muted-foreground">Shared by {s.shared_by} on {new Date(s.shared_at).toLocaleDateString()}</p>
+                                                                     <div className="flex items-center gap-2">
+                                                                        {s.type === "verse_pack" ? <BookOpen className="h-4 w-4 text-blue-500" /> : <span className="h-4 w-4">📝</span>}
+                                                                        <h4 className="font-bold text-md">{s.title}</h4>
+                                                                     </div>
+                                                                     <p className="text-xs text-muted-foreground mt-1">Shared by {s.shared_by} on {new Date(s.shared_at).toLocaleDateString()}</p>
                                                                      {s.comment && <p className="text-sm mt-2 italic">"{s.comment}"</p>}
                                                                  </div>
                                                              </div>
@@ -339,7 +413,6 @@ export default function GroupsPage() {
                                                                             value={userSearchQuery}
                                                                             onChange={(e) => setUserSearchQuery(e.target.value)}
                                                                         />
-                                                                        {/* Button removed */}
                                                                     </div>
                                                                     <div className="space-y-2 max-h-60 overflow-y-auto">
                                                                         {userSearchResults.map(u => (
@@ -394,7 +467,6 @@ export default function GroupsPage() {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
-                         {/* Button removed */}
                     </div>
                     <div className="grid gap-4 md:grid-cols-2">
                         {searchResults.map(g => (
