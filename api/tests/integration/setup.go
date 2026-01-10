@@ -3,6 +3,7 @@ package integration
 import (
 	"context"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 	"time"
@@ -23,6 +24,12 @@ import (
 func SetupIntegrationDB(t *testing.T) (*pgxpool.Pool, func()) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
+	}
+
+	// Pre-check for Docker availability to avoid panics from testcontainers-go
+	cmd := exec.Command("docker", "info")
+	if err := cmd.Run(); err != nil {
+		t.Skipf("skipping integration test: docker not available or permission denied: %v", err)
 	}
 
 	ctx := context.Background()
