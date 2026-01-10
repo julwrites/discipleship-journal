@@ -3,6 +3,7 @@ package integration
 import (
 	"context"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 	"time"
@@ -23,6 +24,11 @@ import (
 func SetupIntegrationDB(t *testing.T) (*pgxpool.Pool, func()) {
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
+	}
+
+	// Check if Docker is available
+	if err := exec.Command("docker", "info").Run(); err != nil {
+		t.Skipf("skipping integration test: docker not available: %v", err)
 	}
 
 	ctx := context.Background()
