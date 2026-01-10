@@ -54,19 +54,30 @@ func (h *GroupHandler) CreateGroup(w http.ResponseWriter, r *http.Request) {
 
 	var userUUID string
 	var err error
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
-		var id uuid.UUID
-		id, err = GetUserUUID(r.Context(), token.UID)
-		if err != nil {
-			http.Error(w, "User not found", http.StatusInternalServerError)
+
+	// Check for test override first to avoid DB lookup
+	if testUserID := r.Context().Value(TestUserKey); testUserID != nil {
+		if idStr, ok := testUserID.(string); ok {
+			userUUID = idStr
+		} else if id, ok := testUserID.(uuid.UUID); ok {
+			userUUID = id.String()
+		}
+	}
+
+	// If not found in test override, try standard auth
+	if userUUID == "" {
+		if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+			var id uuid.UUID
+			id, err = GetUserUUID(r.Context(), token.UID)
+			if err != nil {
+				http.Error(w, "User not found", http.StatusInternalServerError)
+				return
+			}
+			userUUID = id.String()
+		} else {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-		userUUID = id.String()
-	} else if testUserID, ok := r.Context().Value(TestUserKey).(string); ok {
-		userUUID = testUserID
-	} else {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
 	}
 
 	tx, err := h.db.Begin(r.Context())
@@ -74,9 +85,12 @@ func (h *GroupHandler) CreateGroup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
+	var commitSuccessful bool
 	defer func() {
-		if err := tx.Rollback(r.Context()); err != nil && err != pgx.ErrTxClosed {
-			slog.Error("Failed to rollback transaction", "error", err)
+		if !commitSuccessful {
+			if err := tx.Rollback(r.Context()); err != nil && err != pgx.ErrTxClosed {
+				slog.Error("Failed to rollback transaction", "error", err)
+			}
 		}
 	}()
 
@@ -104,6 +118,7 @@ func (h *GroupHandler) CreateGroup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Transaction commit failed", http.StatusInternalServerError)
 		return
 	}
+	commitSuccessful = true
 
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(map[string]string{"id": groupID}); err != nil {
@@ -236,6 +251,9 @@ func (h *GroupHandler) JoinGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(map[string]bool{"success": true}); err != nil {
+		slog.Error("Failed to encode response", "error", err)
+	}
 }
 
 // LeaveGroup allows a user to leave a group
@@ -264,6 +282,9 @@ func (h *GroupHandler) LeaveGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(map[string]bool{"success": true}); err != nil {
+		slog.Error("Failed to encode response", "error", err)
+	}
 }
 
 // GetGroupMembers lists members of a group
@@ -390,6 +411,9 @@ func (h *GroupHandler) AddGroupMember(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	w.WriteHeader(http.StatusCreated)
+	if err := json.NewEncoder(w).Encode(map[string]bool{"success": true}); err != nil {
+		slog.Error("Failed to encode response", "error", err)
+	}
 }
 
 // RemoveGroupMember removes a user from a group (Admin only)
@@ -433,4 +457,7 @@ func (h *GroupHandler) RemoveGroupMember(w http.ResponseWriter, r *http.Request)
 	}
 
 	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(map[string]bool{"success": true}); err != nil {
+		slog.Error("Failed to encode response", "error", err)
+	}
 }

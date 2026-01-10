@@ -222,6 +222,9 @@ func (h *NoteHandler) DeleteNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(map[string]bool{"success": true}); err != nil {
+		slog.Error("Failed to encode response", "error", err)
+	}
 }
 
 // CreateNote godoc
@@ -331,6 +334,9 @@ func (h *NoteHandler) UpdateNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(map[string]bool{"success": true}); err != nil {
+		slog.Error("Failed to encode response", "error", err)
+	}
 }
 
 // GetNote godoc

@@ -165,6 +165,7 @@ func TestDeleteNoteHandler(t *testing.T) {
 		handler.DeleteNote(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
+		assert.JSONEq(t, `{"success": true}`, w.Body.String())
 		noteServiceMock.AssertExpectations(t)
 		if err := dbMock.ExpectationsWereMet(); err != nil {
 			t.Errorf("unfulfilled db expectations: %s", err)
@@ -269,6 +270,7 @@ func TestUpdateNoteHandler(t *testing.T) {
 		handler.UpdateNote(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
+		assert.JSONEq(t, `{"success": true}`, w.Body.String())
 		noteServiceMock.AssertExpectations(t)
 		if err := dbMock.ExpectationsWereMet(); err != nil {
 			t.Errorf("unfulfilled db expectations: %s", err)

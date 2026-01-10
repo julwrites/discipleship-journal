@@ -234,25 +234,25 @@ export async function removeGroupMember(groupId: string, userId: string) {
 export async function getGroupShares(groupId: string) {
     const headers = await getHeaders();
     const res = await fetch(`${API_URL}/groups/${groupId}/shares`, { headers });
-    if (!res.ok) throw new Error("Failed to fetch shared notes");
+    if (!res.ok) throw new Error("Failed to fetch shared items");
     return res.json();
 }
 
-export async function shareNote(groupId: string, noteId: string, comment: string) {
+export async function shareItem(groupId: string, data: { note_id?: string; verse_pack_id?: string; comment: string }) {
     const headers = await getHeaders();
     const res = await fetch(`${API_URL}/groups/${groupId}/shares`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ note_id: noteId, comment }),
+        body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error("Failed to share note");
+    if (!res.ok) throw new Error("Failed to share item");
     return res.json();
 }
 
-export async function getSharedNote(groupId: string, shareId: string) {
+export async function getSharedItem(groupId: string, shareId: string) {
     const headers = await getHeaders();
     const res = await fetch(`${API_URL}/groups/${groupId}/shares/${shareId}`, { headers });
-    if (!res.ok) throw new Error("Failed to fetch shared note details");
+    if (!res.ok) throw new Error("Failed to fetch shared item details");
     return res.json();
 }
 
@@ -359,39 +359,94 @@ export async function getPlanProgress(planId: string) {
 
 // --- Memory Verses ---
 
+export interface VersePack {
+    id: string;
+    title: string;
+    identifier?: string;
+    description?: string;
+    is_public: boolean;
+    verse_count: number;
+    user_id?: string;
+}
+
 export interface MemoryVerse {
     id?: string;
-    pack_name: string;
+    verse_pack_id: string;
     reference: string;
-    text: string;
     version: string;
     tags: string[];
 }
 
-export async function searchMemoryVerses(query: string = "") {
+export async function getVersePacks(type: "system" | "user" = "user") {
     const headers = await getHeaders();
-    const res = await fetch(`${API_URL}/memory-verses?q=${encodeURIComponent(query)}`, { headers });
-    if (!res.ok) throw new Error("Failed to search verses");
+    const res = await fetch(`${API_URL}/verse-packs?type=${type}`, { headers });
+    if (!res.ok) throw new Error("Failed to get packs");
     return res.json();
 }
 
-export async function createMemoryVerse(verse: MemoryVerse) {
+export async function createVersePack(title: string, description?: string) {
     const headers = await getHeaders();
-    const res = await fetch(`${API_URL}/memory-verses`, {
+    const res = await fetch(`${API_URL}/verse-packs`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ title, description }),
+    });
+    if (!res.ok) throw new Error("Failed to create pack");
+    return res.json();
+}
+
+export async function getPackDetails(id: string) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/verse-packs/${id}`, { headers });
+    if (!res.ok) throw new Error("Failed to get pack details");
+    return res.json();
+}
+
+export async function createVerseInPack(packId: string, verse: Omit<MemoryVerse, "verse_pack_id">) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/verse-packs/${packId}/verses`, {
         method: "POST",
         headers,
         body: JSON.stringify(verse),
     });
-    if (!res.ok) throw new Error("Failed to create memory verse");
+    if (!res.ok) throw new Error("Failed to create verse");
     return res.json();
 }
 
-export async function getMemoryVersePacks() {
+export async function clonePack(id: string, title?: string) {
     const headers = await getHeaders();
-    const res = await fetch(`${API_URL}/memory-verses/packs`, { headers });
-    if (!res.ok) throw new Error("Failed to get packs");
+    const res = await fetch(`${API_URL}/verse-packs/${id}/clone`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ title }),
+    });
+    if (!res.ok) throw new Error("Failed to clone pack");
     return res.json();
 }
+
+export async function deletePack(id: string) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/verse-packs/${id}`, {
+        method: "DELETE",
+        headers,
+    });
+    if (!res.ok) throw new Error("Failed to delete pack");
+    return res.json();
+}
+
+// Deprecated: Compatibility aliases
+export const shareNote = (groupId: string, noteId: string, comment: string) => shareItem(groupId, { note_id: noteId, comment });
+export const searchMemoryVerses = async (query: string = "") => {
+    // This requires implementing a search endpoint in MemoryVerseService that searches verses across packs
+    // For now, if we don't have it, we might error or mock empty.
+    // BUT the requirement is to use the new system.
+    // I will point this to a search endpoint I just added to the service interface
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/memory-verses?q=${encodeURIComponent(query)}`, { headers });
+    if (!res.ok) throw new Error("Failed to search verses");
+    return res.json();
+};
+
 
 // --- Study Templates ---
 

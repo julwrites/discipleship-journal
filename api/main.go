@@ -351,9 +351,9 @@ func main() {
 		r.Delete("/api/groups/{id}/members/{userId}", groupHandler.RemoveGroupMember)
 
 		// Group Shares
-		r.Post("/api/groups/{id}/shares", groupShareHandler.ShareNoteToGroup)
+		r.Post("/api/groups/{id}/shares", groupShareHandler.ShareItemToGroup)
 		r.Get("/api/groups/{id}/shares", groupShareHandler.ListGroupShares)
-		r.Get("/api/groups/{id}/shares/{shareId}", groupShareHandler.GetSharedNoteDetails)
+		r.Get("/api/groups/{id}/shares/{shareId}", groupShareHandler.GetSharedItemDetails)
 
 		// Reading Plans
 		r.Get("/api/reading-plans", readingPlanHandler.GetAllPlans)
@@ -363,10 +363,14 @@ func main() {
 		r.Post("/api/my-reading-plans/{id}/progress", readingPlanHandler.MarkDayComplete)
 		r.Get("/api/my-reading-plans/{id}/progress", readingPlanHandler.GetPlanProgress)
 
-		// Memory Verses
-		r.Get("/api/memory-verses", memoryVerseHandler.SearchVerses)
-		r.Post("/api/memory-verses", memoryVerseHandler.CreateVerse)
-		r.Get("/api/memory-verses/packs", memoryVerseHandler.GetSystemPacks)
+		// Memory Verses (Refactored)
+		r.Get("/api/memory-verses", memoryVerseHandler.SearchVerses) // Restored for compat
+		r.Get("/api/verse-packs", memoryVerseHandler.GetPacks)
+		r.Post("/api/verse-packs", memoryVerseHandler.CreatePack)
+		r.Get("/api/verse-packs/{id}", memoryVerseHandler.GetPackDetails)
+		r.Delete("/api/verse-packs/{id}", memoryVerseHandler.DeletePack)
+		r.Post("/api/verse-packs/{id}/verses", memoryVerseHandler.CreateVerseInPack)
+		r.Post("/api/verse-packs/{id}/clone", memoryVerseHandler.ClonePack)
 
 		// Study Templates
 		r.Post("/api/templates", templateHandler.CreateTemplate)
