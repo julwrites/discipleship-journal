@@ -448,7 +448,7 @@ export const searchMemoryVerses = async (query: string = "") => {
 };
 
 
-// --- Study Templates ---
+// --- Templates ---
 
 export interface TemplateField {
     key: string;

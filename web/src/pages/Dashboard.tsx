@@ -274,7 +274,7 @@ export default function Dashboard() {
               </Link>
               <Link to="/templates">
                 <DropdownMenuItem className="cursor-pointer">
-                  <Filter className="mr-2 h-4 w-4" /> Study Templates
+                  <Filter className="mr-2 h-4 w-4" /> Templates
                 </DropdownMenuItem>
               </Link>
             </DropdownMenuContent>
