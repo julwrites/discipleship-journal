@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, Copy, Play } from "lucide-react";
+import { Plus, Edit, Trash2, Copy, Play, ArrowLeft } from "lucide-react";
 import UseTemplateDialog from "./UseTemplateDialog";
 
 export default function TemplatesPage() {
@@ -66,10 +66,17 @@ export default function TemplatesPage() {
 
     return (
         <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6">
+            <Link to="/">
+                <Button variant="ghost" className="pl-0">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Dashboard
+                </Button>
+            </Link>
+
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold">Study Templates</h1>
-                    <p className="text-muted-foreground">Create reusable AI prompts and study structures.</p>
+                    <h1 className="text-3xl font-bold">Templates</h1>
+                    <p className="text-muted-foreground">Create reusable AI prompts for devotionals, studies, or mentoring.</p>
                 </div>
                 <Link to="/templates/new">
                     <Button>
