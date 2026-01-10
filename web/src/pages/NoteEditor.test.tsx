@@ -17,7 +17,18 @@ vi.mock('@/components/RichTextEditor', async () => {
     const React = await import('react');
     const { useEffect, useRef, useState } = React;
 
-    const MockRichTextEditor = ({ initialContent, onChange, editable, onEditorReady }: { initialContent: string, onChange: (v: string) => void, editable: boolean, onEditorReady?: (e: { chain: () => { focus: () => { insertContent: (html: string) => { run: () => void } } } }) => void }) => {
+    type MockChain = {
+        focus: () => MockChain;
+        insertContent: (html: string) => MockChain;
+        run: () => void;
+    };
+
+    const MockRichTextEditor = ({ initialContent, onChange, editable, onEditorReady }: { 
+        initialContent: string, 
+        onChange: (v: string) => void, 
+        editable: boolean, 
+        onEditorReady?: (e: { chain: () => MockChain }) => void 
+    }) => {
         const [content, setContent] = useState(initialContent);
         const contentRef = useRef(content);
 
@@ -27,18 +38,19 @@ vi.mock('@/components/RichTextEditor', async () => {
 
         useEffect(() => {
             if (onEditorReady) {
+                const chain = {
+                    focus: () => chain,
+                    insertContent: (html: string) => {
+                        const newContent = contentRef.current + html;
+                        setContent(newContent);
+                        onChange(newContent);
+                        return chain;
+                    },
+                    run: () => {}
+                };
+
                 const mockEditor = {
-                    chain: () => ({
-                        focus: () => ({
-                            insertContent: (html: string) => ({
-                                run: () => {
-                                    const newContent = contentRef.current + html;
-                                    setContent(newContent);
-                                    onChange(newContent);
-                                }
-                            })
-                        })
-                    })
+                    chain: () => chain
                 };
                 onEditorReady(mockEditor);
             }
