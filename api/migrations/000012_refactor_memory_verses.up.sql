@@ -22,7 +22,7 @@ ALTER TABLE group_shares ADD COLUMN verse_pack_id UUID REFERENCES verse_packs(id
 ALTER TABLE group_shares ALTER COLUMN note_id DROP NOT NULL;
 ALTER TABLE group_shares ADD CONSTRAINT chk_share_target CHECK ( (note_id IS NOT NULL AND verse_pack_id IS NULL) OR (note_id IS NULL AND verse_pack_id IS NOT NULL) );
 -- Seed System Packs and Verses
-DO 1321
+DO $$
 DECLARE
     pack_id UUID;
 BEGIN
@@ -193,4 +193,4 @@ BEGIN
     INSERT INTO memory_verses (verse_pack_id, reference, version, tags) VALUES (pack_id, 'James 1:12', 'ESV', '["Suffering", "Suffer", "Pain", "Enduring", "Agony", "Comfort"]');
     INSERT INTO memory_verses (verse_pack_id, reference, version, tags) VALUES (pack_id, '1 Peter 1:6-7', 'ESV', '["Suffering", "Suffer", "Pain", "Enduring", "Agony", "Comfort"]');
     INSERT INTO memory_verses (verse_pack_id, reference, version, tags) VALUES (pack_id, '1 Peter 4:12-13', 'ESV', '["Suffering", "Suffer", "Pain", "Enduring", "Agony", "Comfort"]');
-END 1321;
+END; $$;
