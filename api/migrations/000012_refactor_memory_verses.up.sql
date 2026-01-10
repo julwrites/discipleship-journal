@@ -99,8 +99,7 @@ BEGIN
     -- Pack: Lessons of Assurance
     INSERT INTO verse_packs (id, title, identifier, description, is_public) VALUES (gen_random_uuid(), 'Lessons of Assurance', 'LOA', 'Lessons of Assurance', true) RETURNING id INTO pack_id;
     INSERT INTO memory_verses (verse_pack_id, reference, version, tags) VALUES (pack_id, '1 John 5:11-12', 'ESV', '["Testimony", "Eternal Life", "Son", "Lord God"]');
-    INSERT INTO memory_verses (verse_pack_id, reference, version, tags) VALUES (pack_id, 'John 16:24', 'ESV', '["Jesus"s Name", "Ask", "Joy", "Receive"]');
-    INSERT INTO memory_verses (verse_pack_id, reference, version, tags) VALUES (pack_id, '1 Corinthians 10:13', 'ESV', '["Temptation", "Common", "Lord God", "Tempted"]');
+                INSERT INTO memory_verses (verse_pack_id, reference, version, tags) VALUES (pack_id, 'John 16:24', 'ESV', '["Jesus''s Name", "Ask", "Joy", "Receive"]');    INSERT INTO memory_verses (verse_pack_id, reference, version, tags) VALUES (pack_id, '1 Corinthians 10:13', 'ESV', '["Temptation", "Common", "Lord God", "Tempted"]');
     INSERT INTO memory_verses (verse_pack_id, reference, version, tags) VALUES (pack_id, '1 John 1:9', 'ESV', '["Sin", "Confess", "Faithful", "Forgive"]');
     INSERT INTO memory_verses (verse_pack_id, reference, version, tags) VALUES (pack_id, 'Proverbs 3:5-6', 'ESV', '["Trust", "Lord God", "Way", "Path"]');
     -- Pack: Life Issues: Sin
@@ -129,8 +128,7 @@ BEGIN
     INSERT INTO memory_verses (verse_pack_id, reference, version, tags) VALUES (pack_id, '2 Corinthians 7:10', 'ESV', '["Grief", "Repentance", "Salvation", "Death"]');
     INSERT INTO memory_verses (verse_pack_id, reference, version, tags) VALUES (pack_id, 'James 5:16', 'ESV', '["Confess", "Sin", "Prayer", "Righteous"]');
     -- Pack: Life Issues: God's Will
-    INSERT INTO verse_packs (id, title, identifier, description, is_public) VALUES (gen_random_uuid(), 'Life Issues: God''s Will', 'God's Will', 'Life Issues', true) RETURNING id INTO pack_id;
-    INSERT INTO memory_verses (verse_pack_id, reference, version, tags) VALUES (pack_id, 'Proverbs 3:5-6', 'ESV', '["Trust", "Heart", "Understanding", "Path"]');
+                INSERT INTO verse_packs (id, title, identifier, description, is_public) VALUES (gen_random_uuid(), 'Life Issues: God''s Will', 'God''s Will', 'Life Issues', true) RETURNING id INTO pack_id;    INSERT INTO memory_verses (verse_pack_id, reference, version, tags) VALUES (pack_id, 'Proverbs 3:5-6', 'ESV', '["Trust", "Heart", "Understanding", "Path"]');
     INSERT INTO memory_verses (verse_pack_id, reference, version, tags) VALUES (pack_id, 'Proverbs 3:7', 'ESV', '["Wisdom", "Own", "Fear", "Turn", "Evil"]');
     INSERT INTO memory_verses (verse_pack_id, reference, version, tags) VALUES (pack_id, 'Proverbs 16:9', 'ESV', '["Heart", "Man", "Plans", "Step"]');
     INSERT INTO memory_verses (verse_pack_id, reference, version, tags) VALUES (pack_id, 'Isaiah 30:21', 'ESV', '["Hear", "Word", "Walk", "Turn"]');
