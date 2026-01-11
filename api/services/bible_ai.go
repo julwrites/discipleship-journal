@@ -14,8 +14,9 @@ import (
 
 // BibleAIClient defines the interface for interacting with the Bible AI API.
 type BibleAIClient interface {
-	GetPassage(ctx context.Context, reference string) (map[string]interface{}, error)
+	GetPassage(ctx context.Context, reference string, version string) (map[string]interface{}, error)
 	ChatCompletion(ctx context.Context, payload map[string]interface{}) (map[string]interface{}, error)
+	GetVersions(ctx context.Context, params map[string]string) (map[string]interface{}, error)
 }
 
 // RealBibleAIClient is the production implementation using the real API.
@@ -91,14 +92,23 @@ type ErrorResponse struct {
 }
 
 // GetPassage fetches a bible passage from the external API.
-func (c *RealBibleAIClient) GetPassage(ctx context.Context, reference string) (map[string]interface{}, error) {
+func (c *RealBibleAIClient) GetPassage(ctx context.Context, reference string, version string) (map[string]interface{}, error) {
 	if c.APIURL == "" {
 		return nil, fmt.Errorf("bible API not configured")
+	}
+
+	if version == "" {
+		version = "ESV"
 	}
 
 	reqPayload := QueryRequest{
 		Query: QueryPayload{
 			Verses: []string{reference},
+		},
+		Context: &QueryContext{
+			User: &UserContext{
+				Version: version,
+			},
 		},
 	}
 
@@ -145,6 +155,7 @@ func (c *RealBibleAIClient) GetPassage(ctx context.Context, reference string) (m
 		"verse":     verseText,
 		"text":      verseText,
 		"reference": result.Reference,
+		"version":   version,
 	}, nil
 }
 
@@ -165,10 +176,15 @@ func (c *RealBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 		prompt += fmt.Sprintf(" Context: %s.", ctxText)
 	}
 
+	version, ok := payload["version"].(string)
+	if !ok || version == "" {
+		version = "ESV"
+	}
+
 	// Prepare Context
 	queryContext := &QueryContext{
 		User: &UserContext{
-			Version: "ESV",
+			Version: version,
 		},
 	}
 
@@ -262,6 +278,39 @@ func (c *RealBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 	}
 
 	return response, nil
+}
+
+// GetVersions fetches the list of available bible versions.
+func (c *RealBibleAIClient) GetVersions(ctx context.Context, params map[string]string) (map[string]interface{}, error) {
+	if c.APIURL == "" {
+		return nil, fmt.Errorf("bible API not configured")
+	}
+
+	var result map[string]interface{}
+	var errorResult ErrorResponse
+
+	req := c.Client.R().
+		SetContext(ctx).
+		SetHeader("X-API-KEY", c.APIKey).
+		SetHeader("Content-Type", "application/json").
+		SetResult(&result).
+		SetError(&errorResult)
+
+	for k, v := range params {
+		req.SetQueryParam(k, v)
+	}
+
+	resp, err := req.Get(c.APIURL + "/bible-versions")
+
+	if err != nil {
+		return nil, fmt.Errorf("resty request error: %v", err)
+	}
+
+	if resp.IsError() {
+		return nil, fmt.Errorf("bible API error: %s, message: %s", resp.Status(), errorResult.Error.Message)
+	}
+
+	return result, nil
 }
 
 var (

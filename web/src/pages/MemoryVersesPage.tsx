@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { getVersePacks, createVersePack, VersePack, getPackDetails, deletePack, createVerseInPack, MemoryVerse, clonePack } from "@/services/api";
+import { getVersePacks, createVersePack, VersePack, getPackDetails, deletePack, createVerseInPack, MemoryVerse, clonePack, syncUser } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Plus, BookOpen, Trash2, ArrowLeft, Copy } from "lucide-react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { BibleVersionSelector } from "@/components/BibleVersionSelector";
 
 export default function MemoryVersesPage() {
     return (
@@ -193,6 +193,15 @@ export function VersePackDetail() {
         if (id) loadDetails();
     }, [id, loadDetails]);
 
+    // Pre-load default version
+    useEffect(() => {
+        syncUser().then(u => {
+            if (u.settings?.bible_version) {
+                setNewVerse(prev => ({ ...prev, version: u.settings.bible_version }));
+            }
+        }).catch(console.error);
+    }, []);
+
     const handleAddVerse = async () => {
         if (!id || !newVerse.reference) return;
         try {
@@ -200,7 +209,7 @@ export function VersePackDetail() {
             await createVerseInPack(id, newVerse as any);
             toast.success("Verse added");
             setIsAddOpen(false);
-            setNewVerse({ reference: "", version: "ESV", tags: [] });
+            setNewVerse(prev => ({ ...prev, reference: "", tags: [] })); // Keep version
             loadDetails();
         } catch {
             toast.error("Failed to add verse");
@@ -267,11 +276,6 @@ export function VersePackDetail() {
                     )}
                 </div>
                 <div className="flex gap-2">
-                    {/* Share Button Placeholder - Implementation requires generic share dialog component */}
-                    {/* <Button variant="outline">
-                        <Share2 className="mr-2 h-4 w-4" /> Share
-                    </Button> */}
-
                     {!isMyPack ? (
                         <Dialog open={isCloneOpen} onOpenChange={setIsCloneOpen}>
                             <DialogTrigger asChild>
@@ -322,19 +326,10 @@ export function VersePackDetail() {
                                         </div>
                                         <div className="grid gap-2">
                                             <Label>Version</Label>
-                                            <Select
-                                                value={newVerse.version}
-                                                onValueChange={v => setNewVerse({...newVerse, version: v})}
-                                            >
-                                                <SelectTrigger>
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="ESV">ESV</SelectItem>
-                                                    <SelectItem value="NIV">NIV</SelectItem>
-                                                    <SelectItem value="KJV">KJV</SelectItem>
-                                                </SelectContent>
-                                            </Select>
+                                            <BibleVersionSelector
+                                                value={newVerse.version || "ESV"}
+                                                onChange={v => setNewVerse({...newVerse, version: v})}
+                                            />
                                         </div>
                                         <div className="grid gap-2">
                                             <Label>Tags</Label>

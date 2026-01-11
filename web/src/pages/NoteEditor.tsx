@@ -12,7 +12,8 @@ import {
     getGroups,
     shareItem,
     searchMemoryVerses,
-    MemoryVerse
+    MemoryVerse,
+    syncUser
 } from "@/services/api";
 import RichTextEditor from "@/components/RichTextEditor";
 import { Editor } from "@tiptap/react";
@@ -45,6 +46,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical, Book, Sparkles, Share2, Trash2, Quote } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
+import { BibleVersionSelector } from "@/components/BibleVersionSelector";
 
 export default function NoteEditor() {
     const { id } = useParams();
@@ -64,9 +66,13 @@ export default function NoteEditor() {
 
     const editorRef = useRef<Editor | null>(null);
 
+    // Default Version from User Settings
+    const [userVersion, setUserVersion] = useState("ESV");
+
     // Bible Passage State
     const [passageRef, setPassageRef] = useState("");
     const [bibleText, setBibleText] = useState("");
+    const [passageVersion, setPassageVersion] = useState("ESV");
     const [loadingPassage, setLoadingPassage] = useState(false);
     const [passageDialogOpen, setPassageDialogOpen] = useState(false);
 
@@ -81,6 +87,7 @@ export default function NoteEditor() {
     // AI State
     const [aiPrompt, setAiPrompt] = useState("");
     const [aiResponse, setAiResponse] = useState("");
+    const [aiVersion, setAiVersion] = useState("ESV");
     const [askingAI, setAskingAI] = useState(false);
     const [aiDialogOpen, setAiDialogOpen] = useState(false);
 
@@ -95,6 +102,15 @@ export default function NoteEditor() {
     const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
     useEffect(() => {
+        // Load user settings for default version
+        syncUser().then(u => {
+            if (u.settings?.bible_version) {
+                setUserVersion(u.settings.bible_version);
+                setPassageVersion(u.settings.bible_version);
+                setAiVersion(u.settings.bible_version);
+            }
+        }).catch(console.error);
+
         if (id && id !== "new") {
             setLoading(true);
             getNote(id).then(note => {
@@ -231,7 +247,7 @@ export default function NoteEditor() {
         if (!passageRef) return;
         setLoadingPassage(true);
         try {
-            const res = await getBiblePassage(passageRef);
+            const res = await getBiblePassage(passageRef, passageVersion);
             // API returns "verse" (real) or "text" (mock). Support both.
             const text = res.verse || res.text || res.content || "Passage found but no text returned.";
             setBibleText(text);
@@ -251,7 +267,7 @@ export default function NoteEditor() {
         if (!editorRef.current) return;
 
         // Build HTML for the passage
-        const html = `<blockquote><p><strong>${passageRef}</strong></p>${bibleText}</blockquote><p></p>`;
+        const html = `<blockquote><p><strong>${passageRef} (${passageVersion})</strong></p>${bibleText}</blockquote><p></p>`;
 
         editorRef.current.chain().insertContent(html).run();
 
@@ -280,11 +296,12 @@ export default function NoteEditor() {
         if (!editorRef.current) return;
         setInsertingVerse(true);
         try {
-             const res = await getBiblePassage(verse.reference);
+             // For memory verses, we use the verse's version if available, or fetch using default
+             const res = await getBiblePassage(verse.reference, verse.version || userVersion);
              // API returns "verse" (real) or "text" (mock). Support both.
              const text = res.verse || res.text || res.content || "Passage found but no text returned.";
 
-             const html = `<blockquote><p><strong>${verse.reference} (${verse.version})</strong></p>${text}</blockquote><p></p>`;
+             const html = `<blockquote><p><strong>${verse.reference} (${verse.version || userVersion})</strong></p>${text}</blockquote><p></p>`;
              editorRef.current.chain().insertContent(html).run();
              setVerseDialogOpen(false);
         } catch (error) {
@@ -299,7 +316,7 @@ export default function NoteEditor() {
         setAskingAI(true);
         setAiResponse("");
         try {
-            const res = await askAI(content, aiPrompt);
+            const res = await askAI(content, aiPrompt, aiVersion);
             setAiResponse(res.response);
         } catch (e) {
             console.error(e);
@@ -451,9 +468,16 @@ export default function NoteEditor() {
                                 onChange={(e) => setPassageRef(e.target.value)}
                                 className="min-h-[100px]"
                             />
-                            <Button onClick={handleFetchPassage} disabled={loadingPassage} className="w-full">
-                                {loadingPassage ? "..." : "Search"}
-                            </Button>
+                            <div className="flex gap-2 items-center">
+                                <BibleVersionSelector
+                                    value={passageVersion}
+                                    onChange={setPassageVersion}
+                                    className="w-[150px]"
+                                />
+                                <Button onClick={handleFetchPassage} disabled={loadingPassage} className="flex-1">
+                                    {loadingPassage ? "..." : "Search"}
+                                </Button>
+                            </div>
                         </div>
                         {bibleText && (
                             <div className="p-2 bg-muted border rounded max-h-40 overflow-auto text-sm italic">
@@ -529,9 +553,16 @@ export default function NoteEditor() {
                                 value={aiPrompt}
                                 onChange={(e) => setAiPrompt(e.target.value)}
                             />
-                            <Button onClick={handleAskAI} disabled={askingAI || !content}>
-                                {askingAI ? "Thinking..." : "Ask"}
-                            </Button>
+                            <div className="flex gap-2 items-center">
+                                <BibleVersionSelector
+                                    value={aiVersion}
+                                    onChange={setAiVersion}
+                                    className="w-[150px]"
+                                />
+                                <Button onClick={handleAskAI} disabled={askingAI || !content} className="flex-1">
+                                    {askingAI ? "Thinking..." : "Ask"}
+                                </Button>
+                            </div>
                         </div>
                         {aiResponse && (
                             <>
