@@ -229,7 +229,7 @@ func (s *memoryVerseService) DeletePack(ctx context.Context, packID uuid.UUID, u
 func (s *memoryVerseService) SearchVerses(ctx context.Context, userID uuid.UUID, queryStr string) ([]*models.MemoryVerse, error) {
 	// Search in user's packs OR public packs
 	query := `
-		SELECT mv.id, mv.verse_pack_id, mv.reference, mv.version, mv.tags, mv.created_at, mv.updated_at
+		SELECT mv.id, mv.verse_pack_id, mv.reference, mv.version, mv.tags, vp.title, mv.created_at, mv.updated_at
 		FROM memory_verses mv
 		JOIN verse_packs vp ON mv.verse_pack_id = vp.id
 		WHERE (vp.user_id = $1 OR vp.is_public = true)
@@ -247,7 +247,7 @@ func (s *memoryVerseService) SearchVerses(ctx context.Context, userID uuid.UUID,
 	for rows.Next() {
 		var v models.MemoryVerse
 		var tagsBytes []byte
-		if err := rows.Scan(&v.ID, &v.VersePackID, &v.Reference, &v.Version, &tagsBytes, &v.CreatedAt, &v.UpdatedAt); err != nil {
+		if err := rows.Scan(&v.ID, &v.VersePackID, &v.Reference, &v.Version, &tagsBytes, &v.PackTitle, &v.CreatedAt, &v.UpdatedAt); err != nil {
 			return nil, err
 		}
 		if len(tagsBytes) > 0 {

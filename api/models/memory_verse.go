@@ -24,6 +24,7 @@ type MemoryVerse struct {
 	Reference   string    `json:"reference"`
 	Version     string    `json:"version"`
 	Tags        []string  `json:"tags"`
+	PackTitle   string    `json:"pack_title,omitempty"` // Populated in searches
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
