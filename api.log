@@ -1,7 +1,0 @@
-time=2026-01-11T06:39:57.610Z level=ERROR msg="Database connection failed" error="failed to build database connection string: DB_USERNAME and DB_NAME environment variables are required"
-time=2026-01-11T06:39:57.614Z level=ERROR msg="Firebase init failed" error="google: could not find default credentials. See https://cloud.google.com/docs/authentication/external/set-up-adc for more information"
-time=2026-01-11T06:39:57.614Z level=WARN msg="Firebase Service is nil, using mock authentication for development"
-time=2026-01-11T06:39:57.614Z level=INFO msg="BIBLE_API_URL or BIBLE_API_KEY not set, using MockBibleAIClient"
-time=2026-01-11T06:39:57.615Z level=INFO msg="Server listening on port 8088"
-time=2026-01-11T06:39:57.615Z level=ERROR msg="Listen failed" error="listen tcp :8088: bind: address already in use"
-exit status 1

@@ -549,7 +549,6 @@ export async function cloneTemplate(id: string) {
     const res = await fetch(`${API_URL}/templates/${id}/clone`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ title }),
     });
     if (!res.ok) throw new Error("Failed to clone template");
     return res.json();
