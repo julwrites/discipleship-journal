@@ -1,23 +1,33 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { chatWithAI } from "@/services/api";
+import { chatWithAI, syncUser } from "@/services/api";
 import { useNavigate } from "react-router-dom";
+import { BibleVersionSelector } from "@/components/BibleVersionSelector";
 
 export default function ChatPage() {
     const navigate = useNavigate();
     const [passage, setPassage] = useState("");
     const [themes, setThemes] = useState("");
     const [prompt, setPrompt] = useState("");
+    const [version, setVersion] = useState("ESV");
     const [loading, setLoading] = useState(false);
     const [response, setResponse] = useState<string | null>(null);
+
+    useEffect(() => {
+        syncUser().then(u => {
+            if (u.settings?.bible_version) {
+                setVersion(u.settings.bible_version);
+            }
+        }).catch(console.error);
+    }, []);
 
     const handleChat = async () => {
         setLoading(true);
         try {
             const themeList = themes.split(",").map(t => t.trim()).filter(Boolean);
-            const res = await chatWithAI(passage, themeList, prompt);
+            const res = await chatWithAI(passage, themeList, prompt, version);
             setResponse(res.response);
 
             // Optionally redirect to dashboard to see the new note
@@ -33,6 +43,16 @@ export default function ChatPage() {
     return (
         <div className="p-8 max-w-2xl mx-auto space-y-6">
             <h1 className="text-2xl font-bold">Chat with Bible AI</h1>
+
+            <div className="space-y-2">
+                <label className="text-sm font-medium">Bible Version</label>
+                <div className="max-w-[200px]">
+                    <BibleVersionSelector
+                        value={version}
+                        onChange={setVersion}
+                    />
+                </div>
+            </div>
 
             <div className="space-y-2">
                 <label className="text-sm font-medium">Bible Passage(s)</label>
