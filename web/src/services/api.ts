@@ -163,13 +163,14 @@ export interface BibleVersion {
     abbreviation: string;
 }
 
-export async function getBibleVersions(params: { name?: string; language?: string; page?: number; limit?: number } = {}) {
+export async function getBibleVersions(params: { name?: string; language?: string; page?: number; limit?: number; sort?: "code" | "name" | "language" } = {}) {
     const headers = await getHeaders();
     const query = new URLSearchParams();
     if (params.name) query.append("name", params.name);
     if (params.language) query.append("language", params.language);
     if (params.page) query.append("page", params.page.toString());
     if (params.limit) query.append("limit", params.limit.toString());
+    if (params.sort) query.append("sort", params.sort);
 
     const res = await fetch(`${API_URL}/bible/versions?${query.toString()}`, { headers });
     if (!res.ok) throw new Error("Failed to fetch bible versions");

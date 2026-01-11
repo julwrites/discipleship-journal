@@ -85,6 +85,9 @@ vi.mock('@/services/api', () => ({
     askAI: vi.fn(),
     getGroups: vi.fn(),
     shareNote: vi.fn(),
+    syncUser: vi.fn().mockResolvedValue({ settings: { bible_version: 'ESV' } }),
+    getBibleVersions: vi.fn().mockResolvedValue({ data: [] }),
+    searchMemoryVerses: vi.fn().mockResolvedValue({ data: [] }),
 }));
 
 // Mock scrollIntoView
@@ -286,7 +289,7 @@ describe('NoteEditor', () => {
         fireEvent.click(searchBtn);
 
         await waitFor(() => {
-            expect(api.getBiblePassage).toHaveBeenCalledWith('John 3:16');
+            expect(api.getBiblePassage).toHaveBeenCalledWith('John 3:16', 'ESV');
             expect(within(dialog).getByText('For God so loved the world...')).toBeInTheDocument();
         });
 
@@ -322,7 +325,7 @@ describe('NoteEditor', () => {
         fireEvent.click(askBtn);
 
         await waitFor(() => {
-            expect(api.askAI).toHaveBeenCalledWith('Content', 'Explain this');
+            expect(api.askAI).toHaveBeenCalledWith('Content', 'Explain this', 'ESV');
             expect(within(dialog).getByText('AI Answer')).toBeInTheDocument();
         });
 

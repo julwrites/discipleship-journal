@@ -8,6 +8,7 @@ import { BrowserRouter } from 'react-router-dom';
 vi.mock('@/services/api', () => ({
   syncUser: vi.fn().mockResolvedValue({ username: 'testuser', settings: { bible_version: 'ESV' } }),
   updateUser: vi.fn().mockResolvedValue({}),
+  getBibleVersions: vi.fn().mockResolvedValue({ data: [] }),
 }));
 
 describe('Settings Page', () => {
