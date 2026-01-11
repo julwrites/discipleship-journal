@@ -88,14 +88,14 @@ export function BibleVersionSelector({ value, onChange, placeholder = "Select ve
                                     onSelect={() => {
                                         // The value passed to onSelect is usually lowercased by Command
                                         // So we use the version object
-                                        onChange(version.id);
+                                        onChange(version.abbreviation);
                                         setOpen(false);
                                     }}
                                 >
                                     <Check
                                         className={cn(
                                             "mr-2 h-4 w-4",
-                                            value === version.id ? "opacity-100" : "opacity-0"
+                                            (value === version.id || value === version.abbreviation) ? "opacity-100" : "opacity-0"
                                         )}
                                     />
                                     <div className="flex flex-col">
