@@ -125,32 +125,55 @@ export async function searchUsers(query: string) {
 
 // --- Bible & AI ---
 
-export async function getBiblePassage(ref: string) {
+export async function getBiblePassage(ref: string, version?: string) {
     const headers = await getHeaders();
-    const res = await fetch(`${API_URL}/bible/passage?ref=${encodeURIComponent(ref)}`, { headers });
+    const params = new URLSearchParams({ ref });
+    if (version) params.append("version", version);
+    const res = await fetch(`${API_URL}/bible/passage?${params.toString()}`, { headers });
     if (!res.ok) throw new Error("Failed to fetch passage");
     return res.json();
 }
 
-export async function chatWithAI(passage: string, themes: string[], prompt: string) {
+export async function chatWithAI(passage: string, themes: string[], prompt: string, version?: string) {
     const headers = await getHeaders();
     const res = await fetch(`${API_URL}/chat`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ passage, themes, prompt }),
+        body: JSON.stringify({ passage, themes, prompt, version }),
     });
     if (!res.ok) throw new Error("Failed to chat with AI");
     return res.json();
 }
 
-export async function askAI(context: string, prompt: string) {
+export async function askAI(context: string, prompt: string, version?: string) {
     const headers = await getHeaders();
     const res = await fetch(`${API_URL}/ai/ask`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ context, prompt }),
+        body: JSON.stringify({ context, prompt, version }),
     });
     if (!res.ok) throw new Error("Failed to ask AI");
+    return res.json();
+}
+
+export interface BibleVersion {
+    id: string;
+    name: string;
+    language: string;
+    abbreviation: string;
+}
+
+export async function getBibleVersions(params: { name?: string; language?: string; page?: number; limit?: number; sort?: "code" | "name" | "language" } = {}) {
+    const headers = await getHeaders();
+    const query = new URLSearchParams();
+    if (params.name) query.append("name", params.name);
+    if (params.language) query.append("language", params.language);
+    if (params.page) query.append("page", params.page.toString());
+    if (params.limit) query.append("limit", params.limit.toString());
+    if (params.sort) query.append("sort", params.sort);
+
+    const res = await fetch(`${API_URL}/bible/versions?${query.toString()}`, { headers });
+    if (!res.ok) throw new Error("Failed to fetch bible versions");
     return res.json();
 }
 

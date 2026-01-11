@@ -6,6 +6,7 @@ import { syncUser, updateUser } from "@/services/api";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useNotifications } from "@/hooks/useNotifications";
 import { Moon, Sun, Laptop, Palette, Bell, ArrowLeft } from "lucide-react";
+import { BibleVersionSelector } from "@/components/BibleVersionSelector";
 
 export default function Settings() {
   const [username, setUsername] = useState("");
@@ -175,13 +176,14 @@ export default function Settings() {
             </div>
 
             <div>
-            <label className="block text-sm font-medium mb-1">Bible Version</label>
-            <Input
-                value={bibleVersion}
-                onChange={(e) => setBibleVersion(e.target.value)}
-                placeholder="e.g. ESV, KJV, NIV"
-                 className="max-w-md"
-            />
+            <label className="block text-sm font-medium mb-1">Default Bible Version</label>
+            <div className="max-w-md">
+                <BibleVersionSelector
+                    value={bibleVersion}
+                    onChange={setBibleVersion}
+                    placeholder="Select default version..."
+                />
+            </div>
             </div>
         </div>
 
