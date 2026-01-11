@@ -25,6 +25,7 @@ type ChatRequest struct {
 	Passage string   `json:"passage" validate:"required,min=5"`
 	Themes  []string `json:"themes"`
 	Prompt  string   `json:"prompt" validate:"required,min=2"`
+	Version string   `json:"version,omitempty"`
 }
 
 type ChatResponse struct {
@@ -50,10 +51,11 @@ func (h *ChatHandler) ChatWithAI(w http.ResponseWriter, r *http.Request) {
 
 	// Updated payload structure for RealBibleAIClient adapter
 	payload := map[string]interface{}{
-		"prompt": req.Prompt,
-		"verses": []string{req.Passage},
-		"themes": req.Themes,
-		"type":   "ask",
+		"prompt":  req.Prompt,
+		"verses":  []string{req.Passage},
+		"themes":  req.Themes,
+		"type":    "ask",
+		"version": req.Version,
 	}
 
 	var answer string
@@ -110,18 +112,6 @@ func (h *ChatHandler) ChatWithAI(w http.ResponseWriter, r *http.Request) {
 	htmlContent := fmt.Sprintf("<p><strong>Passage:</strong> %s</p><p><strong>Themes:</strong> %v</p><p><strong>Q:</strong> %s</p><div class=\"ai-response\"><strong>AI:</strong> %s</div>",
 		req.Passage, req.Themes, req.Prompt, answer)
 
-	// NoteService expects content as a string which is then marshaled to JSON.
-	// But wait, createNote handler usually takes a JSON object?
-	// NoteService.CreateNote signature is (ctx, userID, title, content []byte).
-	// The DB expects JSONB. So we wrap the HTML string in quotes to make it a valid JSON string.
-	// Or simply pass the raw HTML string if the service/db handles it?
-	// The `Note` struct in `api/services/note_service.go` defines `Content interface{}`.
-	// However, `CreateNote` accepts `content []byte`.
-	// Let's check how NoteHandler does it.
-	// NoteHandler receives `CreateNoteRequest` with `Content string`.
-	// Then calls `json.Marshal(req.Content)`.
-	// So we should do the same: marshal the string to a JSON string literal.
-
 	contentJSON, err := json.Marshal(htmlContent)
 	if err != nil {
 		http.Error(w, "Failed to marshal content", http.StatusInternalServerError)
@@ -144,6 +134,7 @@ func (h *ChatHandler) ChatWithAI(w http.ResponseWriter, r *http.Request) {
 type AskAIRequest struct {
 	Context string `json:"context" validate:"required"`
 	Prompt  string `json:"prompt" validate:"required"`
+	Version string `json:"version,omitempty"`
 }
 
 // AskAI godoc
@@ -167,6 +158,7 @@ func (h *ChatHandler) AskAI(w http.ResponseWriter, r *http.Request) {
 		"prompt":  req.Prompt,
 		"context": req.Context,
 		"type":    "ask",
+		"version": req.Version,
 	}
 
 	var answer string

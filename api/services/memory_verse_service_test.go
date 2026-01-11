@@ -109,3 +109,36 @@ func TestClonePack(t *testing.T) {
 	assert.Equal(t, "New Title", newPack.Title)
 	assert.Equal(t, 1, newPack.VerseCount)
 }
+
+func TestSearchVerses(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
+
+	service := NewMemoryVerseService(mock)
+	userID := uuid.New()
+	query := "John"
+
+	verseID := uuid.New()
+	packID := uuid.New()
+	packTitle := "My Pack"
+
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT mv.id, mv.verse_pack_id, mv.reference, mv.version, mv.tags, vp.title, mv.created_at, mv.updated_at
+		FROM memory_verses mv
+		JOIN verse_packs vp ON mv.verse_pack_id = vp.id
+		WHERE (vp.user_id = $1 OR vp.is_public = true)
+		AND (mv.reference ILIKE $2 OR vp.title ILIKE $2)
+		ORDER BY mv.reference ASC
+		LIMIT 20`)).
+		WithArgs(userID, "%"+query+"%").
+		WillReturnRows(pgxmock.NewRows([]string{"id", "verse_pack_id", "reference", "version", "tags", "title", "created_at", "updated_at"}).
+			AddRow(verseID, packID, "John 3:16", "ESV", []byte(`["Love"]`), packTitle, time.Now(), time.Now()))
+
+	verses, err := service.SearchVerses(context.Background(), userID, query)
+	assert.NoError(t, err)
+	assert.Len(t, verses, 1)
+	assert.Equal(t, "John 3:16", verses[0].Reference)
+	assert.Equal(t, packTitle, verses[0].PackTitle)
+}

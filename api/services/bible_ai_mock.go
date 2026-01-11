@@ -15,7 +15,7 @@ func NewMockBibleAIClient() *MockBibleAIClient {
 	return &MockBibleAIClient{}
 }
 
-func (m *MockBibleAIClient) GetPassage(ctx context.Context, reference string) (map[string]interface{}, error) {
+func (m *MockBibleAIClient) GetPassage(ctx context.Context, reference string, version string) (map[string]interface{}, error) {
 	if m.ShouldError {
 		return nil, fmt.Errorf("mock error")
 	}
@@ -24,6 +24,7 @@ func (m *MockBibleAIClient) GetPassage(ctx context.Context, reference string) (m
 		"reference": reference,
 		"text":      verseText,
 		"verse":     verseText,
+		"version":   version,
 	}, nil
 }
 
@@ -46,6 +47,33 @@ func (m *MockBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 					"content": "This is a mocked AI response to: " + prompt,
 				},
 			},
+		},
+	}, nil
+}
+
+func (m *MockBibleAIClient) GetVersions(ctx context.Context, params map[string]string) (map[string]interface{}, error) {
+	if m.ShouldError {
+		return nil, fmt.Errorf("mock error")
+	}
+	return map[string]interface{}{
+		"data": []interface{}{
+			map[string]interface{}{
+				"id":           "ESV",
+				"name":         "English Standard Version",
+				"language":     "English",
+				"abbreviation": "ESV",
+			},
+			map[string]interface{}{
+				"id":           "NIV",
+				"name":         "New International Version",
+				"language":     "English",
+				"abbreviation": "NIV",
+			},
+		},
+		"meta": map[string]interface{}{
+			"total": 2,
+			"page":  1,
+			"limit": 20,
 		},
 	}, nil
 }
