@@ -161,6 +161,7 @@ export interface BibleVersion {
     name: string;
     language: string;
     abbreviation: string;
+    code?: string;
 }
 
 export async function getBibleVersions(params: { name?: string; language?: string; page?: number; limit?: number; sort?: "code" | "name" | "language" } = {}) {
@@ -174,7 +175,10 @@ export async function getBibleVersions(params: { name?: string; language?: strin
 
     const res = await fetch(`${API_URL}/bible/versions?${query.toString()}`, { headers });
     if (!res.ok) throw new Error("Failed to fetch bible versions");
-    return res.json();
+    const data = await res.json();
+    // Support both { data: [...] } and raw array [...]
+    if (Array.isArray(data)) return { data };
+    return data;
 }
 
 // --- Groups ---
