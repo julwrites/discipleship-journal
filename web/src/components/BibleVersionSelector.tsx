@@ -84,7 +84,7 @@ export function BibleVersionSelector({ value, onChange, placeholder = "Select ve
                             {versions.map((version) => (
                                 <CommandItem
                                     key={version.id}
-                                    value={version.abbreviation}
+                                    value={version.id}
                                     onSelect={() => {
                                         onChange(version.abbreviation);
                                         setOpen(false);
