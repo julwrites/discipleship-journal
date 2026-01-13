@@ -36,8 +36,6 @@ export function BibleVersionSelector({ value, onChange, placeholder = "Select ve
     const loadVersions = useCallback(async (q: string) => {
         setLoading(true);
         try {
-            // If we have a lot of versions, we might want to paginate, but for a dropdown
-            // usually fetching the top 20 matches is enough.
             const res = await getBibleVersions({ name: q, limit: 20 });
             setVersions(res.data || []);
         } catch (error) {
@@ -52,13 +50,23 @@ export function BibleVersionSelector({ value, onChange, placeholder = "Select ve
     }, [debouncedSearch, loadVersions]);
 
     // Handle display value
-    // If we have the version in the list, use its abbreviation/name.
+    const getVersionCode = (v: BibleVersion) => v.abbreviation || v.code || v.id;
+
+    // If we have the version in the list, use its abbreviation/id.
     // If not (e.g. initial load where 'value' is set but list is empty/loading), show value.
-    const selectedVersion = versions.find(v => v.id === value || v.abbreviation === value)
-        || (value ? { id: value, abbreviation: value, name: value, language: "" } : null);
+    const selectedVersion = versions.find(v => 
+        (v.id && v.id === value) || 
+        (v.abbreviation && v.abbreviation === value) || 
+        (v.code && v.code === value)
+    ) || (value ? { id: value, abbreviation: value, name: value, language: "" } : null);
+
+    const displayLabel = selectedVersion ? getVersionCode(selectedVersion) : placeholder;
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={open} onOpenChange={(isOpen) => {
+            setOpen(isOpen);
+            if (!isOpen) setSearch(""); // Reset search on close
+        }}>
             <PopoverTrigger asChild>
                 <Button
                     variant="outline"
@@ -66,7 +74,7 @@ export function BibleVersionSelector({ value, onChange, placeholder = "Select ve
                     aria-expanded={open}
                     className={cn("w-full justify-between", className)}
                 >
-                    {selectedVersion ? selectedVersion.abbreviation : placeholder}
+                    {displayLabel}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
@@ -81,27 +89,35 @@ export function BibleVersionSelector({ value, onChange, placeholder = "Select ve
                         {loading && <div className="py-2 text-center text-sm text-muted-foreground">Loading...</div>}
                         {!loading && versions.length === 0 && <CommandEmpty>No versions found.</CommandEmpty>}
                         <CommandGroup>
-                            {versions.map((version) => (
-                                <CommandItem
-                                    key={version.id}
-                                    value={version.id ? version.id.toLowerCase() : ""} 
-                                    onSelect={() => {
-                                        onChange(version.abbreviation);
-                                        setOpen(false);
-                                    }}
-                                >
-                                    <Check
-                                        className={cn(
-                                            "mr-2 h-4 w-4",
-                                            (value === version.id || value === version.abbreviation) ? "opacity-100" : "opacity-0"
+                            {versions.map((version) => {
+                                const code = getVersionCode(version);
+                                const isSelected = value && (
+                                    value === version.id || 
+                                    value === version.abbreviation || 
+                                    value === version.code
+                                );
+                                
+                                return (
+                                    <CommandItem
+                                        key={version.id}
+                                        value={version.id?.toLowerCase()} 
+                                        onSelect={() => {
+                                            onChange(code);
+                                            setOpen(false);
+                                        }}
+                                    >
+                                        {isSelected ? (
+                                            <Check className={cn("mr-2 h-4 w-4")} />
+                                        ) : (
+                                            <div className="mr-2 h-4 w-4" />
                                         )}
-                                    />
-                                    <div className="flex flex-col">
-                                        <span className="font-medium">{version.abbreviation}</span>
-                                        <span className="text-xs text-muted-foreground">{version.name} - {version.language}</span>
-                                    </div>
-                                </CommandItem>
-                            ))}
+                                        <div className="flex flex-col">
+                                            <span className="font-medium">{code}</span>
+                                            <span className="text-xs text-muted-foreground">{version.name} - {version.language}</span>
+                                        </div>
+                                    </CommandItem>
+                                );
+                            })}
                         </CommandGroup>
                     </CommandList>
                 </Command>
