@@ -50,15 +50,18 @@ export function BibleVersionSelector({ value, onChange, placeholder = "Select ve
     }, [debouncedSearch, loadVersions]);
 
     // Handle display value
-    const getVersionCode = (v: BibleVersion) => v.abbreviation || v.code || v.id;
+    // Support various API response formats (abbreviation, code, id, version)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const getVersionCode = (v: any) => v.abbreviation || v.code || v.id || v.version || v.name;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const getUniqueId = (v: any) => v.id || v.abbreviation || v.code || v.version || v.name;
 
-    // If we have the version in the list, use its abbreviation/id.
+    // If we have the version in the list, use its code.
     // If not (e.g. initial load where 'value' is set but list is empty/loading), show value.
-    const selectedVersion = versions.find(v => 
-        (v.id && v.id === value) || 
-        (v.abbreviation && v.abbreviation === value) || 
-        (v.code && v.code === value)
-    ) || (value ? { id: value, abbreviation: value, name: value, language: "" } : null);
+    const selectedVersion = versions.find(v => {
+        const code = getVersionCode(v);
+        return code && value && code.toLowerCase() === value.toLowerCase();
+    }) || (value ? { id: value, abbreviation: value, name: value, language: "" } : null);
 
     const displayLabel = selectedVersion ? getVersionCode(selectedVersion) : placeholder;
 
@@ -91,18 +94,20 @@ export function BibleVersionSelector({ value, onChange, placeholder = "Select ve
                         <CommandGroup>
                             {versions.map((version) => {
                                 const code = getVersionCode(version);
-                                const isSelected = value && (
-                                    value === version.id || 
-                                    value === version.abbreviation || 
-                                    value === version.code
-                                );
+                                const uniqueId = getUniqueId(version);
+                                
+                                if (!code || !uniqueId) return null;
+
+                                const isSelected = value && code.toLowerCase() === value.toLowerCase();
                                 
                                 return (
                                     <CommandItem
-                                        key={version.id}
-                                        value={version.id?.toLowerCase()} 
+                                        key={uniqueId}
+                                        value={uniqueId.toLowerCase()} 
                                         onSelect={() => {
-                                            onChange(code);
+                                            if (code) {
+                                                onChange(code);
+                                            }
                                             setOpen(false);
                                         }}
                                     >
