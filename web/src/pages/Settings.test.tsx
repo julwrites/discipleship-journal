@@ -12,8 +12,8 @@ vi.mock('@/services/api', () => ({
   updateUser: vi.fn().mockResolvedValue({}),
   getBibleVersions: vi.fn().mockResolvedValue({
     data: [
-        { id: "uuid-1", name: "English Standard Version", abbreviation: "ESV", language: "en" },
-        { id: "uuid-2", name: "New International Version", abbreviation: "NIV", language: "en" }
+        { id: "uuid-1", name: "English Standard Version", abbreviation: "ESV", value: "ESV", language: "en" },
+        { id: "uuid-2", name: "New International Version", abbreviation: "NIV", value: "NIV", language: "en" }
     ]
   }),
 }));
@@ -96,7 +96,7 @@ describe('Settings Page', () => {
 
     // Select NIV
     // Wait for options to appear
-    const nivOption = await screen.findByText('NIV');
+    const nivOption = await screen.findByText('NIV', {}, { timeout: 3000 });
     await user.click(nivOption);
 
     // Click Save

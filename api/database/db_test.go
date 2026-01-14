@@ -55,7 +55,7 @@ func TestBuildConnectionString(t *testing.T) {
 			host:          "db-host",
 			port:          "5432",
 			// & is NOT encoded by url.UserPassword as it is a sub-delim allowed in userinfo
-			wantContains:  []string{"postgres://user:pass%25%5E&word@db-host:5432/mydb", "sslmode=disable"},
+			wantContains: []string{"postgres://user:pass%25%5E&word@db-host:5432/mydb", "sslmode=disable"},
 		},
 		{
 			name:          "Cloud SQL with complex password",

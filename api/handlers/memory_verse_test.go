@@ -184,3 +184,50 @@ func TestMemoryVerseHandler_SearchVerses(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, response["data"], 1)
 }
+
+func TestMemoryVerseHandler_UpdateVerse(t *testing.T) {
+	mockService := new(MockMemoryVerseService)
+	handler := NewMemoryVerseHandler(mockService)
+
+	userID := uuid.New()
+	verseID := uuid.New()
+	ctx := context.WithValue(context.Background(), TestUserKey, userID.String())
+
+	r := chi.NewRouter()
+	r.Put("/api/memory-verses/{verseId}", handler.UpdateVerse)
+
+	payload := `{"reference": "John 3:17", "version": "NIV"}`
+	req := httptest.NewRequest("PUT", "/api/memory-verses/"+verseID.String(), strings.NewReader(payload))
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	mockService.On("UpdateVerse", mock.Anything, mock.MatchedBy(func(v *models.MemoryVerse) bool {
+		return v.ID == verseID && v.Reference == "John 3:17" && v.Version == "NIV"
+	}), userID).Return(nil)
+
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestMemoryVerseHandler_DeleteVerse(t *testing.T) {
+	mockService := new(MockMemoryVerseService)
+	handler := NewMemoryVerseHandler(mockService)
+
+	userID := uuid.New()
+	verseID := uuid.New()
+	ctx := context.WithValue(context.Background(), TestUserKey, userID.String())
+
+	r := chi.NewRouter()
+	r.Delete("/api/memory-verses/{verseId}", handler.DeleteVerse)
+
+	req := httptest.NewRequest("DELETE", "/api/memory-verses/"+verseID.String(), nil)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	mockService.On("DeleteVerse", mock.Anything, verseID, userID).Return(nil)
+
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}
