@@ -26,12 +26,12 @@ func TestCleanHTML(t *testing.T) {
 			expected: "<ul><li>Item 1</li><li>Item 2</li></ul>",
 		},
 		{
-			name:     "Empty list items with newlines",
-			input:    "<ul><li>Item 1</li>\n<li>   </li>\n<li>Item 2</li></ul>",
-            // Explanation of change:
-            // 1. Newlines -> Space: "<ul><li>Item 1</li> <li>   </li> <li>Item 2</li></ul>"
-            // 2. Empty Li -> Removes `<li>   </li>`. Result: "<ul><li>Item 1</li>  <li>Item 2</li></ul>"
-            // 3. List Whitespace -> Collapses "</li>  <li>". Result: "<ul><li>Item 1</li><li>Item 2</li></ul>"
+			name:  "Empty list items with newlines",
+			input: "<ul><li>Item 1</li>\n<li>   </li>\n<li>Item 2</li></ul>",
+			// Explanation of change:
+			// 1. Newlines -> Space: "<ul><li>Item 1</li> <li>   </li> <li>Item 2</li></ul>"
+			// 2. Empty Li -> Removes `<li>   </li>`. Result: "<ul><li>Item 1</li>  <li>Item 2</li></ul>"
+			// 3. List Whitespace -> Collapses "</li>  <li>". Result: "<ul><li>Item 1</li><li>Item 2</li></ul>"
 			expected: "<ul><li>Item 1</li><li>Item 2</li></ul>",
 		},
 		{

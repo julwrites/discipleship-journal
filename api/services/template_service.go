@@ -23,7 +23,7 @@ type TemplateService interface {
 }
 
 type templateService struct {
-	db      DBInterfaceWithQuery
+	db       DBInterfaceWithQuery
 	aiClient BibleAIClient
 }
 
