@@ -50,11 +50,22 @@ export function BibleVersionSelector({ value, onChange, placeholder = "Select ve
     }, [debouncedSearch, loadVersions]);
 
     // Handle display value
-    // Support various API response formats (abbreviation, code, id, version)
+    // Support various API response formats (value, abbreviation, code, id, version)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const getVersionCode = (v: any) => v.abbreviation || v.code || v.id || v.version || v.name;
+    const getVersionCode = (v: any) => {
+        // Priority order: value (from real API), id, abbreviation, code, version, name
+        // We prefer fields that don't contain spaces as they are likely identifiers
+        const fields = [v.value, v.id, v.abbreviation, v.code, v.version, v.name];
+        for (const field of fields) {
+            if (field && typeof field === 'string' && !field.includes(' ')) {
+                return field;
+            }
+        }
+        return v.value || v.abbreviation || v.code || v.id || v.version || v.name;
+    };
+    
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const getUniqueId = (v: any) => v.id || v.abbreviation || v.code || v.version || v.name;
+    const getUniqueId = (v: any) => v.value || v.id || v.abbreviation || v.code || v.version || v.name;
 
     // If we have the version in the list, use its code.
     // If not (e.g. initial load where 'value' is set but list is empty/loading), show value.

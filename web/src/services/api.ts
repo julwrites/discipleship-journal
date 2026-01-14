@@ -173,6 +173,7 @@ export interface BibleVersion {
     abbreviation: string;
     code?: string;
     version?: string;
+    value?: string;
 }
 
 export async function getBibleVersions(params: { name?: string; language?: string; page?: number; limit?: number; sort?: "code" | "name" | "language" } = {}) {
