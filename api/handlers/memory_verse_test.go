@@ -75,6 +75,16 @@ func (m *MockMemoryVerseService) SearchVerses(ctx context.Context, userID uuid.U
 	return args.Get(0).([]*models.MemoryVerse), args.Error(1)
 }
 
+func (m *MockMemoryVerseService) UpdateVerse(ctx context.Context, verse *models.MemoryVerse, userID uuid.UUID) error {
+	args := m.Called(ctx, verse, userID)
+	return args.Error(0)
+}
+
+func (m *MockMemoryVerseService) DeleteVerse(ctx context.Context, verseID uuid.UUID, userID uuid.UUID) error {
+	args := m.Called(ctx, verseID, userID)
+	return args.Error(0)
+}
+
 func TestMemoryVerseHandler_GetPacks(t *testing.T) {
 	mockService := new(MockMemoryVerseService)
 	handler := NewMemoryVerseHandler(mockService)

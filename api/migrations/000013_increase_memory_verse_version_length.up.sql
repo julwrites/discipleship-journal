@@ -1,0 +1,1 @@
+ALTER TABLE memory_verses ALTER COLUMN version TYPE VARCHAR(50);

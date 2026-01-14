@@ -372,6 +372,8 @@ func main() {
 		r.Delete("/api/verse-packs/{id}", memoryVerseHandler.DeletePack)
 		r.Post("/api/verse-packs/{id}/verses", memoryVerseHandler.CreateVerseInPack)
 		r.Post("/api/verse-packs/{id}/clone", memoryVerseHandler.ClonePack)
+		r.Put("/api/memory-verses/{verseId}", memoryVerseHandler.UpdateVerse)
+		r.Delete("/api/memory-verses/{verseId}", memoryVerseHandler.DeleteVerse)
 
 		// Study Templates
 		r.Post("/api/templates", templateHandler.CreateTemplate)

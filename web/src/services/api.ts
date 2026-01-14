@@ -473,6 +473,27 @@ export async function deletePack(id: string) {
     return res.json();
 }
 
+export async function updateMemoryVerse(id: string, verse: Partial<MemoryVerse>) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/memory-verses/${id}`, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify(verse),
+    });
+    if (!res.ok) throw new Error("Failed to update verse");
+    return res.json();
+}
+
+export async function deleteMemoryVerse(id: string) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/memory-verses/${id}`, {
+        method: "DELETE",
+        headers,
+    });
+    if (!res.ok) throw new Error("Failed to delete verse");
+    return res.json();
+}
+
 // Deprecated: Compatibility aliases
 export const shareNote = (groupId: string, noteId: string, comment: string) => shareItem(groupId, { note_id: noteId, comment });
 export const searchMemoryVerses = async (query: string = "") => {

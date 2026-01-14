@@ -18,6 +18,8 @@ type MemoryVerseService interface {
 	CreateVerse(ctx context.Context, verse *models.MemoryVerse) (*models.MemoryVerse, error)
 	ClonePack(ctx context.Context, packID uuid.UUID, userID uuid.UUID, newTitle string) (*models.VersePack, error)
 	DeletePack(ctx context.Context, packID uuid.UUID, userID uuid.UUID) error
+	UpdateVerse(ctx context.Context, verse *models.MemoryVerse, userID uuid.UUID) error
+	DeleteVerse(ctx context.Context, verseID uuid.UUID, userID uuid.UUID) error
 	// SearchVerses searches for verses across all accessible packs (user's or system's)
 	SearchVerses(ctx context.Context, userID uuid.UUID, query string) ([]*models.MemoryVerse, error)
 }
@@ -217,6 +219,47 @@ func (s *memoryVerseService) DeletePack(ctx context.Context, packID uuid.UUID, u
 	// Check ownership
 	query := `DELETE FROM verse_packs WHERE id = $1 AND user_id = $2`
 	res, err := s.db.Exec(ctx, query, packID, userID)
+	if err != nil {
+		return err
+	}
+	if res.RowsAffected() == 0 {
+		return models.ErrNotFound
+	}
+	return nil
+}
+
+func (s *memoryVerseService) UpdateVerse(ctx context.Context, verse *models.MemoryVerse, userID uuid.UUID) error {
+	tagsJSON, _ := json.Marshal(verse.Tags)
+
+	query := `
+		UPDATE memory_verses mv
+		SET reference = $2, version = $3, tags = $4, updated_at = NOW()
+		FROM verse_packs vp
+		WHERE mv.verse_pack_id = vp.id
+		AND mv.id = $1
+		AND vp.user_id = $5
+	`
+	res, err := s.db.Exec(ctx, query,
+		verse.ID, verse.Reference, verse.Version, tagsJSON, userID,
+	)
+	if err != nil {
+		return err
+	}
+	if res.RowsAffected() == 0 {
+		return models.ErrNotFound
+	}
+	return nil
+}
+
+func (s *memoryVerseService) DeleteVerse(ctx context.Context, verseID uuid.UUID, userID uuid.UUID) error {
+	query := `
+		DELETE FROM memory_verses mv
+		USING verse_packs vp
+		WHERE mv.verse_pack_id = vp.id
+		AND mv.id = $1
+		AND vp.user_id = $2
+	`
+	res, err := s.db.Exec(ctx, query, verseID, userID)
 	if err != nil {
 		return err
 	}
