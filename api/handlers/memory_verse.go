@@ -284,3 +284,79 @@ func (h *MemoryVerseHandler) SearchVerses(w http.ResponseWriter, r *http.Request
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
+
+// UpdateVerse updates a verse
+func (h *MemoryVerseHandler) UpdateVerse(w http.ResponseWriter, r *http.Request) {
+	firebaseUID := ""
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+		firebaseUID = token.UID
+	}
+
+	userID, err := GetUserUUID(r.Context(), firebaseUID)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	verseIDStr := chi.URLParam(r, "verseId")
+	verseID, err := uuid.Parse(verseIDStr)
+	if err != nil {
+		http.Error(w, "Invalid verse ID", http.StatusBadRequest)
+		return
+	}
+
+	var req models.MemoryVerse
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid body", http.StatusBadRequest)
+		return
+	}
+
+	req.ID = verseID
+
+	err = h.service.UpdateVerse(r.Context(), &req, userID)
+	if err != nil {
+		if err == models.ErrNotFound {
+			http.Error(w, "Verse not found or unauthorized", http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(map[string]bool{"success": true})
+}
+
+// DeleteVerse deletes a verse
+func (h *MemoryVerseHandler) DeleteVerse(w http.ResponseWriter, r *http.Request) {
+	firebaseUID := ""
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+		firebaseUID = token.UID
+	}
+
+	userID, err := GetUserUUID(r.Context(), firebaseUID)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	verseIDStr := chi.URLParam(r, "verseId")
+	verseID, err := uuid.Parse(verseIDStr)
+	if err != nil {
+		http.Error(w, "Invalid verse ID", http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.DeleteVerse(r.Context(), verseID, userID)
+	if err != nil {
+		if err == models.ErrNotFound {
+			http.Error(w, "Verse not found or unauthorized", http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(map[string]bool{"success": true})
+}
