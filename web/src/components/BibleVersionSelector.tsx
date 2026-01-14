@@ -105,6 +105,7 @@ export function BibleVersionSelector({ value, onChange, placeholder = "Select ve
                                         key={uniqueId}
                                         value={uniqueId.toLowerCase()} 
                                         onSelect={() => {
+                                            console.log("BibleVersionSelector: onSelect", { code, uniqueId, version });
                                             if (code) {
                                                 onChange(code);
                                             }
