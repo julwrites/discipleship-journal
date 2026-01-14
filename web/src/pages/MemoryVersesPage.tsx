@@ -3,7 +3,7 @@ import { getVersePacks, createVersePack, VersePack, getPackDetails, deletePack, 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
@@ -94,6 +94,7 @@ function PackList({ type }: { type: "system" | "user" }) {
                         <DialogContent>
                             <DialogHeader>
                                 <DialogTitle>Create New Pack</DialogTitle>
+                                <DialogDescription>Enter a title for your new verse pack.</DialogDescription>
                             </DialogHeader>
                             <div className="py-4">
                                 <Label>Pack Title</Label>
@@ -351,6 +352,7 @@ export function VersePackDetail() {
                             <DialogContent>
                                 <DialogHeader>
                                     <DialogTitle>Save Pack</DialogTitle>
+                                    <DialogDescription>Save a copy of this pack to your library.</DialogDescription>
                                 </DialogHeader>
                                 <div className="py-4">
                                     <Label>New Title (Optional)</Label>
@@ -378,6 +380,7 @@ export function VersePackDetail() {
                                 <DialogContent>
                                     <DialogHeader>
                                         <DialogTitle>Add Verse</DialogTitle>
+                                        <DialogDescription>Add a new memory verse to this pack.</DialogDescription>
                                     </DialogHeader>
                                     <div className="space-y-4 py-4">
                                         <div className="grid gap-2">
@@ -440,6 +443,9 @@ export function VersePackDetail() {
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Edit Verse</DialogTitle>
+                        <DialogDescription>
+                            Make changes to your memory verse.
+                        </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="grid gap-2">
@@ -495,6 +501,7 @@ export function VersePackDetail() {
                     <DialogHeader>
                         <DialogTitle>{viewVerseData?.reference}</DialogTitle>
                         <CardDescription>{viewVerseData?.version}</CardDescription>
+                        <DialogDescription className="sr-only">Verse text display</DialogDescription>
                     </DialogHeader>
                     <div className="flex-1 overflow-auto p-4 bg-muted/20 rounded-md mt-2">
                         {loadingVerseText ? (
