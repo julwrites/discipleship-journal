@@ -178,7 +178,6 @@ export default function Settings() {
             <div>
             <label className="block text-sm font-medium mb-1">Default Bible Version</label>
             <div className="max-w-md">
-                <div className="text-xs text-muted-foreground mb-1">Current Value: {bibleVersion || "(empty)"}</div>
                 <BibleVersionSelector
                     value={bibleVersion}
                     onChange={setBibleVersion}

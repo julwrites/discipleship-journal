@@ -108,10 +108,20 @@ export async function syncUser() {
 
 export async function updateUser(data: { username?: string; bible_version?: string }) {
     const headers = await getHeaders();
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const payload: any = {};
+    if (data.username !== undefined) payload.username = data.username;
+    
+    // Nest bible_version under settings to match backend UpdateUserRequest structure
+    if (data.bible_version !== undefined) {
+        payload.settings = { bible_version: data.bible_version };
+    }
+
     const res = await fetch(`${API_URL}/users/me`, {
         method: "PUT",
         headers,
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
     });
     if (!res.ok) throw new Error("Failed to update user");
 }
