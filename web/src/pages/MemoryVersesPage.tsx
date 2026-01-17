@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Plus, BookOpen, Trash2, ArrowLeft, Copy, Pencil } from "lucide-react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { BibleVersionSelector } from "@/components/BibleVersionSelector";
+import { BibleReferenceInput } from "@/components/BibleReferenceInput";
 
 export default function MemoryVersesPage() {
     return (
@@ -385,9 +386,9 @@ export function VersePackDetail() {
                                     <div className="space-y-4 py-4">
                                         <div className="grid gap-2">
                                             <Label>Reference</Label>
-                                            <Input
-                                                value={newVerse.reference}
-                                                onChange={e => setNewVerse({...newVerse, reference: e.target.value})}
+                                            <BibleReferenceInput
+                                                value={newVerse.reference || ""}
+                                                onChange={val => setNewVerse({...newVerse, reference: val})}
                                                 placeholder="e.g. John 3:16"
                                             />
                                         </div>
@@ -450,9 +451,9 @@ export function VersePackDetail() {
                     <div className="space-y-4 py-4">
                         <div className="grid gap-2">
                             <Label>Reference</Label>
-                            <Input
+                            <BibleReferenceInput
                                 value={editVerseData.reference || ""}
-                                onChange={e => setEditVerseData({...editVerseData, reference: e.target.value})}
+                                onChange={val => setEditVerseData({...editVerseData, reference: val})}
                                 placeholder="e.g. John 3:16"
                             />
                         </div>

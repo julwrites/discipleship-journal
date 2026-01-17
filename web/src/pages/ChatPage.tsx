@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { chatWithAI, syncUser } from "@/services/api";
 import { useNavigate } from "react-router-dom";
 import { BibleVersionSelector } from "@/components/BibleVersionSelector";
+import { BibleReferenceInput } from "@/components/BibleReferenceInput";
 
 export default function ChatPage() {
     const navigate = useNavigate();
@@ -56,10 +57,12 @@ export default function ChatPage() {
 
             <div className="space-y-2">
                 <label className="text-sm font-medium">Bible Passage(s)</label>
-                <Textarea
+                <BibleReferenceInput
+                    multiline
+                    allowMultiple
                     placeholder="e.g. Romans 8, Psalm 23"
                     value={passage}
-                    onChange={(e) => setPassage(e.target.value)}
+                    onChange={setPassage}
                 />
             </div>
 
