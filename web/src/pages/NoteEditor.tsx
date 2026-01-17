@@ -47,6 +47,7 @@ import {
 import { MoreVertical, Book, Sparkles, Share2, Trash2, Quote } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { BibleVersionSelector } from "@/components/BibleVersionSelector";
+import { parseBibleReference } from "@/utils/bibleReference";
 
 export default function NoteEditor() {
     const { id } = useParams();
@@ -466,6 +467,10 @@ export default function NoteEditor() {
                                 placeholder="e.g. John 3:16"
                                 value={passageRef}
                                 onChange={(e) => setPassageRef(e.target.value)}
+                                onBlur={(e) => {
+                                    const normalized = parseBibleReference(e.target.value);
+                                    if (normalized) setPassageRef(normalized);
+                                }}
                                 className="min-h-[100px]"
                             />
                             <div className="flex gap-2 items-center">

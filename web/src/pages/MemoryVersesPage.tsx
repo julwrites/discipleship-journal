@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Plus, BookOpen, Trash2, ArrowLeft, Copy, Pencil } from "lucide-react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { BibleVersionSelector } from "@/components/BibleVersionSelector";
+import { parseBibleReference } from "@/utils/bibleReference";
 
 export default function MemoryVersesPage() {
     return (
@@ -388,6 +389,12 @@ export function VersePackDetail() {
                                             <Input
                                                 value={newVerse.reference}
                                                 onChange={e => setNewVerse({...newVerse, reference: e.target.value})}
+                                                onBlur={(e) => {
+                                                    const normalized = parseBibleReference(e.target.value);
+                                                    if (normalized) {
+                                                        setNewVerse({...newVerse, reference: normalized});
+                                                    }
+                                                }}
                                                 placeholder="e.g. John 3:16"
                                             />
                                         </div>
@@ -453,6 +460,12 @@ export function VersePackDetail() {
                             <Input
                                 value={editVerseData.reference || ""}
                                 onChange={e => setEditVerseData({...editVerseData, reference: e.target.value})}
+                                onBlur={(e) => {
+                                    const normalized = parseBibleReference(e.target.value);
+                                    if (normalized) {
+                                        setEditVerseData({...editVerseData, reference: normalized});
+                                    }
+                                }}
                                 placeholder="e.g. John 3:16"
                             />
                         </div>
