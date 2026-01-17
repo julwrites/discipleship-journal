@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { Plus, BookOpen, Trash2, ArrowLeft, Copy, Pencil } from "lucide-react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { BibleVersionSelector } from "@/components/BibleVersionSelector";
-import { parseBibleReference } from "@/utils/bibleReference";
+import { BibleReferenceInput } from "@/components/BibleReferenceInput";
 
 export default function MemoryVersesPage() {
     return (
@@ -386,15 +386,9 @@ export function VersePackDetail() {
                                     <div className="space-y-4 py-4">
                                         <div className="grid gap-2">
                                             <Label>Reference</Label>
-                                            <Input
-                                                value={newVerse.reference}
-                                                onChange={e => setNewVerse({...newVerse, reference: e.target.value})}
-                                                onBlur={(e) => {
-                                                    const normalized = parseBibleReference(e.target.value);
-                                                    if (normalized) {
-                                                        setNewVerse({...newVerse, reference: normalized});
-                                                    }
-                                                }}
+                                            <BibleReferenceInput
+                                                value={newVerse.reference || ""}
+                                                onChange={val => setNewVerse({...newVerse, reference: val})}
                                                 placeholder="e.g. John 3:16"
                                             />
                                         </div>
@@ -457,15 +451,9 @@ export function VersePackDetail() {
                     <div className="space-y-4 py-4">
                         <div className="grid gap-2">
                             <Label>Reference</Label>
-                            <Input
+                            <BibleReferenceInput
                                 value={editVerseData.reference || ""}
-                                onChange={e => setEditVerseData({...editVerseData, reference: e.target.value})}
-                                onBlur={(e) => {
-                                    const normalized = parseBibleReference(e.target.value);
-                                    if (normalized) {
-                                        setEditVerseData({...editVerseData, reference: normalized});
-                                    }
-                                }}
+                                onChange={val => setEditVerseData({...editVerseData, reference: val})}
                                 placeholder="e.g. John 3:16"
                             />
                         </div>

@@ -47,7 +47,7 @@ import {
 import { MoreVertical, Book, Sparkles, Share2, Trash2, Quote } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { BibleVersionSelector } from "@/components/BibleVersionSelector";
-import { parseBibleReference } from "@/utils/bibleReference";
+import { BibleReferenceInput } from "@/components/BibleReferenceInput";
 
 export default function NoteEditor() {
     const { id } = useParams();
@@ -463,14 +463,12 @@ export default function NoteEditor() {
                     </DialogHeader>
                     <div className="space-y-4">
                         <div className="flex flex-col gap-2">
-                            <Textarea
+                            <BibleReferenceInput
+                                multiline
+                                allowMultiple
                                 placeholder="e.g. John 3:16"
                                 value={passageRef}
-                                onChange={(e) => setPassageRef(e.target.value)}
-                                onBlur={(e) => {
-                                    const normalized = parseBibleReference(e.target.value);
-                                    if (normalized) setPassageRef(normalized);
-                                }}
+                                onChange={setPassageRef}
                                 className="min-h-[100px]"
                             />
                             <div className="flex gap-2 items-center">
