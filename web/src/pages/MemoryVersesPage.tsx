@@ -8,25 +8,22 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Plus, BookOpen, Trash2, ArrowLeft, Copy, Pencil } from "lucide-react";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { BibleVersionSelector } from "@/components/BibleVersionSelector";
 import { BibleReferenceInput } from "@/components/BibleReferenceInput";
 
 export default function MemoryVersesPage() {
+    const navigate = useNavigate();
     return (
         <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6">
-            <Link to="/">
-                <Button variant="ghost" className="pl-0">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to Dashboard
-                </Button>
-            </Link>
-
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
+            <div>
+                <div className="flex items-center gap-3 mb-2">
+                    <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+                        <ArrowLeft className="h-5 w-5" />
+                    </Button>
                     <h1 className="text-3xl font-bold">Scripture Memory</h1>
-                    <p className="text-muted-foreground">Memorize and meditate on God's Word</p>
                 </div>
+                <p className="text-muted-foreground ml-12">Memorize and meditate on God's Word</p>
             </div>
 
             <Tabs defaultValue="my-packs" className="w-full">

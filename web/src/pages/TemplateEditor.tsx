@@ -1,14 +1,24 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState, useCallback } from "react";
+import { useNavigate, useParams, useBlocker } from "react-router-dom";
 import { getTemplate, createTemplate, updateTemplate, StudyTemplate, TemplateField } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Trash2, Plus, ArrowLeft } from "lucide-react";
+import { Trash2, Plus, ArrowLeft, Info } from "lucide-react";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function TemplateEditor() {
     const { id } = useParams();
@@ -22,9 +32,19 @@ export default function TemplateEditor() {
     const [systemPrompt, setSystemPrompt] = useState("");
     const [fields, setFields] = useState<TemplateField[]>([]);
 
+    const [initialState, setInitialState] = useState("");
+    const [saving, setSaving] = useState(false);
+
+    // Derived state for dirty check
+    const currentState = JSON.stringify({ title, description, isPublic, systemPrompt, fields });
+    const isDirty = initialState !== "" && currentState !== initialState;
+
     useEffect(() => {
         if (isEdit) {
             loadTemplate(id!);
+        } else {
+            // Set initial state for new template
+            setInitialState(JSON.stringify({ title: "", description: "", isPublic: false, systemPrompt: "", fields: [] }));
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
@@ -37,10 +57,20 @@ export default function TemplateEditor() {
             setIsPublic(data.is_public);
             setFields(data.fields || []);
 
+            let sysPrompt = "";
             if (data.prompts && typeof data.prompts === 'object') {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                setSystemPrompt((data.prompts as any).system || "");
+                sysPrompt = (data.prompts as any).system || "";
             }
+            setSystemPrompt(sysPrompt);
+
+            setInitialState(JSON.stringify({
+                title: data.title,
+                description: data.description,
+                isPublic: data.is_public,
+                systemPrompt: sysPrompt,
+                fields: data.fields || []
+            }));
         } catch {
             toast.error("Failed to load template");
             navigate("/templates");
@@ -49,9 +79,13 @@ export default function TemplateEditor() {
         }
     };
 
-    const handleSave = async () => {
-        if (!title) return toast.error("Title is required");
+    const saveTemplate = useCallback(async (shouldNavigate = true) => {
+        if (!title) {
+            toast.error("Title is required");
+            return false;
+        }
 
+        setSaving(true);
         const templateData: StudyTemplate = {
             title,
             description,
@@ -69,11 +103,28 @@ export default function TemplateEditor() {
                 await createTemplate(templateData);
                 toast.success("Template created");
             }
-            navigate("/templates");
+
+            // Update initial state to match current, so isDirty becomes false
+            setInitialState(JSON.stringify({ title, description, isPublic, systemPrompt, fields }));
+
+            if (shouldNavigate) {
+                navigate("/templates");
+            }
+            return true;
         } catch {
             toast.error("Failed to save template");
+            return false;
+        } finally {
+            setSaving(false);
         }
-    };
+    }, [title, description, isPublic, fields, systemPrompt, id, isEdit, navigate]);
+
+    const handleSave = () => saveTemplate(true);
+
+    const blocker = useBlocker(
+        ({ currentLocation, nextLocation }) =>
+            !saving && isDirty && currentLocation.pathname !== nextLocation.pathname
+    );
 
     const addField = () => {
         setFields([...fields, { key: "", label: "", type: "text", placeholder: "" }]);
@@ -125,9 +176,21 @@ export default function TemplateEditor() {
                 </CardContent>
             </Card>
 
+            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg p-4 flex items-start gap-3">
+                <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                <div className="text-sm text-blue-800 dark:text-blue-300">
+                    <p className="font-semibold mb-1">How Templates Work</p>
+                    <p>
+                        Templates allow you to create reusable prompts for the AI. You can define variables (Input Fields)
+                        that you'll fill in when you use the template. These variables are then inserted into the System Instructions.
+                    </p>
+                </div>
+            </div>
+
             <Card>
                 <CardHeader>
                     <CardTitle>AI Prompt</CardTitle>
+                    <CardDescription>Define how the AI should behave.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="grid gap-2">
@@ -138,42 +201,57 @@ export default function TemplateEditor() {
                             placeholder="You are a Bible teacher. When the user provides a passage, analyze it by..."
                             rows={6}
                         />
-                        <p className="text-xs text-muted-foreground">This prompt guides the AI on how to process the user inputs.</p>
+                        <div className="text-xs text-muted-foreground space-y-1">
+                            <p>This prompt guides the AI. You can use placeholders for the input fields defined below.</p>
+                            <p>Use the format <code className="bg-muted px-1 py-0.5 rounded">{'{{key}}'}</code> to insert a field value. For example, if you have a field with key "audience", use <code className="bg-muted px-1 py-0.5 rounded">{'{{audience}}'}</code> in your prompt.</p>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
 
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>Input Fields</CardTitle>
+                    <div>
+                        <CardTitle>Input Fields</CardTitle>
+                        <CardDescription>Variables the user will fill in when using the template.</CardDescription>
+                    </div>
                     <Button size="sm" variant="outline" onClick={addField}>
                         <Plus className="mr-2 h-4 w-4" /> Add Field
                     </Button>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    {fields.length === 0 ? <p className="text-sm text-muted-foreground text-center">No input fields defined.</p> :
+                    {fields.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">No input fields defined. Click "Add Field" to create variables.</p> :
                         fields.map((field, idx) => (
                             <div key={idx} className="flex gap-2 items-start border p-3 rounded bg-muted/20">
                                 <div className="grid gap-2 flex-1">
                                     <div className="flex gap-2">
+                                        <div className="flex-1">
+                                            <Label className="text-xs text-muted-foreground mb-1 block">Label</Label>
+                                            <Input
+                                                placeholder="e.g. Target Audience"
+                                                value={field.label}
+                                                onChange={e => updateField(idx, "label", e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="flex-1">
+                                            <Label className="text-xs text-muted-foreground mb-1 block">Key (for use in prompt)</Label>
+                                            <Input
+                                                placeholder="e.g. audience"
+                                                value={field.key}
+                                                onChange={e => updateField(idx, "key", e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <Label className="text-xs text-muted-foreground mb-1 block">Placeholder (Optional)</Label>
                                         <Input
-                                            placeholder="Label (e.g. Target Audience)"
-                                            value={field.label}
-                                            onChange={e => updateField(idx, "label", e.target.value)}
-                                        />
-                                        <Input
-                                            placeholder="Key (e.g. audience)"
-                                            value={field.key}
-                                            onChange={e => updateField(idx, "key", e.target.value)}
+                                            placeholder="Example value to guide the user..."
+                                            value={field.placeholder || ""}
+                                            onChange={e => updateField(idx, "placeholder", e.target.value)}
                                         />
                                     </div>
-                                    <Input
-                                        placeholder="Placeholder text..."
-                                        value={field.placeholder || ""}
-                                        onChange={e => updateField(idx, "placeholder", e.target.value)}
-                                    />
                                 </div>
-                                <Button variant="ghost" size="icon" className="text-destructive mt-1" onClick={() => removeField(idx)}>
+                                <Button variant="ghost" size="icon" className="text-destructive mt-6" onClick={() => removeField(idx)}>
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
                             </div>
@@ -184,8 +262,37 @@ export default function TemplateEditor() {
 
             <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => navigate("/templates")}>Cancel</Button>
-                <Button onClick={handleSave}>Save Template</Button>
+                <Button onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save Template"}</Button>
             </div>
+
+            {blocker.state === "blocked" && (
+                <AlertDialog open={true}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                You have unsaved changes. Do you want to save them before leaving?
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel onClick={() => blocker.reset()}>Cancel</AlertDialogCancel>
+                            <Button variant="destructive" onClick={() => blocker.proceed()}>
+                                Discard Changes
+                            </Button>
+                            <AlertDialogAction onClick={async (e) => {
+                                e.preventDefault();
+                                const target = blocker.location;
+                                const success = await saveTemplate(false);
+                                if (success && target) {
+                                    navigate(target);
+                                }
+                            }}>
+                                Save & Leave
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            )}
         </div>
     );
 }

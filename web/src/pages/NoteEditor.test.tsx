@@ -214,7 +214,9 @@ describe('NoteEditor', () => {
 
         // Expect AlertDialog
         expect(await screen.findByText('Unsaved Changes')).toBeInTheDocument();
-        expect(screen.getByText('You have unsaved changes. Are you sure you want to leave? Your changes will be lost.')).toBeInTheDocument();
+        expect(screen.getByText('You have unsaved changes. Do you want to save them before leaving?')).toBeInTheDocument();
+        expect(screen.getByText('Save & Leave')).toBeInTheDocument();
+        expect(screen.getByText('Discard Changes')).toBeInTheDocument();
 
         // Click Cancel
         const cancelBtn = screen.getByText('Cancel');
@@ -228,8 +230,8 @@ describe('NoteEditor', () => {
 
         // Try again and leave
         fireEvent.click(backBtn);
-        const leaveBtn = await screen.findByText('Leave');
-        fireEvent.click(leaveBtn);
+        const discardBtn = await screen.findByText('Discard Changes');
+        fireEvent.click(discardBtn);
 
         // Should navigate to dashboard
         await waitFor(() => {
