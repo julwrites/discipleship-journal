@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getReadingPlans, getMyReadingPlans, subscribeToPlan } from "@/services/api";
 import { toast } from "sonner";
-import { ArrowLeft, BookOpen, Check, Calendar } from "lucide-react";
+import { ArrowLeft, Check, Calendar } from "lucide-react";
 
 interface ReadingPlan {
     id: string;
@@ -23,6 +23,7 @@ interface UserReadingPlan {
 }
 
 export default function ReadingPlansPage() {
+    const navigate = useNavigate();
     const [allPlans, setAllPlans] = useState<ReadingPlan[]>([]);
     const [myPlans, setMyPlans] = useState<UserReadingPlan[]>([]);
     const [loading, setLoading] = useState(true);
@@ -71,17 +72,13 @@ export default function ReadingPlansPage() {
     return (
         <div className="p-4 md:p-8 max-w-7xl mx-auto">
             <div className="mb-8">
-                <Link to="/">
-                    <Button variant="ghost" className="mb-4 pl-0 hover:bg-transparent hover:text-primary">
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back to Dashboard
+                <div className="flex items-center gap-3 mb-2">
+                    <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+                        <ArrowLeft className="h-5 w-5" />
                     </Button>
-                </Link>
-                <h1 className="text-3xl font-bold flex items-center gap-2">
-                    <BookOpen className="h-8 w-8" />
-                    Bible Reading Plans
-                </h1>
-                <p className="text-muted-foreground mt-2">
+                    <h1 className="text-3xl font-bold">Bible Reading Plans</h1>
+                </div>
+                <p className="text-muted-foreground ml-12">
                     Follow structured plans to read through the Bible.
                 </p>
             </div>
