@@ -147,21 +147,25 @@ export default function NoteEditor() {
         }
     }, [debouncedVerseSearch, verseDialogOpen]);
 
-    const handleSave = useCallback(async () => {
+    const saveNote = useCallback(async (shouldNavigate = true) => {
         setSaving(true);
         setSaveError(false);
         try {
             if (id === "new") {
                 const res = await createNote(title, content);
-                navigate(`/notes/${res.id}`, { replace: true });
+                if (shouldNavigate) {
+                    navigate(`/notes/${res.id}`, { replace: true });
+                }
                 setLastSaved(new Date().toLocaleTimeString());
                 setInitialTitle(title);
                 setInitialContent(content);
+                return true;
             } else if (id) {
                 await updateNote(id, title, content);
                 setLastSaved(new Date().toLocaleTimeString());
                 setInitialTitle(title);
                 setInitialContent(content);
+                return true;
             }
         } catch (e) {
             console.error(e);
@@ -172,10 +176,16 @@ export default function NoteEditor() {
             } else {
                 toast.error(`Failed to save: ${message}`);
             }
+            return false;
         } finally {
             setSaving(false);
         }
+        return false;
     }, [id, title, content, navigate]);
+
+    const handleSave = useCallback(() => {
+        saveNote(true);
+    }, [saveNote]);
 
     // Handle Ctrl+S / Cmd+S
     useEffect(() => {
@@ -427,12 +437,24 @@ export default function NoteEditor() {
                         <AlertDialogHeader>
                             <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
                             <AlertDialogDescription>
-                                You have unsaved changes. Are you sure you want to leave? Your changes will be lost.
+                                You have unsaved changes. Do you want to save them before leaving?
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                             <AlertDialogCancel onClick={() => blocker.reset()}>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => blocker.proceed()}>Leave</AlertDialogAction>
+                            <Button variant="destructive" onClick={() => blocker.proceed()}>
+                                Discard Changes
+                            </Button>
+                            <AlertDialogAction onClick={async (e) => {
+                                e.preventDefault(); // Prevent closing immediately
+                                const target = blocker.location;
+                                const success = await saveNote(false); // Save without navigating
+                                if (success && target) {
+                                    navigate(target);
+                                }
+                            }}>
+                                Save & Leave
+                            </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>

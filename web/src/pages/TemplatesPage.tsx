@@ -66,23 +66,21 @@ export default function TemplatesPage() {
 
     return (
         <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6">
-            <Link to="/">
-                <Button variant="ghost" className="pl-0">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to Dashboard
-                </Button>
-            </Link>
-
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-3xl font-bold">Templates</h1>
-                    <p className="text-muted-foreground">Create reusable AI prompts for devotionals, studies, or mentoring.</p>
+            <div>
+                <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center gap-3">
+                        <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+                            <ArrowLeft className="h-5 w-5" />
+                        </Button>
+                        <h1 className="text-3xl font-bold">Templates</h1>
+                    </div>
+                    <Link to="/templates/new">
+                        <Button>
+                            <Plus className="mr-2 h-4 w-4" /> New Template
+                        </Button>
+                    </Link>
                 </div>
-                <Link to="/templates/new">
-                    <Button>
-                        <Plus className="mr-2 h-4 w-4" /> New Template
-                    </Button>
-                </Link>
+                <p className="text-muted-foreground ml-12">Create reusable AI prompts for devotionals, studies, or mentoring.</p>
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab}>
