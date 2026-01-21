@@ -19,7 +19,7 @@ import {
 interface User {
     id: string;
     email: string;
-    display_name: string;
+    username?: string;
 }
 
 interface Connection {
@@ -162,7 +162,7 @@ export default function ConnectionsPage() {
                 <TabsContent value="find" className="space-y-4">
                     <div className="flex gap-2">
                         <Input
-                            placeholder="Search by email or name..."
+                            placeholder="Search by email or username..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
@@ -175,8 +175,8 @@ export default function ConnectionsPage() {
                             <Card key={u.id}>
                                 <CardContent className="flex justify-between items-center p-4">
                                     <div>
-                                        <p className="font-medium">{u.display_name || "User"}</p>
-                                        <p className="text-sm text-muted-foreground">{u.email}</p>
+                                        <p className="font-medium">{u.username || u.email}</p>
+                                        {u.username && <p className="text-sm text-muted-foreground">{u.email}</p>}
                                     </div>
                                     <Button size="sm" onClick={() => sendRequest(u.email)}>Connect</Button>
                                 </CardContent>

@@ -47,9 +47,9 @@ func TestSendConnectionRequest(t *testing.T) {
 		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow("conn-1"))
 
 	// Expect synchronous requester name lookup
-	mock.ExpectQuery("SELECT display_name FROM users WHERE id").
+	mock.ExpectQuery("SELECT username FROM users WHERE id").
 		WithArgs(requesterUUID).
-		WillReturnRows(pgxmock.NewRows([]string{"display_name"}).AddRow("Requester Name"))
+		WillReturnRows(pgxmock.NewRows([]string{"username"}).AddRow("RequesterUser"))
 
 	reqBody := ConnectionRequest{ReceiverEmail: receiverEmail}
 	bodyBytes, _ := json.Marshal(reqBody)
@@ -89,12 +89,11 @@ func TestSearchUsers(t *testing.T) {
 		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
 
 	// Expect search query
-	fullName := "John Doe"
-	avatarURL := "http://example.com/avatar.jpg"
-	mock.ExpectQuery(`SELECT id, email, full_name, avatar_url FROM users WHERE \(email ILIKE \$1 OR full_name ILIKE \$1\) AND id != \$2 LIMIT 20`).
+	username := "johndoe"
+	mock.ExpectQuery(`SELECT id, email, username FROM users WHERE \(email ILIKE \$1 OR username ILIKE \$1\) AND id != \$2 LIMIT 20`).
 		WithArgs("%john%", userUUID).
-		WillReturnRows(pgxmock.NewRows([]string{"id", "email", "full_name", "avatar_url"}).
-			AddRow("u2", "john@example.com", &fullName, &avatarURL))
+		WillReturnRows(pgxmock.NewRows([]string{"id", "email", "username"}).
+			AddRow("u2", "john@example.com", &username))
 
 	req := httptest.NewRequest("GET", "/api/users/search?q=john", nil)
 	token := &auth.Token{UID: uid}
