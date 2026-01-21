@@ -13,7 +13,9 @@ import {
     shareItem,
     searchMemoryVerses,
     MemoryVerse,
-    syncUser
+    syncUser,
+    getConnections,
+    getOrCreateDirectGroup
 } from "@/services/api";
 import RichTextEditor from "@/components/RichTextEditor";
 import { Editor } from "@tiptap/react";
@@ -25,6 +27,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -69,6 +72,7 @@ export default function NoteEditor() {
 
     // Default Version from User Settings
     const [userVersion, setUserVersion] = useState("ESV");
+    const [currentUserEmail, setCurrentUserEmail] = useState("");
 
     // Bible Passage State
     const [passageRef, setPassageRef] = useState("");
@@ -94,7 +98,10 @@ export default function NoteEditor() {
 
     // Sharing State
     const [myGroups, setMyGroups] = useState<{ id: string, name: string }[]>([]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [myConnections, setMyConnections] = useState<any[]>([]);
     const [selectedGroupId, setSelectedGroupId] = useState("");
+    const [selectedConnectionId, setSelectedConnectionId] = useState("");
     const [shareComment, setShareComment] = useState("");
     const [sharing, setSharing] = useState(false);
     const [deleting, setDeleting] = useState(false);
@@ -105,6 +112,7 @@ export default function NoteEditor() {
     useEffect(() => {
         // Load user settings for default version
         syncUser().then(u => {
+            if (u.email) setCurrentUserEmail(u.email);
             if (u.settings?.bible_version) {
                 setUserVersion(u.settings.bible_version);
                 setPassageVersion(u.settings.bible_version);
@@ -233,17 +241,37 @@ export default function NoteEditor() {
         }
     };
 
+    const fetchConnections = async () => {
+        try {
+            const data = await getConnections();
+            setMyConnections(data || []);
+        } catch (error) {
+            console.error("Failed to fetch connections", error);
+        }
+    };
+
     const handleShare = async () => {
         if (!id || id === "new") {
             toast.error("Please save the note first.");
             return;
         }
-        if (!selectedGroupId) return;
+
+        let targetGroupId = selectedGroupId;
+
         setSharing(true);
         try {
-            await shareItem(selectedGroupId, { note_id: id, comment: shareComment });
+            if (selectedConnectionId) {
+                // Get or Create Direct Group
+                const group = await getOrCreateDirectGroup(selectedConnectionId);
+                targetGroupId = group.id;
+            }
+
+            if (!targetGroupId) return;
+
+            await shareItem(targetGroupId, { note_id: id, comment: shareComment });
             toast.success("Note shared!");
             setSelectedGroupId("");
+            setSelectedConnectionId("");
             setShareComment("");
             setShareDialogOpen(false);
         } catch (error) {
@@ -415,6 +443,7 @@ export default function NoteEditor() {
                                         <DropdownMenuItem onClick={() => {
                                             setShareDialogOpen(true);
                                             fetchMyGroups();
+                                            fetchConnections();
                                         }}>
                                             <Share2 className="mr-2 h-4 w-4" /> Share
                                         </DropdownMenuItem>
@@ -607,33 +636,88 @@ export default function NoteEditor() {
             </Dialog>
              <Dialog open={shareDialogOpen} onOpenChange={(open) => {
                 setShareDialogOpen(open);
-                if(open && myGroups.length === 0) fetchMyGroups();
+                if(open) {
+                    fetchMyGroups();
+                    fetchConnections();
+                }
             }}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Share to Group</DialogTitle>
-                        <DialogDescription>Share this note with your groups.</DialogDescription>
+                        <DialogTitle>Share Note</DialogTitle>
+                        <DialogDescription>Share this note with your groups or connections.</DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4">
-                        <select
-                            className="w-full p-2 border rounded"
-                            value={selectedGroupId}
-                            onChange={(e) => setSelectedGroupId(e.target.value)}
-                        >
-                            <option value="">Select a Group...</option>
-                            {myGroups.map(g => (
-                                <option key={g.id} value={g.id}>{g.name}</option>
-                            ))}
-                        </select>
-                        <Input
-                            placeholder="Add a comment (optional)..."
-                            value={shareComment}
-                            onChange={(e) => setShareComment(e.target.value)}
-                        />
-                        <Button onClick={handleShare} disabled={sharing || !selectedGroupId} className="w-full">
-                            {sharing ? "Sharing..." : "Share Note"}
-                        </Button>
-                    </div>
+
+                    <Tabs defaultValue="groups" onValueChange={() => {
+                        setSelectedGroupId("");
+                        setSelectedConnectionId("");
+                    }}>
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="groups">Groups</TabsTrigger>
+                            <TabsTrigger value="connections">Direct Message</TabsTrigger>
+                        </TabsList>
+
+                        <div className="py-4 space-y-4">
+                            <TabsContent value="groups">
+                                <select
+                                    className="w-full p-2 border rounded bg-background"
+                                    value={selectedGroupId}
+                                    onChange={(e) => setSelectedGroupId(e.target.value)}
+                                >
+                                    <option value="">Select a Group...</option>
+                                    {myGroups.map(g => (
+                                        <option key={g.id} value={g.id}>{g.name}</option>
+                                    ))}
+                                </select>
+                            </TabsContent>
+
+                            <TabsContent value="connections">
+                                <select
+                                    className="w-full p-2 border rounded bg-background"
+                                    value={selectedConnectionId}
+                                    onChange={(e) => setSelectedConnectionId(e.target.value)}
+                                >
+                                    <option value="">Select a Connection...</option>
+                                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                                    {myConnections.filter((c: any) => c.status === 'accepted').map((c: any) => {
+                                        // Need to identify which user is the 'other' one
+                                        // But we don't have current user email easily here unless we use auth hook or syncUser data
+                                        // Just display both emails or try to guess?
+                                        // Connections list usually returns requester_email and receiver_email.
+                                        // If I am requester, show receiver.
+                                        // I will assume simple display for now: "requester <-> receiver" or just map all?
+                                        // Better: The ConnectionsPage logic filters this.
+                                        // I'll try to find the "other" email.
+                                        // But I don't have 'user' object in this scope easily (useAuth hook is not used in top level... wait, it is NOT used in NoteEditor currently)
+                                        // NoteEditor uses `syncUser`.
+                                        // I'll just show the email that isn't null? Or maybe just render the object as string if I can't filter?
+                                        // Actually `getConnections` returns { ... requester_email, receiver_email ... }.
+                                        // I'll list both emails or just the ID.
+                                        // Wait, I need to know which one is the OTHER.
+                                        // I'll show: "Connection (ID: ...)" fallback?
+                                        // No, that's bad UX.
+                                        // I'll fetch user in useEffect or use `syncUser` result.
+                                        // `syncUser` is called in useEffect. I can store user.
+                                        // I'll add `currentUser` state.
+                                        return (
+                                            <option key={c.id} value={c.requester_email === currentUserEmail ? c.receiver_id : c.requester_id}>
+                                                {c.requester_email === currentUserEmail ? c.receiver_email : c.requester_email}
+                                            </option>
+                                        );
+                                    })}
+                                </select>
+                            </TabsContent>
+
+                            <Input
+                                placeholder="Add a comment (optional)..."
+                                value={shareComment}
+                                onChange={(e) => setShareComment(e.target.value)}
+                            />
+
+                            <Button onClick={handleShare} disabled={sharing || (!selectedGroupId && !selectedConnectionId)} className="w-full">
+                                {sharing ? "Sharing..." : "Share Note"}
+                            </Button>
+                        </div>
+                    </Tabs>
                 </DialogContent>
             </Dialog>
 

@@ -27,6 +27,7 @@ func NewGroupHandler(db DBInterface, notificationService services.NotificationSe
 type CreateGroupRequest struct {
 	Name        string `json:"name" validate:"required,min=3,max=100"`
 	Description string `json:"description" validate:"max=500"`
+	Type        string `json:"type" validate:"omitempty,oneof=group direct"`
 }
 
 type GroupResponse struct {
@@ -35,6 +36,7 @@ type GroupResponse struct {
 	Description string `json:"description"`
 	CreatedBy   string `json:"created_by"`
 	Role        string `json:"role,omitempty"` // Current user's role
+	Type        string `json:"type"`
 }
 
 type GroupMemberResponse struct {
@@ -94,10 +96,15 @@ func (h *GroupHandler) CreateGroup(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
+	groupType := "group"
+	if req.Type != "" {
+		groupType = req.Type
+	}
+
 	var groupID string
 	err = tx.QueryRow(r.Context(),
-		"INSERT INTO groups (name, description, created_by) VALUES ($1, $2, $3) RETURNING id",
-		req.Name, req.Description, userUUID).Scan(&groupID)
+		"INSERT INTO groups (name, description, created_by, type) VALUES ($1, $2, $3, $4) RETURNING id",
+		req.Name, req.Description, userUUID, groupType).Scan(&groupID)
 	if err != nil {
 		slog.Error("Failed to create group", "error", err)
 		http.Error(w, "Failed to create group", http.StatusInternalServerError)
@@ -151,7 +158,7 @@ func (h *GroupHandler) ListMyGroups(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rows, err := h.db.Query(r.Context(),
-		`SELECT g.id, g.name, g.description, g.created_by, gm.role
+		`SELECT g.id, g.name, g.description, g.created_by, g.type, gm.role
 		 FROM groups g
 		 JOIN group_members gm ON g.id = gm.group_id
 		 WHERE gm.user_id = $1`, userUUID)
@@ -164,8 +171,14 @@ func (h *GroupHandler) ListMyGroups(w http.ResponseWriter, r *http.Request) {
 	var groups []GroupResponse
 	for rows.Next() {
 		var g GroupResponse
-		if err := rows.Scan(&g.ID, &g.Name, &g.Description, &g.CreatedBy, &g.Role); err != nil {
+		var groupType *string
+		if err := rows.Scan(&g.ID, &g.Name, &g.Description, &g.CreatedBy, &groupType, &g.Role); err != nil {
 			continue
+		}
+		if groupType != nil {
+			g.Type = *groupType
+		} else {
+			g.Type = "group"
 		}
 		groups = append(groups, g)
 	}
@@ -192,11 +205,12 @@ func (h *GroupHandler) SearchGroups(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Only search for standard groups, not direct messages
 	rows, err := h.db.Query(r.Context(),
-		`SELECT g.id, g.name, g.description, g.created_by,
+		`SELECT g.id, g.name, g.description, g.created_by, g.type,
 		 COALESCE((SELECT role FROM group_members WHERE group_id = g.id AND user_id = $2), '') as role
 		 FROM groups g
-		 WHERE g.name ILIKE $1 LIMIT 20`, "%"+query+"%", userUUID)
+		 WHERE g.name ILIKE $1 AND (g.type = 'group' OR g.type IS NULL) LIMIT 20`, "%"+query+"%", userUUID)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
@@ -206,8 +220,14 @@ func (h *GroupHandler) SearchGroups(w http.ResponseWriter, r *http.Request) {
 	var groups []GroupResponse
 	for rows.Next() {
 		var g GroupResponse
-		if err := rows.Scan(&g.ID, &g.Name, &g.Description, &g.CreatedBy, &g.Role); err != nil {
+		var groupType *string
+		if err := rows.Scan(&g.ID, &g.Name, &g.Description, &g.CreatedBy, &groupType, &g.Role); err != nil {
 			continue
+		}
+		if groupType != nil {
+			g.Type = *groupType
+		} else {
+			g.Type = "group"
 		}
 		groups = append(groups, g)
 	}
@@ -315,7 +335,7 @@ func (h *GroupHandler) GetGroupMembers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rows, err := h.db.Query(r.Context(),
-		`SELECT gm.user_id, u.display_name, u.email, gm.role, gm.joined_at
+		`SELECT gm.user_id, COALESCE(u.username, u.email), u.email, gm.role, gm.joined_at
 		 FROM group_members gm
 		 JOIN users u ON gm.user_id = u.id
 		 WHERE gm.group_id = $1`, groupID)
@@ -380,6 +400,25 @@ func (h *GroupHandler) AddGroupMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Verify connection exists between requester and target user
+	var isConnected bool
+	err = h.db.QueryRow(r.Context(),
+		`SELECT EXISTS(
+			SELECT 1 FROM connections
+			WHERE ((requester_id = $1 AND receiver_id = $2) OR (requester_id = $2 AND receiver_id = $1))
+			AND status = 'accepted'
+		)`, userUUID, req.UserID).Scan(&isConnected)
+
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	if !isConnected {
+		http.Error(w, "User is not in your connections", http.StatusForbidden)
+		return
+	}
+
 	// Check if user to add exists and is not already member
 	// (Assuming req.UserID is the internal UUID, we should probably check existence)
 	_, err = h.db.Exec(r.Context(),
@@ -414,6 +453,122 @@ func (h *GroupHandler) AddGroupMember(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(map[string]bool{"success": true}); err != nil {
 		slog.Error("Failed to encode response", "error", err)
 	}
+}
+
+// GetOrCreateDirectGroup gets or creates a direct message group with a connection
+func (h *GroupHandler) GetOrCreateDirectGroup(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		PartnerID string `json:"partner_id" validate:"required"`
+	}
+	if !DecodeAndValidate(w, r, &req) {
+		return
+	}
+
+	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
+	userUUID, err := GetUserUUID(r.Context(), token.UID)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusInternalServerError)
+		return
+	}
+
+	if req.PartnerID == userUUID.String() {
+		http.Error(w, "Cannot create direct group with yourself", http.StatusBadRequest)
+		return
+	}
+
+	// 1. Check if connected
+	var isConnected bool
+	err = h.db.QueryRow(r.Context(),
+		`SELECT EXISTS(
+			SELECT 1 FROM connections
+			WHERE ((requester_id = $1 AND receiver_id = $2) OR (requester_id = $2 AND receiver_id = $1))
+			AND status = 'accepted'
+		)`, userUUID, req.PartnerID).Scan(&isConnected)
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	if !isConnected {
+		http.Error(w, "User is not in your connections", http.StatusForbidden)
+		return
+	}
+
+	// 2. Check if Direct group exists
+	var groupID string
+	// Find a group of type 'direct' where both are members.
+	// We can find groups where I am a member, then check if partner is also a member, and type is direct.
+	// OR:
+	// SELECT g.id FROM groups g
+	// JOIN group_members gm1 ON g.id = gm1.group_id AND gm1.user_id = $1
+	// JOIN group_members gm2 ON g.id = gm2.group_id AND gm2.user_id = $2
+	// WHERE g.type = 'direct' LIMIT 1
+	err = h.db.QueryRow(r.Context(), `
+		SELECT g.id FROM groups g
+		JOIN group_members gm1 ON g.id = gm1.group_id AND gm1.user_id = $1
+		JOIN group_members gm2 ON g.id = gm2.group_id AND gm2.user_id = $2
+		WHERE g.type = 'direct' LIMIT 1
+	`, userUUID, req.PartnerID).Scan(&groupID)
+
+	if err == nil {
+		// Found
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"id": groupID})
+		return
+	}
+
+	if err != pgx.ErrNoRows {
+		slog.Error("Database error", "error", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	// 3. Create Group
+	// Fetch partner name for Group Name
+	var partnerName, partnerUsername, partnerEmail string
+	err = h.db.QueryRow(r.Context(), "SELECT COALESCE(username, email), username, email FROM users WHERE id=$1", req.PartnerID).Scan(&partnerName, &partnerUsername, &partnerEmail)
+	if err != nil {
+		http.Error(w, "Partner not found", http.StatusNotFound)
+		return
+	}
+
+	// Fetch my name
+	var myName string
+	err = h.db.QueryRow(r.Context(), "SELECT COALESCE(username, email) FROM users WHERE id=$1", userUUID).Scan(&myName)
+
+	groupName := "Direct: " + myName + " & " + partnerName
+
+	tx, err := h.db.Begin(r.Context())
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback(r.Context())
+
+	if err := tx.QueryRow(r.Context(),
+		"INSERT INTO groups (name, type, created_by) VALUES ($1, 'direct', $2) RETURNING id",
+		groupName, userUUID).Scan(&groupID); err != nil {
+		slog.Error("Failed to create group", "error", err)
+		http.Error(w, "Failed to create group", http.StatusInternalServerError)
+		return
+	}
+
+	// Add members
+	if _, err := tx.Exec(r.Context(), "INSERT INTO group_members (group_id, user_id, role) VALUES ($1, $2, 'admin')", groupID, userUUID); err != nil {
+		http.Error(w, "Failed to add member", http.StatusInternalServerError)
+		return
+	}
+	if _, err := tx.Exec(r.Context(), "INSERT INTO group_members (group_id, user_id, role) VALUES ($1, $2, 'admin')", groupID, req.PartnerID); err != nil {
+		http.Error(w, "Failed to add member", http.StatusInternalServerError)
+		return
+	}
+
+	if err := tx.Commit(r.Context()); err != nil {
+		http.Error(w, "Commit failed", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]string{"id": groupID})
 }
 
 // RemoveGroupMember removes a user from a group (Admin only)

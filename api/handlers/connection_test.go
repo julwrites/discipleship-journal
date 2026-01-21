@@ -90,12 +90,15 @@ func TestSearchUsers(t *testing.T) {
 
 	// Expect search query
 	username := "johndoe"
-	mock.ExpectQuery(`SELECT id, email, username FROM users WHERE \(email ILIKE \$1 OR username ILIKE \$1\) AND id != \$2 LIMIT 20`).
-		WithArgs("%john%", userUUID).
-		WillReturnRows(pgxmock.NewRows([]string{"id", "email", "username"}).
-			AddRow("u2", "john@example.com", &username))
+	mock.ExpectQuery(`SELECT u.id, u.email, u.username,
+		 EXISTS\(SELECT 1 FROM connections c WHERE \(\(c.requester_id = u.id AND c.receiver_id = \$2\) OR \(c.receiver_id = u.id AND c.requester_id = \$2\)\) AND c.status = 'accepted'\) as is_connected
+		 FROM users u
+		 WHERE \(email ILIKE \$1 OR username ILIKE \$1\) AND u.id != \$2 LIMIT 20`).
+		WithArgs("johndoe", userUUID).
+		WillReturnRows(pgxmock.NewRows([]string{"id", "email", "username", "is_connected"}).
+			AddRow("u2", "john@example.com", &username, false))
 
-	req := httptest.NewRequest("GET", "/api/users/search?q=john", nil)
+	req := httptest.NewRequest("GET", "/api/users/search?q=johndoe", nil)
 	token := &auth.Token{UID: uid}
 	ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
 	req = req.WithContext(ctx)
@@ -111,7 +114,9 @@ func TestSearchUsers(t *testing.T) {
 	err = json.Unmarshal(w.Body.Bytes(), &resp)
 	assert.NoError(t, err)
 	assert.Len(t, resp, 1)
-	assert.Equal(t, "john@example.com", resp[0]["email"])
+	// Email should be masked (nil/missing) because q != email and not connected
+	assert.Nil(t, resp[0]["email"])
+	assert.Equal(t, "johndoe", resp[0]["username"])
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %s", err)

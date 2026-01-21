@@ -8,12 +8,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { auth } from "@/lib/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useDebounce } from "@/hooks/useDebounce";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, MessageSquare } from "lucide-react";
 import {
     getConnections,
     searchUsers as apiSearchUsers,
     sendConnectionRequest,
-    respondToConnectionRequest
+    respondToConnectionRequest,
+    getOrCreateDirectGroup
 } from "@/services/api";
 
 interface User {
@@ -77,9 +78,9 @@ export default function ConnectionsPage() {
         return () => { ignore = true; };
     }, [debouncedSearch]);
 
-    const sendRequest = async (receiverEmail: string) => {
+    const sendRequest = async (id: string) => {
         try {
-            await sendConnectionRequest(receiverEmail);
+            await sendConnectionRequest(id, true);
             toast.success("Request sent!");
             fetchConnections();
         } catch (error) {
@@ -98,6 +99,17 @@ export default function ConnectionsPage() {
             fetchConnections();
         } catch (error) {
             console.error("Response failed", error);
+        }
+    };
+
+    const handleMessage = async (connection: Connection) => {
+        const otherId = connection.requester_email === user?.email ? connection.receiver_id : connection.requester_id;
+        try {
+            const group = await getOrCreateDirectGroup(otherId);
+            navigate(`/groups?id=${group.id}`);
+        } catch (error) {
+            console.error("Failed to open chat", error);
+            toast.error("Failed to open chat");
         }
     };
 
@@ -148,8 +160,11 @@ export default function ConnectionsPage() {
                         const otherEmail = c.requester_email === user?.email ? c.receiver_email : c.requester_email;
                         return (
                             <Card key={c.id}>
-                                <CardContent className="p-4">
+                                <CardContent className="p-4 flex justify-between items-center">
                                     <p className="font-medium">{otherEmail}</p>
+                                    <Button size="sm" variant="outline" onClick={() => handleMessage(c)}>
+                                        <MessageSquare className="h-4 w-4 mr-2" /> Message
+                                    </Button>
                                 </CardContent>
                             </Card>
                         )
@@ -175,10 +190,10 @@ export default function ConnectionsPage() {
                             <Card key={u.id}>
                                 <CardContent className="flex justify-between items-center p-4">
                                     <div>
-                                        <p className="font-medium">{u.username || u.email}</p>
-                                        {u.username && <p className="text-sm text-muted-foreground">{u.email}</p>}
+                                        <p className="font-medium">{u.username || (u.email ? u.email : "User")}</p>
+                                        {u.username && u.email && <p className="text-sm text-muted-foreground">{u.email}</p>}
                                     </div>
-                                    <Button size="sm" onClick={() => sendRequest(u.email)}>Connect</Button>
+                                    <Button size="sm" onClick={() => sendRequest(u.id)}>Connect</Button>
                                 </CardContent>
                             </Card>
                         ))}
