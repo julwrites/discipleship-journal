@@ -59,7 +59,7 @@ test.describe('Connections (Mocked)', () => {
     });
 
     // Type in search box
-    await page.getByPlaceholder('Search by email or name...').fill('friend');
+    await page.getByPlaceholder('Search by email or username...').fill('friend');
 
     // Wait for results (auto-search)
     await expect(page.getByText('friend@example.com')).toBeVisible();

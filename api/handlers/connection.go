@@ -65,7 +65,7 @@ func (h *ConnectionHandler) SearchUsers(w http.ResponseWriter, r *http.Request) 
 	}
 
 	rows, err := h.db.Query(r.Context(),
-		"SELECT id, email, full_name, avatar_url FROM users WHERE (email ILIKE $1 OR full_name ILIKE $1) AND id != $2 LIMIT 20",
+		"SELECT id, email, username FROM users WHERE (email ILIKE $1 OR username ILIKE $1) AND id != $2 LIMIT 20",
 		"%"+query+"%", requesterUUID)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
@@ -76,8 +76,8 @@ func (h *ConnectionHandler) SearchUsers(w http.ResponseWriter, r *http.Request) 
 	users := []map[string]string{}
 	for rows.Next() {
 		var id, email string
-		var fullName, avatarURL *string
-		if err := rows.Scan(&id, &email, &fullName, &avatarURL); err != nil {
+		var username *string
+		if err := rows.Scan(&id, &email, &username); err != nil {
 			continue
 		}
 
@@ -85,15 +85,8 @@ func (h *ConnectionHandler) SearchUsers(w http.ResponseWriter, r *http.Request) 
 			"id":    id,
 			"email": email,
 		}
-		if fullName != nil {
-			user["full_name"] = *fullName
-		} else {
-			user["full_name"] = ""
-		}
-		if avatarURL != nil {
-			user["avatar_url"] = *avatarURL
-		} else {
-			user["avatar_url"] = ""
+		if username != nil && *username != "" {
+			user["username"] = *username
 		}
 		users = append(users, user)
 	}
@@ -155,7 +148,12 @@ func (h *ConnectionHandler) SendConnectionRequest(w http.ResponseWriter, r *http
 
 	// Fetch requester name synchronously to avoid race conditions in tests and ensure data availability
 	var requesterName string
-	if err := h.db.QueryRow(r.Context(), "SELECT display_name FROM users WHERE id = $1", requesterUUID).Scan(&requesterName); err != nil {
+	var requesterUsername *string
+	if err := h.db.QueryRow(r.Context(), "SELECT username FROM users WHERE id = $1", requesterUUID).Scan(&requesterUsername); err != nil {
+		requesterName = "Someone"
+	} else if requesterUsername != nil && *requesterUsername != "" {
+		requesterName = *requesterUsername
+	} else {
 		requesterName = "Someone"
 	}
 
