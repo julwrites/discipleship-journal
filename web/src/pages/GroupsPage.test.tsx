@@ -22,7 +22,8 @@ vi.mock('@/services/api', () => ({
     leaveGroup: vi.fn(),
     getGroupMembers: vi.fn(),
     getGroupShares: vi.fn(),
-    getSharedNote: vi.fn(),
+    getSharedItem: vi.fn(),
+    getConnections: vi.fn(),
     searchUsers: vi.fn(),
     addGroupMember: vi.fn(),
     removeGroupMember: vi.fn(),
@@ -99,7 +100,7 @@ describe('GroupsPage', () => {
         expect(await screen.findByText('Found Group')).toBeInTheDocument();
     });
 
-    it('debounces user search in Add Member dialog', async () => {
+    it('lists connections in Add Member dialog', async () => {
         const user = userEvent.setup();
         const mockGetGroups = vi.mocked(api.getGroups);
         mockGetGroups.mockResolvedValue([
@@ -110,9 +111,9 @@ describe('GroupsPage', () => {
         const mockGetGroupShares = vi.mocked(api.getGroupShares);
         mockGetGroupShares.mockResolvedValue([]);
 
-        const mockSearchUsers = vi.mocked(api.searchUsers);
-        mockSearchUsers.mockResolvedValue([
-            { id: 'user-1', email: 'newmember@example.com', display_name: 'New Member' }
+        const mockGetConnections = vi.mocked(api.getConnections);
+        mockGetConnections.mockResolvedValue([
+            { id: 'conn-1', requester_id: '123', receiver_id: 'user-2', status: 'accepted', receiver_email: 'friend@example.com', requester_email: 'test@example.com' }
         ]);
 
         render(
@@ -140,26 +141,11 @@ describe('GroupsPage', () => {
         const addMemberBtn = await screen.findByText(/add member/i);
         await user.click(addMemberBtn);
 
-        // Wait for dialog
-        const searchInput = await screen.findByPlaceholderText(/search by email, name, or username/i);
-
-        const { fireEvent } = await import('@testing-library/react');
-        vi.useFakeTimers();
-
-        fireEvent.change(searchInput, { target: { value: 'user' } });
-
-        expect(mockSearchUsers).not.toHaveBeenCalled();
-
-        act(() => {
-            vi.advanceTimersByTime(500);
-        });
-
-        vi.useRealTimers();
-
+        // Wait for connections to load
         await waitFor(() => {
-            expect(mockSearchUsers).toHaveBeenCalledWith('user');
+            expect(mockGetConnections).toHaveBeenCalled();
         });
 
-        expect(await screen.findByText('New Member')).toBeInTheDocument();
+        expect(await screen.findByText('friend@example.com')).toBeInTheDocument();
     });
 });
