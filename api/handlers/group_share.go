@@ -183,7 +183,7 @@ func (h *GroupShareHandler) sendNotifications(groupID, sharerID, resourceTitle, 
 	}
 
 	var sharerName string
-	if err := h.db.QueryRow(ctx, "SELECT display_name FROM users WHERE id = $1", sharerID).Scan(&sharerName); err != nil {
+	if err := h.db.QueryRow(ctx, "SELECT COALESCE(username, email) FROM users WHERE id = $1", sharerID).Scan(&sharerName); err != nil {
 		sharerName = "Someone"
 	}
 
@@ -239,7 +239,7 @@ func (h *GroupShareHandler) ListGroupShares(w http.ResponseWriter, r *http.Reque
 		SELECT gs.id, gs.group_id, gs.note_id, gs.verse_pack_id,
 		       COALESCE(n.title, vp.title) as title,
 		       vp.identifier as subtitle,
-		       u.display_name, gs.shared_at, gs.comment,
+		       COALESCE(u.username, u.email) as display_name, gs.shared_at, gs.comment,
 		       CASE WHEN gs.note_id IS NOT NULL THEN 'note' ELSE 'verse_pack' END as type
 		FROM group_shares gs
 		LEFT JOIN notes n ON gs.note_id = n.id AND n.deleted_at IS NULL
@@ -313,7 +313,7 @@ func (h *GroupShareHandler) GetSharedItemDetails(w http.ResponseWriter, r *http.
 	err = h.db.QueryRow(r.Context(),
 		`SELECT gs.id, gs.group_id, gs.note_id, gs.verse_pack_id,
 		        COALESCE(n.title, vp.title), vp.identifier, n.content,
-		        u.display_name, gs.shared_at, gs.comment,
+		        COALESCE(u.username, u.email) as display_name, gs.shared_at, gs.comment,
 		        CASE WHEN gs.note_id IS NOT NULL THEN 'note' ELSE 'verse_pack' END
 		 FROM group_shares gs
 		 LEFT JOIN notes n ON gs.note_id = n.id

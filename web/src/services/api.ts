@@ -304,17 +304,29 @@ export async function getConnections() {
     return res.json();
 }
 
-export async function sendConnectionRequest(receiverEmail: string) {
+export async function sendConnectionRequest(receiverEmailOrId: string, isId: boolean = false) {
     const headers = await getHeaders();
+    const payload = isId ? { receiver_id: receiverEmailOrId } : { receiver_email: receiverEmailOrId };
     const res = await fetch(`${API_URL}/connections/request`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ receiver_email: receiverEmail }),
+        body: JSON.stringify(payload),
     });
     if (!res.ok) {
         const err = await res.text();
         throw new Error(err || "Failed to send connection request");
     }
+    return res.json();
+}
+
+export async function getOrCreateDirectGroup(partnerId: string) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/groups/direct`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ partner_id: partnerId }),
+    });
+    if (!res.ok) throw new Error("Failed to get/create direct group");
     return res.json();
 }
 

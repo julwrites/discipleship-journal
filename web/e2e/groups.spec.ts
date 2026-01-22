@@ -90,6 +90,21 @@ test.describe('Groups (Mocked)', () => {
         });
     });
 
+    // Mock Connections for Add Member dialog
+    await page.route('**/api/connections', async (route) => {
+        await route.fulfill({
+            contentType: 'application/json',
+            body: JSON.stringify([{
+                id: 'conn-1',
+                requester_id: 'uuid-123',
+                receiver_id: 'new-user',
+                status: 'accepted',
+                requester_email: 'test@example.com',
+                receiver_email: 'new@example.com'
+            }])
+        });
+    });
+
     // Inject user
     await page.addInitScript((user) => {
         localStorage.setItem('E2E_TEST_USER', JSON.stringify(user));
@@ -125,11 +140,10 @@ test.describe('Groups (Mocked)', () => {
 
     await page.getByRole('button', { name: 'Add Member' }).click();
 
-    await page.getByPlaceholder('Search by email, name, or username').fill('newuser');
-
-    // Wait for auto-search
-    await expect(page.locator('text=New User')).toBeVisible();
-    await page.getByRole('button', { name: 'Add' }).click();
+    // Wait for dialog and connection to appear
+    await expect(page.locator('text=Add Member to Bible Study')).toBeVisible();
+    await expect(page.locator('text=new@example.com')).toBeVisible();
+    await page.getByRole('button', { name: 'Add' }).first().click();
 
     // Verify dialog closed
     await expect(page.locator('text=Add Member to Bible Study')).not.toBeVisible();

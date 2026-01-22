@@ -32,10 +32,10 @@ func TestGroupHandler_CreateGroup(t *testing.T) {
 			setupMock: func(mockDB pgxmock.PgxConnIface) {
 				mockDB.ExpectBegin()
 				mockDB.ExpectQuery("INSERT INTO groups").
-					WithArgs("Bible Study", "Weekly study", pgxmock.AnyArg()).
-					WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow("group-123"))
+					WithArgs("Bible Study", "Weekly study", pgxmock.AnyArg(), "group").
+					WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow("00000000-0000-0000-0000-000000000123"))
 				mockDB.ExpectExec("INSERT INTO group_members").
-					WithArgs("group-123", pgxmock.AnyArg()).
+					WithArgs("00000000-0000-0000-0000-000000000123", pgxmock.AnyArg()).
 					WillReturnResult(pgxmock.NewResult("INSERT", 1))
 				mockDB.ExpectCommit()
 			},
@@ -53,7 +53,7 @@ func TestGroupHandler_CreateGroup(t *testing.T) {
 			setupMock: func(mockDB pgxmock.PgxConnIface) {
 				mockDB.ExpectBegin()
 				mockDB.ExpectQuery("INSERT INTO groups").
-					WithArgs("Bible Study", "Weekly study", pgxmock.AnyArg()).
+					WithArgs("Bible Study", "Weekly study", pgxmock.AnyArg(), "group").
 					WillReturnError(pgx.ErrTxClosed) // Simulate error
 				mockDB.ExpectRollback()
 			},
@@ -67,7 +67,7 @@ func TestGroupHandler_CreateGroup(t *testing.T) {
 			if err != nil {
 				t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 			}
-			defer mockDB.Close(context.Background())
+			defer func() { _ = mockDB.Close(context.Background()) }()
 
 			mockNotif := new(MockNotificationServiceWithMock)
 			h := NewGroupHandler(mockDB, mockNotif)
@@ -102,17 +102,17 @@ func TestGroupHandler_ListMyGroups(t *testing.T) {
 		if err != nil {
 			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 		}
-		defer mockDB.Close(context.Background())
+		defer func() { _ = mockDB.Close(context.Background()) }()
 
 		mockNotif := new(MockNotificationServiceWithMock)
 		h := NewGroupHandler(mockDB, mockNotif)
 
 		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 
-		mockDB.ExpectQuery(`SELECT g.id, g.name, g.description, g.created_by, gm.role`).
+		mockDB.ExpectQuery(`SELECT g.id, g.name, g.description, g.created_by, g.type, gm.role`).
 			WithArgs(pgxmock.AnyArg()).
-			WillReturnRows(pgxmock.NewRows([]string{"id", "name", "description", "created_by", "role"}).
-				AddRow("g1", "Group 1", "Desc 1", "creator1", "admin"))
+			WillReturnRows(pgxmock.NewRows([]string{"id", "name", "description", "created_by", "type", "role"}).
+				AddRow("00000000-0000-0000-0000-000000000001", "Group 1", "Desc 1", "00000000-0000-0000-0000-000000000002", nil, "admin"))
 
 		req := httptest.NewRequest("GET", "/groups", nil)
 		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
@@ -140,17 +140,17 @@ func TestGroupHandler_SearchGroups(t *testing.T) {
 		if err != nil {
 			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 		}
-		defer mockDB.Close(context.Background())
+		defer func() { _ = mockDB.Close(context.Background()) }()
 
 		mockNotif := new(MockNotificationServiceWithMock)
 		h := NewGroupHandler(mockDB, mockNotif)
 
 		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 
-		mockDB.ExpectQuery(`SELECT g.id, g.name, g.description, g.created_by`).
+		mockDB.ExpectQuery(`SELECT g.id, g.name, g.description, g.created_by, g.type`).
 			WithArgs("%Bible%", pgxmock.AnyArg()).
-			WillReturnRows(pgxmock.NewRows([]string{"id", "name", "description", "created_by", "role"}).
-				AddRow("g1", "Bible Study", "Desc", "creator", "member"))
+			WillReturnRows(pgxmock.NewRows([]string{"id", "name", "description", "created_by", "type", "role"}).
+				AddRow("00000000-0000-0000-0000-000000000001", "Bible Study", "Desc", "00000000-0000-0000-0000-000000000002", nil, "member"))
 
 		req := httptest.NewRequest("GET", "/groups/search?q=Bible", nil)
 		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
@@ -170,7 +170,7 @@ func TestGroupHandler_SearchGroups(t *testing.T) {
 		if err != nil {
 			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 		}
-		defer mockDB.Close(context.Background())
+		defer func() { _ = mockDB.Close(context.Background()) }()
 
 		mockNotif := new(MockNotificationServiceWithMock)
 		h := NewGroupHandler(mockDB, mockNotif)
@@ -190,7 +190,7 @@ func TestGroupHandler_JoinGroup(t *testing.T) {
 		if err != nil {
 			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 		}
-		defer mockDB.Close(context.Background())
+		defer func() { _ = mockDB.Close(context.Background()) }()
 
 		mockNotif := new(MockNotificationServiceWithMock)
 		h := NewGroupHandler(mockDB, mockNotif)
@@ -198,18 +198,18 @@ func TestGroupHandler_JoinGroup(t *testing.T) {
 		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 
 		mockDB.ExpectQuery("SELECT EXISTS").
-			WithArgs("g1", pgxmock.AnyArg()).
+			WithArgs("00000000-0000-0000-0000-000000000001", pgxmock.AnyArg()).
 			WillReturnRows(pgxmock.NewRows([]string{"exists"}).AddRow(false))
 
 		mockDB.ExpectExec("INSERT INTO group_members").
-			WithArgs("g1", pgxmock.AnyArg()).
+			WithArgs("00000000-0000-0000-0000-000000000001", pgxmock.AnyArg()).
 			WillReturnResult(pgxmock.NewResult("INSERT", 1))
 
-		req := httptest.NewRequest("POST", "/groups/g1/join", nil)
+		req := httptest.NewRequest("POST", "/groups/00000000-0000-0000-0000-000000000001/join", nil)
 
 		// Setup chi context
 		rctx := chi.NewRouteContext()
-		rctx.URLParams.Add("id", "g1")
+		rctx.URLParams.Add("id", "00000000-0000-0000-0000-000000000001")
 		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
 
 		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
@@ -230,7 +230,7 @@ func TestGroupHandler_JoinGroup(t *testing.T) {
 		if err != nil {
 			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 		}
-		defer mockDB.Close(context.Background())
+		defer func() { _ = mockDB.Close(context.Background()) }()
 
 		mockNotif := new(MockNotificationServiceWithMock)
 		h := NewGroupHandler(mockDB, mockNotif)
@@ -238,13 +238,13 @@ func TestGroupHandler_JoinGroup(t *testing.T) {
 		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 
 		mockDB.ExpectQuery("SELECT EXISTS").
-			WithArgs("g1", pgxmock.AnyArg()).
+			WithArgs("00000000-0000-0000-0000-000000000001", pgxmock.AnyArg()).
 			WillReturnRows(pgxmock.NewRows([]string{"exists"}).AddRow(true))
 
-		req := httptest.NewRequest("POST", "/groups/g1/join", nil)
+		req := httptest.NewRequest("POST", "/groups/00000000-0000-0000-0000-000000000001/join", nil)
 
 		rctx := chi.NewRouteContext()
-		rctx.URLParams.Add("id", "g1")
+		rctx.URLParams.Add("id", "00000000-0000-0000-0000-000000000001")
 		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
 
 		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
@@ -266,7 +266,7 @@ func TestGroupHandler_LeaveGroup(t *testing.T) {
 		if err != nil {
 			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 		}
-		defer mockDB.Close(context.Background())
+		defer func() { _ = mockDB.Close(context.Background()) }()
 
 		mockNotif := new(MockNotificationServiceWithMock)
 		h := NewGroupHandler(mockDB, mockNotif)
@@ -274,14 +274,14 @@ func TestGroupHandler_LeaveGroup(t *testing.T) {
 		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 
 		mockDB.ExpectExec("DELETE FROM group_members").
-			WithArgs("g1", pgxmock.AnyArg()).
+			WithArgs("00000000-0000-0000-0000-000000000001", pgxmock.AnyArg()).
 			WillReturnResult(pgxmock.NewResult("DELETE", 1))
 
-		req := httptest.NewRequest("POST", "/groups/g1/leave", nil)
+		req := httptest.NewRequest("POST", "/groups/00000000-0000-0000-0000-000000000001/leave", nil)
 
 		// Setup chi context
 		rctx := chi.NewRouteContext()
-		rctx.URLParams.Add("id", "g1")
+		rctx.URLParams.Add("id", "00000000-0000-0000-0000-000000000001")
 		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
 
 		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
@@ -302,7 +302,7 @@ func TestGroupHandler_LeaveGroup(t *testing.T) {
 		if err != nil {
 			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 		}
-		defer mockDB.Close(context.Background())
+		defer func() { _ = mockDB.Close(context.Background()) }()
 
 		mockNotif := new(MockNotificationServiceWithMock)
 		h := NewGroupHandler(mockDB, mockNotif)
@@ -310,13 +310,13 @@ func TestGroupHandler_LeaveGroup(t *testing.T) {
 		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 
 		mockDB.ExpectExec("DELETE FROM group_members").
-			WithArgs("g1", pgxmock.AnyArg()).
+			WithArgs("00000000-0000-0000-0000-000000000001", pgxmock.AnyArg()).
 			WillReturnResult(pgxmock.NewResult("DELETE", 0))
 
-		req := httptest.NewRequest("POST", "/groups/g1/leave", nil)
+		req := httptest.NewRequest("POST", "/groups/00000000-0000-0000-0000-000000000001/leave", nil)
 
 		rctx := chi.NewRouteContext()
-		rctx.URLParams.Add("id", "g1")
+		rctx.URLParams.Add("id", "00000000-0000-0000-0000-000000000001")
 		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
 
 		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
@@ -338,7 +338,7 @@ func TestGroupHandler_GetGroupMembers(t *testing.T) {
 		if err != nil {
 			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 		}
-		defer mockDB.Close(context.Background())
+		defer func() { _ = mockDB.Close(context.Background()) }()
 
 		mockNotif := new(MockNotificationServiceWithMock)
 		h := NewGroupHandler(mockDB, mockNotif)
@@ -346,18 +346,18 @@ func TestGroupHandler_GetGroupMembers(t *testing.T) {
 		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 
 		mockDB.ExpectQuery("SELECT EXISTS").
-			WithArgs("g1", pgxmock.AnyArg()).
+			WithArgs("00000000-0000-0000-0000-000000000001", pgxmock.AnyArg()).
 			WillReturnRows(pgxmock.NewRows([]string{"exists"}).AddRow(true))
 
 		mockDB.ExpectQuery("SELECT gm.user_id").
-			WithArgs("g1").
+			WithArgs("00000000-0000-0000-0000-000000000001").
 			WillReturnRows(pgxmock.NewRows([]string{"user_id", "display_name", "email", "role", "joined_at"}).
-				AddRow("u1", "User 1", "u1@example.com", "admin", time.Now()))
+				AddRow("00000000-0000-0000-0000-000000000002", "User 1", "u1@example.com", "admin", time.Now()))
 
-		req := httptest.NewRequest("GET", "/groups/g1/members", nil)
+		req := httptest.NewRequest("GET", "/groups/00000000-0000-0000-0000-000000000001/members", nil)
 
 		rctx := chi.NewRouteContext()
-		rctx.URLParams.Add("id", "g1")
+		rctx.URLParams.Add("id", "00000000-0000-0000-0000-000000000001")
 		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
 
 		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
@@ -379,7 +379,7 @@ func TestGroupHandler_AddGroupMember(t *testing.T) {
 		if err != nil {
 			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 		}
-		defer mockDB.Close(context.Background())
+		defer func() { _ = mockDB.Close(context.Background()) }()
 
 		mockNotif := new(MockNotificationServiceWithMock)
 		h := NewGroupHandler(mockDB, mockNotif)
@@ -388,27 +388,32 @@ func TestGroupHandler_AddGroupMember(t *testing.T) {
 
 		// 1. Verify admin
 		mockDB.ExpectQuery("SELECT role FROM group_members").
-			WithArgs("g1", pgxmock.AnyArg()).
+			WithArgs("00000000-0000-0000-0000-000000000001", pgxmock.AnyArg()).
 			WillReturnRows(pgxmock.NewRows([]string{"role"}).AddRow("admin"))
 
-		// 2. Insert member
+		// 2. Verify Connection
+		mockDB.ExpectQuery("SELECT EXISTS").
+			WithArgs(testUUID, "00000000-0000-0000-0000-000000000002").
+			WillReturnRows(pgxmock.NewRows([]string{"exists"}).AddRow(true))
+
+		// 3. Insert member
 		mockDB.ExpectExec("INSERT INTO group_members").
-			WithArgs("g1", "target-user").
+			WithArgs("00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000002").
 			WillReturnResult(pgxmock.NewResult("INSERT", 1))
 
 		// 3. Get group name
 		mockDB.ExpectQuery("SELECT name FROM groups").
-			WithArgs("g1").
+			WithArgs("00000000-0000-0000-0000-000000000001").
 			WillReturnRows(pgxmock.NewRows([]string{"name"}).AddRow("Test Group"))
 
 		// 4. Notification
-		mockNotif.On("SendNotification", mock.Anything, "target-user", "Group Invitation", mock.Anything, mock.Anything).Return(nil).Maybe()
+		mockNotif.On("SendNotification", mock.Anything, "00000000-0000-0000-0000-000000000002", "Group Invitation", mock.Anything, mock.Anything).Return(nil).Maybe()
 
-		reqBody := `{"user_id": "target-user"}`
-		req := httptest.NewRequest("POST", "/groups/g1/members", strings.NewReader(reqBody))
+		reqBody := `{"user_id": "00000000-0000-0000-0000-000000000002"}`
+		req := httptest.NewRequest("POST", "/groups/00000000-0000-0000-0000-000000000001/members", strings.NewReader(reqBody))
 
 		rctx := chi.NewRouteContext()
-		rctx.URLParams.Add("id", "g1")
+		rctx.URLParams.Add("id", "00000000-0000-0000-0000-000000000001")
 		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
 
 		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
@@ -432,7 +437,7 @@ func TestGroupHandler_AddGroupMember(t *testing.T) {
 		if err != nil {
 			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 		}
-		defer mockDB.Close(context.Background())
+		defer func() { _ = mockDB.Close(context.Background()) }()
 
 		mockNotif := new(MockNotificationServiceWithMock)
 		h := NewGroupHandler(mockDB, mockNotif)
@@ -440,14 +445,14 @@ func TestGroupHandler_AddGroupMember(t *testing.T) {
 		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 
 		mockDB.ExpectQuery("SELECT role FROM group_members").
-			WithArgs("g1", pgxmock.AnyArg()).
+			WithArgs("00000000-0000-0000-0000-000000000001", pgxmock.AnyArg()).
 			WillReturnRows(pgxmock.NewRows([]string{"role"}).AddRow("member"))
 
-		reqBody := `{"user_id": "target-user"}`
-		req := httptest.NewRequest("POST", "/groups/g1/members", strings.NewReader(reqBody))
+		reqBody := `{"user_id": "00000000-0000-0000-0000-000000000002"}`
+		req := httptest.NewRequest("POST", "/groups/00000000-0000-0000-0000-000000000001/members", strings.NewReader(reqBody))
 
 		rctx := chi.NewRouteContext()
-		rctx.URLParams.Add("id", "g1")
+		rctx.URLParams.Add("id", "00000000-0000-0000-0000-000000000001")
 		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
 
 		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
@@ -469,7 +474,7 @@ func TestGroupHandler_RemoveGroupMember(t *testing.T) {
 		if err != nil {
 			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 		}
-		defer mockDB.Close(context.Background())
+		defer func() { _ = mockDB.Close(context.Background()) }()
 
 		mockNotif := new(MockNotificationServiceWithMock)
 		h := NewGroupHandler(mockDB, mockNotif)
@@ -477,18 +482,18 @@ func TestGroupHandler_RemoveGroupMember(t *testing.T) {
 		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 
 		mockDB.ExpectQuery("SELECT role FROM group_members").
-			WithArgs("g1", pgxmock.AnyArg()).
+			WithArgs("00000000-0000-0000-0000-000000000001", pgxmock.AnyArg()).
 			WillReturnRows(pgxmock.NewRows([]string{"role"}).AddRow("admin"))
 
 		mockDB.ExpectExec("DELETE FROM group_members").
-			WithArgs("g1", "target-user").
+			WithArgs("00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000002").
 			WillReturnResult(pgxmock.NewResult("DELETE", 1))
 
-		req := httptest.NewRequest("DELETE", "/groups/g1/members/target-user", nil)
+		req := httptest.NewRequest("DELETE", "/groups/00000000-0000-0000-0000-000000000001/members/00000000-0000-0000-0000-000000000002", nil)
 
 		rctx := chi.NewRouteContext()
-		rctx.URLParams.Add("id", "g1")
-		rctx.URLParams.Add("userId", "target-user")
+		rctx.URLParams.Add("id", "00000000-0000-0000-0000-000000000001")
+		rctx.URLParams.Add("userId", "00000000-0000-0000-0000-000000000002")
 		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
 
 		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)

@@ -18,12 +18,12 @@ import {
     getGroupMembers,
     getGroupShares,
     getSharedItem,
-    searchUsers as apiSearchUsers,
+    getConnections,
     addGroupMember,
     removeGroupMember,
     clonePack
 } from "@/services/api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Label } from "@/components/ui/label";
 
 interface Group {
@@ -52,16 +52,21 @@ interface SharedItem {
     comment: string;
 }
 
-interface UserSearchResult {
+interface Connection {
     id: string;
-    email: string;
-    display_name: string;
-    username?: string;
+    requester_id: string;
+    receiver_id: string;
+    status: string;
+    requester_email?: string;
+    receiver_email?: string;
 }
 
 export default function GroupsPage() {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const initialGroupId = searchParams.get("id");
+
     const [myGroups, setMyGroups] = useState<Group[]>([]);
 
     const [searchResults, setSearchResults] = useState<Group[]>([]);
@@ -74,10 +79,7 @@ export default function GroupsPage() {
     const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
     const [groupShares, setGroupShares] = useState<SharedItem[]>([]);
 
-    const [userSearchQuery, setUserSearchQuery] = useState("");
-    const debouncedUserSearchQuery = useDebounce(userSearchQuery, 500);
-    const [userSearchResults, setUserSearchResults] = useState<UserSearchResult[]>([]);
-
+    const [myConnections, setMyConnections] = useState<Connection[]>([]);
     const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
     const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
 
@@ -104,6 +106,20 @@ export default function GroupsPage() {
         load();
     }, [fetchMyGroups]);
 
+    // Auto-expand group from URL
+    useEffect(() => {
+        if (initialGroupId && myGroups.length > 0 && !expandedGroupId) {
+            // Verify group exists in myGroups
+            const exists = myGroups.find(g => g.id === initialGroupId);
+            if (exists) {
+                toggleGroupDetails(initialGroupId);
+                // Clean URL
+                navigate("/groups", { replace: true });
+            }
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [initialGroupId, myGroups]); // Run once when groups load
+
     // Find Groups Search
     useEffect(() => {
         let ignore = false;
@@ -123,24 +139,14 @@ export default function GroupsPage() {
         return () => { ignore = true; };
     }, [debouncedSearchQuery]);
 
-    // Add Member User Search
-    useEffect(() => {
-        let ignore = false;
-        const run = async () => {
-            if (debouncedUserSearchQuery.length < 3) {
-                setUserSearchResults([]);
-                return;
-            }
-            try {
-                const data = await apiSearchUsers(debouncedUserSearchQuery);
-                if (!ignore) setUserSearchResults(data || []);
-            } catch (error) {
-                if (!ignore) console.error("User search failed", error);
-            }
-        };
-        run();
-        return () => { ignore = true; };
-    }, [debouncedUserSearchQuery]);
+    const loadConnections = async () => {
+        try {
+            const data = await getConnections();
+            setMyConnections(data || []);
+        } catch (error) {
+            console.error("Failed to load connections", error);
+        }
+    };
 
 
     const handleCreate = async () => {
@@ -225,11 +231,10 @@ export default function GroupsPage() {
         try {
             await addGroupMember(activeGroupId, userId);
             setIsAddMemberOpen(false);
-            setUserSearchQuery("");
-            setUserSearchResults([]);
             toggleGroupDetails(activeGroupId); // Refresh members
         } catch (error) {
             console.error("Failed to add member", error);
+            toast.error("Failed to add member. Are you connected?");
         }
     };
 
@@ -399,7 +404,10 @@ export default function GroupsPage() {
                                                 <div className="flex justify-between items-center border-b pb-2">
                                                     <h3 className="font-semibold">Members</h3>
                                                     {g.role === 'admin' && (
-                                                        <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
+                                                        <Dialog open={isAddMemberOpen} onOpenChange={(o) => {
+                                                            setIsAddMemberOpen(o);
+                                                            if (o) loadConnections();
+                                                        }}>
                                                             <DialogTrigger asChild>
                                                                 <Button size="sm" variant="outline" onClick={() => setActiveGroupId(g.id)}>
                                                                     <UserPlus size={16} className="mr-2" /> Add Member
@@ -408,26 +416,34 @@ export default function GroupsPage() {
                                                             <DialogContent>
                                                                 <DialogHeader>
                                                                     <DialogTitle>Add Member to {g.name}</DialogTitle>
-                                                                    <DialogDescription>Search for users to add to the group.</DialogDescription>
+                                                                    <DialogDescription>Add from your connections.</DialogDescription>
                                                                 </DialogHeader>
                                                                 <div className="space-y-4">
-                                                                    <div className="flex gap-2">
-                                                                        <Input
-                                                                            placeholder="Search by email, name, or username"
-                                                                            value={userSearchQuery}
-                                                                            onChange={(e) => setUserSearchQuery(e.target.value)}
-                                                                        />
-                                                                    </div>
                                                                     <div className="space-y-2 max-h-60 overflow-y-auto">
-                                                                        {userSearchResults.map(u => (
-                                                                            <div key={u.id} className="flex justify-between items-center p-2 border rounded">
-                                                                                <div>
-                                                                                    <p className="font-medium">{u.display_name}</p>
-                                                                                    <p className="text-xs text-muted-foreground">@{u.username || 'unknown'} • {u.email}</p>
+                                                                        {myConnections.filter(c => c.status === 'accepted').length === 0 && (
+                                                                            <p className="text-muted-foreground text-sm">No connections found. Go to Connections page to add friends.</p>
+                                                                        )}
+                                                                        {myConnections.filter(c => c.status === 'accepted').map(c => {
+                                                                            const isRequester = c.requester_email === user?.email;
+                                                                            const otherEmail = isRequester ? c.receiver_email : c.requester_email;
+                                                                            const otherId = isRequester ? c.receiver_id : c.requester_id;
+
+                                                                            // Check if already in group
+                                                                            const isMember = groupMembers.some(m => m.user_id === otherId);
+
+                                                                            return (
+                                                                                <div key={c.id} className="flex justify-between items-center p-2 border rounded">
+                                                                                    <div>
+                                                                                        <p className="font-medium">{otherEmail}</p>
+                                                                                    </div>
+                                                                                    {isMember ? (
+                                                                                        <Button size="sm" variant="secondary" disabled>Added</Button>
+                                                                                    ) : (
+                                                                                        <Button size="sm" onClick={() => addMember(otherId)}>Add</Button>
+                                                                                    )}
                                                                                 </div>
-                                                                                <Button size="sm" onClick={() => addMember(u.id)}>Add</Button>
-                                                                            </div>
-                                                                        ))}
+                                                                            );
+                                                                        })}
                                                                     </div>
                                                                 </div>
                                                             </DialogContent>

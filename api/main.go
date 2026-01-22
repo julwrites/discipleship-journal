@@ -90,7 +90,7 @@ func main() {
 		// Continue anyway - secret loader will fall back to env vars
 	}
 	if secretLoader != nil {
-		defer secretLoader.Close()
+		defer func() { _ = secretLoader.Close() }()
 	}
 
 	// Load configuration from Secret Manager or environment variables
@@ -112,7 +112,7 @@ func main() {
 	for _, secret := range dbSecrets {
 		value := loadSecret(secret)
 		if value != "" {
-			os.Setenv(secret, value)
+			_ = os.Setenv(secret, value)
 			// Mask password in logs
 			if secret == "DB_PASSWORD" {
 				logger.Info("Loaded secret", "secret", secret, "value", "***")
@@ -125,7 +125,7 @@ func main() {
 	// Load CORS allowed origins from Secret Manager
 	corsOrigins := loadSecret("CORS_ALLOWED_ORIGINS")
 	if corsOrigins != "" {
-		os.Setenv("CORS_ALLOWED_ORIGINS", corsOrigins)
+		_ = os.Setenv("CORS_ALLOWED_ORIGINS", corsOrigins)
 		logger.Info("Loaded CORS allowed origins", "value", corsOrigins)
 	}
 
