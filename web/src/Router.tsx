@@ -1,5 +1,4 @@
-import { createBrowserRouter, Navigate, Outlet } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import LoginPage from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import NoteEditor from "@/pages/NoteEditor";
@@ -15,20 +14,7 @@ import Settings from "@/pages/Settings";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
 import PublicLayout from "@/components/PublicLayout";
-
-function AuthGuard() {
-  const { user, loading } = useAuth();
-  if (loading) return <div className="flex h-screen items-center justify-center">Loading...</div>;
-  if (!user) return <Navigate to="/login" replace />;
-  return <Outlet />;
-}
-
-function GuestGuard() {
-  const { user, loading } = useAuth();
-  if (loading) return <div className="flex h-screen items-center justify-center">Loading...</div>;
-  if (user) return <Navigate to="/" replace />;
-  return <Outlet />;
-}
+import { AuthGuard, GuestGuard } from "@/components/AuthGuards";
 
 export const router = createBrowserRouter([
   {
