@@ -67,7 +67,7 @@ func TestGroupHandler_CreateGroup(t *testing.T) {
 			if err != nil {
 				t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 			}
-			defer mockDB.Close(context.Background())
+			defer func() { _ = mockDB.Close(context.Background()) }()
 
 			mockNotif := new(MockNotificationServiceWithMock)
 			h := NewGroupHandler(mockDB, mockNotif)
@@ -102,7 +102,7 @@ func TestGroupHandler_ListMyGroups(t *testing.T) {
 		if err != nil {
 			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 		}
-		defer mockDB.Close(context.Background())
+		defer func() { _ = mockDB.Close(context.Background()) }()
 
 		mockNotif := new(MockNotificationServiceWithMock)
 		h := NewGroupHandler(mockDB, mockNotif)
@@ -140,7 +140,7 @@ func TestGroupHandler_SearchGroups(t *testing.T) {
 		if err != nil {
 			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 		}
-		defer mockDB.Close(context.Background())
+		defer func() { _ = mockDB.Close(context.Background()) }()
 
 		mockNotif := new(MockNotificationServiceWithMock)
 		h := NewGroupHandler(mockDB, mockNotif)
@@ -170,7 +170,7 @@ func TestGroupHandler_SearchGroups(t *testing.T) {
 		if err != nil {
 			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 		}
-		defer mockDB.Close(context.Background())
+		defer func() { _ = mockDB.Close(context.Background()) }()
 
 		mockNotif := new(MockNotificationServiceWithMock)
 		h := NewGroupHandler(mockDB, mockNotif)
@@ -190,7 +190,7 @@ func TestGroupHandler_JoinGroup(t *testing.T) {
 		if err != nil {
 			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 		}
-		defer mockDB.Close(context.Background())
+		defer func() { _ = mockDB.Close(context.Background()) }()
 
 		mockNotif := new(MockNotificationServiceWithMock)
 		h := NewGroupHandler(mockDB, mockNotif)
@@ -230,7 +230,7 @@ func TestGroupHandler_JoinGroup(t *testing.T) {
 		if err != nil {
 			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 		}
-		defer mockDB.Close(context.Background())
+		defer func() { _ = mockDB.Close(context.Background()) }()
 
 		mockNotif := new(MockNotificationServiceWithMock)
 		h := NewGroupHandler(mockDB, mockNotif)
@@ -266,7 +266,7 @@ func TestGroupHandler_LeaveGroup(t *testing.T) {
 		if err != nil {
 			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 		}
-		defer mockDB.Close(context.Background())
+		defer func() { _ = mockDB.Close(context.Background()) }()
 
 		mockNotif := new(MockNotificationServiceWithMock)
 		h := NewGroupHandler(mockDB, mockNotif)
@@ -302,7 +302,7 @@ func TestGroupHandler_LeaveGroup(t *testing.T) {
 		if err != nil {
 			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 		}
-		defer mockDB.Close(context.Background())
+		defer func() { _ = mockDB.Close(context.Background()) }()
 
 		mockNotif := new(MockNotificationServiceWithMock)
 		h := NewGroupHandler(mockDB, mockNotif)
@@ -338,7 +338,7 @@ func TestGroupHandler_GetGroupMembers(t *testing.T) {
 		if err != nil {
 			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 		}
-		defer mockDB.Close(context.Background())
+		defer func() { _ = mockDB.Close(context.Background()) }()
 
 		mockNotif := new(MockNotificationServiceWithMock)
 		h := NewGroupHandler(mockDB, mockNotif)
@@ -379,7 +379,7 @@ func TestGroupHandler_AddGroupMember(t *testing.T) {
 		if err != nil {
 			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 		}
-		defer mockDB.Close(context.Background())
+		defer func() { _ = mockDB.Close(context.Background()) }()
 
 		mockNotif := new(MockNotificationServiceWithMock)
 		h := NewGroupHandler(mockDB, mockNotif)
@@ -437,7 +437,7 @@ func TestGroupHandler_AddGroupMember(t *testing.T) {
 		if err != nil {
 			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 		}
-		defer mockDB.Close(context.Background())
+		defer func() { _ = mockDB.Close(context.Background()) }()
 
 		mockNotif := new(MockNotificationServiceWithMock)
 		h := NewGroupHandler(mockDB, mockNotif)
@@ -474,7 +474,7 @@ func TestGroupHandler_RemoveGroupMember(t *testing.T) {
 		if err != nil {
 			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 		}
-		defer mockDB.Close(context.Background())
+		defer func() { _ = mockDB.Close(context.Background()) }()
 
 		mockNotif := new(MockNotificationServiceWithMock)
 		h := NewGroupHandler(mockDB, mockNotif)

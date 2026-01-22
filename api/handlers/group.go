@@ -512,7 +512,9 @@ func (h *GroupHandler) GetOrCreateDirectGroup(w http.ResponseWriter, r *http.Req
 	if err == nil {
 		// Found
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"id": groupID})
+		if err := json.NewEncoder(w).Encode(map[string]string{"id": groupID}); err != nil {
+			slog.Error("Failed to encode response", "error", err)
+		}
 		return
 	}
 
@@ -534,6 +536,10 @@ func (h *GroupHandler) GetOrCreateDirectGroup(w http.ResponseWriter, r *http.Req
 	// Fetch my name
 	var myName string
 	err = h.db.QueryRow(r.Context(), "SELECT COALESCE(username, email) FROM users WHERE id=$1", userUUID).Scan(&myName)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusInternalServerError)
+		return
+	}
 
 	groupName := "Direct: " + myName + " & " + partnerName
 
@@ -542,7 +548,7 @@ func (h *GroupHandler) GetOrCreateDirectGroup(w http.ResponseWriter, r *http.Req
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
-	defer tx.Rollback(r.Context())
+	defer func() { _ = tx.Rollback(r.Context()) }()
 
 	if err := tx.QueryRow(r.Context(),
 		"INSERT INTO groups (name, type, created_by) VALUES ($1, 'direct', $2) RETURNING id",
@@ -568,7 +574,9 @@ func (h *GroupHandler) GetOrCreateDirectGroup(w http.ResponseWriter, r *http.Req
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{"id": groupID})
+	if err := json.NewEncoder(w).Encode(map[string]string{"id": groupID}); err != nil {
+		slog.Error("Failed to encode response", "error", err)
+	}
 }
 
 // RemoveGroupMember removes a user from a group (Admin only)

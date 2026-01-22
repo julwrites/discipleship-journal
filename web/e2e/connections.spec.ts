@@ -54,7 +54,7 @@ test.describe('Connections (Mocked)', () => {
     // Mock Send Request API
     await page.route('**/api/connections/request', async route => {
         const body = route.request().postDataJSON();
-        expect(body.receiver_email).toBe('friend@example.com');
+        expect(body.receiver_id).toBe('uuid-friend');
         await route.fulfill({ status: 201, json: { success: true } });
     });
 

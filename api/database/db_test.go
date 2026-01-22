@@ -18,12 +18,12 @@ func TestBuildConnectionString(t *testing.T) {
 
 	// Restore env vars after test
 	defer func() {
-		os.Setenv("DB_USERNAME", originalUsername)
-		os.Setenv("DB_PASSWORD", originalPassword)
-		os.Setenv("DB_NAME", originalDBName)
-		os.Setenv("DB_HOST", originalHost)
-		os.Setenv("DB_PORT", originalPort)
-		os.Setenv("CLOUD_SQL_INSTANCE", originalCloudInstance)
+		_ = os.Setenv("DB_USERNAME", originalUsername)
+		_ = os.Setenv("DB_PASSWORD", originalPassword)
+		_ = os.Setenv("DB_NAME", originalDBName)
+		_ = os.Setenv("DB_HOST", originalHost)
+		_ = os.Setenv("DB_PORT", originalPort)
+		_ = os.Setenv("CLOUD_SQL_INSTANCE", originalCloudInstance)
 	}()
 
 	tests := []struct {
@@ -84,16 +84,16 @@ func TestBuildConnectionString(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			os.Setenv("DB_USERNAME", tt.username)
-			os.Setenv("DB_PASSWORD", tt.password)
-			os.Setenv("DB_NAME", tt.dbName)
-			os.Setenv("CLOUD_SQL_INSTANCE", tt.cloudInstance)
+			_ = os.Setenv("DB_USERNAME", tt.username)
+			_ = os.Setenv("DB_PASSWORD", tt.password)
+			_ = os.Setenv("DB_NAME", tt.dbName)
+			_ = os.Setenv("CLOUD_SQL_INSTANCE", tt.cloudInstance)
 			if tt.cloudInstance == "" {
-				os.Setenv("DB_HOST", tt.host)
-				os.Setenv("DB_PORT", tt.port)
+				_ = os.Setenv("DB_HOST", tt.host)
+				_ = os.Setenv("DB_PORT", tt.port)
 			} else {
-				os.Unsetenv("DB_HOST")
-				os.Unsetenv("DB_PORT")
+				_ = os.Unsetenv("DB_HOST")
+				_ = os.Unsetenv("DB_PORT")
 			}
 
 			got, err := BuildConnectionString()

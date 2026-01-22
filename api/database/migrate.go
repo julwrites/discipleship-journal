@@ -38,7 +38,7 @@ func RunMigrations() error {
 		if err != nil {
 			return fmt.Errorf("failed to initialize Cloud SQL dialer for migrations: %w", err)
 		}
-		defer d.Close()
+		defer func() { _ = d.Close() }()
 
 		config.DialFunc = func(ctx context.Context, network, addr string) (net.Conn, error) {
 			return d.Dial(ctx, cloudSQLInstance)
@@ -47,7 +47,7 @@ func RunMigrations() error {
 
 	// 4. Open database connection using pgx stdlib
 	db := stdlib.OpenDB(*config)
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	// 5. Verify connection before starting migrate
 	if err := db.Ping(); err != nil {

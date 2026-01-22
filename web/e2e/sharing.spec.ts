@@ -69,7 +69,7 @@ test.describe('Note Sharing (Mocked)', () => {
     await page.getByRole('button', { name: 'Share' }).click();
 
     // Verify Dialog Open
-    await expect(page.getByRole('heading', { name: 'Share to Group' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Share Note' })).toBeVisible();
 
     // Select Group
     await page.locator('select').selectOption('g1');
