@@ -11,8 +11,8 @@ import (
 func TestNewSecretLoader_NoProjectID(t *testing.T) {
 	// Clear GOOGLE_CLOUD_PROJECT env var for this test
 	originalProjectID := os.Getenv("GOOGLE_CLOUD_PROJECT")
-	os.Unsetenv("GOOGLE_CLOUD_PROJECT")
-	defer os.Setenv("GOOGLE_CLOUD_PROJECT", originalProjectID)
+	_ = os.Unsetenv("GOOGLE_CLOUD_PROJECT")
+	defer func() { _ = os.Setenv("GOOGLE_CLOUD_PROJECT", originalProjectID) }()
 
 	loader, err := NewSecretLoader(context.Background(), "")
 	assert.NoError(t, err)
@@ -32,7 +32,7 @@ func TestNewSecretLoader_WithProjectID(t *testing.T) {
 	// Both are valid outcomes
 	if loader.client != nil {
 		// If client was created, close it
-		loader.Close()
+		_ = loader.Close()
 	}
 }
 
@@ -40,8 +40,8 @@ func TestSecretLoader_LoadSecret_EnvVarFallback(t *testing.T) {
 	// Set up test environment variable
 	secretName := "TEST_SECRET"
 	expectedValue := "test-secret-value"
-	os.Setenv("TEST_SECRET", expectedValue)
-	defer os.Unsetenv("TEST_SECRET")
+	_ = os.Setenv("TEST_SECRET", expectedValue)
+	defer func() { _ = os.Unsetenv("TEST_SECRET") }()
 
 	// Create loader without client (simulating local dev)
 	loader := &SecretLoader{
@@ -56,7 +56,7 @@ func TestSecretLoader_LoadSecret_EnvVarFallback(t *testing.T) {
 
 func TestSecretLoader_LoadSecret_EnvVarNotFound(t *testing.T) {
 	// Make sure env var is not set
-	os.Unsetenv("NONEXISTENT_SECRET")
+	_ = os.Unsetenv("NONEXISTENT_SECRET")
 
 	loader := &SecretLoader{
 		projectID: "",
@@ -79,8 +79,8 @@ func TestSecretLoader_LoadSecret_WithClientButNoProjectID(t *testing.T) {
 	}
 
 	// Since client is nil, it will fall back to env var
-	os.Setenv("TEST_SECRET", "env-value")
-	defer os.Unsetenv("TEST_SECRET")
+	_ = os.Setenv("TEST_SECRET", "env-value")
+	defer func() { _ = os.Unsetenv("TEST_SECRET") }()
 
 	value, err := loader.LoadSecret(context.Background(), "TEST_SECRET")
 	assert.NoError(t, err)
@@ -91,7 +91,7 @@ func TestSecretLoader_MustLoadSecret_PanicsOnFailure(t *testing.T) {
 	secretName := "NONEXISTENT_SECRET"
 
 	// Make sure env var is not set
-	os.Unsetenv("NONEXISTENT_SECRET")
+	_ = os.Unsetenv("NONEXISTENT_SECRET")
 
 	loader := &SecretLoader{
 		projectID: "",
@@ -108,8 +108,8 @@ func TestSecretLoader_MustLoadSecret_ReturnsValueOnSuccess(t *testing.T) {
 	expectedValue := "test-value"
 
 	// Set up environment variable
-	os.Setenv("TEST_SECRET", expectedValue)
-	defer os.Unsetenv("TEST_SECRET")
+	_ = os.Setenv("TEST_SECRET", expectedValue)
+	defer func() { _ = os.Unsetenv("TEST_SECRET") }()
 
 	loader := &SecretLoader{
 		projectID: "",

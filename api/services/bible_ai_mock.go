@@ -51,6 +51,13 @@ func (m *MockBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 	}, nil
 }
 
+func (m *MockBibleAIClient) GetSystemPrompt(key string) string {
+	if key == "system" {
+		return "Mock System Prompt"
+	}
+	return ""
+}
+
 func (m *MockBibleAIClient) GetVersions(ctx context.Context, params map[string]string) (map[string]interface{}, error) {
 	if m.ShouldError {
 		return nil, fmt.Errorf("mock error")

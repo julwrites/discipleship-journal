@@ -30,7 +30,7 @@ func TestNotificationService_RegisterDevice(t *testing.T) {
 		if err != nil {
 			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 		}
-		defer mockDB.Close(context.Background())
+		defer func() { _ = mockDB.Close(context.Background()) }()
 
 		mockMsgClient := new(MockMessagingClient)
 		service := NewNotificationService(mockDB, mockMsgClient)
@@ -49,7 +49,7 @@ func TestNotificationService_RegisterDevice(t *testing.T) {
 		if err != nil {
 			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 		}
-		defer mockDB.Close(context.Background())
+		defer func() { _ = mockDB.Close(context.Background()) }()
 
 		mockMsgClient := new(MockMessagingClient)
 		service := NewNotificationService(mockDB, mockMsgClient)
@@ -70,7 +70,7 @@ func TestNotificationService_SendNotification(t *testing.T) {
 		if err != nil {
 			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 		}
-		defer mockDB.Close(context.Background())
+		defer func() { _ = mockDB.Close(context.Background()) }()
 
 		mockMsgClient := new(MockMessagingClient)
 		service := NewNotificationService(mockDB, mockMsgClient)
@@ -96,7 +96,7 @@ func TestNotificationService_SendNotification(t *testing.T) {
 		if err != nil {
 			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 		}
-		defer mockDB.Close(context.Background())
+		defer func() { _ = mockDB.Close(context.Background()) }()
 
 		mockMsgClient := new(MockMessagingClient)
 		service := NewNotificationService(mockDB, mockMsgClient)
@@ -117,7 +117,7 @@ func TestNotificationService_SendNotification(t *testing.T) {
 		if err != nil {
 			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 		}
-		defer mockDB.Close(context.Background())
+		defer func() { _ = mockDB.Close(context.Background()) }()
 
 		mockMsgClient := new(MockMessagingClient)
 		service := NewNotificationService(mockDB, mockMsgClient)

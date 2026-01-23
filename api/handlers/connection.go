@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/services"
@@ -14,7 +15,8 @@ import (
 )
 
 type ConnectionRequest struct {
-	ReceiverEmail string `json:"receiver_email" validate:"required,email"`
+	ReceiverEmail string `json:"receiver_email" validate:"omitempty,email"`
+	ReceiverID    string `json:"receiver_id" validate:"omitempty,uuid"`
 }
 
 type ConnectionResponse struct {
@@ -64,36 +66,39 @@ func (h *ConnectionHandler) SearchUsers(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// Strict match on email or username
 	rows, err := h.db.Query(r.Context(),
-		"SELECT id, email, full_name, avatar_url FROM users WHERE (email ILIKE $1 OR full_name ILIKE $1) AND id != $2 LIMIT 20",
-		"%"+query+"%", requesterUUID)
+		`SELECT u.id, u.email, u.username,
+		 EXISTS(SELECT 1 FROM connections c WHERE ((c.requester_id = u.id AND c.receiver_id = $2) OR (c.receiver_id = u.id AND c.requester_id = $2)) AND c.status = 'accepted') as is_connected
+		 FROM users u
+		 WHERE (email ILIKE $1 OR username ILIKE $1) AND u.id != $2 LIMIT 20`,
+		query, requesterUUID)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
 
-	users := []map[string]string{}
+	users := []map[string]interface{}{}
 	for rows.Next() {
 		var id, email string
-		var fullName, avatarURL *string
-		if err := rows.Scan(&id, &email, &fullName, &avatarURL); err != nil {
+		var username *string
+		var isConnected bool
+		if err := rows.Scan(&id, &email, &username, &isConnected); err != nil {
 			continue
 		}
 
-		user := map[string]string{
-			"id":    id,
-			"email": email,
+		user := map[string]interface{}{
+			"id":           id,
+			"is_connected": isConnected,
 		}
-		if fullName != nil {
-			user["full_name"] = *fullName
-		} else {
-			user["full_name"] = ""
+		if username != nil && *username != "" {
+			user["username"] = *username
 		}
-		if avatarURL != nil {
-			user["avatar_url"] = *avatarURL
-		} else {
-			user["avatar_url"] = ""
+
+		// Reveal email if connected OR if the query was the email itself
+		if isConnected || strings.EqualFold(email, query) {
+			user["email"] = email
 		}
 		users = append(users, user)
 	}
@@ -123,9 +128,20 @@ func (h *ConnectionHandler) SendConnectionRequest(w http.ResponseWriter, r *http
 		return
 	}
 
+	if req.ReceiverEmail == "" && req.ReceiverID == "" {
+		http.Error(w, "Receiver email or ID required", http.StatusBadRequest)
+		return
+	}
+
 	// Find receiver UUID
 	var receiverUUID string
-	err = h.db.QueryRow(r.Context(), "SELECT id FROM users WHERE email = $1", req.ReceiverEmail).Scan(&receiverUUID)
+	if req.ReceiverID != "" {
+		// Verify exists
+		err = h.db.QueryRow(r.Context(), "SELECT id FROM users WHERE id = $1", req.ReceiverID).Scan(&receiverUUID)
+	} else {
+		err = h.db.QueryRow(r.Context(), "SELECT id FROM users WHERE email = $1", req.ReceiverEmail).Scan(&receiverUUID)
+	}
+
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			http.Error(w, "User not found", http.StatusNotFound)
@@ -155,7 +171,12 @@ func (h *ConnectionHandler) SendConnectionRequest(w http.ResponseWriter, r *http
 
 	// Fetch requester name synchronously to avoid race conditions in tests and ensure data availability
 	var requesterName string
-	if err := h.db.QueryRow(r.Context(), "SELECT display_name FROM users WHERE id = $1", requesterUUID).Scan(&requesterName); err != nil {
+	var requesterUsername *string
+	if err := h.db.QueryRow(r.Context(), "SELECT username FROM users WHERE id = $1", requesterUUID).Scan(&requesterUsername); err != nil {
+		requesterName = "Someone"
+	} else if requesterUsername != nil && *requesterUsername != "" {
+		requesterName = *requesterUsername
+	} else {
 		requesterName = "Someone"
 	}
 

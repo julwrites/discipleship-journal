@@ -197,7 +197,7 @@ func (h *TemplateHandler) Generate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	content, err := h.service.GenerateContent(r.Context(), id, req.Inputs)
+	content, err := h.service.GenerateContent(r.Context(), id, req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Trash2, Plus, ArrowLeft, Info } from "lucide-react";
+import { Trash2, Plus, ArrowLeft, Info, X } from "lucide-react";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -19,6 +19,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { BibleVersionSelector } from "@/components/BibleVersionSelector";
 
 export default function TemplateEditor() {
     const { id } = useParams();
@@ -32,11 +33,21 @@ export default function TemplateEditor() {
     const [systemPrompt, setSystemPrompt] = useState("");
     const [fields, setFields] = useState<TemplateField[]>([]);
 
+    const [bibleReferences, setBibleReferences] = useState<string[]>([]);
+    const [allowUserPassages, setAllowUserPassages] = useState(false);
+    const [templateBody, setTemplateBody] = useState("");
+    const [requiredVersion, setRequiredVersion] = useState("");
+
+    const [newRef, setNewRef] = useState("");
+
     const [initialState, setInitialState] = useState("");
     const [saving, setSaving] = useState(false);
 
     // Derived state for dirty check
-    const currentState = JSON.stringify({ title, description, isPublic, systemPrompt, fields });
+    const currentState = JSON.stringify({
+        title, description, isPublic, systemPrompt, fields,
+        bibleReferences, allowUserPassages, templateBody, requiredVersion
+    });
     const isDirty = initialState !== "" && currentState !== initialState;
 
     useEffect(() => {
@@ -44,7 +55,10 @@ export default function TemplateEditor() {
             loadTemplate(id!);
         } else {
             // Set initial state for new template
-            setInitialState(JSON.stringify({ title: "", description: "", isPublic: false, systemPrompt: "", fields: [] }));
+            setInitialState(JSON.stringify({
+                title: "", description: "", isPublic: false, systemPrompt: "", fields: [],
+                bibleReferences: [], allowUserPassages: false, templateBody: "", requiredVersion: ""
+            }));
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
@@ -56,6 +70,10 @@ export default function TemplateEditor() {
             setDescription(data.description);
             setIsPublic(data.is_public);
             setFields(data.fields || []);
+            setBibleReferences(data.bible_references || []);
+            setAllowUserPassages(!!data.allow_user_passages);
+            setTemplateBody(data.template_body || "");
+            setRequiredVersion(data.required_version || "");
 
             let sysPrompt = "";
             if (data.prompts && typeof data.prompts === 'object') {
@@ -69,7 +87,11 @@ export default function TemplateEditor() {
                 description: data.description,
                 isPublic: data.is_public,
                 systemPrompt: sysPrompt,
-                fields: data.fields || []
+                fields: data.fields || [],
+                bibleReferences: data.bible_references || [],
+                allowUserPassages: !!data.allow_user_passages,
+                templateBody: data.template_body || "",
+                requiredVersion: data.required_version || ""
             }));
         } catch {
             toast.error("Failed to load template");
@@ -92,7 +114,11 @@ export default function TemplateEditor() {
             is_public: isPublic,
             fields,
             prompts: { system: systemPrompt },
-            structure: {} // Default empty for now
+            structure: {}, // Default empty for now
+            bible_references: bibleReferences,
+            allow_user_passages: allowUserPassages,
+            template_body: templateBody,
+            required_version: requiredVersion,
         };
 
         try {
@@ -105,7 +131,10 @@ export default function TemplateEditor() {
             }
 
             // Update initial state to match current, so isDirty becomes false
-            setInitialState(JSON.stringify({ title, description, isPublic, systemPrompt, fields }));
+            setInitialState(JSON.stringify({
+                title, description, isPublic, systemPrompt, fields,
+                bibleReferences, allowUserPassages, templateBody, requiredVersion
+            }));
 
             if (shouldNavigate) {
                 navigate("/templates");
@@ -117,7 +146,7 @@ export default function TemplateEditor() {
         } finally {
             setSaving(false);
         }
-    }, [title, description, isPublic, fields, systemPrompt, id, isEdit, navigate]);
+    }, [title, description, isPublic, fields, systemPrompt, bibleReferences, allowUserPassages, templateBody, requiredVersion, id, isEdit, navigate]);
 
     const handleSave = () => saveTemplate(true);
 
@@ -141,6 +170,16 @@ export default function TemplateEditor() {
         setFields(fields.filter((_, i) => i !== index));
     };
 
+    const addReference = () => {
+        if (!newRef.trim()) return;
+        setBibleReferences([...bibleReferences, newRef.trim()]);
+        setNewRef("");
+    };
+
+    const removeReference = (idx: number) => {
+        setBibleReferences(bibleReferences.filter((_, i) => i !== idx));
+    };
+
     if (loading) return <div className="p-8">Loading...</div>;
 
     return (
@@ -158,12 +197,12 @@ export default function TemplateEditor() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid gap-2">
-                        <Label>Title</Label>
-                        <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Inductive Study" />
+                        <Label htmlFor="title">Title</Label>
+                        <Input id="title" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Inductive Study" />
                     </div>
                     <div className="grid gap-2">
-                        <Label>Description</Label>
-                        <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Brief description..." />
+                        <Label htmlFor="description">Description</Label>
+                        <Textarea id="description" value={description} onChange={e => setDescription(e.target.value)} placeholder="Brief description..." />
                     </div>
                     <div className="flex items-center gap-2">
                         <Checkbox
@@ -189,22 +228,52 @@ export default function TemplateEditor() {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>AI Prompt</CardTitle>
-                    <CardDescription>Define how the AI should behave.</CardDescription>
+                    <CardTitle>Bible Passages (Optional)</CardTitle>
+                    <CardDescription>Define bible passages to study.</CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <div className="grid gap-2">
-                        <Label>System Instructions</Label>
-                        <Textarea
-                            value={systemPrompt}
-                            onChange={e => setSystemPrompt(e.target.value)}
-                            placeholder="You are a Bible teacher. When the user provides a passage, analyze it by..."
-                            rows={6}
+                <CardContent className="space-y-4">
+                    <div className="flex items-center gap-2 mb-2">
+                        <Checkbox
+                            id="allowUserPassages"
+                            checked={allowUserPassages}
+                            onCheckedChange={(c: boolean | string) => setAllowUserPassages(!!c)}
                         />
-                        <div className="text-xs text-muted-foreground space-y-1">
-                            <p>This prompt guides the AI. You can use placeholders for the input fields defined below.</p>
-                            <p>Use the format <code className="bg-muted px-1 py-0.5 rounded">{'{{key}}'}</code> to insert a field value. For example, if you have a field with key "audience", use <code className="bg-muted px-1 py-0.5 rounded">{'{{audience}}'}</code> in your prompt.</p>
+                        <Label htmlFor="allowUserPassages">Let user choose passages?</Label>
+                    </div>
+
+                    {!allowUserPassages && (
+                        <div className="space-y-2">
+                            <Label>References (e.g. John 3:16)</Label>
+                            <div className="flex gap-2">
+                                <Input
+                                    value={newRef}
+                                    onChange={e => setNewRef(e.target.value)}
+                                    placeholder="Enter reference..."
+                                    onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addReference())}
+                                />
+                                <Button onClick={addReference} size="icon" variant="secondary" aria-label="Add Reference"><Plus className="h-4 w-4"/></Button>
+                            </div>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                                {bibleReferences.map((ref, idx) => (
+                                    <div key={idx} className="flex items-center gap-1 bg-secondary px-2 py-1 rounded text-sm">
+                                        {ref}
+                                        <button onClick={() => removeReference(idx)} className="text-muted-foreground hover:text-foreground" aria-label={`Remove ${ref}`}>
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
+                    )}
+
+                    <div className="grid gap-2 max-w-sm">
+                        <Label>Required Version (Optional)</Label>
+                        <BibleVersionSelector
+                            value={requiredVersion}
+                            onChange={setRequiredVersion}
+                            placeholder="Use User Default"
+                        />
+                        <p className="text-xs text-muted-foreground">If left empty, the user's preferred version will be used.</p>
                     </div>
                 </CardContent>
             </Card>
@@ -212,7 +281,7 @@ export default function TemplateEditor() {
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                     <div>
-                        <CardTitle>Input Fields</CardTitle>
+                        <CardTitle>Input Parameters (Optional)</CardTitle>
                         <CardDescription>Variables the user will fill in when using the template.</CardDescription>
                     </div>
                     <Button size="sm" variant="outline" onClick={addField}>
@@ -245,7 +314,7 @@ export default function TemplateEditor() {
                                     <div>
                                         <Label className="text-xs text-muted-foreground mb-1 block">Placeholder (Optional)</Label>
                                         <Input
-                                            placeholder="Example value to guide the user..."
+                                            placeholder="Example value..."
                                             value={field.placeholder || ""}
                                             onChange={e => updateField(idx, "placeholder", e.target.value)}
                                         />
@@ -257,6 +326,58 @@ export default function TemplateEditor() {
                             </div>
                         ))
                     }
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>AI Prompt (Required)</CardTitle>
+                    <CardDescription>Define how the AI should behave.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid gap-2">
+                        <Label htmlFor="systemPrompt">System Instructions</Label>
+                        <Textarea
+                            id="systemPrompt"
+                            value={systemPrompt}
+                            onChange={e => setSystemPrompt(e.target.value)}
+                            placeholder="You are a Bible teacher. When the user provides a passage, analyze it by..."
+                            rows={6}
+                        />
+                        <div className="text-xs text-muted-foreground space-y-1">
+                            <p>This prompt guides the AI. You can use placeholders for the input fields defined above.</p>
+                            <p>Use <code className="bg-muted px-1 py-0.5 rounded">{'{{key}}'}</code> to insert a field value.</p>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Template Body (Optional)</CardTitle>
+                    <CardDescription>Structure the final note output.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid gap-2">
+                        <Label htmlFor="templateBody">Body Content</Label>
+                        <Textarea
+                            id="templateBody"
+                            value={templateBody}
+                            onChange={e => setTemplateBody(e.target.value)}
+                            placeholder="# Study Notes&#10;&#10;{{passages}}&#10;&#10;## Analysis&#10;&#10;{{generated}}"
+                            rows={8}
+                        />
+                        <div className="text-xs text-muted-foreground space-y-1">
+                            <p>Define the exact markdown structure of the note.</p>
+                            <p>Special tags:</p>
+                            <ul className="list-disc list-inside">
+                                <li><code className="bg-muted px-1 py-0.5 rounded">{'{{passages}}'}</code>: Inserts the full text of the bible passages.</li>
+                                <li><code className="bg-muted px-1 py-0.5 rounded">{'{{generated}}'}</code>: Inserts the AI response.</li>
+                                <li><code className="bg-muted px-1 py-0.5 rounded">{'{{key}}'}</code>: Inserts input field values.</li>
+                            </ul>
+                            <p>If left empty, a default format will be used.</p>
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
 

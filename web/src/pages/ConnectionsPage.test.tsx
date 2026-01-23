@@ -49,7 +49,7 @@ describe('ConnectionsPage', () => {
         const user = userEvent.setup();
         const mockSearchUsers = vi.mocked(api.searchUsers);
         mockSearchUsers.mockResolvedValue([
-            { id: 'user-1', email: 'found@example.com', display_name: 'Found User' }
+            { id: 'user-1', email: 'found@example.com', username: 'Found User' }
         ]);
 
         const mockGetConnections = vi.mocked(api.getConnections);
@@ -71,7 +71,7 @@ describe('ConnectionsPage', () => {
         await user.click(findTab);
 
         // Wait for the tab content to be visible
-        const searchInput = await screen.findByPlaceholderText('Search by email or name...');
+        const searchInput = await screen.findByPlaceholderText('Search by email or username...');
 
         // Now switch to fake timers for debounce testing
         vi.useFakeTimers();

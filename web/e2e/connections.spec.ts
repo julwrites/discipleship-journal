@@ -54,12 +54,12 @@ test.describe('Connections (Mocked)', () => {
     // Mock Send Request API
     await page.route('**/api/connections/request', async route => {
         const body = route.request().postDataJSON();
-        expect(body.receiver_email).toBe('friend@example.com');
+        expect(body.receiver_id).toBe('uuid-friend');
         await route.fulfill({ status: 201, json: { success: true } });
     });
 
     // Type in search box
-    await page.getByPlaceholder('Search by email or name...').fill('friend');
+    await page.getByPlaceholder('Search by email or username...').fill('friend');
 
     // Wait for results (auto-search)
     await expect(page.getByText('friend@example.com')).toBeVisible();

@@ -69,7 +69,7 @@ func TestShareItemToGroup(t *testing.T) {
 			WithArgs(groupID.String()).
 			WillReturnRows(mockDB.NewRows([]string{"name"}).AddRow("Test Group"))
 
-		mockDB.ExpectQuery(`SELECT display_name FROM users WHERE id = \$1`).
+		mockDB.ExpectQuery(`SELECT COALESCE\(username, email\) FROM users WHERE id = \$1`).
 			WithArgs(userID.String()).
 			WillReturnRows(mockDB.NewRows([]string{"display_name"}).AddRow("Test User"))
 
