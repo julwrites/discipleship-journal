@@ -539,6 +539,10 @@ export interface StudyTemplate {
     prompts: Record<string, unknown>;
     fields: TemplateField[];
     is_public: boolean;
+    bible_references?: string[];
+    allow_user_passages?: boolean;
+    template_body?: string;
+    required_version?: string;
 }
 
 export async function getMyTemplates() {
@@ -604,12 +608,17 @@ export async function cloneTemplate(id: string) {
     return res.json();
 }
 
-export async function generateFromTemplate(id: string, inputs: Record<string, string>) {
+export async function generateFromTemplate(id: string, inputs: Record<string, string>, user_passages?: string[], user_version?: string) {
     const headers = await getHeaders();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const payload: any = { inputs };
+    if (user_passages) payload.user_passages = user_passages;
+    if (user_version) payload.user_version = user_version;
+
     const res = await fetch(`${API_URL}/templates/${id}/generate`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ inputs }),
+        body: JSON.stringify(payload),
     });
     if (!res.ok) throw new Error("Failed to generate content");
     return res.json();

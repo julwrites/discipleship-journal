@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"discipleship_journal_api/models"
@@ -19,7 +20,7 @@ type TemplateService interface {
 	UpdateTemplate(ctx context.Context, tmpl *models.StudyTemplate) error
 	DeleteTemplate(ctx context.Context, id, userID uuid.UUID) error
 	CloneTemplate(ctx context.Context, id, userID uuid.UUID) (*models.StudyTemplate, error)
-	GenerateContent(ctx context.Context, templateID uuid.UUID, inputs map[string]string) (string, error)
+	GenerateContent(ctx context.Context, templateID uuid.UUID, req models.GenerateRequest) (string, error)
 }
 
 type templateService struct {
@@ -39,14 +40,17 @@ func (s *templateService) CreateTemplate(ctx context.Context, tmpl *models.Study
 	structureJSON, _ := json.Marshal(tmpl.Structure)
 	promptsJSON, _ := json.Marshal(tmpl.Prompts)
 	fieldsJSON, _ := json.Marshal(tmpl.Fields)
+	bibleRefsJSON, _ := json.Marshal(tmpl.BibleReferences)
 
 	query := `
-		INSERT INTO study_templates (id, creator_id, title, description, structure, prompts, fields, is_public, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		INSERT INTO study_templates (id, creator_id, title, description, structure, prompts, fields, is_public, bible_references, allow_user_passages, template_body, required_version, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
 		RETURNING id
 	`
 	_, err := s.db.Exec(ctx, query,
-		tmpl.ID, tmpl.CreatorID, tmpl.Title, tmpl.Description, structureJSON, promptsJSON, fieldsJSON, tmpl.IsPublic, tmpl.CreatedAt, tmpl.UpdatedAt,
+		tmpl.ID, tmpl.CreatorID, tmpl.Title, tmpl.Description, structureJSON, promptsJSON, fieldsJSON, tmpl.IsPublic,
+		bibleRefsJSON, tmpl.AllowUserPassages, tmpl.TemplateBody, tmpl.RequiredVersion,
+		tmpl.CreatedAt, tmpl.UpdatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -56,15 +60,17 @@ func (s *templateService) CreateTemplate(ctx context.Context, tmpl *models.Study
 
 func (s *templateService) GetTemplate(ctx context.Context, id uuid.UUID) (*models.StudyTemplate, error) {
 	query := `
-		SELECT id, creator_id, title, description, structure, prompts, fields, is_public, created_at, updated_at
+		SELECT id, creator_id, title, description, structure, prompts, fields, is_public, bible_references, allow_user_passages, template_body, required_version, created_at, updated_at
 		FROM study_templates
 		WHERE id = $1
 	`
 	var t models.StudyTemplate
-	var structureBytes, promptsBytes, fieldsBytes []byte
+	var structureBytes, promptsBytes, fieldsBytes, bibleRefsBytes []byte
 
 	err := s.db.QueryRow(ctx, query, id).Scan(
-		&t.ID, &t.CreatorID, &t.Title, &t.Description, &structureBytes, &promptsBytes, &fieldsBytes, &t.IsPublic, &t.CreatedAt, &t.UpdatedAt,
+		&t.ID, &t.CreatorID, &t.Title, &t.Description, &structureBytes, &promptsBytes, &fieldsBytes, &t.IsPublic,
+		&bibleRefsBytes, &t.AllowUserPassages, &t.TemplateBody, &t.RequiredVersion,
+		&t.CreatedAt, &t.UpdatedAt,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -76,13 +82,14 @@ func (s *templateService) GetTemplate(ctx context.Context, id uuid.UUID) (*model
 	_ = json.Unmarshal(structureBytes, &t.Structure)
 	_ = json.Unmarshal(promptsBytes, &t.Prompts)
 	_ = json.Unmarshal(fieldsBytes, &t.Fields)
+	_ = json.Unmarshal(bibleRefsBytes, &t.BibleReferences)
 
 	return &t, nil
 }
 
 func (s *templateService) ListTemplates(ctx context.Context, userID uuid.UUID) ([]*models.StudyTemplate, error) {
 	query := `
-		SELECT id, creator_id, title, description, structure, prompts, fields, is_public, created_at, updated_at
+		SELECT id, creator_id, title, description, structure, prompts, fields, is_public, bible_references, allow_user_passages, template_body, required_version, created_at, updated_at
 		FROM study_templates
 		WHERE creator_id = $1
 		ORDER BY updated_at DESC
@@ -92,7 +99,7 @@ func (s *templateService) ListTemplates(ctx context.Context, userID uuid.UUID) (
 
 func (s *templateService) ListPublicTemplates(ctx context.Context) ([]*models.StudyTemplate, error) {
 	query := `
-		SELECT id, creator_id, title, description, structure, prompts, fields, is_public, created_at, updated_at
+		SELECT id, creator_id, title, description, structure, prompts, fields, is_public, bible_references, allow_user_passages, template_body, required_version, created_at, updated_at
 		FROM study_templates
 		WHERE is_public = true
 		ORDER BY created_at DESC
@@ -110,15 +117,18 @@ func (s *templateService) scanTemplates(ctx context.Context, query string, args 
 	var templates []*models.StudyTemplate
 	for rows.Next() {
 		var t models.StudyTemplate
-		var structureBytes, promptsBytes, fieldsBytes []byte
+		var structureBytes, promptsBytes, fieldsBytes, bibleRefsBytes []byte
 		if err := rows.Scan(
-			&t.ID, &t.CreatorID, &t.Title, &t.Description, &structureBytes, &promptsBytes, &fieldsBytes, &t.IsPublic, &t.CreatedAt, &t.UpdatedAt,
+			&t.ID, &t.CreatorID, &t.Title, &t.Description, &structureBytes, &promptsBytes, &fieldsBytes, &t.IsPublic,
+			&bibleRefsBytes, &t.AllowUserPassages, &t.TemplateBody, &t.RequiredVersion,
+			&t.CreatedAt, &t.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
 		_ = json.Unmarshal(structureBytes, &t.Structure)
 		_ = json.Unmarshal(promptsBytes, &t.Prompts)
 		_ = json.Unmarshal(fieldsBytes, &t.Fields)
+		_ = json.Unmarshal(bibleRefsBytes, &t.BibleReferences)
 		templates = append(templates, &t)
 	}
 	return templates, nil
@@ -128,14 +138,19 @@ func (s *templateService) UpdateTemplate(ctx context.Context, tmpl *models.Study
 	structureJSON, _ := json.Marshal(tmpl.Structure)
 	promptsJSON, _ := json.Marshal(tmpl.Prompts)
 	fieldsJSON, _ := json.Marshal(tmpl.Fields)
+	bibleRefsJSON, _ := json.Marshal(tmpl.BibleReferences)
 
 	query := `
 		UPDATE study_templates
-		SET title=$1, description=$2, structure=$3, prompts=$4, fields=$5, is_public=$6, updated_at=NOW()
-		WHERE id=$7 AND creator_id=$8
+		SET title=$1, description=$2, structure=$3, prompts=$4, fields=$5, is_public=$6,
+		bible_references=$7, allow_user_passages=$8, template_body=$9, required_version=$10,
+		updated_at=NOW()
+		WHERE id=$11 AND creator_id=$12
 	`
 	cmd, err := s.db.Exec(ctx, query,
-		tmpl.Title, tmpl.Description, structureJSON, promptsJSON, fieldsJSON, tmpl.IsPublic, tmpl.ID, tmpl.CreatorID,
+		tmpl.Title, tmpl.Description, structureJSON, promptsJSON, fieldsJSON, tmpl.IsPublic,
+		bibleRefsJSON, tmpl.AllowUserPassages, tmpl.TemplateBody, tmpl.RequiredVersion,
+		tmpl.ID, tmpl.CreatorID,
 	)
 	if err != nil {
 		return err
@@ -165,86 +180,147 @@ func (s *templateService) CloneTemplate(ctx context.Context, id, userID uuid.UUI
 	}
 
 	clone := &models.StudyTemplate{
-		CreatorID:   userID,
-		Title:       original.Title + " (Copy)",
-		Description: original.Description,
-		Structure:   original.Structure,
-		Prompts:     original.Prompts,
-		Fields:      original.Fields,
-		IsPublic:    false,
+		CreatorID:         userID,
+		Title:             original.Title + " (Copy)",
+		Description:       original.Description,
+		Structure:         original.Structure,
+		Prompts:           original.Prompts,
+		Fields:            original.Fields,
+		IsPublic:          false,
+		BibleReferences:   original.BibleReferences,
+		AllowUserPassages: original.AllowUserPassages,
+		TemplateBody:      original.TemplateBody,
+		RequiredVersion:   original.RequiredVersion,
 	}
 
 	return s.CreateTemplate(ctx, clone)
 }
 
-func (s *templateService) GenerateContent(ctx context.Context, templateID uuid.UUID, inputs map[string]string) (string, error) {
+func (s *templateService) GenerateContent(ctx context.Context, templateID uuid.UUID, req models.GenerateRequest) (string, error) {
 	tmpl, err := s.GetTemplate(ctx, templateID)
 	if err != nil {
 		return "", err
 	}
 
-	// Basic Prompt Construction
-	// We assume a 'system' key in prompts for the instruction
-	systemPrompt, ok := tmpl.Prompts["system"].(string)
-	if !ok {
-		systemPrompt = "You are a helpful Bible study assistant. Use the user provided inputs to create a study guide."
+	// 1. Resolve Version
+	version := "ESV" // Default
+	if tmpl.RequiredVersion != "" {
+		version = tmpl.RequiredVersion
+	} else if req.UserVersion != "" {
+		version = req.UserVersion
 	}
 
-	userPrompt := "Please generate a study guide based on the following inputs:\n"
-	for key, val := range inputs {
-		userPrompt += fmt.Sprintf("%s: %s\n", key, val)
+	// 2. Resolve Passages
+	var references []string
+	if tmpl.AllowUserPassages {
+		references = req.UserPassages
+	} else {
+		references = tmpl.BibleReferences
 	}
 
-	// Add structure guidance
-	structureJSON, _ := json.MarshalIndent(tmpl.Structure, "", "  ")
-	userPrompt += fmt.Sprintf("\nPlease format the output according to this JSON structure if possible, or use it as a section guide:\n%s", string(structureJSON))
+	// 3. Fetch Passages Text (for output) and format references (for prompt)
+	var passageTexts []string
+	for _, ref := range references {
+		res, err := s.aiClient.GetPassage(ctx, ref, version)
+		if err != nil {
+			// Log error but continue
+			passageTexts = append(passageTexts, fmt.Sprintf("%s: (Error fetching text)", ref))
+			continue
+		}
 
-	// Prepare payload for ChatCompletion
-	// ChatCompletion signature is: (ctx, payload map[string]interface{})
+		// Extract text
+		text := ""
+		if t, ok := res["text"].(string); ok {
+			text = t
+		} else if t, ok := res["verse"].(string); ok {
+			text = t
+		}
+
+		passageTexts = append(passageTexts, fmt.Sprintf("<blockquote><p><strong>%s (%s)</strong></p>%s</blockquote>", ref, version, text))
+	}
+	passagesBlock := strings.Join(passageTexts, "\n\n")
+	referencesBlock := strings.Join(references, ", ")
+
+	// 4. Construct AI Prompt
+	globalPrompt := s.aiClient.GetSystemPrompt("system")
+	if globalPrompt == "" {
+		globalPrompt = "You are a helpful Bible study assistant."
+	}
+
+	templatePromptRaw, _ := tmpl.Prompts["system"].(string)
+	if templatePromptRaw == "" {
+		templatePromptRaw = "Analyze the provided passages and inputs."
+	}
+
+	// Replace params in template prompt
+	templatePrompt := templatePromptRaw
+	for k, v := range req.Inputs {
+		templatePrompt = strings.ReplaceAll(templatePrompt, "{{"+k+"}}", v)
+	}
+
+	// Construct full prompt
+	// Format:
+	// [Global Prompt]
+	//
+	// Context:
+	// Bible References: [Refs]
+	//
+	// Instructions:
+	// [Template Prompt]
+	//
+	// User Inputs:
+	// [Inputs]
+
+	fullPrompt := fmt.Sprintf("%s\n\nBible References: %s\n\n%s\n\n", globalPrompt, referencesBlock, templatePrompt)
+
+	// Add User Inputs for context if not fully covered by params
+	fullPrompt += "User Inputs:\n"
+	for k, v := range req.Inputs {
+		fullPrompt += fmt.Sprintf("%s: %s\n", k, v)
+	}
+
+	// 5. Call AI
 	payload := map[string]interface{}{
-		"prompt": userPrompt,
-		"type":   "custom", // We might need to handle custom prompt injection in the client
+		"prompt": fullPrompt,
+		"type":   "raw_template_generation",
 	}
-
-	// WARNING: The current RealBibleAIClient uses pre-defined system prompts via `type`.
-	// To support dynamic templates, we need to bypass the template lookup if a custom system prompt is needed,
-	// OR we rely on the `prompt` field being the full user message.
-	// Since `RealBibleAIClient.ChatCompletion` logic is:
-	// 1. Select template by `type` (default 'ask').
-	// 2. If template found, replace {PROMPT}.
-	// 3. If no template found, use prompt as is.
-
-	// So, if we pass a `type` that doesn't exist in `SystemPrompts` map, it falls back to raw prompt.
-	// However, we want to inject the *System Prompt* from the template.
-	// The `BibleAIClient` as written is somewhat rigid around `SystemPrompts` loaded at config time.
-	// We might need to modify `ChatCompletion` or append the system instruction to the user prompt.
-
-	// Strategy: Append the template's system prompt to the beginning of the user prompt.
-	fullPrompt := fmt.Sprintf("System Instruction: %s\n\nUser Request: %s", systemPrompt, userPrompt)
-
-	payload["prompt"] = fullPrompt
-	payload["type"] = "raw_template_generation" // Likely doesn't exist, triggering fallback
 
 	resp, err := s.aiClient.ChatCompletion(ctx, payload)
 	if err != nil {
 		return "", err
 	}
 
-	// Extract text from response
+	aiOutput := ""
 	if text, ok := resp["text"].(string); ok {
-		return text, nil
-	}
-
-	// Fallback check for nested choice (OpenAI style)
-	if choices, ok := resp["choices"].([]interface{}); ok && len(choices) > 0 {
+		aiOutput = text
+	} else if choices, ok := resp["choices"].([]interface{}); ok && len(choices) > 0 {
 		if choice, ok := choices[0].(map[string]interface{}); ok {
 			if msg, ok := choice["message"].(map[string]interface{}); ok {
 				if content, ok := msg["content"].(string); ok {
-					return content, nil
+					aiOutput = content
 				}
 			}
 		}
 	}
 
-	return "", fmt.Errorf("no content in response")
+	// 6. Format Final Output
+	finalOutput := ""
+
+	if tmpl.TemplateBody != "" {
+		body := tmpl.TemplateBody
+		body = strings.ReplaceAll(body, "{{passages}}", passagesBlock)
+		body = strings.ReplaceAll(body, "{{generated}}", aiOutput)
+		for k, v := range req.Inputs {
+			body = strings.ReplaceAll(body, "{{"+k+"}}", v)
+		}
+		finalOutput = body
+	} else {
+		// Default Format
+		if passagesBlock != "" {
+			finalOutput = passagesBlock + "\n\n"
+		}
+		finalOutput += aiOutput
+	}
+
+	return finalOutput, nil
 }
