@@ -17,6 +17,7 @@ type BibleAIClient interface {
 	GetPassage(ctx context.Context, reference string, version string) (map[string]interface{}, error)
 	ChatCompletion(ctx context.Context, payload map[string]interface{}) (map[string]interface{}, error)
 	GetVersions(ctx context.Context, params map[string]string) (map[string]interface{}, error)
+	GetSystemPrompt(key string) string
 }
 
 // RealBibleAIClient is the production implementation using the real API.
@@ -278,6 +279,14 @@ func (c *RealBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 	}
 
 	return response, nil
+}
+
+// GetSystemPrompt retrieves a configured system prompt by key.
+func (c *RealBibleAIClient) GetSystemPrompt(key string) string {
+	if c.SystemPrompts == nil {
+		return ""
+	}
+	return c.SystemPrompts[key]
 }
 
 // GetVersions fetches the list of available bible versions.
