@@ -167,7 +167,9 @@ func (h *ChatHandler) handleStream(w http.ResponseWriter, r *http.Request, reqTy
 	}
 
 	// Send initial event
-	fmt.Fprintf(w, "event: start\ndata: %s\n\n", note.ID)
+	if _, err := fmt.Fprintf(w, "event: start\ndata: %s\n\n", note.ID); err != nil {
+		return
+	}
 	flusher.Flush()
 
 	// 3. Launch AI Request in Background (Detached Context)
@@ -250,8 +252,12 @@ func (h *ChatHandler) handleStream(w http.ResponseWriter, r *http.Request, reqTy
 			// Send the content (simulating chunks could be done here if needed, but we send full for now)
 			// Use json.Marshal to safely escape newlines/etc in SSE data
 			data, _ := json.Marshal(map[string]string{"response": answer})
-			fmt.Fprintf(w, "event: chunk\ndata: %s\n\n", data)
-			fmt.Fprintf(w, "event: done\ndata: {}\n\n")
+			if _, err := fmt.Fprintf(w, "event: chunk\ndata: %s\n\n", data); err != nil {
+				return
+			}
+			if _, err := fmt.Fprintf(w, "event: done\ndata: {}\n\n"); err != nil {
+				return
+			}
 			flusher.Flush()
 			return
 
@@ -262,12 +268,16 @@ func (h *ChatHandler) handleStream(w http.ResponseWriter, r *http.Request, reqTy
 			}
 
 			errMsg, _ := json.Marshal(map[string]string{"error": err.Error()})
-			fmt.Fprintf(w, "event: error\ndata: %s\n\n", errMsg)
+			if _, err := fmt.Fprintf(w, "event: error\ndata: %s\n\n", errMsg); err != nil {
+				return
+			}
 			flusher.Flush()
 			return
 
 		case <-ticker.C:
-			fmt.Fprintf(w, "event: ping\ndata: {}\n\n")
+			if _, err := fmt.Fprintf(w, "event: ping\ndata: {}\n\n"); err != nil {
+				return
+			}
 			flusher.Flush()
 
 		case <-r.Context().Done():

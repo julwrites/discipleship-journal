@@ -311,7 +311,7 @@ describe('NoteEditor', () => {
             title: 'Test Note',
             content: 'Content'
         });
-        vi.mocked(api.askAIStream).mockImplementation(async (context, prompt, version, callbacks) => {
+        vi.mocked(api.askAIStream).mockImplementation(async (_context, _prompt, _version, callbacks) => {
             if (callbacks.onStart) callbacks.onStart("note-id");
             if (callbacks.onChunk) callbacks.onChunk('AI Answer');
             if (callbacks.onDone) callbacks.onDone();

@@ -24,12 +24,24 @@ test.describe('Chat & AI (Mocked)', () => {
   });
 
   test('should send a message and receive an AI response', async ({ page }) => {
-    // Mock AI Chat Endpoint (ChatPage uses /api/chat)
+    // Mock AI Chat Endpoint (ChatPage uses /api/chat) with SSE streaming
     await page.route('**/api/chat', async route => {
+        const sseData = [
+            'event: start',
+            'data: "note-id"',
+            '',
+            'event: chunk',
+            'data: {"response": "This is a mocked AI response about grace."}',
+            '',
+            'event: done',
+            'data: {}',
+            ''
+        ].join('\n');
+
         await route.fulfill({
-            json: {
-                response: "This is a mocked AI response about grace."
-            }
+            status: 200,
+            headers: { 'Content-Type': 'text/event-stream' },
+            body: sseData,
         });
     });
 
