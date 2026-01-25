@@ -83,6 +83,7 @@ vi.mock('@/services/api', () => ({
     deleteNote: vi.fn(),
     getBiblePassage: vi.fn(),
     askAI: vi.fn(),
+    askAIStream: vi.fn(),
     getGroups: vi.fn(),
     shareNote: vi.fn(),
     syncUser: vi.fn().mockResolvedValue({ settings: { bible_version: 'ESV' } }),
@@ -310,7 +311,11 @@ describe('NoteEditor', () => {
             title: 'Test Note',
             content: 'Content'
         });
-        vi.mocked(api.askAI).mockResolvedValue({ response: 'AI Answer' });
+        vi.mocked(api.askAIStream).mockImplementation(async (_context, _prompt, _version, callbacks) => {
+            if (callbacks.onStart) callbacks.onStart("note-id");
+            if (callbacks.onChunk) callbacks.onChunk('AI Answer');
+            if (callbacks.onDone) callbacks.onDone();
+        });
 
         renderEditor();
 
@@ -327,7 +332,7 @@ describe('NoteEditor', () => {
         fireEvent.click(askBtn);
 
         await waitFor(() => {
-            expect(api.askAI).toHaveBeenCalledWith('Content', 'Explain this', 'ESV');
+            expect(api.askAIStream).toHaveBeenCalledWith('Content', 'Explain this', 'ESV', expect.any(Object));
             expect(within(dialog).getByText('AI Answer')).toBeInTheDocument();
         });
 

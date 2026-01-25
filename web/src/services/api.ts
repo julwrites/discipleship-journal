@@ -144,26 +144,126 @@ export async function getBiblePassage(ref: string, version?: string) {
     return res.json();
 }
 
+// Stream Handlers
+type StreamCallback = {
+    onStart?: (noteId: string) => void;
+    onChunk?: (data: string) => void;
+    onDone?: () => void;
+    onError?: (err: Error) => void;
+};
+
+async function handleStreamRequest(url: string, body: object, callbacks: StreamCallback) {
+    try {
+        const headers = await getHeaders();
+        const res = await fetch(url, {
+            method: "POST",
+            headers,
+            body: JSON.stringify(body),
+        });
+
+        if (!res.ok) {
+            throw new Error(`Stream request failed: ${res.status} ${res.statusText}`);
+        }
+
+        if (!res.body) {
+            throw new Error("ReadableStream not supported by browser");
+        }
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n\n");
+            // Keep the last partial line in the buffer
+            buffer = lines.pop() || "";
+
+            for (const line of lines) {
+                if (line.startsWith("event: ")) {
+                    const parts = line.split("\n");
+                    const eventLine = parts.find(l => l.startsWith("event: "));
+                    const dataLine = parts.find(l => l.startsWith("data: "));
+
+                    if (eventLine) {
+                        const event = eventLine.substring(7).trim();
+                        const dataStr = dataLine ? dataLine.substring(6).trim() : "{}";
+
+                        try {
+                            const data = dataStr ? JSON.parse(dataStr) : {};
+
+                            if (event === "start" && callbacks.onStart) {
+                                callbacks.onStart(dataStr); // Note ID is sent as raw string/json
+                            } else if (event === "chunk" && callbacks.onChunk) {
+                                callbacks.onChunk(data.response || "");
+                            } else if (event === "done" && callbacks.onDone) {
+                                callbacks.onDone();
+                            } else if (event === "error" && callbacks.onError) {
+                                callbacks.onError(new Error(data.error || "Unknown stream error"));
+                            }
+                        } catch (e) {
+                             // If parse fails, it might be raw string for 'start' (which sends note ID directly)
+                             // Actually backend sends `fmt.Fprintf(w, "event: start\ndata: %s\n\n", note.ID)`
+                             // So dataStr IS the note ID, not JSON.
+                             if (event === "start" && callbacks.onStart) {
+                                 callbacks.onStart(dataStr);
+                             } else {
+                                 console.warn("Failed to parse SSE data", dataStr, e);
+                             }
+                        }
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        if (callbacks.onError) callbacks.onError(e instanceof Error ? e : new Error(String(e)));
+    }
+}
+
 export async function chatWithAI(passage: string, themes: string[], prompt: string, version?: string) {
-    const headers = await getHeaders();
-    const res = await fetch(`${API_URL}/chat`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ passage, themes, prompt, version }),
+    // Deprecated wrapper around stream, or keep old behavior?
+    // Old behavior expects Promise<{response: string}>.
+    // If backend now returns SSE, this will fail if we just await res.json().
+    // We must update this to accumulate the stream and return full response for backward compatibility if we want.
+    // But since I updated the backend to return SSE, calling res.json() will crash or be weird.
+    // So I MUST update usages or wrap it.
+    // I'll wrap it to wait for full stream.
+    return new Promise((resolve, reject) => {
+        let fullResponse = "";
+        handleStreamRequest(`${API_URL}/chat`, { passage, themes, prompt, version }, {
+            onChunk: (c) => fullResponse += c, // The chunk IS the full text in current implementation?
+            // Actually backend sends `data, _ := json.Marshal(map[string]string{"response": answer})`.
+            // And handleStreamRequest parses that JSON and passes `data.response`.
+            // Backend sends full answer in one chunk currently.
+            // But if it sent real chunks, we'd concat.
+            // Since backend currently sends full answer in one chunk (see ChatHandler),
+            // fullResponse will be the full text.
+            onDone: () => resolve({ response: fullResponse }),
+            onError: reject
+        });
     });
-    if (!res.ok) throw new Error("Failed to chat with AI");
-    return res.json();
+}
+
+export async function chatWithAIStream(passage: string, themes: string[], prompt: string, version: string | undefined, callbacks: StreamCallback) {
+    return handleStreamRequest(`${API_URL}/chat`, { passage, themes, prompt, version }, callbacks);
 }
 
 export async function askAI(context: string, prompt: string, version?: string) {
-    const headers = await getHeaders();
-    const res = await fetch(`${API_URL}/ai/ask`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ context, prompt, version }),
+     return new Promise((resolve, reject) => {
+        let fullResponse = "";
+        handleStreamRequest(`${API_URL}/ai/ask`, { context, prompt, version }, {
+            onChunk: (c) => fullResponse = c, // Backend sends full text currently
+            onDone: () => resolve({ response: fullResponse }),
+            onError: reject
+        });
     });
-    if (!res.ok) throw new Error("Failed to ask AI");
-    return res.json();
+}
+
+export async function askAIStream(context: string, prompt: string, version: string | undefined, callbacks: StreamCallback) {
+    return handleStreamRequest(`${API_URL}/ai/ask`, { context, prompt, version }, callbacks);
 }
 
 export interface BibleVersion {

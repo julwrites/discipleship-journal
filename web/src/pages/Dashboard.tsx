@@ -3,7 +3,7 @@ import { auth } from "@/lib/firebase";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { fetchNotes, syncUser, NoteFilter, deleteNote, getGroups, shareNote, getNote, askAI } from "@/services/api";
+import { fetchNotes, syncUser, NoteFilter, deleteNote, getGroups, shareNote, getNote, askAIStream } from "@/services/api";
 import { Link } from "react-router-dom";
 import { Settings, Users, BookOpen, Filter, CalendarIcon, User as UserIcon, Book, LogOut } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -230,13 +230,21 @@ export default function Dashboard() {
   const confirmAskAI = async () => {
       if (!aiNoteContent || !aiPrompt) return;
       setAskingAI(true);
+      setAiResponse("");
       try {
-          const res = await askAI(aiNoteContent, aiPrompt);
-          setAiResponse(res.response);
+          await askAIStream(aiNoteContent, aiPrompt, undefined, {
+              onStart: () => setAiResponse(""),
+              onChunk: (chunk) => setAiResponse(prev => prev + chunk), // Currently receives full text, but supports appending
+              onDone: () => setAskingAI(false),
+              onError: (e) => {
+                  console.error(e);
+                  toast.error("Failed to get AI response");
+                  setAskingAI(false);
+              }
+          });
       } catch (e) {
           console.error(e);
-          toast.error("Failed to get AI response");
-      } finally {
+          toast.error("Failed to start AI request");
           setAskingAI(false);
       }
   };
