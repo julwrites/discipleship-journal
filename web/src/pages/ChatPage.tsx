@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { chatWithAI, syncUser } from "@/services/api";
+import { chatWithAIStream, syncUser } from "@/services/api";
 import { useNavigate } from "react-router-dom";
 import { BibleVersionSelector } from "@/components/BibleVersionSelector";
 import { BibleReferenceInput } from "@/components/BibleReferenceInput";
@@ -26,17 +26,22 @@ export default function ChatPage() {
 
     const handleChat = async () => {
         setLoading(true);
+        setResponse("");
         try {
             const themeList = themes.split(",").map(t => t.trim()).filter(Boolean);
-            const res = await chatWithAI(passage, themeList, prompt, version);
-            setResponse(res.response);
-
-            // Optionally redirect to dashboard to see the new note
-            // navigate("/");
+            await chatWithAIStream(passage, themeList, prompt, version, {
+                onStart: () => setResponse(""),
+                onChunk: (chunk) => setResponse(prev => (prev || "") + chunk),
+                onDone: () => setLoading(false),
+                onError: (e) => {
+                    console.error(e);
+                    alert("Chat failed: " + e.message);
+                    setLoading(false);
+                }
+            });
         } catch (e) {
             console.error(e);
             alert("Chat failed");
-        } finally {
             setLoading(false);
         }
     };

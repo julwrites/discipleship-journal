@@ -8,7 +8,7 @@ import {
     updateNote,
     deleteNote,
     getBiblePassage,
-    askAI,
+    askAIStream,
     getGroups,
     shareItem,
     searchMemoryVerses,
@@ -355,12 +355,20 @@ export default function NoteEditor() {
         setAskingAI(true);
         setAiResponse("");
         try {
-            const res = await askAI(content, aiPrompt, aiVersion);
-            setAiResponse(res.response);
+            await askAIStream(content, aiPrompt, aiVersion, {
+                onStart: () => setAiResponse(""),
+                onChunk: (chunk) => setAiResponse(prev => prev + chunk),
+                onDone: () => setAskingAI(false),
+                onError: (e) => {
+                    console.error(e);
+                    toast.error("Error asking AI");
+                    setAiResponse("Error asking AI.");
+                    setAskingAI(false);
+                }
+            });
         } catch (e) {
             console.error(e);
             setAiResponse("Error asking AI.");
-        } finally {
             setAskingAI(false);
         }
     };

@@ -23,9 +23,9 @@ type NoteFilter struct {
 
 // NoteServiceInterface defines the methods for note operations.
 type NoteServiceInterface interface {
-	CreateNote(ctx context.Context, userID, title string, content json.RawMessage) (*Note, error)
+	CreateNote(ctx context.Context, userID, title string, content json.RawMessage, status ...string) (*Note, error)
 	DeleteNote(ctx context.Context, userID, noteID string) error
-	UpdateNote(ctx context.Context, userID, noteID, title string, content json.RawMessage) error
+	UpdateNote(ctx context.Context, userID, noteID, title string, content json.RawMessage, status ...string) error
 	GetNote(ctx context.Context, userID, noteID string) (*Note, error)
 	GetNotes(ctx context.Context, userID string, page, limit int, filter NoteFilter) ([]Note, int, error)
 }
@@ -50,20 +50,26 @@ type Note struct {
 	UserID    string          `json:"user_id"`
 	Title     string          `json:"title"`
 	Content   json.RawMessage `json:"content,omitempty"`
+	Status    string          `json:"status"` // "active", "pending", "processing", "failed"
 	CreatedAt time.Time       `json:"created_at"`
 	UpdatedAt time.Time       `json:"updated_at"`
 	DeletedAt *time.Time      `json:"deleted_at,omitempty"`
 }
 
-func (s *NoteService) CreateNote(ctx context.Context, userID, title string, content json.RawMessage) (*Note, error) {
+func (s *NoteService) CreateNote(ctx context.Context, userID, title string, content json.RawMessage, status ...string) (*Note, error) {
 	var note Note
+	statusVal := "active"
+	if len(status) > 0 {
+		statusVal = status[0]
+	}
+
 	query := `
-		INSERT INTO notes (user_id, title, content)
-		VALUES ($1, $2, $3)
-		RETURNING id, user_id, title, content, created_at, updated_at
+		INSERT INTO notes (user_id, title, content, status)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, user_id, title, content, status, created_at, updated_at
 	`
-	err := s.db.QueryRow(ctx, query, userID, title, content).Scan(
-		&note.ID, &note.UserID, &note.Title, &note.Content, &note.CreatedAt, &note.UpdatedAt,
+	err := s.db.QueryRow(ctx, query, userID, title, content, statusVal).Scan(
+		&note.ID, &note.UserID, &note.Title, &note.Content, &note.Status, &note.CreatedAt, &note.UpdatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -83,13 +89,27 @@ func (s *NoteService) DeleteNote(ctx context.Context, userID, noteID string) err
 	return nil
 }
 
-func (s *NoteService) UpdateNote(ctx context.Context, userID, noteID, title string, content json.RawMessage) error {
-	query := `
-		UPDATE notes
-		SET title=$1, content=$2, updated_at=NOW()
-		WHERE id=$3 AND user_id=$4 AND deleted_at IS NULL
-	`
-	commandTag, err := s.db.Exec(ctx, query, title, content, noteID, userID)
+func (s *NoteService) UpdateNote(ctx context.Context, userID, noteID, title string, content json.RawMessage, status ...string) error {
+	var query string
+	var args []interface{}
+
+	if len(status) > 0 {
+		query = `
+			UPDATE notes
+			SET title=$1, content=$2, status=$3, updated_at=NOW()
+			WHERE id=$4 AND user_id=$5 AND deleted_at IS NULL
+		`
+		args = []interface{}{title, content, status[0], noteID, userID}
+	} else {
+		query = `
+			UPDATE notes
+			SET title=$1, content=$2, updated_at=NOW()
+			WHERE id=$3 AND user_id=$4 AND deleted_at IS NULL
+		`
+		args = []interface{}{title, content, noteID, userID}
+	}
+
+	commandTag, err := s.db.Exec(ctx, query, args...)
 	if err != nil {
 		return err
 	}
@@ -101,9 +121,9 @@ func (s *NoteService) UpdateNote(ctx context.Context, userID, noteID, title stri
 
 func (s *NoteService) GetNote(ctx context.Context, userID, noteID string) (*Note, error) {
 	var note Note
-	query := "SELECT id, user_id, title, content, created_at, updated_at, deleted_at FROM notes WHERE id=$1 AND user_id=$2 AND deleted_at IS NULL"
+	query := "SELECT id, user_id, title, content, status, created_at, updated_at, deleted_at FROM notes WHERE id=$1 AND user_id=$2 AND deleted_at IS NULL"
 	err := s.db.QueryRow(ctx, query, noteID, userID).Scan(
-		&note.ID, &note.UserID, &note.Title, &note.Content, &note.CreatedAt, &note.UpdatedAt, &note.DeletedAt,
+		&note.ID, &note.UserID, &note.Title, &note.Content, &note.Status, &note.CreatedAt, &note.UpdatedAt, &note.DeletedAt,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -174,7 +194,7 @@ func (s *NoteService) GetNotes(ctx context.Context, userID string, page, limit i
 	}
 
 	// Fetch notes
-	baseQuery := "SELECT id, user_id, title, created_at, updated_at, deleted_at FROM notes" + whereClause
+	baseQuery := "SELECT id, user_id, title, content, status, created_at, updated_at, deleted_at FROM notes" + whereClause
 	baseQuery += fmt.Sprintf(" ORDER BY %s %s LIMIT %d OFFSET %d", orderBy, orderDir, limit, offset)
 
 	rows, err := s.db.Query(ctx, baseQuery, args...)
@@ -186,7 +206,8 @@ func (s *NoteService) GetNotes(ctx context.Context, userID string, page, limit i
 	var notes []Note
 	for rows.Next() {
 		var n Note
-		if err := rows.Scan(&n.ID, &n.UserID, &n.Title, &n.CreatedAt, &n.UpdatedAt, &n.DeletedAt); err != nil {
+		// Scan status as well
+		if err := rows.Scan(&n.ID, &n.UserID, &n.Title, &n.Content, &n.Status, &n.CreatedAt, &n.UpdatedAt, &n.DeletedAt); err != nil {
 			continue
 		}
 		notes = append(notes, n)
