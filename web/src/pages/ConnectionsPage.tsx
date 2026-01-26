@@ -14,22 +14,14 @@ import {
     searchUsers as apiSearchUsers,
     sendConnectionRequest,
     respondToConnectionRequest,
-    getOrCreateDirectGroup
+    getOrCreateDirectGroup,
+    Connection
 } from "@/services/api";
 
 interface User {
     id: string;
     email: string;
     username?: string;
-}
-
-interface Connection {
-    id: string;
-    requester_id: string;
-    receiver_id: string;
-    status: string;
-    requester_email?: string;
-    receiver_email?: string;
 }
 
 export default function ConnectionsPage() {
@@ -134,7 +126,8 @@ export default function ConnectionsPage() {
                          <Card key={c.id}>
                             <CardContent className="flex justify-between items-center p-4">
                                 <div>
-                                    <p className="font-medium">{c.requester_email}</p>
+                                <p className="font-medium">{c.requester_username || c.requester_email}</p>
+                                {c.requester_username && <p className="text-xs text-muted-foreground">{c.requester_email}</p>}
                                     <p className="text-sm text-muted-foreground">Wants to connect</p>
                                 </div>
                                 <div className="space-x-2">
@@ -149,7 +142,7 @@ export default function ConnectionsPage() {
                             <h3 className="text-sm font-medium text-muted-foreground uppercase">Sent Requests</h3>
                              {connections.filter(c => c.status === 'pending' && c.requester_email === user?.email).map(c => (
                                 <div key={c.id} className="p-2 border-b">
-                                    To: {c.receiver_email} (Pending)
+                                To: {c.receiver_username || c.receiver_email} (Pending)
                                 </div>
                             ))}
                         </div>
@@ -157,11 +150,16 @@ export default function ConnectionsPage() {
 
                     <h2 className="text-xl font-semibold mt-8">My Network</h2>
                     {connections.filter(c => c.status === 'accepted').map(c => {
-                        const otherEmail = c.requester_email === user?.email ? c.receiver_email : c.requester_email;
+                    const isRequester = c.requester_email === user?.email;
+                    const otherEmail = isRequester ? c.receiver_email : c.requester_email;
+                    const otherUsername = isRequester ? c.receiver_username : c.requester_username;
                         return (
                             <Card key={c.id}>
                                 <CardContent className="p-4 flex justify-between items-center">
-                                    <p className="font-medium">{otherEmail}</p>
+                                <div>
+                                    <p className="font-medium">{otherUsername || otherEmail}</p>
+                                    {otherUsername && <p className="text-xs text-muted-foreground">{otherEmail}</p>}
+                                </div>
                                     <Button size="sm" variant="outline" onClick={() => handleMessage(c)}>
                                         <MessageSquare className="h-4 w-4 mr-2" /> Message
                                     </Button>

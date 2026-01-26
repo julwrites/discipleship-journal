@@ -3,13 +3,14 @@ import { auth } from "@/lib/firebase";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { fetchNotes, syncUser, NoteFilter, deleteNote, getGroups, shareNote, getNote, askAIStream } from "@/services/api";
+import { fetchNotes, syncUser, NoteFilter, deleteNote, getGroups, shareNote, getNote, askAIStream, getConnections, getOrCreateDirectGroup, Connection } from "@/services/api";
 import { Link } from "react-router-dom";
 import { Settings, Users, BookOpen, Filter, CalendarIcon, User as UserIcon, Book, LogOut } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { NoteCard, Note } from "@/components/NoteCard";
@@ -52,8 +53,11 @@ export default function Dashboard() {
   // Share State
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [sharing, setSharing] = useState(false);
-  const [myGroups, setMyGroups] = useState<{ id: string, name: string }[]>([]);
+  const [myGroups, setMyGroups] = useState<{ id: string; name: string; type?: string }[]>([]);
+  const [connections, setConnections] = useState<Connection[]>([]);
+  const [shareType, setShareType] = useState<"group" | "person">("group");
   const [selectedGroupId, setSelectedGroupId] = useState("");
+  const [selectedPersonId, setSelectedPersonId] = useState("");
   const [shareComment, setShareComment] = useState("");
 
   // AI State
@@ -173,22 +177,40 @@ export default function Dashboard() {
       setShareDialogOpen(true);
       setShareComment("");
       setSelectedGroupId("");
+      setSelectedPersonId("");
+      setShareType("group");
 
-      // Fetch groups if not already fetched (or refetch to be safe)
+      // Fetch groups and connections
       try {
-          const groups = await getGroups();
+          const [groups, conns] = await Promise.all([
+              getGroups(),
+              getConnections()
+          ]);
           setMyGroups(groups || []);
+          setConnections(conns || []);
       } catch (e) {
           console.error(e);
-          toast.error("Failed to load groups");
+          toast.error("Failed to load sharing options");
       }
   };
 
   const confirmShare = async () => {
-      if (!selectedNote || !selectedGroupId) return;
+      if (!selectedNote) return;
+
+      let targetGroupId = selectedGroupId;
+
       setSharing(true);
       try {
-          await shareNote(selectedGroupId, selectedNote.id, shareComment);
+          if (shareType === "person") {
+              if (!selectedPersonId) return;
+              // Get or create direct group
+              const group = await getOrCreateDirectGroup(selectedPersonId);
+              targetGroupId = group.id;
+          }
+
+          if (!targetGroupId) return;
+
+          await shareNote(targetGroupId, selectedNote.id, shareComment);
           toast.success("Note shared successfully");
           setShareDialogOpen(false);
       } catch (e) {
@@ -466,26 +488,73 @@ export default function Dashboard() {
       <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
           <DialogContent>
               <DialogHeader>
-                  <DialogTitle>Share to Group</DialogTitle>
-                  <DialogDescription>Share "{selectedNote?.title}" with your study group.</DialogDescription>
+                  <DialogTitle>Share Note</DialogTitle>
+                  <DialogDescription>Share "{selectedNote?.title}" with others.</DialogDescription>
               </DialogHeader>
-              <div className="space-y-4">
-                  <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
-                      <SelectTrigger>
-                          <SelectValue placeholder="Select a Group..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                          {myGroups.map(g => (
-                              <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
-                          ))}
-                      </SelectContent>
-                  </Select>
+
+              <Tabs value={shareType} onValueChange={(v) => setShareType(v as "group" | "person")} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 mb-4">
+                      <TabsTrigger value="group">Share to Group</TabsTrigger>
+                      <TabsTrigger value="person">Share to Person</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="group" className="space-y-4">
+                      <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
+                          <SelectTrigger>
+                              <SelectValue placeholder="Select a Group..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                              {myGroups.filter(g => g.type !== 'direct').length === 0 && (
+                                  <div className="p-2 text-sm text-muted-foreground text-center">No groups found</div>
+                              )}
+                              {myGroups.filter(g => g.type !== 'direct').map(g => (
+                                  <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+                              ))}
+                          </SelectContent>
+                      </Select>
+                  </TabsContent>
+
+                  <TabsContent value="person" className="space-y-4">
+                      <Select value={selectedPersonId} onValueChange={setSelectedPersonId}>
+                          <SelectTrigger>
+                              <SelectValue placeholder="Select a Person..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                              {connections.filter(c => c.status === 'accepted').length === 0 && (
+                                  <div className="p-2 text-sm text-muted-foreground text-center">No connections found</div>
+                              )}
+                              {connections.filter(c => c.status === 'accepted').map(c => {
+                                  // Determine other user
+                                  const isRequester = !auth.currentUser || c.requester_email === auth.currentUser.email; // Fallback logic if auth.currentUser is not perfectly synced, but usually requester_email check is robust enough if we assume requester_id check
+                                  // Better: we don't have user ID easily here without syncUser result.
+                                  // But connection object has email.
+                                  // We can compare emails.
+                                  const myEmail = auth.currentUser?.email;
+                                  const isReq = c.requester_email === myEmail;
+                                  const otherId = isReq ? c.receiver_id : c.requester_id;
+                                  const otherEmail = isReq ? c.receiver_email : c.requester_email;
+                                  const otherName = isReq ? c.receiver_username : c.requester_username;
+
+                                  return (
+                                      <SelectItem key={c.id} value={otherId}>{otherName || otherEmail}</SelectItem>
+                                  );
+                              })}
+                          </SelectContent>
+                      </Select>
+                  </TabsContent>
+              </Tabs>
+
+              <div className="space-y-4 mt-4">
                   <Input
                       placeholder="Add a comment (optional)..."
                       value={shareComment}
                       onChange={(e) => setShareComment(e.target.value)}
                   />
-                  <Button onClick={confirmShare} disabled={sharing || !selectedGroupId} className="w-full">
+                  <Button
+                      onClick={confirmShare}
+                      disabled={sharing || (shareType === "group" ? !selectedGroupId : !selectedPersonId)}
+                      className="w-full"
+                  >
                       {sharing ? "Sharing..." : "Share Note"}
                   </Button>
               </div>

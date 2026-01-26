@@ -20,12 +20,14 @@ type ConnectionRequest struct {
 }
 
 type ConnectionResponse struct {
-	ID             string `json:"id"`
-	RequesterID    string `json:"requester_id"`
-	ReceiverID     string `json:"receiver_id"`
-	Status         string `json:"status"`
-	RequesterEmail string `json:"requester_email,omitempty"`
-	ReceiverEmail  string `json:"receiver_email,omitempty"`
+	ID                string  `json:"id"`
+	RequesterID       string  `json:"requester_id"`
+	ReceiverID        string  `json:"receiver_id"`
+	Status            string  `json:"status"`
+	RequesterEmail    string  `json:"requester_email,omitempty"`
+	ReceiverEmail     string  `json:"receiver_email,omitempty"`
+	RequesterUsername *string `json:"requester_username,omitempty"`
+	ReceiverUsername  *string `json:"receiver_username,omitempty"`
 }
 
 type ConnectionHandler struct {
@@ -216,7 +218,8 @@ func (h *ConnectionHandler) ListConnections(w http.ResponseWriter, r *http.Reque
 
 	rows, err := h.db.Query(r.Context(),
 		`SELECT c.id, c.requester_id, c.receiver_id, c.status,
-		        u1.email as requester_email, u2.email as receiver_email
+		        u1.email as requester_email, u2.email as receiver_email,
+		        u1.username as requester_username, u2.username as receiver_username
 		 FROM connections c
 		 JOIN users u1 ON c.requester_id = u1.id
 		 JOIN users u2 ON c.receiver_id = u2.id
@@ -230,7 +233,7 @@ func (h *ConnectionHandler) ListConnections(w http.ResponseWriter, r *http.Reque
 	var connections []ConnectionResponse
 	for rows.Next() {
 		var c ConnectionResponse
-		if err := rows.Scan(&c.ID, &c.RequesterID, &c.ReceiverID, &c.Status, &c.RequesterEmail, &c.ReceiverEmail); err != nil {
+		if err := rows.Scan(&c.ID, &c.RequesterID, &c.ReceiverID, &c.Status, &c.RequesterEmail, &c.ReceiverEmail, &c.RequesterUsername, &c.ReceiverUsername); err != nil {
 			continue
 		}
 		connections = append(connections, c)

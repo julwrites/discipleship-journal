@@ -397,6 +397,17 @@ export async function getSharedItem(groupId: string, shareId: string) {
 
 // --- Connections ---
 
+export interface Connection {
+    id: string;
+    requester_id: string;
+    receiver_id: string;
+    status: string;
+    requester_email?: string;
+    receiver_email?: string;
+    requester_username?: string;
+    receiver_username?: string;
+}
+
 export async function getConnections() {
     const headers = await getHeaders();
     const res = await fetch(`${API_URL}/connections`, { headers });
