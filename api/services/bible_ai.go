@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"html"
@@ -16,6 +17,7 @@ import (
 type BibleAIClient interface {
 	GetPassage(ctx context.Context, reference string, version string) (map[string]interface{}, error)
 	ChatCompletion(ctx context.Context, payload map[string]interface{}) (map[string]interface{}, error)
+	StreamChatCompletion(ctx context.Context, payload map[string]interface{}) (<-chan string, <-chan error, error)
 	GetVersions(ctx context.Context, params map[string]string) (map[string]interface{}, error)
 	GetSystemPrompt(key string) string
 }
@@ -56,6 +58,7 @@ type QueryPayload struct {
 	Verses []string `json:"verses,omitempty"`
 	Words  []string `json:"words,omitempty"`
 	Prompt string   `json:"prompt,omitempty"`
+	Stream bool     `json:"stream,omitempty"`
 }
 
 type QueryContext struct {
@@ -166,76 +169,7 @@ func (c *RealBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 		return nil, fmt.Errorf("bible API not configured")
 	}
 
-	prompt, ok := payload["prompt"].(string)
-	if !ok {
-		prompt = ""
-	}
-
-	// Handle optional context by appending it to the prompt variable
-	// This ensures it is included even if the template doesn't explicitly use {CONTEXT}
-	if ctxText, ok := payload["context"].(string); ok && ctxText != "" {
-		prompt += fmt.Sprintf(" Context: %s.", ctxText)
-	}
-
-	version, ok := payload["version"].(string)
-	if !ok || version == "" {
-		version = "ESV"
-	}
-
-	// Prepare Context
-	queryContext := &QueryContext{
-		User: &UserContext{
-			Version: version,
-		},
-	}
-
-	var themes []string
-	if ts, ok := payload["themes"].([]string); ok {
-		themes = ts
-	}
-	if len(themes) > 0 {
-		queryContext.Words = themes
-	}
-
-	var verses []string
-	if vs, ok := payload["verses"].([]string); ok {
-		verses = vs
-	}
-	if len(verses) > 0 {
-		queryContext.Verses = verses
-	}
-
-	// Select prompt template
-	promptType, _ := payload["type"].(string)
-	if promptType == "" {
-		promptType = "ask"
-	}
-
-	template := c.SystemPrompts[promptType]
-
-	finalPrompt := prompt
-	if template != "" {
-		// Replace tags: {PROMPT}, {WORDS}, {PASSAGE}
-		r := strings.NewReplacer(
-			"{PROMPT}", prompt,
-			"{WORDS}", strings.Join(themes, ", "),
-			"{PASSAGE}", strings.Join(verses, "\n"),
-		)
-		finalPrompt = r.Replace(template)
-	} else {
-		// Fallback/Legacy behavior: append context manually if prompt template not found
-		// (though we already appended context to prompt above, so just add themes)
-		if len(themes) > 0 {
-			finalPrompt += fmt.Sprintf(" Focus on themes: %s.", strings.Join(themes, ", "))
-		}
-	}
-
-	reqPayload := QueryRequest{
-		Query: QueryPayload{
-			Prompt: finalPrompt,
-		},
-		Context: queryContext,
-	}
+	reqPayload := c.prepareQueryRequest(payload)
 
 	var result OQueryResponse
 	var errorResult ErrorResponse
@@ -279,6 +213,170 @@ func (c *RealBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 	}
 
 	return response, nil
+}
+
+// StreamChatCompletion sends a chat completion request to the external API with streaming.
+func (c *RealBibleAIClient) StreamChatCompletion(ctx context.Context, payload map[string]interface{}) (<-chan string, <-chan error, error) {
+	if c.APIURL == "" {
+		return nil, nil, fmt.Errorf("bible API not configured")
+	}
+
+	reqPayload := c.prepareQueryRequest(payload)
+	reqPayload.Query.Stream = true
+
+	outChan := make(chan string)
+	errChan := make(chan error, 1) // Buffered to prevent blocking
+
+	// Execute request with streaming enabled in Resty
+	resp, err := c.Client.R().
+		SetContext(ctx).
+		SetHeader("X-API-KEY", c.APIKey).
+		SetHeader("Content-Type", "application/json").
+		SetBody(reqPayload).
+		SetDoNotParseResponse(true).
+		Post(c.APIURL + "/query")
+
+	if err != nil {
+		return nil, nil, fmt.Errorf("resty request error: %v", err)
+	}
+
+	if resp.IsError() {
+		// Try to read body for error message
+		body := resp.RawResponse.Body
+		defer body.Close()
+		// We can't easily parse ErrorResponse here since DoNotParseResponse is true,
+		// but we can read a bit of it.
+		return nil, nil, fmt.Errorf("bible API error: %s", resp.Status())
+	}
+
+	go func() {
+		defer close(outChan)
+		defer close(errChan)
+		defer resp.RawResponse.Body.Close()
+
+		reader := bufio.NewReader(resp.RawResponse.Body)
+		for {
+			line, err := reader.ReadString('\n')
+			if err != nil {
+				if err.Error() != "EOF" {
+					errChan <- err
+				}
+				return
+			}
+
+			line = strings.TrimSpace(line)
+			if line == "" {
+				continue
+			}
+
+			// Expected format: "data: JSON"
+			if strings.HasPrefix(line, "data: ") {
+				dataStr := strings.TrimPrefix(line, "data: ")
+				if dataStr == "[DONE]" {
+					return
+				}
+
+				var data map[string]interface{}
+				if err := json.Unmarshal([]byte(dataStr), &data); err != nil {
+					// Log warning?
+					continue
+				}
+
+				// Extract text content based on possible formats
+				// 1. OQueryResponse style: {"text": "..."}
+				if text, ok := data["text"].(string); ok && text != "" {
+					outChan <- text
+				}
+				// 2. OpenAI style: {"choices": [{"delta": {"content": "..."}}]}
+				if choices, ok := data["choices"].([]interface{}); ok {
+					for _, c := range choices {
+						if choice, ok := c.(map[string]interface{}); ok {
+							if delta, ok := choice["delta"].(map[string]interface{}); ok {
+								if content, ok := delta["content"].(string); ok {
+									outChan <- content
+								}
+							}
+						}
+					}
+				}
+				// 3. Fallback: just check if there is a "response" or "content" field at top level
+				if content, ok := data["response"].(string); ok {
+					outChan <- content
+				}
+			}
+		}
+	}()
+
+	return outChan, errChan, nil
+}
+
+func (c *RealBibleAIClient) prepareQueryRequest(payload map[string]interface{}) QueryRequest {
+	prompt, ok := payload["prompt"].(string)
+	if !ok {
+		prompt = ""
+	}
+
+	// Handle optional context by appending it to the prompt variable
+	if ctxText, ok := payload["context"].(string); ok && ctxText != "" {
+		prompt += fmt.Sprintf(" Context: %s.", ctxText)
+	}
+
+	version, ok := payload["version"].(string)
+	if !ok || version == "" {
+		version = "ESV"
+	}
+
+	// Prepare Context
+	queryContext := &QueryContext{
+		User: &UserContext{
+			Version: version,
+		},
+	}
+
+	var themes []string
+	if ts, ok := payload["themes"].([]string); ok {
+		themes = ts
+	}
+	if len(themes) > 0 {
+		queryContext.Words = themes
+	}
+
+	var verses []string
+	if vs, ok := payload["verses"].([]string); ok {
+		verses = vs
+	}
+	if len(verses) > 0 {
+		queryContext.Verses = verses
+	}
+
+	// Select prompt template
+	promptType, _ := payload["type"].(string)
+	if promptType == "" {
+		promptType = "ask"
+	}
+
+	template := c.SystemPrompts[promptType]
+
+	finalPrompt := prompt
+	if template != "" {
+		r := strings.NewReplacer(
+			"{PROMPT}", prompt,
+			"{WORDS}", strings.Join(themes, ", "),
+			"{PASSAGE}", strings.Join(verses, "\n"),
+		)
+		finalPrompt = r.Replace(template)
+	} else {
+		if len(themes) > 0 {
+			finalPrompt += fmt.Sprintf(" Focus on themes: %s.", strings.Join(themes, ", "))
+		}
+	}
+
+	return QueryRequest{
+		Query: QueryPayload{
+			Prompt: finalPrompt,
+		},
+		Context: queryContext,
+	}
 }
 
 // GetSystemPrompt retrieves a configured system prompt by key.

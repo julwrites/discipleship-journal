@@ -172,118 +172,116 @@ func (h *ChatHandler) handleStream(w http.ResponseWriter, r *http.Request, reqTy
 	}
 	flusher.Flush()
 
-	// 3. Launch AI Request in Background (Detached Context)
-	// Use buffered channels to prevent goroutine leak on disconnect
-	resultChan := make(chan string, 1)
-	errChan := make(chan error, 1)
-
-	// Create a detached context for the background operation so it survives client disconnect
+	// 3. Launch AI Request
+	// Use detached context so stream reading continues if client disconnects
 	bgCtx := context.Background()
-	// (In a real app, might want to link this to server shutdown context)
-
-	go func() {
-		defer close(resultChan)
-		defer close(errChan)
-
-		// Call AI (Synchronous for now)
-		aiResult, err := h.Client.ChatCompletion(bgCtx, payload)
-		if err != nil {
-			errChan <- err
-			return
+	outChan, errChan, err := h.Client.StreamChatCompletion(bgCtx, payload)
+	if err != nil {
+		slog.Error("Failed to start AI stream", "error", err)
+		if err := h.NoteService.UpdateNote(bgCtx, userUUID.String(), note.ID, noteTitle, contentJSON, "failed"); err != nil {
+			slog.Error("Failed to mark note as failed", "error", err)
 		}
-
-		var answer string
-		if choices, ok := aiResult["choices"].([]interface{}); ok && len(choices) > 0 {
-			if choice, ok := choices[0].(map[string]interface{}); ok {
-				if msg, ok := choice["message"].(map[string]interface{}); ok {
-					if content, ok := msg["content"].(string); ok {
-						answer = content
-					}
-				}
-			}
-		} else if content, ok := aiResult["text"].(string); ok {
-			answer = content
-		} else if content, ok := aiResult["response"].(string); ok {
-			answer = content
-		}
-
-		// Update Note with final content
-		var finalHTML string
-		if reqType == "chat" {
-			req := reqData.(ChatRequest)
-			finalHTML = fmt.Sprintf("<p><strong>Passage:</strong> %s</p><p><strong>Themes:</strong> %v</p><p><strong>Q:</strong> %s</p><div class=\"ai-response\"><strong>AI:</strong> %s</div>",
-				req.Passage, req.Themes, req.Prompt, answer)
-		} else {
-			req := reqData.(AskAIRequest)
-			finalHTML = fmt.Sprintf("<p><strong>Context:</strong> %s</p><p><strong>Q:</strong> %s</p><div class=\"ai-response\"><strong>AI:</strong> %s</div>",
-				req.Context, req.Prompt, answer)
-		}
-
-		finalJSON, _ := json.Marshal(finalHTML)
-
-		// Update DB with detached context
-		if err := h.NoteService.UpdateNote(bgCtx, userUUID.String(), note.ID, noteTitle, finalJSON, "active"); err != nil {
-			slog.Error("Failed to update note status", "error", err)
-		} else {
-			slog.Info("Note updated successfully", "id", note.ID)
-
-			// Send Notification
-			if h.NotificationService != nil {
-				notificationData := map[string]string{
-					"type": "ask_ai_complete",
-					"note_id": note.ID,
-				}
-				if err := h.NotificationService.SendNotification(bgCtx, userUUID.String(), "AI Response Ready", "Your question has been answered.", notificationData); err != nil {
-					slog.Warn("Failed to send notification", "error", err)
-				}
-			}
-		}
-
-		resultChan <- answer
-	}()
+		errMsg, _ := json.Marshal(map[string]string{"error": err.Error()})
+		fmt.Fprintf(w, "event: error\ndata: %s\n\n", errMsg)
+		flusher.Flush()
+		return
+	}
 
 	// 4. Stream Loop
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
 
+	fullAnswer := ""
+	clientConnected := true
+
 	for {
 		select {
-		case answer := <-resultChan:
-			// Send the content (simulating chunks could be done here if needed, but we send full for now)
-			// Use json.Marshal to safely escape newlines/etc in SSE data
-			data, _ := json.Marshal(map[string]string{"response": answer})
-			if _, err := fmt.Fprintf(w, "event: chunk\ndata: %s\n\n", data); err != nil {
-				return
+		case chunk, ok := <-outChan:
+			if !ok {
+				// Stream finished successfully
+				goto StreamFinished
 			}
-			if _, err := fmt.Fprintf(w, "event: done\ndata: {}\n\n"); err != nil {
-				return
-			}
-			flusher.Flush()
-			return
 
-		case err := <-errChan:
-			// Update note status to failed
-			if err := h.NoteService.UpdateNote(context.Background(), userUUID.String(), note.ID, noteTitle, contentJSON, "failed"); err != nil {
+			fullAnswer += chunk
+
+			if clientConnected {
+				data, _ := json.Marshal(map[string]string{"response": chunk})
+				if _, err := fmt.Fprintf(w, "event: chunk\ndata: %s\n\n", data); err != nil {
+					clientConnected = false
+					slog.Info("Client disconnected during stream write")
+				} else {
+					flusher.Flush()
+				}
+			}
+
+		case err, ok := <-errChan:
+			if !ok {
+				errChan = nil
+				continue
+			}
+			// Stream error
+			slog.Error("AI stream error", "error", err)
+			if err := h.NoteService.UpdateNote(bgCtx, userUUID.String(), note.ID, noteTitle, contentJSON, "failed"); err != nil {
 				slog.Error("Failed to mark note as failed", "error", err)
 			}
-
-			errMsg, _ := json.Marshal(map[string]string{"error": err.Error()})
-			if _, err := fmt.Fprintf(w, "event: error\ndata: %s\n\n", errMsg); err != nil {
-				return
+			if clientConnected {
+				errMsg, _ := json.Marshal(map[string]string{"error": err.Error()})
+				fmt.Fprintf(w, "event: error\ndata: %s\n\n", errMsg)
+				flusher.Flush()
 			}
-			flusher.Flush()
 			return
 
 		case <-ticker.C:
-			if _, err := fmt.Fprintf(w, "event: ping\ndata: {}\n\n"); err != nil {
-				return
+			if clientConnected {
+				if _, err := fmt.Fprintf(w, "event: ping\ndata: {}\n\n"); err != nil {
+					clientConnected = false
+				} else {
+					flusher.Flush()
+				}
 			}
-			flusher.Flush()
 
 		case <-r.Context().Done():
-			// Client disconnected
-			slog.Info("Client disconnected, background processing continuing")
-			return
+			if clientConnected {
+				clientConnected = false
+				slog.Info("Client disconnected (context done), continuing background processing")
+			}
 		}
+	}
+
+StreamFinished:
+	// Update Note with final content
+	var finalHTML string
+	if reqType == "chat" {
+		req := reqData.(ChatRequest)
+		finalHTML = fmt.Sprintf("<p><strong>Passage:</strong> %s</p><p><strong>Themes:</strong> %v</p><p><strong>Q:</strong> %s</p><div class=\"ai-response\"><strong>AI:</strong> %s</div>",
+			req.Passage, req.Themes, req.Prompt, fullAnswer)
+	} else {
+		req := reqData.(AskAIRequest)
+		finalHTML = fmt.Sprintf("<p><strong>Context:</strong> %s</p><p><strong>Q:</strong> %s</p><div class=\"ai-response\"><strong>AI:</strong> %s</div>",
+			req.Context, req.Prompt, fullAnswer)
+	}
+
+	finalJSON, _ := json.Marshal(finalHTML)
+
+	if err := h.NoteService.UpdateNote(bgCtx, userUUID.String(), note.ID, noteTitle, finalJSON, "active"); err != nil {
+		slog.Error("Failed to update note status", "error", err)
+	} else {
+		slog.Info("Note updated successfully", "id", note.ID)
+
+		// Send Notification
+		if h.NotificationService != nil {
+			notificationData := map[string]string{
+				"type":    "ask_ai_complete",
+				"note_id": note.ID,
+			}
+			if err := h.NotificationService.SendNotification(bgCtx, userUUID.String(), "AI Response Ready", "Your question has been answered.", notificationData); err != nil {
+				slog.Warn("Failed to send notification", "error", err)
+			}
+		}
+	}
+
+	if clientConnected {
+		fmt.Fprintf(w, "event: done\ndata: {}\n\n")
+		flusher.Flush()
 	}
 }

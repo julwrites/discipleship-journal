@@ -3,6 +3,8 @@ package services
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
 )
 
 // MockBibleAIClient is a mock implementation for testing.
@@ -49,6 +51,40 @@ func (m *MockBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 			},
 		},
 	}, nil
+}
+
+func (m *MockBibleAIClient) StreamChatCompletion(ctx context.Context, payload map[string]interface{}) (<-chan string, <-chan error, error) {
+	if m.ShouldError {
+		return nil, nil, fmt.Errorf("mock error")
+	}
+
+	outChan := make(chan string)
+	errChan := make(chan error, 1)
+
+	go func() {
+		defer close(outChan)
+		defer close(errChan)
+
+		// Mock response content
+		var prompt string
+		if p, ok := payload["prompt"].(string); ok {
+			prompt = p
+		}
+		fullResponse := "This is a mocked AI response to: " + prompt
+
+		// Simulate chunks
+		words := strings.Split(fullResponse, " ")
+		for _, word := range words {
+			select {
+			case <-ctx.Done():
+				return
+			case outChan <- word + " ":
+				time.Sleep(10 * time.Millisecond) // Simulate delay
+			}
+		}
+	}()
+
+	return outChan, errChan, nil
 }
 
 func (m *MockBibleAIClient) GetSystemPrompt(key string) string {
