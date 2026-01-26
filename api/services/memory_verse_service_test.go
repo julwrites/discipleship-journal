@@ -94,14 +94,15 @@ func TestClonePack(t *testing.T) {
 		WillReturnResult(pgxmock.NewResult("INSERT", 1))
 
 	// 3. GetVerses (Source)
+	var verseTitle *string = nil // No title
 	mock.ExpectQuery(`SELECT .* FROM memory_verses WHERE verse_pack_id = \$1`).
 		WithArgs(packID).
-		WillReturnRows(pgxmock.NewRows([]string{"id", "verse_pack_id", "reference", "version", "tags", "created_at", "updated_at"}).
-			AddRow(uuid.New(), packID, "John 3:16", "ESV", []byte(`["Love"]`), time.Now(), time.Now()))
+		WillReturnRows(pgxmock.NewRows([]string{"id", "verse_pack_id", "reference", "title", "version", "tags", "created_at", "updated_at"}).
+			AddRow(uuid.New(), packID, "John 3:16", verseTitle, "ESV", []byte(`["Love"]`), time.Now(), time.Now()))
 
 	// 4. CreateVerse (Clone)
 	mock.ExpectExec(`INSERT INTO memory_verses`).
-		WithArgs(pgxmock.AnyArg(), pgxmock.AnyArg(), "John 3:16", "ESV", []byte(`["Love"]`), pgxmock.AnyArg(), pgxmock.AnyArg()).
+		WithArgs(pgxmock.AnyArg(), pgxmock.AnyArg(), "John 3:16", "", "ESV", []byte(`["Love"]`), pgxmock.AnyArg(), pgxmock.AnyArg()).
 		WillReturnResult(pgxmock.NewResult("INSERT", 1))
 
 	newPack, err := service.ClonePack(context.Background(), packID, userID, "New Title")
@@ -124,17 +125,18 @@ func TestSearchVerses(t *testing.T) {
 	verseID := uuid.New()
 	packID := uuid.New()
 	packTitle := "My Pack"
+	var verseTitle *string = nil
 
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT mv.id, mv.verse_pack_id, mv.reference, mv.version, mv.tags, vp.title, mv.created_at, mv.updated_at
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT mv.id, mv.verse_pack_id, mv.reference, mv.title, mv.version, mv.tags, vp.title, mv.created_at, mv.updated_at
 		FROM memory_verses mv
 		JOIN verse_packs vp ON mv.verse_pack_id = vp.id
 		WHERE (vp.user_id = $1 OR vp.is_public = true)
-		AND (mv.reference ILIKE $2 OR vp.title ILIKE $2)
+		AND (mv.reference ILIKE $2 OR vp.title ILIKE $2 OR mv.title ILIKE $2)
 		ORDER BY mv.reference ASC
 		LIMIT 20`)).
 		WithArgs(userID, "%"+query+"%").
-		WillReturnRows(pgxmock.NewRows([]string{"id", "verse_pack_id", "reference", "version", "tags", "title", "created_at", "updated_at"}).
-			AddRow(verseID, packID, "John 3:16", "ESV", []byte(`["Love"]`), packTitle, time.Now(), time.Now()))
+		WillReturnRows(pgxmock.NewRows([]string{"id", "verse_pack_id", "reference", "title", "version", "tags", "pack_title", "created_at", "updated_at"}).
+			AddRow(verseID, packID, "John 3:16", verseTitle, "ESV", []byte(`["Love"]`), packTitle, time.Now(), time.Now()))
 
 	verses, err := service.SearchVerses(context.Background(), userID, query)
 	assert.NoError(t, err)

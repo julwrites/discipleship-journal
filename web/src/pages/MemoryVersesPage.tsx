@@ -164,6 +164,7 @@ export function VersePackDetail() {
     // Add Verse Form
     const [newVerse, setNewVerse] = useState<Partial<MemoryVerse>>({
         reference: "",
+        title: "",
         version: "ESV",
         tags: []
     });
@@ -218,7 +219,7 @@ export function VersePackDetail() {
             await createVerseInPack(id, newVerse as any);
             toast.success("Verse added");
             setIsAddOpen(false);
-            setNewVerse(prev => ({ ...prev, reference: "", tags: [] })); // Keep version
+            setNewVerse(prev => ({ ...prev, reference: "", title: "", tags: [] })); // Keep version
             loadDetails();
         } catch {
             toast.error("Failed to add verse");
@@ -382,6 +383,14 @@ export function VersePackDetail() {
                                     </DialogHeader>
                                     <div className="space-y-4 py-4">
                                         <div className="grid gap-2">
+                                            <Label>Title (Optional)</Label>
+                                            <Input
+                                                value={newVerse.title || ""}
+                                                onChange={e => setNewVerse({...newVerse, title: e.target.value})}
+                                                placeholder="e.g. God's Love"
+                                            />
+                                        </div>
+                                        <div className="grid gap-2">
                                             <Label>Reference</Label>
                                             <BibleReferenceInput
                                                 value={newVerse.reference || ""}
@@ -446,6 +455,14 @@ export function VersePackDetail() {
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
+                        <div className="grid gap-2">
+                            <Label>Title (Optional)</Label>
+                            <Input
+                                value={editVerseData.title || ""}
+                                onChange={e => setEditVerseData({...editVerseData, title: e.target.value})}
+                                placeholder="e.g. God's Love"
+                            />
+                        </div>
                         <div className="grid gap-2">
                             <Label>Reference</Label>
                             <BibleReferenceInput
@@ -527,8 +544,15 @@ export function VersePackDetail() {
                             <div className="flex items-center gap-3">
                                 <BookOpen className="h-5 w-5 text-primary" />
                                 <div>
-                                    <div className="font-semibold text-lg">{verse.reference}</div>
-                                    <div className="text-xs text-muted-foreground flex gap-2">
+                                    <div className="font-semibold text-lg">
+                                        {verse.title ? (
+                                            <>
+                                                {verse.title}
+                                                <span className="text-muted-foreground font-normal ml-2 text-sm">{verse.reference}</span>
+                                            </>
+                                        ) : verse.reference}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground flex gap-2 mt-1">
                                         <span className="bg-muted px-1.5 rounded">{verse.version}</span>
                                         {verse.tags?.map(t => (
                                             <span key={t}>#{t}</span>
