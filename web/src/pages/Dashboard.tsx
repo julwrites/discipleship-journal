@@ -525,10 +525,6 @@ export default function Dashboard() {
                               )}
                               {connections.filter(c => c.status === 'accepted').map(c => {
                                   // Determine other user
-                                  const isRequester = !auth.currentUser || c.requester_email === auth.currentUser.email; // Fallback logic if auth.currentUser is not perfectly synced, but usually requester_email check is robust enough if we assume requester_id check
-                                  // Better: we don't have user ID easily here without syncUser result.
-                                  // But connection object has email.
-                                  // We can compare emails.
                                   const myEmail = auth.currentUser?.email;
                                   const isReq = c.requester_email === myEmail;
                                   const otherId = isReq ? c.receiver_id : c.requester_id;
