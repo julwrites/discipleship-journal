@@ -67,7 +67,14 @@ export async function createNote(title: string, content: string | Record<string,
     headers,
     body: JSON.stringify({ title, content }),
   });
-  if (!res.ok) throw new Error("Failed to create note");
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    if (data.errors) {
+      const messages = Object.values(data.errors).join(", ");
+      throw new Error(`Validation failed: ${messages}`);
+    }
+    throw new Error("Failed to create note");
+  }
   return res.json();
 }
 
@@ -85,7 +92,14 @@ export async function updateNote(id: string, title: string, content: string | Re
         headers,
         body: JSON.stringify({ title, content })
     });
-    if (!res.ok) throw new Error("Failed to update note");
+    if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        if (data.errors) {
+            const messages = Object.values(data.errors).join(", ");
+            throw new Error(`Validation failed: ${messages}`);
+        }
+        throw new Error("Failed to update note");
+    }
 }
 
 export async function deleteNote(id: string) {
