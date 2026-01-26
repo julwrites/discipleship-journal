@@ -29,9 +29,9 @@ vi.mock('@/lib/firebase', () => ({
     }
 }));
 
-// Mock useAuthState
-vi.mock('react-firebase-hooks/auth', () => ({
-    useAuthState: () => [{ email: 'test@example.com', uid: '123' } as User, false, undefined],
+// Mock useAuth
+vi.mock('@/hooks/useAuth', () => ({
+    useAuth: () => ({ user: { email: 'test@example.com', uid: '123' } as User, loading: false }),
 }));
 
 
