@@ -232,7 +232,7 @@ func main() {
 	noteService := services.NewNoteService(dbWrapper)
 
 	bibleHandler := handlers.NewBibleHandler(bibleAIClient)
-	chatHandler := handlers.NewChatHandler(bibleAIClient, noteService, dbWrapper)
+	chatHandler := handlers.NewChatHandler(bibleAIClient, noteService, notificationService, dbWrapper)
 	noteHandler := handlers.NewNoteHandler(dbWrapper, noteService)
 	userHandler := handlers.NewUserHandler(dbWrapper)
 

@@ -38,6 +38,7 @@ Object.defineProperty(window, 'matchMedia', {
 vi.mock('@/services/api', () => ({
     fetchNotes: vi.fn(),
     syncUser: vi.fn(),
+    askAIStream: vi.fn(),
 }));
 
 // Mock Firebase

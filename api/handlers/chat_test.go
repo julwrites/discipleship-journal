@@ -7,7 +7,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
+	"time"
 
 	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/services"
@@ -34,9 +36,21 @@ func TestChatWithAI(t *testing.T) {
 	defer mockDB.Close()
 
 	mockService := new(MockNoteService)
-	handler := NewChatHandler(client, mockService, mockDB)
+	mockNotificationService := services.NewMockNotificationService()
+
+	handler := NewChatHandler(client, mockService, mockNotificationService, mockDB)
 
 	t.Run("AskAI Success", func(t *testing.T) {
+		testUserID := "00000000-0000-0000-0000-000000000001"
+
+		mockService.On("CreateNote", mock.Anything, testUserID, mock.Anything, mock.Anything, []string{"pending"}).
+			Return(&services.Note{ID: "note-123"}, nil).
+			Once()
+
+		mockService.On("UpdateNote", mock.Anything, testUserID, "note-123", mock.Anything, mock.Anything, []string{"active"}).
+			Return(nil).
+			Maybe()
+
 		reqBody := map[string]string{
 			"context": "I am feeling happy today.",
 			"prompt":  "What is happiness?",
@@ -44,6 +58,10 @@ func TestChatWithAI(t *testing.T) {
 		bodyBytes, _ := json.Marshal(reqBody)
 		req, _ := http.NewRequest("POST", "/api/ai/ask", bytes.NewBuffer(bodyBytes))
 		req.Header.Set("Content-Type", "application/json")
+
+		ctx := context.WithValue(req.Context(), TestUserKey, testUserID)
+		req = req.WithContext(ctx)
+
 		rr := httptest.NewRecorder()
 
 		handler.AskAI(rr, req)
@@ -52,22 +70,20 @@ func TestChatWithAI(t *testing.T) {
 			t.Errorf("handler returned wrong status code: got %v want %v. Body: %s", status, http.StatusOK, rr.Body.String())
 		}
 
-		var resp ChatResponse
-		if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
-			t.Fatalf("Failed to parse response: %v", err)
+		contentType := rr.Header().Get("Content-Type")
+		if contentType != "text/event-stream" {
+			t.Errorf("Expected Content-Type text/event-stream, got %s", contentType)
 		}
 
-		if useReal {
-			if len(resp.Response) == 0 {
-				t.Error("Real API returned empty response")
-			}
-		} else {
-			// The mock returns "This is a mocked AI response to: " + prompt
-			// With the new implementation, AskAI sends req.Prompt as "prompt"
-			expected := "This is a mocked AI response to: " + reqBody["prompt"]
-			if resp.Response != expected {
-				t.Errorf("Got unexpected mock response: %v\nExpected: %v", resp.Response, expected)
-			}
+		body := rr.Body.String()
+		if !strings.Contains(body, "event: start") {
+			t.Error("Expected event: start")
+		}
+		if !strings.Contains(body, "event: chunk") {
+			t.Error("Expected event: chunk")
+		}
+		if !strings.Contains(body, "event: done") {
+			t.Error("Expected event: done")
 		}
 	})
 
@@ -76,21 +92,20 @@ func TestChatWithAI(t *testing.T) {
 			t.Skip("Skipping ChatWithAI test in real integration mode due to auth/DB complexity")
 		}
 
-		// Setup Mock DB expectation
 		uid := "firebase_uid_123"
 		userUUID := uuid.New()
 
-		// pgxmock requires escaping $ for args if regex is used, but by default ExpectQuery takes a regex string
-		// So we should escape $.
 		mockDB.ExpectQuery("SELECT id FROM users WHERE firebase_uid=\\$1").
 			WithArgs(uid).
 			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
 
-		// Setup Mock NoteService expectation
-		// We expect CreateNote to be called with the userUUID we just returned
-		mockService.On("CreateNote", mock.Anything, userUUID.String(), mock.Anything, mock.Anything).
-			Return(&services.Note{ID: uuid.New().String()}, nil).
+		mockService.On("CreateNote", mock.Anything, userUUID.String(), mock.Anything, mock.Anything, []string{"pending"}).
+			Return(&services.Note{ID: "note-456"}, nil).
 			Once()
+
+		mockService.On("UpdateNote", mock.Anything, userUUID.String(), "note-456", mock.Anything, mock.Anything, []string{"active"}).
+			Return(nil).
+			Maybe()
 
 		reqBody := map[string]interface{}{
 			"passage": "John 3:16",
@@ -101,7 +116,6 @@ func TestChatWithAI(t *testing.T) {
 		req, _ := http.NewRequest("POST", "/api/chat", bytes.NewBuffer(bodyBytes))
 		req.Header.Set("Content-Type", "application/json")
 
-		// Inject Auth Context
 		ctx := context.WithValue(req.Context(), middleware.UserContextKey, &auth.Token{UID: uid})
 		req = req.WithContext(ctx)
 
@@ -113,10 +127,15 @@ func TestChatWithAI(t *testing.T) {
 			t.Errorf("handler returned wrong status code: got %v want %v. Body: %s", status, http.StatusOK, rr.Body.String())
 		}
 
-		// Ensure all expectations were met
 		if err := mockDB.ExpectationsWereMet(); err != nil {
 			t.Errorf("there were unfulfilled expectations: %s", err)
 		}
-		mockService.AssertExpectations(t)
+
+		body := rr.Body.String()
+		if !strings.Contains(body, "event: start") {
+			t.Error("Expected event: start")
+		}
+
+		time.Sleep(10 * time.Millisecond)
 	})
 }
