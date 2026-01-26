@@ -549,6 +549,7 @@ export interface MemoryVerse {
     id?: string;
     verse_pack_id: string;
     reference: string;
+    title?: string;
     version: string;
     tags: string[];
     pack_title?: string;

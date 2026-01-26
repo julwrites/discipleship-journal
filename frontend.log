@@ -1,0 +1,12 @@
+
+> web@0.0.0 dev
+> vite
+
+Alias @ resolves to: /app/web/src
+
+  VITE v7.2.7  ready in 430 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+6:01:10 AM [vite] (client) ✨ new dependencies optimized: workbox-precaching, workbox-core, workbox-routing, firebase/messaging/sw
+6:01:10 AM [vite] (client) ✨ optimized dependencies changed. reloading

@@ -1,0 +1,26 @@
+go: downloading github.com/go-chi/chi/v5 v5.2.3
+go: downloading github.com/go-chi/cors v1.2.2
+go: downloading github.com/joho/godotenv v1.5.1
+go: downloading github.com/swaggo/http-swagger v1.3.4
+go: downloading github.com/swaggo/swag v1.16.6
+go: downloading github.com/go-playground/validator/v10 v10.28.0
+go: downloading github.com/swaggo/files v0.0.0-20220610200504-28940afbdbfe
+go: downloading github.com/gabriel-vasile/mimetype v1.4.10
+go: downloading github.com/go-playground/universal-translator v0.18.1
+go: downloading github.com/leodido/go-urn v1.4.0
+go: downloading github.com/KyleBanks/depth v1.2.1
+go: downloading github.com/go-openapi/spec v0.20.6
+go: downloading golang.org/x/tools v0.39.0
+go: downloading github.com/go-playground/locales v0.14.1
+go: downloading github.com/go-openapi/jsonpointer v0.19.5
+go: downloading github.com/go-openapi/jsonreference v0.20.0
+go: downloading github.com/go-openapi/swag v0.19.15
+go: downloading github.com/mailru/easyjson v0.7.6
+go: downloading gopkg.in/yaml.v2 v2.4.0
+go: downloading github.com/josharian/intern v1.0.0
+go: downloading golang.org/x/mod v0.30.0
+time=2026-01-26T05:58:38.348Z level=ERROR msg="Database connection failed" error="failed to build database connection string: DB_USERNAME and DB_NAME environment variables are required"
+time=2026-01-26T05:58:38.351Z level=ERROR msg="Firebase init failed" error="google: could not find default credentials. See https://cloud.google.com/docs/authentication/external/set-up-adc for more information"
+time=2026-01-26T05:58:38.351Z level=WARN msg="Firebase Service is nil, using mock authentication for development"
+time=2026-01-26T05:58:38.351Z level=INFO msg="BIBLE_API_URL or BIBLE_API_KEY not set, using MockBibleAIClient"
+time=2026-01-26T05:58:38.351Z level=INFO msg="Server listening on port 8088"

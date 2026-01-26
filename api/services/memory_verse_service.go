@@ -120,7 +120,7 @@ func (s *memoryVerseService) CreatePack(ctx context.Context, pack *models.VerseP
 
 func (s *memoryVerseService) GetVerses(ctx context.Context, packID uuid.UUID) ([]*models.MemoryVerse, error) {
 	query := `
-		SELECT id, verse_pack_id, reference, version, tags, created_at, updated_at
+		SELECT id, verse_pack_id, reference, title, version, tags, created_at, updated_at
 		FROM memory_verses
 		WHERE verse_pack_id = $1
 		ORDER BY created_at ASC
@@ -135,8 +135,12 @@ func (s *memoryVerseService) GetVerses(ctx context.Context, packID uuid.UUID) ([
 	for rows.Next() {
 		var v models.MemoryVerse
 		var tagsBytes []byte
-		if err := rows.Scan(&v.ID, &v.VersePackID, &v.Reference, &v.Version, &tagsBytes, &v.CreatedAt, &v.UpdatedAt); err != nil {
+		var title *string
+		if err := rows.Scan(&v.ID, &v.VersePackID, &v.Reference, &title, &v.Version, &tagsBytes, &v.CreatedAt, &v.UpdatedAt); err != nil {
 			return nil, err
+		}
+		if title != nil {
+			v.Title = *title
 		}
 		if len(tagsBytes) > 0 {
 			_ = json.Unmarshal(tagsBytes, &v.Tags)
@@ -154,11 +158,11 @@ func (s *memoryVerseService) CreateVerse(ctx context.Context, verse *models.Memo
 	tagsJSON, _ := json.Marshal(verse.Tags)
 
 	query := `
-		INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO memory_verses (id, verse_pack_id, reference, title, version, tags, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	`
 	_, err := s.db.Exec(ctx, query,
-		verse.ID, verse.VersePackID, verse.Reference, verse.Version, tagsJSON, verse.CreatedAt, verse.UpdatedAt,
+		verse.ID, verse.VersePackID, verse.Reference, verse.Title, verse.Version, tagsJSON, verse.CreatedAt, verse.UpdatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -201,6 +205,7 @@ func (s *memoryVerseService) ClonePack(ctx context.Context, packID uuid.UUID, us
 		newVerse := &models.MemoryVerse{
 			VersePackID: createdPack.ID,
 			Reference:   v.Reference,
+			Title:       v.Title,
 			Version:     v.Version,
 			Tags:        v.Tags,
 		}
@@ -233,14 +238,14 @@ func (s *memoryVerseService) UpdateVerse(ctx context.Context, verse *models.Memo
 
 	query := `
 		UPDATE memory_verses mv
-		SET reference = $2, version = $3, tags = $4, updated_at = NOW()
+		SET reference = $2, title = $3, version = $4, tags = $5, updated_at = NOW()
 		FROM verse_packs vp
 		WHERE mv.verse_pack_id = vp.id
 		AND mv.id = $1
-		AND vp.user_id = $5
+		AND vp.user_id = $6
 	`
 	res, err := s.db.Exec(ctx, query,
-		verse.ID, verse.Reference, verse.Version, tagsJSON, userID,
+		verse.ID, verse.Reference, verse.Title, verse.Version, tagsJSON, userID,
 	)
 	if err != nil {
 		return err
@@ -272,11 +277,11 @@ func (s *memoryVerseService) DeleteVerse(ctx context.Context, verseID uuid.UUID,
 func (s *memoryVerseService) SearchVerses(ctx context.Context, userID uuid.UUID, queryStr string) ([]*models.MemoryVerse, error) {
 	// Search in user's packs OR public packs
 	query := `
-		SELECT mv.id, mv.verse_pack_id, mv.reference, mv.version, mv.tags, vp.title, mv.created_at, mv.updated_at
+		SELECT mv.id, mv.verse_pack_id, mv.reference, mv.title, mv.version, mv.tags, vp.title, mv.created_at, mv.updated_at
 		FROM memory_verses mv
 		JOIN verse_packs vp ON mv.verse_pack_id = vp.id
 		WHERE (vp.user_id = $1 OR vp.is_public = true)
-		AND (mv.reference ILIKE $2 OR vp.title ILIKE $2)
+		AND (mv.reference ILIKE $2 OR vp.title ILIKE $2 OR mv.title ILIKE $2)
 		ORDER BY mv.reference ASC
 		LIMIT 20
 	`
@@ -290,8 +295,12 @@ func (s *memoryVerseService) SearchVerses(ctx context.Context, userID uuid.UUID,
 	for rows.Next() {
 		var v models.MemoryVerse
 		var tagsBytes []byte
-		if err := rows.Scan(&v.ID, &v.VersePackID, &v.Reference, &v.Version, &tagsBytes, &v.PackTitle, &v.CreatedAt, &v.UpdatedAt); err != nil {
+		var title *string
+		if err := rows.Scan(&v.ID, &v.VersePackID, &v.Reference, &title, &v.Version, &tagsBytes, &v.PackTitle, &v.CreatedAt, &v.UpdatedAt); err != nil {
 			return nil, err
+		}
+		if title != nil {
+			v.Title = *title
 		}
 		if len(tagsBytes) > 0 {
 			_ = json.Unmarshal(tagsBytes, &v.Tags)
