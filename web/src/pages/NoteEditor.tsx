@@ -156,6 +156,11 @@ export default function NoteEditor() {
     }, [debouncedVerseSearch, verseDialogOpen]);
 
     const saveNote = useCallback(async (shouldNavigate = true) => {
+        if (!title.trim()) {
+            toast.error("Please provide a title for your note.");
+            return false;
+        }
+
         setSaving(true);
         setSaveError(false);
         try {
@@ -582,7 +587,9 @@ export default function NoteEditor() {
                                         onClick={() => handleInsertVerse(v)}
                                     >
                                         <div className="flex justify-between items-start">
-                                            <div className="font-semibold text-sm">{v.reference}</div>
+                                            <div className="font-semibold text-sm">
+                                                {v.title ? `${v.title} (${v.reference})` : v.reference}
+                                            </div>
                                             <span className="text-[10px] bg-secondary px-1.5 py-0.5 rounded text-secondary-foreground">
                                                 {v.pack_title || "Unknown Pack"}
                                             </span>

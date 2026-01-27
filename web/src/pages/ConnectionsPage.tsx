@@ -1,12 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { auth } from "@/lib/firebase";
-import { useAuthState } from "react-firebase-hooks/auth";
+import { useAuth } from "@/hooks/useAuth";
 import { useDebounce } from "@/hooks/useDebounce";
 import { ArrowLeft, MessageSquare } from "lucide-react";
 import {
@@ -14,7 +13,8 @@ import {
     searchUsers as apiSearchUsers,
     sendConnectionRequest,
     respondToConnectionRequest,
-    getOrCreateDirectGroup
+    getOrCreateDirectGroup,
+    Connection
 } from "@/services/api";
 
 interface User {
@@ -23,23 +23,29 @@ interface User {
     username?: string;
 }
 
-interface Connection {
-    id: string;
-    requester_id: string;
-    receiver_id: string;
-    status: string;
-    requester_email?: string;
-    receiver_email?: string;
-}
-
 export default function ConnectionsPage() {
     const navigate = useNavigate();
-    const [user] = useAuthState(auth);
+    const { user } = useAuth();
     const [searchQuery, setSearchQuery] = useState("");
     const debouncedSearch = useDebounce(searchQuery, 500);
     const [searchResults, setSearchResults] = useState<User[]>([]);
     const [connections, setConnections] = useState<Connection[]>([]);
     const [loading, setLoading] = useState(false);
+
+    const pendingIncoming = useMemo(() =>
+        connections.filter(c => c.status === 'pending' && c.receiver_email === user?.email),
+        [connections, user?.email]
+    );
+
+    const pendingOutgoing = useMemo(() =>
+        connections.filter(c => c.status === 'pending' && c.requester_email === user?.email),
+        [connections, user?.email]
+    );
+
+    const acceptedConnections = useMemo(() =>
+        connections.filter(c => c.status === 'accepted'),
+        [connections]
+    );
 
     const fetchConnections = useCallback(async () => {
         try {
@@ -130,11 +136,12 @@ export default function ConnectionsPage() {
 
                 <TabsContent value="connections" className="space-y-4">
                     <h2 className="text-xl font-semibold mt-4">Pending Requests</h2>
-                    {connections.filter(c => c.status === 'pending' && c.receiver_email === user?.email).map(c => (
+                    {pendingIncoming.map(c => (
                          <Card key={c.id}>
                             <CardContent className="flex justify-between items-center p-4">
                                 <div>
-                                    <p className="font-medium">{c.requester_email}</p>
+                                <p className="font-medium">{c.requester_username || c.requester_email}</p>
+                                {c.requester_username && <p className="text-xs text-muted-foreground">{c.requester_email}</p>}
                                     <p className="text-sm text-muted-foreground">Wants to connect</p>
                                 </div>
                                 <div className="space-x-2">
@@ -144,12 +151,12 @@ export default function ConnectionsPage() {
                             </CardContent>
                          </Card>
                     ))}
-                    {connections.filter(c => c.status === 'pending' && c.requester_email === user?.email).length > 0 && (
+                    {pendingOutgoing.length > 0 && (
                         <div className="mt-4">
                             <h3 className="text-sm font-medium text-muted-foreground uppercase">Sent Requests</h3>
-                             {connections.filter(c => c.status === 'pending' && c.requester_email === user?.email).map(c => (
+                             {pendingOutgoing.map(c => (
                                 <div key={c.id} className="p-2 border-b">
-                                    To: {c.receiver_email} (Pending)
+                                To: {c.receiver_username || c.receiver_email} (Pending)
                                 </div>
                             ))}
                         </div>
@@ -157,11 +164,16 @@ export default function ConnectionsPage() {
 
                     <h2 className="text-xl font-semibold mt-8">My Network</h2>
                     {connections.filter(c => c.status === 'accepted').map(c => {
-                        const otherEmail = c.requester_email === user?.email ? c.receiver_email : c.requester_email;
+                    const isRequester = c.requester_email === user?.email;
+                    const otherEmail = isRequester ? c.receiver_email : c.requester_email;
+                    const otherUsername = isRequester ? c.receiver_username : c.requester_username;
                         return (
                             <Card key={c.id}>
                                 <CardContent className="p-4 flex justify-between items-center">
-                                    <p className="font-medium">{otherEmail}</p>
+                                <div>
+                                    <p className="font-medium">{otherUsername || otherEmail}</p>
+                                    {otherUsername && <p className="text-xs text-muted-foreground">{otherEmail}</p>}
+                                </div>
                                     <Button size="sm" variant="outline" onClick={() => handleMessage(c)}>
                                         <MessageSquare className="h-4 w-4 mr-2" /> Message
                                     </Button>
@@ -169,7 +181,7 @@ export default function ConnectionsPage() {
                             </Card>
                         )
                     })}
-                     {connections.filter(c => c.status === 'accepted').length === 0 && (
+                     {acceptedConnections.length === 0 && (
                         <p className="text-muted-foreground">No connections yet.</p>
                     )}
                 </TabsContent>

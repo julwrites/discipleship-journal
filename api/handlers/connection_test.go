@@ -142,10 +142,12 @@ func TestListConnections(t *testing.T) {
 		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
 
 	// Mock list connections
+	requesterUsername := "user2"
+	receiverUsername := "user1"
 	mock.ExpectQuery("SELECT c.id, c.requester_id, c.receiver_id, c.status").
 		WithArgs(userUUID).
-		WillReturnRows(pgxmock.NewRows([]string{"id", "requester_id", "receiver_id", "status", "requester_email", "receiver_email"}).
-			AddRow("conn-1", "user-uuid-2", userUUID, "pending", "user2@example.com", "user1@example.com"))
+		WillReturnRows(pgxmock.NewRows([]string{"id", "requester_id", "receiver_id", "status", "requester_email", "receiver_email", "requester_username", "receiver_username"}).
+			AddRow("conn-1", "user-uuid-2", userUUID, "pending", "user2@example.com", "user1@example.com", &requesterUsername, &receiverUsername))
 
 	req := httptest.NewRequest("GET", "/api/connections", nil)
 	token := &auth.Token{UID: uid}

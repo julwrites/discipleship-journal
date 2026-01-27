@@ -67,7 +67,14 @@ export async function createNote(title: string, content: string | Record<string,
     headers,
     body: JSON.stringify({ title, content }),
   });
-  if (!res.ok) throw new Error("Failed to create note");
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    if (data.errors) {
+      const messages = Object.values(data.errors).join(", ");
+      throw new Error(`Validation failed: ${messages}`);
+    }
+    throw new Error("Failed to create note");
+  }
   return res.json();
 }
 
@@ -85,7 +92,14 @@ export async function updateNote(id: string, title: string, content: string | Re
         headers,
         body: JSON.stringify({ title, content })
     });
-    if (!res.ok) throw new Error("Failed to update note");
+    if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        if (data.errors) {
+            const messages = Object.values(data.errors).join(", ");
+            throw new Error(`Validation failed: ${messages}`);
+        }
+        throw new Error("Failed to update note");
+    }
 }
 
 export async function deleteNote(id: string) {
@@ -397,6 +411,17 @@ export async function getSharedItem(groupId: string, shareId: string) {
 
 // --- Connections ---
 
+export interface Connection {
+    id: string;
+    requester_id: string;
+    receiver_id: string;
+    status: string;
+    requester_email?: string;
+    receiver_email?: string;
+    requester_username?: string;
+    receiver_username?: string;
+}
+
 export async function getConnections() {
     const headers = await getHeaders();
     const res = await fetch(`${API_URL}/connections`, { headers });
@@ -524,6 +549,7 @@ export interface MemoryVerse {
     id?: string;
     verse_pack_id: string;
     reference: string;
+    title?: string;
     version: string;
     tags: string[];
     pack_title?: string;
