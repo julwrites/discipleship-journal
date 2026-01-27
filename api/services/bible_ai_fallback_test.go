@@ -68,7 +68,7 @@ func TestStreamChatCompletion_Fallback(t *testing.T) {
 					Text: "Fallback Response",
 				}
 				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(resp)
+				_ = json.NewEncoder(w).Encode(resp)
 			},
 			expectError:    false,
 			expectedOutput: "Fallback Response",
@@ -89,7 +89,7 @@ func TestStreamChatCompletion_Fallback(t *testing.T) {
 					resp := OQueryResponse{
 						Text: "Ignored Stream Request",
 					}
-					json.NewEncoder(w).Encode(resp)
+					_ = json.NewEncoder(w).Encode(resp)
 					return
 				}
 
@@ -98,7 +98,7 @@ func TestStreamChatCompletion_Fallback(t *testing.T) {
 					Text: "Fallback Response from Clean Request",
 				}
 				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(resp)
+				_ = json.NewEncoder(w).Encode(resp)
 			},
 			expectError:    false,
 			expectedOutput: "Fallback Response from Clean Request",
