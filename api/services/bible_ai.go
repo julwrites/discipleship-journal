@@ -96,7 +96,11 @@ type ErrorResponse struct {
 }
 
 // GetPassage fetches a bible passage from the external API.
-func (c *RealBibleAIClient) GetPassage(ctx context.Context, reference string, version string) (map[string]interface{}, error) {
+func (c *RealBibleAIClient) GetPassage(
+	ctx context.Context,
+	reference string,
+	version string,
+) (map[string]interface{}, error) {
 	if c.APIURL == "" {
 		return nil, fmt.Errorf("bible API not configured")
 	}
@@ -164,7 +168,10 @@ func (c *RealBibleAIClient) GetPassage(ctx context.Context, reference string, ve
 }
 
 // ChatCompletion sends a chat completion request to the external API.
-func (c *RealBibleAIClient) ChatCompletion(ctx context.Context, payload map[string]interface{}) (map[string]interface{}, error) {
+func (c *RealBibleAIClient) ChatCompletion(
+	ctx context.Context,
+	payload map[string]interface{},
+) (map[string]interface{}, error) {
 	if c.APIURL == "" {
 		return nil, fmt.Errorf("bible API not configured")
 	}
@@ -216,7 +223,10 @@ func (c *RealBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 }
 
 // StreamChatCompletion sends a chat completion request to the external API with streaming.
-func (c *RealBibleAIClient) StreamChatCompletion(ctx context.Context, payload map[string]interface{}) (<-chan string, <-chan error, error) {
+func (c *RealBibleAIClient) StreamChatCompletion(
+	ctx context.Context,
+	payload map[string]interface{},
+) (<-chan string, <-chan error, error) {
 	if c.APIURL == "" {
 		return nil, nil, fmt.Errorf("bible API not configured")
 	}
@@ -325,7 +335,15 @@ func (c *RealBibleAIClient) StreamChatCompletion(ctx context.Context, payload ma
 	return outChan, errChan, nil
 }
 
-func (c *RealBibleAIClient) performFallback(ctx context.Context, payload map[string]interface{}, outChan chan<- string, errChan chan<- error, originalErr error, resp *resty.Response, isEventStream bool) {
+func (c *RealBibleAIClient) performFallback(
+	ctx context.Context,
+	payload map[string]interface{},
+	outChan chan<- string,
+	errChan chan<- error,
+	originalErr error,
+	resp *resty.Response,
+	isEventStream bool,
+) {
 	status := "nil"
 	if resp != nil {
 		status = resp.Status()
@@ -461,10 +479,13 @@ func (c *RealBibleAIClient) GetVersions(ctx context.Context, params map[string]s
 }
 
 var (
-	emptyParaRegex      = regexp.MustCompile(`(?i)<p[^>]*>(\s|&nbsp;|<br\s*/?>)*</p>`)
-	emptyLiRegex        = regexp.MustCompile(`(?i)<li[^>]*>(\s|&nbsp;|<br\s*/?>)*</li>`)
-	newlineRegex        = regexp.MustCompile(`[\r\n]+`)
-	listWhitespaceRegex = regexp.MustCompile(`(?i)(</?ul[^>]*>|</?ol[^>]*>|</?li[^>]*>)\s+(</?ul[^>]*>|</?ol[^>]*>|</?li[^>]*>)`)
+	emptyParaRegex = regexp.MustCompile(`(?i)<p[^>]*>(\s|&nbsp;|<br\s*/?>)*</p>`)
+	emptyLiRegex   = regexp.MustCompile(`(?i)<li[^>]*>(\s|&nbsp;|<br\s*/?>)*</li>`)
+	newlineRegex   = regexp.MustCompile(`[\r\n]+`)
+	//nolint:lll // Regex is long
+	listWhitespaceRegex = regexp.MustCompile(
+		`(?i)(</?ul[^>]*>|</?ol[^>]*>|</?li[^>]*>)\s+(</?ul[^>]*>|</?ol[^>]*>|</?li[^>]*>)`,
+	)
 )
 
 func cleanHTML(input string) string {
