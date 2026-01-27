@@ -250,12 +250,12 @@ func (c *RealBibleAIClient) StreamChatCompletion(ctx context.Context, payload ma
 			}
 
 			// 2. Fallback to Non-Streaming
-			log.Printf("Streaming failed (err=%v, status=%s, event-stream=%v), falling back to non-streaming...", err, func() string {
-				if resp != nil {
-					return resp.Status()
-				}
-				return "nil"
-			}(), isEventStream)
+			status := "nil"
+			if resp != nil {
+				status = resp.Status()
+			}
+			log.Printf("Streaming failed (err=%v, status=%s, event-stream=%v), falling back to non-streaming...",
+				err, status, isEventStream)
 
 			fallbackResp, fallbackErr := c.ChatCompletion(ctx, payload)
 			if fallbackErr != nil {
