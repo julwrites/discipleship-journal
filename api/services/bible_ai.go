@@ -250,28 +250,7 @@ func (c *RealBibleAIClient) StreamChatCompletion(ctx context.Context, payload ma
 			}
 
 			// 2. Fallback to Non-Streaming
-			status := "nil"
-			if resp != nil {
-				status = resp.Status()
-			}
-			log.Printf("Streaming failed (err=%v, status=%s, event-stream=%v), falling back to non-streaming...",
-				err, status, isEventStream)
-
-			fallbackResp, fallbackErr := c.ChatCompletion(ctx, payload)
-			if fallbackErr != nil {
-				select {
-				case errChan <- fmt.Errorf("fallback failed: %v (original stream error: %v)", fallbackErr, err):
-				case <-ctx.Done():
-				}
-				return
-			}
-
-			if text, ok := fallbackResp["text"].(string); ok && text != "" {
-				select {
-				case outChan <- text:
-				case <-ctx.Done():
-				}
-			}
+			c.performFallback(ctx, payload, outChan, errChan, err, resp, isEventStream)
 			return
 		}
 
@@ -344,6 +323,31 @@ func (c *RealBibleAIClient) StreamChatCompletion(ctx context.Context, payload ma
 	}()
 
 	return outChan, errChan, nil
+}
+
+func (c *RealBibleAIClient) performFallback(ctx context.Context, payload map[string]interface{}, outChan chan<- string, errChan chan<- error, originalErr error, resp *resty.Response, isEventStream bool) {
+	status := "nil"
+	if resp != nil {
+		status = resp.Status()
+	}
+	log.Printf("Streaming failed (err=%v, status=%s, event-stream=%v), falling back to non-streaming...",
+		originalErr, status, isEventStream)
+
+	fallbackResp, fallbackErr := c.ChatCompletion(ctx, payload)
+	if fallbackErr != nil {
+		select {
+		case errChan <- fmt.Errorf("fallback failed: %v (original stream error: %v)", fallbackErr, originalErr):
+		case <-ctx.Done():
+		}
+		return
+	}
+
+	if text, ok := fallbackResp["text"].(string); ok && text != "" {
+		select {
+		case outChan <- text:
+		case <-ctx.Done():
+		}
+	}
 }
 
 func (c *RealBibleAIClient) prepareQueryRequest(payload map[string]interface{}) QueryRequest {
