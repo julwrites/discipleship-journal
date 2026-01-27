@@ -1,8 +1,8 @@
 package services
 
 import (
-	"context"
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"html"
@@ -96,7 +96,11 @@ type ErrorResponse struct {
 }
 
 // GetPassage fetches a bible passage from the external API.
-func (c *RealBibleAIClient) GetPassage(ctx context.Context, reference string, version string) (map[string]interface{}, error) {
+func (c *RealBibleAIClient) GetPassage(
+	ctx context.Context,
+	reference string,
+	version string,
+) (map[string]interface{}, error) {
 	if c.APIURL == "" {
 		return nil, fmt.Errorf("bible API not configured")
 	}
@@ -164,7 +168,10 @@ func (c *RealBibleAIClient) GetPassage(ctx context.Context, reference string, ve
 }
 
 // ChatCompletion sends a chat completion request to the external API.
-func (c *RealBibleAIClient) ChatCompletion(ctx context.Context, payload map[string]interface{}) (map[string]interface{}, error) {
+func (c *RealBibleAIClient) ChatCompletion(
+	ctx context.Context,
+	payload map[string]interface{},
+) (map[string]interface{}, error) {
 	if c.APIURL == "" {
 		return nil, fmt.Errorf("bible API not configured")
 	}
@@ -216,42 +223,48 @@ func (c *RealBibleAIClient) ChatCompletion(ctx context.Context, payload map[stri
 }
 
 // StreamChatCompletion sends a chat completion request to the external API with streaming.
-func (c *RealBibleAIClient) StreamChatCompletion(ctx context.Context, payload map[string]interface{}) (<-chan string, <-chan error, error) {
+func (c *RealBibleAIClient) StreamChatCompletion(
+	ctx context.Context,
+	payload map[string]interface{},
+) (<-chan string, <-chan error, error) {
 	if c.APIURL == "" {
 		return nil, nil, fmt.Errorf("bible API not configured")
 	}
 
-	reqPayload := c.prepareQueryRequest(payload)
-	reqPayload.Query.Stream = true
-
 	outChan := make(chan string)
 	errChan := make(chan error, 1) // Buffered to prevent blocking
-
-	// Execute request with streaming enabled in Resty
-	resp, err := c.Client.R().
-		SetContext(ctx).
-		SetHeader("X-API-KEY", c.APIKey).
-		SetHeader("Content-Type", "application/json").
-		SetBody(reqPayload).
-		SetDoNotParseResponse(true).
-		Post(c.APIURL + "/query")
-
-	if err != nil {
-		return nil, nil, fmt.Errorf("resty request error: %v", err)
-	}
-
-	if resp.IsError() {
-		// Try to read body for error message
-		body := resp.RawResponse.Body
-		defer body.Close()
-		// We can't easily parse ErrorResponse here since DoNotParseResponse is true,
-		// but we can read a bit of it.
-		return nil, nil, fmt.Errorf("bible API error: %s", resp.Status())
-	}
 
 	go func() {
 		defer close(outChan)
 		defer close(errChan)
+
+		// 1. Attempt Streaming Request
+		reqPayload := c.prepareQueryRequest(payload)
+		reqPayload.Query.Stream = true
+
+		resp, err := c.Client.R().
+			SetContext(ctx).
+			SetHeader("X-API-KEY", c.APIKey).
+			SetHeader("Content-Type", "application/json").
+			SetBody(reqPayload).
+			SetDoNotParseResponse(true).
+			Post(c.APIURL + "/query")
+
+		// Check if streaming failed (network error or HTTP error) or if response is not event-stream
+		isEventStream := resp != nil && strings.Contains(resp.Header().Get("Content-Type"), "text/event-stream")
+
+		if err != nil || (resp != nil && resp.IsError()) || !isEventStream {
+			// Ensure we close the body if it exists
+			if resp != nil && resp.RawResponse != nil && resp.RawResponse.Body != nil {
+				resp.RawResponse.Body.Close()
+			}
+
+			// 2. Fallback to Non-Streaming
+			c.performFallback(ctx, payload, outChan, errChan, err, resp, isEventStream)
+			return
+		}
+
+		// 3. Process Stream
 		defer resp.RawResponse.Body.Close()
 
 		reader := bufio.NewReader(resp.RawResponse.Body)
@@ -285,7 +298,11 @@ func (c *RealBibleAIClient) StreamChatCompletion(ctx context.Context, payload ma
 				// Extract text content based on possible formats
 				// 1. OQueryResponse style: {"text": "..."}
 				if text, ok := data["text"].(string); ok && text != "" {
-					outChan <- text
+					select {
+					case outChan <- text:
+					case <-ctx.Done():
+						return
+					}
 				}
 				// 2. OpenAI style: {"choices": [{"delta": {"content": "..."}}]}
 				if choices, ok := data["choices"].([]interface{}); ok {
@@ -293,7 +310,11 @@ func (c *RealBibleAIClient) StreamChatCompletion(ctx context.Context, payload ma
 						if choice, ok := c.(map[string]interface{}); ok {
 							if delta, ok := choice["delta"].(map[string]interface{}); ok {
 								if content, ok := delta["content"].(string); ok {
-									outChan <- content
+									select {
+									case outChan <- content:
+									case <-ctx.Done():
+										return
+									}
 								}
 							}
 						}
@@ -301,13 +322,50 @@ func (c *RealBibleAIClient) StreamChatCompletion(ctx context.Context, payload ma
 				}
 				// 3. Fallback: just check if there is a "response" or "content" field at top level
 				if content, ok := data["response"].(string); ok {
-					outChan <- content
+					select {
+					case outChan <- content:
+					case <-ctx.Done():
+						return
+					}
 				}
 			}
 		}
 	}()
 
 	return outChan, errChan, nil
+}
+
+func (c *RealBibleAIClient) performFallback(
+	ctx context.Context,
+	payload map[string]interface{},
+	outChan chan<- string,
+	errChan chan<- error,
+	originalErr error,
+	resp *resty.Response,
+	isEventStream bool,
+) {
+	status := "nil"
+	if resp != nil {
+		status = resp.Status()
+	}
+	log.Printf("Streaming failed (err=%v, status=%s, event-stream=%v), falling back to non-streaming...",
+		originalErr, status, isEventStream)
+
+	fallbackResp, fallbackErr := c.ChatCompletion(ctx, payload)
+	if fallbackErr != nil {
+		select {
+		case errChan <- fmt.Errorf("fallback failed: %v (original stream error: %v)", fallbackErr, originalErr):
+		case <-ctx.Done():
+		}
+		return
+	}
+
+	if text, ok := fallbackResp["text"].(string); ok && text != "" {
+		select {
+		case outChan <- text:
+		case <-ctx.Done():
+		}
+	}
 }
 
 func (c *RealBibleAIClient) prepareQueryRequest(payload map[string]interface{}) QueryRequest {
@@ -421,10 +479,13 @@ func (c *RealBibleAIClient) GetVersions(ctx context.Context, params map[string]s
 }
 
 var (
-	emptyParaRegex      = regexp.MustCompile(`(?i)<p[^>]*>(\s|&nbsp;|<br\s*/?>)*</p>`)
-	emptyLiRegex        = regexp.MustCompile(`(?i)<li[^>]*>(\s|&nbsp;|<br\s*/?>)*</li>`)
-	newlineRegex        = regexp.MustCompile(`[\r\n]+`)
-	listWhitespaceRegex = regexp.MustCompile(`(?i)(</?ul[^>]*>|</?ol[^>]*>|</?li[^>]*>)\s+(</?ul[^>]*>|</?ol[^>]*>|</?li[^>]*>)`)
+	emptyParaRegex = regexp.MustCompile(`(?i)<p[^>]*>(\s|&nbsp;|<br\s*/?>)*</p>`)
+	emptyLiRegex   = regexp.MustCompile(`(?i)<li[^>]*>(\s|&nbsp;|<br\s*/?>)*</li>`)
+	newlineRegex   = regexp.MustCompile(`[\r\n]+`)
+	//nolint:lll // Regex is long
+	listWhitespaceRegex = regexp.MustCompile(
+		`(?i)(</?ul[^>]*>|</?ol[^>]*>|</?li[^>]*>)\s+(</?ul[^>]*>|</?ol[^>]*>|</?li[^>]*>)`,
+	)
 )
 
 func cleanHTML(input string) string {
