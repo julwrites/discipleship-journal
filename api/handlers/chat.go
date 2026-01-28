@@ -189,15 +189,20 @@ func (h *ChatHandler) handleRequest(w http.ResponseWriter, r *http.Request, reqT
 		// Update Note
 		finalHTML := h.formatFinalHTML(reqType, reqData, fullAnswer)
 		finalJSON, _ := json.Marshal(finalHTML)
-		h.NoteService.UpdateNote(bgCtx, userUUID.String(), note.ID, noteTitle, finalJSON, "active")
-		h.sendNotification(bgCtx, userUUID.String(), note.ID)
+		if err := h.NoteService.UpdateNote(bgCtx, userUUID.String(), note.ID, noteTitle, finalJSON, "active"); err != nil {
+			slog.Error("Failed to update note status", "error", err)
+		} else {
+			h.sendNotification(bgCtx, userUUID.String(), note.ID)
+		}
 
 		// Return JSON response
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		if err := json.NewEncoder(w).Encode(map[string]interface{}{
 			"note_id":  note.ID,
 			"response": fullAnswer,
-		})
+		}); err != nil {
+			slog.Error("Failed to encode response", "error", err)
+		}
 		return
 	}
 
