@@ -27,7 +27,7 @@ func TestStreamChatCompletion_Fallback(t *testing.T) {
 				}
 
 				// Verify it's a streaming request
-				if !req.Query.Stream {
+				if req.Options == nil || !req.Options.Stream {
 					http.Error(w, "expected stream=true", http.StatusBadRequest)
 					return
 				}
@@ -40,8 +40,9 @@ func TestStreamChatCompletion_Fallback(t *testing.T) {
 					f.Flush()
 				}
 
-				fmt.Fprintf(w, "data: {\"text\": \"Hello \"}\n\n")
-				fmt.Fprintf(w, "data: {\"text\": \"World\"}\n\n")
+				// V2 Format
+				fmt.Fprintf(w, "data: {\"delta\": \"Hello \"}\n\n")
+				fmt.Fprintf(w, "data: {\"delta\": \"World\"}\n\n")
 				fmt.Fprintf(w, "data: [DONE]\n\n")
 			},
 			expectError:    false,
@@ -57,15 +58,18 @@ func TestStreamChatCompletion_Fallback(t *testing.T) {
 					return
 				}
 
-				if req.Query.Stream {
+				if req.Options != nil && req.Options.Stream {
 					// Fail the streaming request
 					http.Error(w, "Stream not supported", http.StatusNotFound)
 					return
 				}
 
 				// This must be the fallback request (Stream=false/omitted)
-				resp := OQueryResponse{
-					Text: "Fallback Response",
+				// Return V2 JSON format
+				resp := map[string]interface{}{
+					"data": map[string]interface{}{
+						"text": "Fallback Response",
+					},
 				}
 				w.Header().Set("Content-Type", "application/json")
 				_ = json.NewEncoder(w).Encode(resp)
@@ -82,26 +86,40 @@ func TestStreamChatCompletion_Fallback(t *testing.T) {
 					return
 				}
 
-				if req.Query.Stream {
+				if req.Options != nil && req.Options.Stream {
 					// Return JSON instead of stream, simulating API ignoring stream=true
 					w.Header().Set("Content-Type", "application/json")
-					// We return some dummy JSON that might be returned if stream was ignored
-					resp := OQueryResponse{
-						Text: "Ignored Stream Request",
+					// Return V2 JSON (or V1 if we were testing mixed, but let's simulate V2 behavior)
+					resp := map[string]interface{}{
+						"data": map[string]interface{}{
+							"text": "Ignored Stream Request",
+						},
 					}
 					_ = json.NewEncoder(w).Encode(resp)
 					return
 				}
 
 				// Fallback request
-				resp := OQueryResponse{
-					Text: "Fallback Response from Clean Request",
+				resp := map[string]interface{}{
+					"data": map[string]interface{}{
+						"text": "Fallback Response from Clean Request",
+					},
 				}
 				w.Header().Set("Content-Type", "application/json")
 				_ = json.NewEncoder(w).Encode(resp)
 			},
 			expectError:    false,
-			expectedOutput: "Fallback Response from Clean Request",
+			expectedOutput: "Fallback Response from Clean Request", // Wait, if stream returns valid JSON, performFallback logic might handle it differently?
+			// In performFallback: "Streaming failed ... falling back to non-streaming..."
+			// But wait, in StreamChatCompletion:
+			// "Check if streaming failed (network error or HTTP error) or if response is not event-stream"
+			// If 200 OK and not event-stream, it falls back.
+			// So it calls performFallback which calls ChatCompletion.
+			// So the output comes from the SECOND request (fallback request).
+			// My mock handler handles both requests.
+			// 1st request (Stream=true) returns JSON. client falls back.
+			// 2nd request (Stream=false) returns JSON.
+			// So output should be "Fallback Response from Clean Request".
 		},
 		{
 			name: "Total Failure",
