@@ -179,7 +179,9 @@ func (h *ChatHandler) handleRequest(w http.ResponseWriter, r *http.Request, reqT
 		resp, _, err := h.Client.Query(ctxWithOpts, fullPrompt, "")
 		if err != nil {
 			slog.Error("Failed to query AI", "error", err)
-			h.NoteService.UpdateNote(bgCtx, userUUID.String(), note.ID, noteTitle, contentJSON, "failed")
+			if err := h.NoteService.UpdateNote(bgCtx, userUUID.String(), note.ID, noteTitle, contentJSON, "failed"); err != nil {
+				slog.Error("Failed to mark note as failed", "error", err)
+			}
 			http.Error(w, "AI Request failed: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
