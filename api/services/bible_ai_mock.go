@@ -87,6 +87,47 @@ func (m *MockBibleAIClient) StreamChatCompletion(ctx context.Context, payload ma
 	return outChan, errChan, nil
 }
 
+// LLMClient Interface Implementation
+
+func (m *MockBibleAIClient) Name() string {
+	return "mock"
+}
+
+func (m *MockBibleAIClient) Query(ctx context.Context, prompt string, schema string) (string, string, error) {
+	if m.ShouldError {
+		return "", m.Name(), fmt.Errorf("mock error")
+	}
+	return "This is a mocked AI response to: " + prompt, m.Name(), nil
+}
+
+func (m *MockBibleAIClient) Stream(ctx context.Context, prompt string) (<-chan string, string, error) {
+	if m.ShouldError {
+		return nil, m.Name(), fmt.Errorf("mock error")
+	}
+
+	outChan := make(chan string)
+
+	go func() {
+		defer close(outChan)
+
+		// Mock response content
+		fullResponse := "This is a mocked AI response to: " + prompt
+
+		// Simulate chunks
+		words := strings.Split(fullResponse, " ")
+		for _, word := range words {
+			select {
+			case <-ctx.Done():
+				return
+			case outChan <- word + " ":
+				time.Sleep(10 * time.Millisecond) // Simulate delay
+			}
+		}
+	}()
+
+	return outChan, m.Name(), nil
+}
+
 func (m *MockBibleAIClient) GetSystemPrompt(key string) string {
 	if key == "system" {
 		return "Mock System Prompt"

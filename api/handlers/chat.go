@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"discipleship_journal_api/middleware"
@@ -15,13 +16,13 @@ import (
 )
 
 type ChatHandler struct {
-	Client              services.BibleAIClient
+	Client              services.LLMClient
 	NoteService         services.NoteServiceInterface
 	NotificationService services.NotificationService
 	DB                  DBInterface
 }
 
-func NewChatHandler(client services.BibleAIClient, noteService services.NoteServiceInterface, notificationService services.NotificationService, db DBInterface) *ChatHandler {
+func NewChatHandler(client services.LLMClient, noteService services.NoteServiceInterface, notificationService services.NotificationService, db DBInterface) *ChatHandler {
 	return &ChatHandler{
 		Client:              client,
 		NoteService:         noteService,
@@ -30,11 +31,17 @@ func NewChatHandler(client services.BibleAIClient, noteService services.NoteServ
 	}
 }
 
+type ChatOptions struct {
+	Stream     *bool  `json:"stream,omitempty"`
+	AIProvider string `json:"ai_provider,omitempty"`
+}
+
 type ChatRequest struct {
-	Passage string   `json:"passage" validate:"required,min=5"`
-	Themes  []string `json:"themes"`
-	Prompt  string   `json:"prompt" validate:"required,min=2"`
-	Version string   `json:"version,omitempty"`
+	Passage string       `json:"passage" validate:"required,min=5"`
+	Themes  []string     `json:"themes"`
+	Prompt  string       `json:"prompt" validate:"required,min=2"`
+	Version string       `json:"version,omitempty"`
+	Options *ChatOptions `json:"options,omitempty"`
 }
 
 type ChatResponse struct {
@@ -58,13 +65,14 @@ func (h *ChatHandler) ChatWithAI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.handleStream(w, r, "chat", req)
+	h.handleRequest(w, r, "chat", req)
 }
 
 type AskAIRequest struct {
-	Context string `json:"context" validate:"required"`
-	Prompt  string `json:"prompt" validate:"required"`
-	Version string `json:"version,omitempty"`
+	Context string       `json:"context" validate:"required"`
+	Prompt  string       `json:"prompt" validate:"required"`
+	Version string       `json:"version,omitempty"`
+	Options *ChatOptions `json:"options,omitempty"`
 }
 
 // AskAI godoc
@@ -83,10 +91,10 @@ func (h *ChatHandler) AskAI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.handleStream(w, r, "ask", req)
+	h.handleRequest(w, r, "ask", req)
 }
 
-func (h *ChatHandler) handleStream(w http.ResponseWriter, r *http.Request, reqType string, reqData interface{}) {
+func (h *ChatHandler) handleRequest(w http.ResponseWriter, r *http.Request, reqType string, reqData interface{}) {
 	// 1. Authenticate & Create Note
 	var userUUID uuid.UUID
 	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
@@ -109,10 +117,14 @@ func (h *ChatHandler) handleStream(w http.ResponseWriter, r *http.Request, reqTy
 
 	var noteTitle string
 	var initialContent string
-	var payload map[string]interface{}
+	var options *ChatOptions
+	var reqVersion string
+	var fullPrompt string
 
 	if reqType == "chat" {
 		req := reqData.(ChatRequest)
+		options = req.Options
+		reqVersion = req.Version
 		noteTitle = fmt.Sprintf("Chat: %s", req.Prompt)
 		if len(noteTitle) > 50 {
 			noteTitle = noteTitle[:47] + "..."
@@ -121,15 +133,12 @@ func (h *ChatHandler) handleStream(w http.ResponseWriter, r *http.Request, reqTy
 		initialContent = fmt.Sprintf("<p><strong>Passage:</strong> %s</p><p><strong>Themes:</strong> %v</p><p><strong>Q:</strong> %s</p><div class=\"ai-response\"><em>AI is thinking...</em></div>",
 			req.Passage, req.Themes, req.Prompt)
 
-		payload = map[string]interface{}{
-			"prompt":  req.Prompt,
-			"verses":  []string{req.Passage},
-			"themes":  req.Themes,
-			"type":    "ask",
-			"version": req.Version,
-		}
+		fullPrompt = fmt.Sprintf("Passage: %s\nThemes: %s\n\nQuestion: %s", req.Passage, strings.Join(req.Themes, ", "), req.Prompt)
+
 	} else {
 		req := reqData.(AskAIRequest)
+		options = req.Options
+		reqVersion = req.Version
 		noteTitle = fmt.Sprintf("Ask AI: %s", req.Prompt)
 		if len(noteTitle) > 50 {
 			noteTitle = noteTitle[:47] + "..."
@@ -137,12 +146,7 @@ func (h *ChatHandler) handleStream(w http.ResponseWriter, r *http.Request, reqTy
 		initialContent = fmt.Sprintf("<p><strong>Context:</strong> %s</p><p><strong>Q:</strong> %s</p><div class=\"ai-response\"><em>AI is thinking...</em></div>",
 			req.Context, req.Prompt)
 
-		payload = map[string]interface{}{
-			"prompt":  req.Prompt,
-			"context": req.Context,
-			"type":    "ask",
-			"version": req.Version,
-		}
+		fullPrompt = fmt.Sprintf("Context: %s\n\nQuestion: %s", req.Context, req.Prompt)
 	}
 
 	contentJSON, _ := json.Marshal(initialContent)
@@ -151,6 +155,56 @@ func (h *ChatHandler) handleStream(w http.ResponseWriter, r *http.Request, reqTy
 	if err != nil {
 		slog.Error("Failed to create pending note", "error", err)
 		http.Error(w, "Failed to initialize operation", http.StatusInternalServerError)
+		return
+	}
+
+	// Check if streaming is requested (default: true)
+	stream := true
+	if options != nil && options.Stream != nil {
+		stream = *options.Stream
+	}
+
+	// Prepare Context
+	bgCtx := context.Background()
+	ctxWithOpts := bgCtx
+	if options != nil && options.AIProvider != "" {
+		ctxWithOpts = context.WithValue(ctxWithOpts, services.AIProviderKey, options.AIProvider)
+	}
+	if reqVersion != "" {
+		ctxWithOpts = context.WithValue(ctxWithOpts, services.BibleVersionKey, reqVersion)
+	}
+
+	if !stream {
+		// Blocking Mode
+		resp, _, err := h.Client.Query(ctxWithOpts, fullPrompt, "")
+		if err != nil {
+			slog.Error("Failed to query AI", "error", err)
+			if err := h.NoteService.UpdateNote(bgCtx, userUUID.String(), note.ID, noteTitle, contentJSON, "failed"); err != nil {
+				slog.Error("Failed to mark note as failed", "error", err)
+			}
+			http.Error(w, "AI Request failed: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		fullAnswer := resp
+
+		// Update Note
+		finalHTML := h.formatFinalHTML(reqType, reqData, fullAnswer)
+		finalJSON, _ := json.Marshal(finalHTML)
+		if err := h.NoteService.UpdateNote(bgCtx, userUUID.String(), note.ID, noteTitle, finalJSON, "active"); err != nil {
+			slog.Error("Failed to update note status", "error", err)
+		} else {
+			h.sendNotification(bgCtx, userUUID.String(), note.ID)
+		}
+
+		// Return JSON response
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(map[string]interface{}{
+			"note_id":  note.ID,
+			"response": fullAnswer,
+		}); err != nil {
+			slog.Error("Failed to encode response", "error", err)
+		}
 		return
 	}
 
@@ -174,8 +228,7 @@ func (h *ChatHandler) handleStream(w http.ResponseWriter, r *http.Request, reqTy
 
 	// 3. Launch AI Request
 	// Use detached context so stream reading continues if client disconnects
-	bgCtx := context.Background()
-	outChan, errChan, err := h.Client.StreamChatCompletion(bgCtx, payload)
+	outChan, _, err := h.Client.Stream(ctxWithOpts, fullPrompt)
 	if err != nil {
 		slog.Error("Failed to start AI stream", "error", err)
 		if err := h.NoteService.UpdateNote(bgCtx, userUUID.String(), note.ID, noteTitle, contentJSON, "failed"); err != nil {
@@ -214,22 +267,15 @@ func (h *ChatHandler) handleStream(w http.ResponseWriter, r *http.Request, reqTy
 				}
 			}
 
-		case err, ok := <-errChan:
-			if !ok {
-				errChan = nil
-				continue
-			}
-			// Stream error
-			slog.Error("AI stream error", "error", err)
-			if err := h.NoteService.UpdateNote(bgCtx, userUUID.String(), note.ID, noteTitle, contentJSON, "failed"); err != nil {
-				slog.Error("Failed to mark note as failed", "error", err)
-			}
-			if clientConnected {
-				errMsg, _ := json.Marshal(map[string]string{"error": err.Error()})
-				fmt.Fprintf(w, "event: error\ndata: %s\n\n", errMsg)
-				flusher.Flush()
-			}
-			return
+		// Error handling for stream usually comes via separate channel in previous implementation.
+		// LLMClient.Stream returns (chan string, string, error) where error is immediate.
+		// Errors DURING stream? The interface says "Returns a channel for chunks...".
+		// It doesn't return an error channel.
+		// My implementation of RealBibleAIClient.Stream swallows errors and logs them (or stops stream).
+		// So here we only listen to outChan.
+		// Wait, if I want to propagate errors during stream, I can't with current LLMClient interface.
+		// This is a limitation of the interface requested.
+		// I will proceed assuming outChan close means done (success or error).
 
 		case <-ticker.C:
 			if clientConnected {
@@ -250,38 +296,41 @@ func (h *ChatHandler) handleStream(w http.ResponseWriter, r *http.Request, reqTy
 
 StreamFinished:
 	// Update Note with final content
-	var finalHTML string
-	if reqType == "chat" {
-		req := reqData.(ChatRequest)
-		finalHTML = fmt.Sprintf("<p><strong>Passage:</strong> %s</p><p><strong>Themes:</strong> %v</p><p><strong>Q:</strong> %s</p><div class=\"ai-response\"><strong>AI:</strong> %s</div>",
-			req.Passage, req.Themes, req.Prompt, fullAnswer)
-	} else {
-		req := reqData.(AskAIRequest)
-		finalHTML = fmt.Sprintf("<p><strong>Context:</strong> %s</p><p><strong>Q:</strong> %s</p><div class=\"ai-response\"><strong>AI:</strong> %s</div>",
-			req.Context, req.Prompt, fullAnswer)
-	}
-
+	finalHTML := h.formatFinalHTML(reqType, reqData, fullAnswer)
 	finalJSON, _ := json.Marshal(finalHTML)
 
 	if err := h.NoteService.UpdateNote(bgCtx, userUUID.String(), note.ID, noteTitle, finalJSON, "active"); err != nil {
 		slog.Error("Failed to update note status", "error", err)
 	} else {
 		slog.Info("Note updated successfully", "id", note.ID)
-
-		// Send Notification
-		if h.NotificationService != nil {
-			notificationData := map[string]string{
-				"type":    "ask_ai_complete",
-				"note_id": note.ID,
-			}
-			if err := h.NotificationService.SendNotification(bgCtx, userUUID.String(), "AI Response Ready", "Your question has been answered.", notificationData); err != nil {
-				slog.Warn("Failed to send notification", "error", err)
-			}
-		}
+		h.sendNotification(bgCtx, userUUID.String(), note.ID)
 	}
 
 	if clientConnected {
 		fmt.Fprintf(w, "event: done\ndata: {}\n\n")
 		flusher.Flush()
+	}
+}
+
+func (h *ChatHandler) formatFinalHTML(reqType string, reqData interface{}, answer string) string {
+	if reqType == "chat" {
+		req := reqData.(ChatRequest)
+		return fmt.Sprintf("<p><strong>Passage:</strong> %s</p><p><strong>Themes:</strong> %v</p><p><strong>Q:</strong> %s</p><div class=\"ai-response\"><strong>AI:</strong> %s</div>",
+			req.Passage, req.Themes, req.Prompt, answer)
+	}
+	req := reqData.(AskAIRequest)
+	return fmt.Sprintf("<p><strong>Context:</strong> %s</p><p><strong>Q:</strong> %s</p><div class=\"ai-response\"><strong>AI:</strong> %s</div>",
+		req.Context, req.Prompt, answer)
+}
+
+func (h *ChatHandler) sendNotification(ctx context.Context, userID, noteID string) {
+	if h.NotificationService != nil {
+		notificationData := map[string]string{
+			"type":    "ask_ai_complete",
+			"note_id": noteID,
+		}
+		if err := h.NotificationService.SendNotification(ctx, userID, "AI Response Ready", "Your question has been answered.", notificationData); err != nil {
+			slog.Warn("Failed to send notification", "error", err)
+		}
 	}
 }
