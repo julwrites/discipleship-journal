@@ -1,0 +1,136 @@
+name: Deploy Staging
+
+on:
+  push:
+    branches:
+      - staging
+  workflow_dispatch:
+
+env:
+  # Backend GCP configuration (from secrets)
+  # Note: GCP project ID should match Firebase project ID
+  GCP_PROJECT_ID: ${{ secrets.STG_FIREBASE_PROJECT_ID }}
+  GCP_REGION: ${{ secrets.STG_GCP_REGION }}
+  GCP_SERVICE_NAME: ${{ secrets.STG_GCP_SERVICE_NAME }}
+  GCP_ARTIFACT_REPOSITORY: ${{ secrets.STG_GCP_ARTIFACT_REPOSITORY }}
+
+  # Frontend Firebase configuration
+  FIREBASE_PROJECT_ID: ${{ secrets.STG_FIREBASE_PROJECT_ID }}
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    defaults:
+      run:
+        working-directory: ./api
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.STG_GCP_SA_KEY }}'
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Configure Docker to use gcloud as credential helper
+        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev
+
+      - name: Validate Configuration
+        run: |
+          echo "🔍 Validating configuration..."
+          if [ -z "${{ env.GCP_PROJECT_ID }}" ]; then
+            echo "❌ ERROR: GCP_PROJECT_ID is empty!"
+            exit 1
+          fi
+          if [ -z "${{ env.GCP_REGION }}" ]; then
+            echo "❌ ERROR: GCP_REGION is empty!"
+            exit 1
+          fi
+          if [ -z "${{ env.GCP_ARTIFACT_REPOSITORY }}" ]; then
+            echo "❌ ERROR: GCP_ARTIFACT_REPOSITORY is empty!"
+            exit 1
+          fi
+          echo "✅ Configuration validated"
+
+      - name: Build and Push Container to Artifact Registry
+        run: |
+          # Build image with Artifact Registry tag
+          IMAGE_TAG=${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPOSITORY }}/${{ env.GCP_SERVICE_NAME }}:${{ github.sha }}
+
+          echo "Building image: $IMAGE_TAG"
+          docker build -t $IMAGE_TAG .
+
+          echo "Pushing to Artifact Registry..."
+          docker push $IMAGE_TAG
+
+          echo "✅ Image pushed successfully to Artifact Registry"
+
+      - name: Deploy to Cloud Run from Artifact Registry
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.GCP_SERVICE_NAME }}
+          image: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPOSITORY }}/${{ env.GCP_SERVICE_NAME }}:${{ github.sha }}
+          region: ${{ env.GCP_REGION }}
+          flags: '--service-account=${{ secrets.STG_GCP_SERVICE_ACCOUNT }} --allow-unauthenticated --set-cloudsql-instances=${{ secrets.STG_CLOUD_SQL_INSTANCE }}'
+          env_vars: |
+            APP_ENV=production
+            GOOGLE_CLOUD_PROJECT=${{ env.GCP_PROJECT_ID }}
+            # Application secrets are loaded from Google Secret Manager at runtime
+
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.STG_GCP_SA_KEY }}'
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.FIREBASE_PROJECT_ID }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          FIREBASE_API_KEY: ${{ secrets.STG_FIREBASE_API_KEY }}
+          FIREBASE_AUTH_DOMAIN: ${{ secrets.STG_FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_PROJECT_ID: ${{ env.FIREBASE_PROJECT_ID }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.STG_FIREBASE_STORAGE_BUCKET }}
+          FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.STG_FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_APP_ID: ${{ secrets.STG_FIREBASE_APP_ID }}
+          FIREBASE_MEASUREMENT_ID: ${{ secrets.STG_FIREBASE_MEASUREMENT_ID }}
+          GCP_API_URL: ${{ secrets.STG_GCP_API_URL }}
+
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.STG_FIREBASE_SERVICE_ACCOUNT_DISCIPLESHIP_JOURNAL }}'
+          channelId: live
+          projectId: ${{ env.FIREBASE_PROJECT_ID }}
