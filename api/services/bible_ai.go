@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html"
-	"log"
+	"log/slog"
 	"regexp"
 	"strings"
 
@@ -36,7 +36,7 @@ func NewRealBibleAIClient(apiURL, apiKey, systemPromptsJSON string) *RealBibleAI
 	prompts := make(map[string]string)
 	if systemPromptsJSON != "" {
 		if err := json.Unmarshal([]byte(systemPromptsJSON), &prompts); err != nil {
-			log.Printf("Failed to parse system prompts JSON: %v", err)
+			slog.Warn("Failed to parse system prompts JSON", "error", err)
 		}
 	}
 
@@ -228,7 +228,7 @@ func (c *RealBibleAIClient) Stream(ctx context.Context, prompt string) (<-chan s
 				safeOutChan <- msg
 			case err, ok := <-errChan:
 				if ok {
-					log.Printf("Stream error from BibleAI: %v", err)
+					slog.Error("Stream error from BibleAI", "error", err)
 				}
 				return // Stop streaming on error
 			case <-ctx.Done():
@@ -287,7 +287,7 @@ func (c *RealBibleAIClient) GetPassage(
 
 	// Helper for parsing if resty failed to unmarshal into result automatically
 	if result.Verse == "" {
-		log.Printf("Bible API response status %s, body length %d", resp.Status(), len(resp.Body()))
+		slog.Warn("Bible API response missing verse field", "status", resp.Status(), "body_length", len(resp.Body()))
 		// Fallback manual check
 		var raw map[string]interface{}
 		_ = json.Unmarshal(resp.Body(), &raw)
@@ -296,7 +296,7 @@ func (c *RealBibleAIClient) GetPassage(
 		} else if t, ok := raw["text"].(string); ok {
 			result.Verse = t
 		} else {
-			log.Printf("Bible API response body: %s", resp.Body())
+			slog.Warn("Bible API response body content", "body", string(resp.Body()))
 		}
 	}
 
@@ -513,8 +513,10 @@ func (c *RealBibleAIClient) performFallback(
 	if resp != nil {
 		status = resp.Status()
 	}
-	log.Printf("Streaming failed (err=%v, status=%s, event-stream=%v), falling back to non-streaming...",
-		originalErr, status, isEventStream)
+	slog.Warn("Streaming failed, falling back to non-streaming",
+		"error", originalErr,
+		"status", status,
+		"is_event_stream", isEventStream)
 
 	fallbackResp, fallbackErr := c.ChatCompletion(ctx, payload)
 	if fallbackErr != nil {
