@@ -80,8 +80,7 @@ type UserContext struct {
 }
 
 type VerseResponse struct {
-	Verse     string `json:"verse"`
-	Reference string `json:"reference,omitempty"`
+	Verse string `json:"verse"`
 }
 
 type Reference struct {
@@ -302,11 +301,23 @@ func (c *RealBibleAIClient) GetPassage(
 	}
 
 	verseText := html.UnescapeString(result.Verse)
+	finalRef := reference // Default to user input
+
+	// Parse reference from text if possible
+	// Example: "John 3:16 (ESV) For God so loved..."
+	// Group 1: Ref, Group 2: Version, Group 3: Text
+	matches := verseReferenceRegex.FindStringSubmatch(verseText)
+
+	if len(matches) == 4 {
+		finalRef = matches[1]
+		// version := matches[2] // We could use this too
+		verseText = matches[3]
+	}
 
 	return map[string]interface{}{
 		"verse":     verseText,
 		"text":      verseText,
-		"reference": result.Reference,
+		"reference": finalRef,
 		"version":   version,
 	}, nil
 }
@@ -440,6 +451,12 @@ func (c *RealBibleAIClient) StreamChatCompletion(
 
 				var data map[string]interface{}
 				if err := json.Unmarshal([]byte(dataStr), &data); err != nil {
+					// Handle raw text fallback for non-JSON SSE
+					select {
+					case outChan <- dataStr:
+					case <-ctx.Done():
+						return
+					}
 					continue
 				}
 
@@ -637,6 +654,9 @@ var (
 	listWhitespaceRegex = regexp.MustCompile(
 		`(?i)(</?ul[^>]*>|</?ol[^>]*>|</?li[^>]*>)\s+(</?ul[^>]*>|</?ol[^>]*>|</?li[^>]*>)`,
 	)
+	// verseReferenceRegex extracts Ref, Version, Text from "Ref (Ver) Text" format.
+	// Uses (?s) to allow matching newlines in the text.
+	verseReferenceRegex = regexp.MustCompile(`(?s)^([\w\s]+\d+:\d+(?:-\d+)?)\s+\(([^)]+)\)\s+(.*)$`)
 )
 
 func cleanHTML(input string) string {
