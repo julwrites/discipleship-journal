@@ -32,3 +32,4 @@ test-results/
 
 # Go binaries
 */discipleship_journal_api
+*.log
