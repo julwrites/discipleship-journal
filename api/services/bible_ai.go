@@ -306,8 +306,7 @@ func (c *RealBibleAIClient) GetPassage(
 	// Parse reference from text if possible
 	// Example: "John 3:16 (ESV) For God so loved..."
 	// Group 1: Ref, Group 2: Version, Group 3: Text
-	re := regexp.MustCompile(`^([\w\s]+\d+:\d+(?:-\d+)?)\s+\(([^)]+)\)\s+(.*)$`)
-	matches := re.FindStringSubmatch(verseText)
+	matches := verseReferenceRegex.FindStringSubmatch(verseText)
 
 	if len(matches) == 4 {
 		finalRef = matches[1]
