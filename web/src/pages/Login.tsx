@@ -27,8 +27,23 @@ export default function LoginPage() {
   const [activeTab, setActiveTab] = useState("login");
 
   useEffect(() => {
-    console.log("Login page useEffect running, auth:", !!auth, "URL:", window.location.href, "Search:", window.location.search);
+    console.log("Login page useEffect running, auth:", !!auth, "URL:", window.location.href, "Search:", window.location.search, "Hash:", window.location.hash);
     if (!auth) return;
+
+    // Debug: check for any OAuth parameters in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    console.log("URL query params:", Array.from(urlParams.entries()));
+    console.log("URL hash params:", Array.from(hashParams.entries()));
+
+    // Check sessionStorage for redirect state (Firebase stores OAuth state here)
+    try {
+      const sessionKeys = Object.keys(sessionStorage);
+      const firebaseKeys = sessionKeys.filter(key => key.includes('firebase') || key.includes('auth'));
+      console.log("SessionStorage firebase/auth keys:", firebaseKeys);
+    } catch (e) {
+      console.warn("Could not access sessionStorage:", e);
+    }
 
     // Handle Google Redirect Result
     console.log("Calling getRedirectResult...");
@@ -40,6 +55,8 @@ export default function LoginPage() {
           // Auth state will be updated by onAuthStateChanged listener
         } else {
           console.log("No redirect result to process");
+          // Fallback: check if user is already signed in (might have happened automatically)
+          console.log("Auth currentUser:", auth.currentUser?.email);
         }
       })
       .catch((error) => {
