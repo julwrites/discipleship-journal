@@ -26,7 +26,7 @@ These secrets are used to build the Docker image and deploy it to Google Cloud R
 
 | Production Secret | Staging Secret | Description | Shared? |
 |-------------------|----------------|-------------|---------|
-| `FIREBASE_PROJECT_ID` | `FIREBASE_PROJECT_ID` | The Google Cloud Project ID (shared backend GCP project). | ✅ |
+| `GCP_PROJECT_ID` | `GCP_PROJECT_ID` | The Google Cloud Project ID (shared backend GCP project). | ✅ |
 | `GCP_REGION` | `GCP_REGION` | The GCP region for resources (e.g., `us-central1`). | ✅ |
 | `GCP_SERVICE_NAME` | `STG_GCP_SERVICE_NAME` | The name of the Cloud Run service. | ❌ |
 | `GCP_ARTIFACT_REPOSITORY` | `GCP_ARTIFACT_REPOSITORY` | The name of the Artifact Registry repository. | ✅ |

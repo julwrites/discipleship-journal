@@ -348,7 +348,7 @@ These secrets are used by GitHub Actions to deploy:
 |--------|---------|---------------|--------------|
 | `GCP_SA_KEY` | GCP Service Account JSON key | `{ "type": "service_account", ... }` | GitHub Secrets |
 | `FIREBASE_SERVICE_ACCOUNT_DISCIPLESHIP_JOURNAL` | Firebase service account | `{ "type": "service_account", ... }` | GitHub Secrets |
-| `GCP_PROJECT_ID` | GCP Project ID | `YOUR_FIREBASE_PROJECT_ID` (same as Firebase) | GitHub Secrets |
+| `GCP_PROJECT_ID` | GCP Project ID | `your-backend-gcp-project-id` (shared backend GCP project) | GitHub Secrets |
 | `GCP_REGION` | GCP Region | `asia-southeast1` | GitHub Secrets |
 | `GCP_SERVICE_NAME` | Cloud Run service name | `discipleship-journal-api` | GitHub Secrets |
 | `GCP_ARTIFACT_REPOSITORY` | Artifact Registry repo | `discipleship-journal-repo` | GitHub Secrets |
