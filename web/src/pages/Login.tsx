@@ -31,6 +31,14 @@ export default function LoginPage() {
 
     // Handle Google Redirect Result
     getRedirectResult(auth)
+      .then((result) => {
+        if (result) {
+          console.log("Redirect login successful:", result.user?.email);
+          // Auth state will be updated by onAuthStateChanged listener
+        } else {
+          console.log("No redirect result to process");
+        }
+      })
       .catch((error) => {
         console.error("Redirect login error:", error);
         const msg = getErrorMessage(error as AuthError);
