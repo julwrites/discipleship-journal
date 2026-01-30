@@ -67,10 +67,21 @@ export default function LoginPage() {
           console.log("No redirect result to process");
           // Fallback: check if user is already signed in (might have happened automatically)
           console.log("Auth currentUser:", auth.currentUser?.email);
+
+          // Additional debugging: check if sessionStorage should be cleared
+          console.log("Checking if sessionStorage should be cleared...");
+          const shouldClearStorage = window.location.search.includes('error') ||
+                                    window.location.search.includes('state');
+          console.log("Should clear sessionStorage?", shouldClearStorage);
         }
       })
       .catch((error) => {
         console.error("Redirect login error:", error);
+        console.error("Error details:", {
+          code: error.code,
+          message: error.message,
+          stack: error.stack
+        });
         const msg = getErrorMessage(error as AuthError);
         toast.error(msg);
       });
