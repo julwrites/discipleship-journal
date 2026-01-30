@@ -27,13 +27,16 @@ export default function LoginPage() {
   const [activeTab, setActiveTab] = useState("login");
 
   useEffect(() => {
+    console.log("Login page useEffect running, auth:", !!auth, "URL:", window.location.href, "Search:", window.location.search);
     if (!auth) return;
 
     // Handle Google Redirect Result
+    console.log("Calling getRedirectResult...");
     getRedirectResult(auth)
       .then((result) => {
+        console.log("getRedirectResult resolved:", result);
         if (result) {
-          console.log("Redirect login successful:", result.user?.email);
+          console.log("Redirect login successful:", result.user?.email, "Provider:", result.providerId);
           // Auth state will be updated by onAuthStateChanged listener
         } else {
           console.log("No redirect result to process");
@@ -99,7 +102,7 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    console.log("handleGoogleLogin called.");
+    console.log("handleGoogleLogin called.", { auth: !!auth });
 
     if (!auth) {
       toast.error("Authentication not initialized.");
@@ -107,11 +110,14 @@ export default function LoginPage() {
     }
     setIsLoading(true);
     const provider = new GoogleAuthProvider();
+    console.log("GoogleAuthProvider created");
 
     // Use redirect flow by default - popup is unreliable with modern browser security policies
     console.log("Using redirect flow for Google Sign-In");
     try {
+      console.log("Calling signInWithRedirect...");
       await signInWithRedirect(auth, provider);
+      console.log("signInWithRedirect completed, redirect should happen");
       // User will be redirected to Google and back
       return; // Redirect will happen, no further processing needed
     } catch (error) {
