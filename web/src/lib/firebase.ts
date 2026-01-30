@@ -18,8 +18,14 @@ let authInstance;
 let messagingInstance;
 
 try {
+  console.log("Initializing Firebase with config:", {
+    projectId: firebaseConfig.projectId,
+    authDomain: firebaseConfig.authDomain,
+    hasApiKey: !!firebaseConfig.apiKey
+  });
   appInstance = initializeApp(firebaseConfig);
   authInstance = getAuth(appInstance);
+  console.log("Firebase initialized successfully");
 
   try {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
@@ -47,6 +53,9 @@ try {
 
       // Messaging is null in mock mode to prevent SDK crashes
       messagingInstance = null;
+  } else {
+      // For non-mock failures, set authInstance to null
+      authInstance = null;
   }
   console.error("Firebase initialization catch block activated. Auth instance might be mocked or null.");
 }

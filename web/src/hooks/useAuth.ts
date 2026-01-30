@@ -51,6 +51,7 @@ export function useAuth() {
     }
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log("Auth state changed, user:", user?.email || "null");
       setUser(user);
       setLoading(false);
     }, (error) => {
