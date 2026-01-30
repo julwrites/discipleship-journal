@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
 import { getMessaging } from "firebase/messaging";
 
 const firebaseConfig = {
@@ -25,6 +25,20 @@ try {
   });
   appInstance = initializeApp(firebaseConfig);
   authInstance = getAuth(appInstance);
+
+  // Set persistence for auth state
+  try {
+    setPersistence(authInstance, browserLocalPersistence)
+      .then(() => {
+        console.log("Firebase auth persistence set to browserLocalPersistence");
+      })
+      .catch((persistenceError) => {
+        console.warn("Failed to set auth persistence:", persistenceError);
+      });
+  } catch (persistenceError) {
+    console.warn("Failed to set auth persistence (sync error):", persistenceError);
+  }
+
   console.log("Firebase initialized successfully");
 
   try {
