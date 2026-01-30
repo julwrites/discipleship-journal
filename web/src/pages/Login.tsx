@@ -41,6 +41,16 @@ export default function LoginPage() {
       const sessionKeys = Object.keys(sessionStorage);
       const firebaseKeys = sessionKeys.filter(key => key.includes('firebase') || key.includes('auth'));
       console.log("SessionStorage firebase/auth keys:", firebaseKeys);
+
+      // Try to read and parse the Firebase redirect event
+      for (const key of firebaseKeys) {
+        try {
+          const value = sessionStorage.getItem(key);
+          console.log(`SessionStorage ${key}:`, value ? JSON.parse(value) : value);
+        } catch (parseError) {
+          console.log(`SessionStorage ${key} (raw):`, sessionStorage.getItem(key));
+        }
+      }
     } catch (e) {
       console.warn("Could not access sessionStorage:", e);
     }
