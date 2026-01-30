@@ -84,6 +84,7 @@ jobs:
           env_vars: |
             APP_ENV=production
             GOOGLE_CLOUD_PROJECT=${{ env.GCP_PROJECT_ID }}
+            FIREBASE_PROJECT_ID=${{ secrets.STG_FIREBASE_PROJECT_ID }}
             # Application secrets are loaded from Google Secret Manager at runtime
 
   deploy-frontend:
