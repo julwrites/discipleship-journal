@@ -101,31 +101,16 @@ export default function LoginPage() {
     setIsLoading(true);
     const provider = new GoogleAuthProvider();
 
+    // Use redirect flow by default - popup is unreliable with modern browser security policies
+    console.log("Using redirect flow for Google Sign-In");
     try {
-      // Try popup first as it is cleaner and doesn't require a redirect flow
-      await signInWithPopup(auth, provider);
-      // Success is handled by auth state listener or subsequent redirect
+      await signInWithRedirect(auth, provider);
+      // User will be redirected to Google and back
+      return; // Redirect will happen, no further processing needed
     } catch (error) {
       const authError = error as AuthError;
-      console.error("Google Sign In (Popup) failed:", authError);
-
-      if (authError.code === 'auth/popup-blocked' || authError.code === 'auth/popup-closed-by-user') {
-        // Fallback to redirect if popup is blocked or closed (sometimes mistakenly)
-        if (authError.code === 'auth/popup-blocked') {
-            toast.info("Popup blocked. Redirecting to Google Sign In...");
-            try {
-                await signInWithRedirect(auth, provider);
-                return; // Redirecting...
-            } catch (redirectError) {
-                console.error("Google Sign In (Redirect) failed:", redirectError);
-                toast.error(getErrorMessage(redirectError as AuthError));
-            }
-        } else {
-             toast.error(getErrorMessage(authError));
-        }
-      } else {
-        toast.error(getErrorMessage(authError));
-      }
+      console.error("Google Sign In (Redirect) failed:", authError);
+      toast.error(getErrorMessage(authError));
       setIsLoading(false);
     }
   };
