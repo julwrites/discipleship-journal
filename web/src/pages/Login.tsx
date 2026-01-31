@@ -2,6 +2,7 @@ import { auth, authReadyPromise } from "@/lib/firebase";
 import {
   GoogleAuthProvider,
   signInWithRedirect,
+  signInWithPopup,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   getRedirectResult,
@@ -195,30 +196,53 @@ export default function LoginPage() {
     const provider = new GoogleAuthProvider();
     console.log("GoogleAuthProvider created");
 
-    // Ensure auth persistence is set before starting redirect flow
+    // Ensure auth persistence is set before starting authentication flow
     if (authReadyPromise) {
-      console.log("Waiting for auth persistence to be set before redirect...");
+      console.log("Waiting for auth persistence to be set...");
       try {
         await authReadyPromise;
-        console.log("Auth persistence ready, proceeding with signInWithRedirect");
+        console.log("Auth persistence ready");
       } catch (e) {
         console.warn("Auth ready promise rejected:", e);
       }
     }
 
-    // Use redirect flow by default - popup is unreliable with modern browser security policies
-    console.log("Using redirect flow for Google Sign-In");
+    // Try popup flow first (bypasses redirect issues on Edge/Chrome)
+    console.log("Attempting popup flow for Google Sign-In...");
     try {
-      console.log("Calling signInWithRedirect...");
-      await signInWithRedirect(auth, provider);
-      console.log("signInWithRedirect completed, redirect should happen");
-      // User will be redirected to Google and back
-      return; // Redirect will happen, no further processing needed
-    } catch (error) {
-      const authError = error as AuthError;
-      console.error("Google Sign In (Redirect) failed:", authError);
-      toast.error(getErrorMessage(authError));
+      console.log("Calling signInWithPopup...");
+      const result = await signInWithPopup(auth, provider);
+      console.log("Popup login successful:", result.user?.email, "Provider:", result.providerId);
+      // Auth state will be updated by onAuthStateChanged listener
       setIsLoading(false);
+      return;
+    } catch (popupError) {
+      const authError = popupError as AuthError;
+      console.warn("Popup sign-in failed:", authError.code, authError.message);
+
+      // Check if popup was blocked or closed by user
+      if (authError.code === 'auth/popup-blocked' || authError.code === 'auth/popup-closed-by-user') {
+        console.log("Popup blocked or closed, falling back to redirect flow...");
+        toast.info("Popup was blocked or closed. Trying redirect method...");
+
+        try {
+          console.log("Calling signInWithRedirect...");
+          await signInWithRedirect(auth, provider);
+          console.log("signInWithRedirect initiated, redirect should happen");
+          // User will be redirected to Google and back
+          return; // Redirect will happen, no further processing needed
+        } catch (redirectError) {
+          const redirectAuthError = redirectError as AuthError;
+          console.error("Google Sign In (Redirect) failed:", redirectAuthError);
+          toast.error(getErrorMessage(redirectAuthError));
+          setIsLoading(false);
+        }
+      } else {
+        // Other popup errors (unauthorized domain, etc.)
+        console.error("Google Sign In (Popup) failed:", authError);
+        toast.error(getErrorMessage(authError));
+        setIsLoading(false);
+      }
     }
   };
 

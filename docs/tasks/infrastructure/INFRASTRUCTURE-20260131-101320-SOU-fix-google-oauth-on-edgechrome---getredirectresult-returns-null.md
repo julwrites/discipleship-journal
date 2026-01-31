@@ -33,11 +33,25 @@ The recent fix for race condition between `setPersistence()` and `getRedirectRes
 ## Changes Made (Implementation)
 1. **SessionStorage Cleanup**: Modified `web/src/pages/Login.tsx` to automatically clear stale Firebase redirect events from `sessionStorage` when `getRedirectResult()` returns `null`. This prevents stale events from blocking subsequent OAuth attempts.
 
-## Test Results (After SessionStorage Cleanup Implementation)
-- **Fix is working**: The code successfully detects and clears stale Firebase redirect events from `sessionStorage`
-- **But issue persists**: `getRedirectResult()` still returns `null` even when a fresh redirect event exists in `sessionStorage`
-- **Key observation**: Firebase creates redirect event with `eventId: null` in `sessionStorage`, but cannot read/process it back
-- **Conclusion**: The issue is NOT stale events, but Firebase's inability to process redirect events on Edge/Chrome
+## Test Results Summary
+
+### SessionStorage Cleanup (Test 1)
+- ✅ **Working**: Successfully detects and clears stale Firebase redirect events from `sessionStorage`
+- ❌ **Issue persists**: `getRedirectResult()` returns `null` even with fresh redirect event in `sessionStorage`
+- 🔍 **Observation**: Redirect event has `eventId: null`, Firebase writes but cannot read/process it
+
+### Service Worker Unregistration (Test 2)
+- ✅ **Working**: Service worker unregistration successful ("Found 1 service worker registration(s)", "Service worker unregistration successful")
+- ❌ **Issue persists**: `getRedirectResult()` still returns `null` after service worker removal
+- 🔍 **Conclusion**: Service workers are NOT the root cause
+
+### COOP Header Removal (Test 3)
+- ✅ **Tested**: Removed `Cross-Origin-Opener-Policy: same-origin-allow-popups` header from `firebase.json`
+- ❌ **Issue persists**: `getRedirectResult()` still returns `null` without COOP header
+- 🔍 **Conclusion**: COOP header is NOT the root cause
+
+### Root Issue Identified
+Firebase successfully creates redirect event with `eventId: null` in `sessionStorage` on Edge/Chrome, but `getRedirectResult()` cannot read/process it. This appears to be a Firebase SDK compatibility issue with Edge/Chrome's implementation of OAuth redirect flow and sessionStorage isolation.
 
 ## Root Cause Update
 Based on test results, the primary issue appears to be:
@@ -45,31 +59,38 @@ Based on test results, the primary issue appears to be:
 2. **Possible `eventId: null` issue**: The redirect event has `eventId: null` which might indicate Google OAuth isn't providing proper event ID on Edge/Chrome
 3. **Storage isolation**: Browser security policies may isolate `sessionStorage` across redirects despite event being present
 
-## Proposed Solutions
-Test the following hypotheses in order:
+## Proposed Solutions - Implementation Status
 
-### 1. Clear Stale Redirect Events (IMPLEMENTED)
-Implemented in `Login.tsx`. Automatically clears stale Firebase redirect events from `sessionStorage` when `getRedirectResult()` returns `null`.
+### 1. Clear Stale Redirect Events (IMPLEMENTED & TESTED)
+✅ **Implemented**: Automatic cleanup of stale Firebase redirect events in `Login.tsx`
+❌ **Result**: Helps clean up but doesn't fix root issue - `getRedirectResult()` still returns `null`
 
-### 2. Disable Service Worker for Testing (BEING TESTED)
-Added service worker unregistration code in `Login.tsx`. Attempts to unregister all service workers on login page load to test if they interfere with OAuth on Edge/Chrome.
+### 2. Disable Service Worker for Testing (IMPLEMENTED & TESTED)
+✅ **Implemented**: Service worker unregistration code in `Login.tsx`
+❌ **Result**: Service workers successfully unregistered but `getRedirectResult()` still returns `null`
+🔍 **Conclusion**: Service workers are NOT the root cause
 
-### 3. Adjust Cross-Origin Headers (BEING TESTED)
-Temporarily removed `Cross-Origin-Opener-Policy: same-origin-allow-popups` header from `firebase.json` to test if it affects sessionStorage isolation across redirects.
+### 3. Adjust Cross-Origin Headers (IMPLEMENTED & TESTED)
+✅ **Tested**: Temporarily removed `Cross-Origin-Opener-Policy` header from `firebase.json`
+❌ **Result**: `getRedirectResult()` still returns `null` without COOP header
+🔍 **Conclusion**: COOP header is NOT the root cause for redirect flow
+🔄 **Update**: COOP header restored to `same-origin-allow-popups` for popup flow compatibility
 
-### 4. Use Popup Flow Instead of Redirect
-Test `signInWithPopup()` as alternative (though popups may be blocked by browsers). This bypasses redirect flow issues.
+### 4. Use Popup Flow Instead of Redirect (IMPLEMENTING)
+🔄 **Implementing**: Modified `Login.tsx` to try `signInWithPopup()` first, with fallback to `signInWithRedirect()` if popup is blocked
+🔍 **Rationale**: Popup flow bypasses redirect flow issues entirely and may work on Edge/Chrome where redirect flow fails
+📝 **Note**: COOP header restored to `same-origin-allow-popups` for popup compatibility
 
 ### 5. Cookie Configuration
 Ensure Firebase OAuth client is configured with correct authorized domains and that cookies are allowed with appropriate SameSite settings.
 
 ## Implementation Plan - Current Status
-1. ✅ **Add sessionStorage cleanup** in `Login.tsx` after `getRedirectResult()` returns `null`. (COMPLETED)
+1. ✅ **Add sessionStorage cleanup** in `Login.tsx` after `getRedirectResult()` returns `null`. (COMPLETED & TESTED)
 2. ✅ **Deploy to staging** and test on Edge/Chrome. (COMPLETED - issue persists)
-3. 🔄 **Disable service worker** and retest. (IN PROGRESS - added unregistration code)
-4. 🔄 **Adjust headers** (temporarily remove COOP). (IN PROGRESS - removed from firebase.json)
-5. **Implement popup fallback** with user option. (PENDING - next if 3-4 fail)
-6. **Update Firebase console** OAuth configuration to ensure authorized domains include staging URL. (PENDING)
+3. ✅ **Disable service worker** and retest. (COMPLETED & TESTED - not the root cause)
+4. ✅ **Adjust headers** (temporarily remove COOP). (COMPLETED & TESTED - not the root cause, header restored for popups)
+5. 🔄 **Implement popup fallback** with user option. (IN PROGRESS - popup-first flow implemented)
+6. **Update Firebase console** OAuth configuration to ensure authorized domains include staging URL. (PENDING - if popup also fails)
 
 ## Testing Required
 - Test Google OAuth on Microsoft Edge, Chrome, and Safari (control).
