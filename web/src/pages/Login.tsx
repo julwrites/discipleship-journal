@@ -87,6 +87,18 @@ export default function LoginPage() {
           const shouldClearStorage = window.location.search.includes('error') ||
                                     window.location.search.includes('state');
           console.log("Should clear sessionStorage?", shouldClearStorage);
+
+          // Clear any stale Firebase redirect events from sessionStorage
+          try {
+            const sessionKeys = Object.keys(sessionStorage);
+            const firebaseRedirectKeys = sessionKeys.filter(key => key.startsWith('firebase:redirectEvent:'));
+            if (firebaseRedirectKeys.length > 0) {
+              console.log(`Clearing ${firebaseRedirectKeys.length} stale Firebase redirect event(s)`);
+              firebaseRedirectKeys.forEach(key => sessionStorage.removeItem(key));
+            }
+          } catch (e) {
+            console.warn("Could not clear sessionStorage:", e);
+          }
         }
       })
       .catch((error) => {
