@@ -28,19 +28,34 @@ export default function LoginPage() {
   const [activeTab, setActiveTab] = useState("login");
 
   useEffect(() => {
-    console.log("Login page useEffect running, auth:", !!auth, "URL:", window.location.href, "Search:", window.location.search, "Hash:", window.location.hash);
+    if (import.meta.env.DEV) {
+      console.log("Login page useEffect running, auth:", !!auth, "URL:", window.location.href, "Search:", window.location.search, "Hash:", window.location.hash);
+    }
 
     // Try to unregister service workers to test if they interfere with OAuth on Edge/Chrome
     if ('serviceWorker' in navigator) {
-      console.log("Service Worker API available, attempting to unregister...");
+      if (import.meta.env.DEV) {
+        console.log("Service Worker API available, attempting to unregister...");
+      }
       navigator.serviceWorker.getRegistrations().then((registrations) => {
-        console.log(`Found ${registrations.length} service worker registration(s)`);
+        if (import.meta.env.DEV) {
+          console.log(`Found ${registrations.length} service worker registration(s)`);
+        }
         for (const registration of registrations) {
-          console.log("Unregistering service worker:", registration.scope);
+          if (import.meta.env.DEV) {
+            console.log("Unregistering service worker:", registration.scope);
+          }
           registration.unregister().then((success) => {
-            console.log(`Service worker unregistration ${success ? 'successful' : 'failed'}`);
+            if (import.meta.env.DEV) {
+              console.log(`Service worker unregistration ${success ? 'successful' : 'failed'}`);
+            }
           }).catch((error) => {
-            console.warn("Failed to unregister service worker:", error);
+            // Suppress InvalidStateError - occurs when trying to unregister active service worker
+            if (error.name !== 'InvalidStateError') {
+              console.warn("Failed to unregister service worker:", error);
+            } else if (import.meta.env.DEV) {
+              console.log("Service worker unregistration suppressed (InvalidStateError - active worker)");
+            }
           });
         }
       }).catch((error) => {
@@ -53,22 +68,30 @@ export default function LoginPage() {
     // Debug: check for any OAuth parameters in URL
     const urlParams = new URLSearchParams(window.location.search);
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    console.log("URL query params:", Array.from(urlParams.entries()));
-    console.log("URL hash params:", Array.from(hashParams.entries()));
+    if (import.meta.env.DEV) {
+      console.log("URL query params:", Array.from(urlParams.entries()));
+      console.log("URL hash params:", Array.from(hashParams.entries()));
+    }
 
     // Check sessionStorage for redirect state (Firebase stores OAuth state here)
     try {
       const sessionKeys = Object.keys(sessionStorage);
       const firebaseKeys = sessionKeys.filter(key => key.includes('firebase') || key.includes('auth'));
-      console.log("SessionStorage firebase/auth keys:", firebaseKeys);
+      if (import.meta.env.DEV) {
+        console.log("SessionStorage firebase/auth keys:", firebaseKeys);
+      }
 
       // Try to read and parse the Firebase redirect event
       for (const key of firebaseKeys) {
         try {
           const value = sessionStorage.getItem(key);
-          console.log(`SessionStorage ${key}:`, value ? JSON.parse(value) : value);
+          if (import.meta.env.DEV) {
+            console.log(`SessionStorage ${key}:`, value ? JSON.parse(value) : value);
+          }
         } catch (parseError) {
-          console.log(`SessionStorage ${key} (raw):`, sessionStorage.getItem(key));
+          if (import.meta.env.DEV) {
+            console.log(`SessionStorage ${key} (raw):`, sessionStorage.getItem(key));
+          }
         }
       }
     } catch (e) {
@@ -76,14 +99,20 @@ export default function LoginPage() {
     }
 
     // Handle Google Redirect Result
-    console.log("Calling getRedirectResult...");
+    if (import.meta.env.DEV) {
+      console.log("Calling getRedirectResult...");
+    }
     // Wait for auth persistence to be set before retrieving redirect result
     const waitForAuthReady = async () => {
       if (authReadyPromise) {
-        console.log("Waiting for auth persistence to be set...");
+        if (import.meta.env.DEV) {
+          console.log("Waiting for auth persistence to be set...");
+        }
         try {
           await authReadyPromise;
-          console.log("Auth persistence ready, proceeding with getRedirectResult");
+          if (import.meta.env.DEV) {
+            console.log("Auth persistence ready, proceeding with getRedirectResult");
+          }
         } catch (e) {
           console.warn("Auth ready promise rejected:", e);
         }
@@ -93,27 +122,41 @@ export default function LoginPage() {
 
     waitForAuthReady()
       .then((result) => {
-        console.log("getRedirectResult resolved:", result);
+        if (import.meta.env.DEV) {
+          console.log("getRedirectResult resolved:", result);
+        }
         if (result) {
-          console.log("Redirect login successful:", result.user?.email, "Provider:", result.providerId);
+          if (import.meta.env.DEV) {
+            console.log("Redirect login successful:", result.user?.email, "Provider:", result.providerId);
+          }
           // Auth state will be updated by onAuthStateChanged listener
         } else {
-          console.log("No redirect result to process");
+          if (import.meta.env.DEV) {
+            console.log("No redirect result to process");
+          }
           // Fallback: check if user is already signed in (might have happened automatically)
-          console.log("Auth currentUser:", auth.currentUser?.email);
+          if (import.meta.env.DEV) {
+            console.log("Auth currentUser:", auth.currentUser?.email);
+          }
 
           // Additional debugging: check if sessionStorage should be cleared
-          console.log("Checking if sessionStorage should be cleared...");
+          if (import.meta.env.DEV) {
+            console.log("Checking if sessionStorage should be cleared...");
+          }
           const shouldClearStorage = window.location.search.includes('error') ||
                                     window.location.search.includes('state');
-          console.log("Should clear sessionStorage?", shouldClearStorage);
+          if (import.meta.env.DEV) {
+            console.log("Should clear sessionStorage?", shouldClearStorage);
+          }
 
           // Clear any stale Firebase redirect events from sessionStorage
           try {
             const sessionKeys = Object.keys(sessionStorage);
             const firebaseRedirectKeys = sessionKeys.filter(key => key.startsWith('firebase:redirectEvent:'));
             if (firebaseRedirectKeys.length > 0) {
-              console.log(`Clearing ${firebaseRedirectKeys.length} stale Firebase redirect event(s)`);
+              if (import.meta.env.DEV) {
+                console.log(`Clearing ${firebaseRedirectKeys.length} stale Firebase redirect event(s)`);
+              }
               firebaseRedirectKeys.forEach(key => sessionStorage.removeItem(key));
             }
           } catch (e) {
@@ -186,7 +229,9 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    console.log("handleGoogleLogin called.", { auth: !!auth });
+    if (import.meta.env.DEV) {
+      console.log("handleGoogleLogin called.", { auth: !!auth });
+    }
 
     if (!auth) {
       toast.error("Authentication not initialized.");
@@ -194,25 +239,37 @@ export default function LoginPage() {
     }
     setIsLoading(true);
     const provider = new GoogleAuthProvider();
-    console.log("GoogleAuthProvider created");
+    if (import.meta.env.DEV) {
+      console.log("GoogleAuthProvider created");
+    }
 
     // Ensure auth persistence is set before starting authentication flow
     if (authReadyPromise) {
-      console.log("Waiting for auth persistence to be set...");
+      if (import.meta.env.DEV) {
+        console.log("Waiting for auth persistence to be set...");
+      }
       try {
         await authReadyPromise;
-        console.log("Auth persistence ready");
+        if (import.meta.env.DEV) {
+          console.log("Auth persistence ready");
+        }
       } catch (e) {
         console.warn("Auth ready promise rejected:", e);
       }
     }
 
     // Try popup flow first (bypasses redirect issues on Edge/Chrome)
-    console.log("Attempting popup flow for Google Sign-In...");
+    if (import.meta.env.DEV) {
+      console.log("Attempting popup flow for Google Sign-In...");
+    }
     try {
-      console.log("Calling signInWithPopup...");
+      if (import.meta.env.DEV) {
+        console.log("Calling signInWithPopup...");
+      }
       const result = await signInWithPopup(auth, provider);
-      console.log("Popup login successful:", result.user?.email, "Provider:", result.providerId);
+      if (import.meta.env.DEV) {
+        console.log("Popup login successful:", result.user?.email, "Provider:", result.providerId);
+      }
       // Auth state will be updated by onAuthStateChanged listener
       setIsLoading(false);
       return;
@@ -222,13 +279,19 @@ export default function LoginPage() {
 
       // Check if popup was blocked or closed by user
       if (authError.code === 'auth/popup-blocked' || authError.code === 'auth/popup-closed-by-user') {
-        console.log("Popup blocked or closed, falling back to redirect flow...");
+        if (import.meta.env.DEV) {
+          console.log("Popup blocked or closed, falling back to redirect flow...");
+        }
         toast.info("Popup was blocked or closed. Trying redirect method...");
 
         try {
-          console.log("Calling signInWithRedirect...");
+          if (import.meta.env.DEV) {
+            console.log("Calling signInWithRedirect...");
+          }
           await signInWithRedirect(auth, provider);
-          console.log("signInWithRedirect initiated, redirect should happen");
+          if (import.meta.env.DEV) {
+            console.log("signInWithRedirect initiated, redirect should happen");
+          }
           // User will be redirected to Google and back
           return; // Redirect will happen, no further processing needed
         } catch (redirectError) {

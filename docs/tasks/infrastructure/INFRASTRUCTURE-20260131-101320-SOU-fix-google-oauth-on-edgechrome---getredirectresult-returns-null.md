@@ -1,6 +1,6 @@
 ---
 id: INFRASTRUCTURE-20260131-101320-SOU
-status: in_progress
+status: review_requested
 title: Fix Google OAuth on Edge/Chrome - getRedirectResult returns null
 priority: medium
 created: 2026-01-31 10:13:20
@@ -50,6 +50,17 @@ The recent fix for race condition between `setPersistence()` and `getRedirectRes
 - ❌ **Issue persists**: `getRedirectResult()` still returns `null` without COOP header
 - 🔍 **Conclusion**: COOP header is NOT the root cause
 
+### Popup Flow Implementation (Test 4 - SUCCESS!)
+- ✅ **Implemented**: Popup-first authentication flow in `Login.tsx`
+- ✅ **Result**: **POPUP FLOW WORKS** on Edge/Chrome! User successfully authenticated: `jump4jupiter@gmail.com`
+- ✅ **Key success logs**: `"Popup login successful: jump4jupiter@gmail.com Provider: google.com"`, `"Auth state changed, user: jump4jupiter@gmail.com"`
+- 🔍 **Observations**:
+  - Popup appears and login completes successfully
+  - Redirect flow still fails (`getRedirectResult()` returns `null`)
+  - Service worker unregistration causes error: `InvalidStateError: Only the active worker can claim clients.`
+  - CORS errors appear after authentication (separate backend issue)
+- ✅ **Conclusion**: **Popup flow successfully bypasses Edge/Chrome redirect flow compatibility issue**
+
 ### Root Issue Identified
 Firebase successfully creates redirect event with `eventId: null` in `sessionStorage` on Edge/Chrome, but `getRedirectResult()` cannot read/process it. This appears to be a Firebase SDK compatibility issue with Edge/Chrome's implementation of OAuth redirect flow and sessionStorage isolation.
 
@@ -76,10 +87,17 @@ Based on test results, the primary issue appears to be:
 🔍 **Conclusion**: COOP header is NOT the root cause for redirect flow
 🔄 **Update**: COOP header restored to `same-origin-allow-popups` for popup flow compatibility
 
-### 4. Use Popup Flow Instead of Redirect (IMPLEMENTING)
-🔄 **Implementing**: Modified `Login.tsx` to try `signInWithPopup()` first, with fallback to `signInWithRedirect()` if popup is blocked
-🔍 **Rationale**: Popup flow bypasses redirect flow issues entirely and may work on Edge/Chrome where redirect flow fails
-📝 **Note**: COOP header restored to `same-origin-allow-popups` for popup compatibility
+### 4. Use Popup Flow Instead of Redirect (IMPLEMENTED & TESTED - SUCCESS!)
+✅ **Implemented**: Popup-first authentication flow in `Login.tsx`
+✅ **Result**: **POPUP FLOW WORKS SUCCESSFULLY** on Edge/Chrome
+🔍 **Test Results**:
+  - User successfully authenticated via popup: `jump4jupiter@gmail.com`
+  - Auth state updated correctly: `"Auth state changed, user: jump4jupiter@gmail.com"`
+  - Popup flow bypasses Edge/Chrome redirect compatibility issue
+⚠️ **Side Effects**:
+  - Service worker unregistration causes error (needs adjustment)
+  - CORS errors after authentication (separate backend issue)
+📝 **Note**: COOP header `same-origin-allow-popups` required for popup compatibility
 
 ### 5. Cookie Configuration
 Ensure Firebase OAuth client is configured with correct authorized domains and that cookies are allowed with appropriate SameSite settings.
