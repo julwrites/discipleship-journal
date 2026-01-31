@@ -11,6 +11,7 @@ vi.mock('@/lib/firebase', () => ({
     auth: {
         currentUser: null,
     },
+    authReadyPromise: Promise.resolve(),
 }));
 
 // Mock Firebase Auth methods
