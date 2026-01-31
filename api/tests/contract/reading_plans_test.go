@@ -24,8 +24,16 @@ func TestReadingPlanAPI_Contract(t *testing.T) {
 	planID := "00000000-0000-0000-0000-000000000100"
 	userID := "00000000-0000-0000-0000-000000000001" // Default test user
 
-	// Seed Plan
+	// Seed User
 	_, err := pool.Exec(ctx, `
+		INSERT INTO users (id, firebase_uid, email, username, created_at, updated_at)
+		VALUES ($1, 'test-uid-rp', 'rp@example.com', 'ReadingPlanUser', NOW(), NOW())
+		ON CONFLICT (id) DO NOTHING
+	`, userID)
+	require.NoError(t, err)
+
+	// Seed Plan
+	_, err = pool.Exec(ctx, `
 		INSERT INTO reading_plans (id, title, description, days, plan_type, created_at, updated_at)
 		VALUES ($1, 'Test Plan', 'A test plan', 365, 'calendar', NOW(), NOW())
 		ON CONFLICT (id) DO NOTHING
