@@ -91,6 +91,7 @@ export default function LoginPage() {
         } catch (parseError) {
           if (import.meta.env.DEV) {
             console.log(`SessionStorage ${key} (raw):`, sessionStorage.getItem(key));
+            console.log('Parse error:', parseError);
           }
         }
       }
