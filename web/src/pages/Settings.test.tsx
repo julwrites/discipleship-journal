@@ -18,6 +18,37 @@ vi.mock('@/services/api', () => ({
   }),
 }));
 
+// Mock Firebase
+vi.mock('@/lib/firebase', () => ({
+  app: null,
+  auth: {},
+  messaging: null,
+  authReadyPromise: null,
+}));
+
+// Mock Firebase Auth methods
+vi.mock('firebase/auth', () => ({
+  getAuth: vi.fn(),
+  onAuthStateChanged: vi.fn(),
+}));
+
+// Mock useAuth hook
+vi.mock('@/hooks/useAuth', () => ({
+  useAuth: () => ({ user: { uid: 'test-user', email: 'test@example.com' }, loading: false }),
+}));
+
+// Mock useNotifications hook
+vi.mock('@/hooks/useNotifications', () => ({
+  useNotifications: () => ({
+    isSupported: false,
+    permission: 'default',
+    token: null,
+    error: null,
+    registerToken: vi.fn(),
+    unregisterToken: vi.fn(),
+  }),
+}));
+
 describe('Settings Page', () => {
   beforeAll(() => {
     // Polyfill ResizeObserver for cmdk
