@@ -155,7 +155,10 @@ func main() {
 	// Init Firebase Service
 	// Pass empty string for saKey to use default credentials (production)
 	// or rely on GOOGLE_APPLICATION_CREDENTIALS
-	firebaseProjectID := os.Getenv("GOOGLE_CLOUD_PROJECT")
+	firebaseProjectID := os.Getenv("FIREBASE_PROJECT_ID")
+	if firebaseProjectID == "" {
+		firebaseProjectID = os.Getenv("GOOGLE_CLOUD_PROJECT")
+	}
 	if firebaseProjectID == "" {
 		firebaseProjectID = "mock-project-id" // Use environment variable GOOGLE_CLOUD_PROJECT for real project ID
 	}

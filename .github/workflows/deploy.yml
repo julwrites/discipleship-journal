@@ -8,13 +8,14 @@ on:
 
 env:
   # Backend GCP configuration (from secrets)
-  # Note: GCP project ID should match Firebase project ID
-  GCP_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+  # GCP_PROJECT_ID: Shared backend GCP project ID (different from Firebase project IDs)
+  # Create this secret if it doesn't exist
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GCP_REGION: ${{ secrets.GCP_REGION }}
   GCP_SERVICE_NAME: ${{ secrets.GCP_SERVICE_NAME }}
   GCP_ARTIFACT_REPOSITORY: ${{ secrets.GCP_ARTIFACT_REPOSITORY }}
 
-  # Frontend Firebase configuration
+  # Backend Firebase configuration (production Firebase project for authentication)
   FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
 
 jobs:
@@ -84,7 +85,10 @@ jobs:
           env_vars: |
             APP_ENV=production
             GOOGLE_CLOUD_PROJECT=${{ env.GCP_PROJECT_ID }}
-            # Application secrets are loaded from Google Secret Manager at runtime
+            FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
+            CLOUD_SQL_INSTANCE=${{ secrets.CLOUD_SQL_INSTANCE }}
+            # Note: CLOUD_SQL_INSTANCE env var is required for the app to detect Cloud SQL connection
+            # Application secrets (DB_USERNAME, DB_PASSWORD, DB_NAME) are loaded from Google Secret Manager at runtime
 
   deploy-frontend:
     runs-on: ubuntu-latest
