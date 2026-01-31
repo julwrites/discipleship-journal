@@ -28,25 +28,11 @@ Implement scripts or logic to seed the database with additional well-established
     *   Extract passage reference from breadcrumb (e.g., `Bible in 90 Days / Genesis 1:1 - Genesis 16:16`).
     *   Note: The duration listed on the site says "88 days", so the loop should check for completion or 404s.
 
-## 3. Professor Grant Horner's Bible Reading System
+## 3. Professor Grant Horner's Bible Reading System (Implemented)
 *   **Description**: A system consisting of 10 lists of books. You read one chapter from each list every day (10 chapters/day). The lists vary in length, causing the readings to rotate and interweave constantly.
-*   **Type**: Algorithmic / Generated Sequence (e.g., Generate 365 or 730 days of the sequence).
-*   **Method**: Algorithmic Generation.
-*   **Logic**:
-    *   Define 10 lists of books/chapters.
-    *   Day `n` reading = `(List1[n % len1])` + `(List2[n % len2])` + ...
-    *   Generate a `reading_plan` entry (e.g., "Professor Grant Horner's System (1 Year Sample)") and insert `reading_plan_days`.
-*   **Lists** (Based on common variation):
-    1.  **Gospels**: Matthew, Mark, Luke, John
-    2.  **Pentateuch**: Genesis, Exodus, Leviticus, Numbers, Deuteronomy
-    3.  **Romans & Pauline Epistles (Part 1)**: Romans, 1 Corinthians, 2 Corinthians, Galatians, Ephesians, Philippians, Colossians
-    4.  **Pauline (Part 2) & General Epistles**: 1 Thessalonians, 2 Thessalonians, 1 Timothy, 2 Timothy, Titus, Philemon, Hebrews, James, 1 Peter, 2 Peter, 1 John, 2 John, 3 John, Jude, Revelation
-    5.  **Wisdom**: Job, Ecclesiastes, Song of Solomon
-    6.  **Psalms**: Psalms
-    7.  **Proverbs**: Proverbs
-    8.  **History**: Joshua, Judges, Ruth, 1 Samuel, 2 Samuel, 1 Kings, 2 Kings, 1 Chronicles, 2 Chronicles, Ezra, Nehemiah, Esther
-    9.  **Prophets**: Isaiah, Jeremiah, Lamentations, Ezekiel, Daniel, Hosea, Joel, Amos, Obadiah, Jonah, Micah, Nahum, Habakkuk, Zephaniah, Haggai, Zechariah, Malachi
-    10. **Acts**: Acts
+*   **Type**: Sequential (365 Days Generated)
+*   **Method**: Algorithmic Generation (Implemented in `scripts/generate_gh_plan/main.go`).
+*   **Status**: Completed. Migration `000022_add_grant_horner_plan` added.
 
 ## 4. Discipleship Journal Bible Reading Plan
 *   **Description**: Four daily readings starting in: Genesis, Psalms, Matthew, and Acts. 25 readings per month to allow catch-up days.
