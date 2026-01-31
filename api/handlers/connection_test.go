@@ -8,10 +8,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/services"
-	"firebase.google.com/go/v4/auth"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 )
@@ -26,25 +25,20 @@ func TestSendConnectionRequest(t *testing.T) {
 	mockNotification := services.NewMockNotificationService()
 	handler := NewConnectionHandler(mock, mockNotification)
 
-	uid := "firebase-uid-1"
-	requesterUUID := "user-uuid-1"
+	requesterUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 	receiverEmail := "user2@example.com"
-	receiverUUID := "user-uuid-2"
-
-	// Mock requester UUID lookup
-	mock.ExpectQuery("SELECT id FROM users WHERE firebase_uid=").
-		WithArgs(uid).
-		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(requesterUUID))
+	receiverUUID := uuid.MustParse("00000000-0000-0000-0000-000000000002")
+	connID := "00000000-0000-0000-0000-000000000003"
 
 	// Mock receiver UUID lookup by email
 	mock.ExpectQuery("SELECT id FROM users WHERE email =").
 		WithArgs(receiverEmail).
-		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(receiverUUID))
+		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(receiverUUID.String()))
 
 	// Mock insert connection
 	mock.ExpectQuery("INSERT INTO connections").
-		WithArgs(requesterUUID, receiverUUID).
-		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow("conn-1"))
+		WithArgs(requesterUUID, receiverUUID.String()).
+		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(connID))
 
 	// Expect synchronous requester name lookup
 	mock.ExpectQuery("SELECT username FROM users WHERE id").
@@ -56,8 +50,9 @@ func TestSendConnectionRequest(t *testing.T) {
 
 	req := httptest.NewRequest("POST", "/api/connections/request", bytes.NewBuffer(bodyBytes))
 	req.Header.Set("Content-Type", "application/json")
-	token := &auth.Token{UID: uid}
-	ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
+
+	// Use TestUserKey to bypass global DB lookup for user ID
+	ctx := context.WithValue(req.Context(), TestUserKey, requesterUUID) // Context value is UUID
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
@@ -81,26 +76,18 @@ func TestSearchUsers(t *testing.T) {
 	mockNotification := services.NewMockNotificationService()
 	handler := NewConnectionHandler(mock, mockNotification)
 
-	uid := "firebase-uid-1"
-	userUUID := "user-uuid-1"
-
-	mock.ExpectQuery("SELECT id FROM users WHERE firebase_uid=").
-		WithArgs(uid).
-		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+	userUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 
 	// Expect search query
 	username := "johndoe"
-	mock.ExpectQuery(`SELECT u.id, u.email, u.username,
-		 EXISTS\(SELECT 1 FROM connections c WHERE \(\(c.requester_id = u.id AND c.receiver_id = \$2\) OR \(c.receiver_id = u.id AND c.requester_id = \$2\)\) AND c.status = 'accepted'\) as is_connected
-		 FROM users u
-		 WHERE \(email ILIKE \$1 OR username ILIKE \$1\) AND u.id != \$2 LIMIT 20`).
+	mock.ExpectQuery(`SELECT u.id, u.email, u.username.*`).
 		WithArgs("johndoe", userUUID).
 		WillReturnRows(pgxmock.NewRows([]string{"id", "email", "username", "is_connected"}).
-			AddRow("u2", "john@example.com", &username, false))
+			AddRow("00000000-0000-0000-0000-000000000002", "john@example.com", &username, false))
 
 	req := httptest.NewRequest("GET", "/api/users/search?q=johndoe", nil)
-	token := &auth.Token{UID: uid}
-	ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
+	// Use TestUserKey to bypass global DB lookup for user ID
+	ctx := context.WithValue(req.Context(), TestUserKey, userUUID)
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
@@ -133,13 +120,9 @@ func TestListConnections(t *testing.T) {
 	mockNotification := services.NewMockNotificationService()
 	handler := NewConnectionHandler(mock, mockNotification)
 
-	uid := "firebase-uid-1"
-	userUUID := "user-uuid-1"
-
-	// Mock user UUID lookup
-	mock.ExpectQuery("SELECT id FROM users WHERE firebase_uid=").
-		WithArgs(uid).
-		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+	userUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+	connID := uuid.MustParse("00000000-0000-0000-0000-000000000003")
+	requesterUUID := uuid.MustParse("00000000-0000-0000-0000-000000000002")
 
 	// Mock list connections
 	requesterUsername := "user2"
@@ -147,11 +130,11 @@ func TestListConnections(t *testing.T) {
 	mock.ExpectQuery("SELECT c.id, c.requester_id, c.receiver_id, c.status").
 		WithArgs(userUUID).
 		WillReturnRows(pgxmock.NewRows([]string{"id", "requester_id", "receiver_id", "status", "requester_email", "receiver_email", "requester_username", "receiver_username"}).
-			AddRow("conn-1", "user-uuid-2", userUUID, "pending", "user2@example.com", "user1@example.com", &requesterUsername, &receiverUsername))
+			AddRow(connID.String(), requesterUUID.String(), userUUID.String(), "pending", "user2@example.com", "user1@example.com", &requesterUsername, &receiverUsername))
 
 	req := httptest.NewRequest("GET", "/api/connections", nil)
-	token := &auth.Token{UID: uid}
-	ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
+	// Use TestUserKey to bypass global DB lookup for user ID
+	ctx := context.WithValue(req.Context(), TestUserKey, userUUID)
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
@@ -180,14 +163,8 @@ func TestAcceptConnectionRequest(t *testing.T) {
 	mockNotification := services.NewMockNotificationService()
 	handler := NewConnectionHandler(mock, mockNotification)
 
-	uid := "firebase-uid-1"
-	userUUID := "user-uuid-1"
-	connID := "conn-1"
-
-	// Mock user UUID lookup
-	mock.ExpectQuery("SELECT id FROM users WHERE firebase_uid=").
-		WithArgs(uid).
-		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+	userUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+	connID := "00000000-0000-0000-0000-000000000003"
 
 	// Mock update connection
 	mock.ExpectExec("UPDATE connections SET status = 'accepted'").
@@ -201,8 +178,8 @@ func TestAcceptConnectionRequest(t *testing.T) {
 	rctx.URLParams.Add("id", connID)
 	ctx := context.WithValue(req.Context(), chi.RouteCtxKey, rctx)
 
-	token := &auth.Token{UID: uid}
-	ctx = context.WithValue(ctx, middleware.UserContextKey, token)
+	// Use TestUserKey to bypass global DB lookup for user ID
+	ctx = context.WithValue(ctx, TestUserKey, userUUID)
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
@@ -231,14 +208,8 @@ func TestDeleteConnectionRequest(t *testing.T) {
 	mockNotification := services.NewMockNotificationService()
 	handler := NewConnectionHandler(mock, mockNotification)
 
-	uid := "firebase-uid-1"
-	userUUID := "user-uuid-1"
-	connID := "conn-1"
-
-	// Mock user UUID lookup
-	mock.ExpectQuery("SELECT id FROM users WHERE firebase_uid=").
-		WithArgs(uid).
-		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+	userUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+	connID := "00000000-0000-0000-0000-000000000003"
 
 	// Mock delete connection
 	mock.ExpectExec("DELETE FROM connections").
@@ -252,8 +223,8 @@ func TestDeleteConnectionRequest(t *testing.T) {
 	rctx.URLParams.Add("id", connID)
 	ctx := context.WithValue(req.Context(), chi.RouteCtxKey, rctx)
 
-	token := &auth.Token{UID: uid}
-	ctx = context.WithValue(ctx, middleware.UserContextKey, token)
+	// Use TestUserKey to bypass global DB lookup for user ID
+	ctx = context.WithValue(ctx, TestUserKey, userUUID)
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
