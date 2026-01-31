@@ -16,6 +16,7 @@ const firebaseConfig = {
 let appInstance;
 let authInstance;
 let messagingInstance;
+let authReadyPromise: Promise<void> | null = null;
 
 try {
   console.log("Initializing Firebase with config:", {
@@ -26,9 +27,9 @@ try {
   appInstance = initializeApp(firebaseConfig);
   authInstance = getAuth(appInstance);
 
-  // Set persistence for auth state
+  // Set persistence for auth state and store promise for components to wait on
   try {
-    setPersistence(authInstance, browserLocalPersistence)
+    authReadyPromise = setPersistence(authInstance, browserLocalPersistence)
       .then(() => {
         console.log("Firebase auth persistence set to browserLocalPersistence");
       })
@@ -37,6 +38,8 @@ try {
       });
   } catch (persistenceError) {
     console.warn("Failed to set auth persistence (sync error):", persistenceError);
+    // Create a resolved promise so components don't wait forever
+    authReadyPromise = Promise.resolve();
   }
 
   console.log("Firebase initialized successfully");
@@ -71,9 +74,12 @@ try {
       // For non-mock failures, set authInstance to null
       authInstance = null;
   }
+  // Ensure authReadyPromise is set to avoid waiting forever
+  authReadyPromise = Promise.resolve();
   console.error("Firebase initialization catch block activated. Auth instance might be mocked or null.");
 }
 
 export const app = appInstance;
 export const auth = authInstance;
 export const messaging = messagingInstance;
+export { authReadyPromise };

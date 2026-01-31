@@ -1,4 +1,4 @@
-import { auth } from "@/lib/firebase";
+import { auth, authReadyPromise } from "@/lib/firebase";
 import {
   GoogleAuthProvider,
   signInWithRedirect,
@@ -57,7 +57,21 @@ export default function LoginPage() {
 
     // Handle Google Redirect Result
     console.log("Calling getRedirectResult...");
-    getRedirectResult(auth)
+    // Wait for auth persistence to be set before retrieving redirect result
+    const waitForAuthReady = async () => {
+      if (authReadyPromise) {
+        console.log("Waiting for auth persistence to be set...");
+        try {
+          await authReadyPromise;
+          console.log("Auth persistence ready, proceeding with getRedirectResult");
+        } catch (e) {
+          console.warn("Auth ready promise rejected:", e);
+        }
+      }
+      return getRedirectResult(auth);
+    };
+
+    waitForAuthReady()
       .then((result) => {
         console.log("getRedirectResult resolved:", result);
         if (result) {
@@ -149,6 +163,17 @@ export default function LoginPage() {
     setIsLoading(true);
     const provider = new GoogleAuthProvider();
     console.log("GoogleAuthProvider created");
+
+    // Ensure auth persistence is set before starting redirect flow
+    if (authReadyPromise) {
+      console.log("Waiting for auth persistence to be set before redirect...");
+      try {
+        await authReadyPromise;
+        console.log("Auth persistence ready, proceeding with signInWithRedirect");
+      } catch (e) {
+        console.warn("Auth ready promise rejected:", e);
+      }
+    }
 
     // Use redirect flow by default - popup is unreliable with modern browser security policies
     console.log("Using redirect flow for Google Sign-In");
