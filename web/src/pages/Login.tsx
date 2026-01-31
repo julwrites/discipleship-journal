@@ -88,7 +88,7 @@ export default function LoginPage() {
           if (import.meta.env.DEV) {
             console.log(`SessionStorage ${key}:`, value ? JSON.parse(value) : value);
           }
-        } catch (parseError) {
+        } catch {
           if (import.meta.env.DEV) {
             console.log(`SessionStorage ${key} (raw):`, sessionStorage.getItem(key));
           }
