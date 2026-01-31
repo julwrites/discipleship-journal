@@ -1,6 +1,6 @@
 ---
 id: INFRASTRUCTURE-20260131-101320-SOU
-status: review_requested
+status: in_progress
 title: Fix Google OAuth on Edge/Chrome - getRedirectResult returns null
 priority: medium
 created: 2026-01-31 10:13:20
@@ -33,17 +33,29 @@ The recent fix for race condition between `setPersistence()` and `getRedirectRes
 ## Changes Made (Implementation)
 1. **SessionStorage Cleanup**: Modified `web/src/pages/Login.tsx` to automatically clear stale Firebase redirect events from `sessionStorage` when `getRedirectResult()` returns `null`. This prevents stale events from blocking subsequent OAuth attempts.
 
+## Test Results (After SessionStorage Cleanup Implementation)
+- **Fix is working**: The code successfully detects and clears stale Firebase redirect events from `sessionStorage`
+- **But issue persists**: `getRedirectResult()` still returns `null` even when a fresh redirect event exists in `sessionStorage`
+- **Key observation**: Firebase creates redirect event with `eventId: null` in `sessionStorage`, but cannot read/process it back
+- **Conclusion**: The issue is NOT stale events, but Firebase's inability to process redirect events on Edge/Chrome
+
+## Root Cause Update
+Based on test results, the primary issue appears to be:
+1. **Firebase SDK/Edge-Chrome compatibility**: Firebase successfully writes redirect event to `sessionStorage` but fails to read/process it
+2. **Possible `eventId: null` issue**: The redirect event has `eventId: null` which might indicate Google OAuth isn't providing proper event ID on Edge/Chrome
+3. **Storage isolation**: Browser security policies may isolate `sessionStorage` across redirects despite event being present
+
 ## Proposed Solutions
 Test the following hypotheses in order:
 
 ### 1. Clear Stale Redirect Events (IMPLEMENTED)
 Implemented in `Login.tsx`. Automatically clears stale Firebase redirect events from `sessionStorage` when `getRedirectResult()` returns `null`.
 
-### 2. Disable Service Worker for Testing
-Temporarily disable service worker registration to rule out interference. Could comment out PWA plugin in `vite.config.ts` or unregister service workers.
+### 2. Disable Service Worker for Testing (BEING TESTED)
+Added service worker unregistration code in `Login.tsx`. Attempts to unregister all service workers on login page load to test if they interfere with OAuth on Edge/Chrome.
 
-### 3. Adjust Cross-Origin Headers
-Temporarily remove `Cross-Origin-Opener-Policy` header to test if it affects sessionStorage isolation.
+### 3. Adjust Cross-Origin Headers (BEING TESTED)
+Temporarily removed `Cross-Origin-Opener-Policy: same-origin-allow-popups` header from `firebase.json` to test if it affects sessionStorage isolation across redirects.
 
 ### 4. Use Popup Flow Instead of Redirect
 Test `signInWithPopup()` as alternative (though popups may be blocked by browsers). This bypasses redirect flow issues.
@@ -51,13 +63,13 @@ Test `signInWithPopup()` as alternative (though popups may be blocked by browser
 ### 5. Cookie Configuration
 Ensure Firebase OAuth client is configured with correct authorized domains and that cookies are allowed with appropriate SameSite settings.
 
-## Implementation Plan
-1. **Add sessionStorage cleanup** in `Login.tsx` after `getRedirectResult()` returns `null`.
-2. **Deploy to staging** and test on Edge/Chrome.
-3. If still failing, **disable service worker** and retest.
-4. If still failing, **adjust headers** (temporarily remove COOP).
-5. If still failing, **implement popup fallback** with user option.
-6. **Update Firebase console** OAuth configuration to ensure authorized domains include staging URL.
+## Implementation Plan - Current Status
+1. ✅ **Add sessionStorage cleanup** in `Login.tsx` after `getRedirectResult()` returns `null`. (COMPLETED)
+2. ✅ **Deploy to staging** and test on Edge/Chrome. (COMPLETED - issue persists)
+3. 🔄 **Disable service worker** and retest. (IN PROGRESS - added unregistration code)
+4. 🔄 **Adjust headers** (temporarily remove COOP). (IN PROGRESS - removed from firebase.json)
+5. **Implement popup fallback** with user option. (PENDING - next if 3-4 fail)
+6. **Update Firebase console** OAuth configuration to ensure authorized domains include staging URL. (PENDING)
 
 ## Testing Required
 - Test Google OAuth on Microsoft Edge, Chrome, and Safari (control).

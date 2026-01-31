@@ -28,6 +28,25 @@ export default function LoginPage() {
 
   useEffect(() => {
     console.log("Login page useEffect running, auth:", !!auth, "URL:", window.location.href, "Search:", window.location.search, "Hash:", window.location.hash);
+
+    // Try to unregister service workers to test if they interfere with OAuth on Edge/Chrome
+    if ('serviceWorker' in navigator) {
+      console.log("Service Worker API available, attempting to unregister...");
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        console.log(`Found ${registrations.length} service worker registration(s)`);
+        for (const registration of registrations) {
+          console.log("Unregistering service worker:", registration.scope);
+          registration.unregister().then((success) => {
+            console.log(`Service worker unregistration ${success ? 'successful' : 'failed'}`);
+          }).catch((error) => {
+            console.warn("Failed to unregister service worker:", error);
+          });
+        }
+      }).catch((error) => {
+        console.warn("Failed to get service worker registrations:", error);
+      });
+    }
+
     if (!auth) return;
 
     // Debug: check for any OAuth parameters in URL
