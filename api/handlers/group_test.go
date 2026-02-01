@@ -109,10 +109,11 @@ func TestGroupHandler_ListMyGroups(t *testing.T) {
 
 		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 
+		desc := "Desc 1"
 		mockDB.ExpectQuery(`SELECT g.id, g.name, g.description, g.created_by, g.type, gm.role`).
 			WithArgs(pgxmock.AnyArg()).
 			WillReturnRows(pgxmock.NewRows([]string{"id", "name", "description", "created_by", "type", "role"}).
-				AddRow("00000000-0000-0000-0000-000000000001", "Group 1", "Desc 1", "00000000-0000-0000-0000-000000000002", nil, "admin"))
+				AddRow("00000000-0000-0000-0000-000000000001", "Group 1", &desc, "00000000-0000-0000-0000-000000000002", nil, "admin"))
 
 		req := httptest.NewRequest("GET", "/groups", nil)
 		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
@@ -147,10 +148,11 @@ func TestGroupHandler_SearchGroups(t *testing.T) {
 
 		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 
+		desc := "Desc"
 		mockDB.ExpectQuery(`SELECT g.id, g.name, g.description, g.created_by, g.type`).
 			WithArgs("%Bible%", pgxmock.AnyArg()).
 			WillReturnRows(pgxmock.NewRows([]string{"id", "name", "description", "created_by", "type", "role"}).
-				AddRow("00000000-0000-0000-0000-000000000001", "Bible Study", "Desc", "00000000-0000-0000-0000-000000000002", nil, "member"))
+				AddRow("00000000-0000-0000-0000-000000000001", "Bible Study", &desc, "00000000-0000-0000-0000-000000000002", nil, "member"))
 
 		req := httptest.NewRequest("GET", "/groups/search?q=Bible", nil)
 		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)

@@ -7,9 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/services"
-	"firebase.google.com/go/v4/auth"
 	chi "github.com/go-chi/chi/v5"
 	pgx "github.com/jackc/pgx/v5"
 )
@@ -56,8 +54,7 @@ func (h *GroupShareHandler) ShareItemToGroup(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	userUUID, err := GetUserUUID(r.Context(), token.UID)
+	userUUID, err := GetUserUUIDFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
 		return
@@ -214,8 +211,7 @@ func (h *GroupShareHandler) sendNotifications(groupID, sharerID, resourceTitle, 
 func (h *GroupShareHandler) ListGroupShares(w http.ResponseWriter, r *http.Request) {
 	groupID := chi.URLParam(r, "id")
 
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	userUUID, err := GetUserUUID(r.Context(), token.UID)
+	userUUID, err := GetUserUUIDFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
 		return
@@ -283,8 +279,7 @@ func (h *GroupShareHandler) GetSharedItemDetails(w http.ResponseWriter, r *http.
 	groupID := chi.URLParam(r, "id")
 	shareID := chi.URLParam(r, "shareId")
 
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	userUUID, err := GetUserUUID(r.Context(), token.UID)
+	userUUID, err := GetUserUUIDFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
 		return

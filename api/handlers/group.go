@@ -31,12 +31,12 @@ type CreateGroupRequest struct {
 }
 
 type GroupResponse struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	CreatedBy   string `json:"created_by"`
-	Role        string `json:"role,omitempty"` // Current user's role
-	Type        string `json:"type"`
+	ID          string  `json:"id"`
+	Name        string  `json:"name"`
+	Description *string `json:"description,omitempty"`
+	CreatedBy   string  `json:"created_by"`
+	Role        string  `json:"role,omitempty"` // Current user's role
+	Type        string  `json:"type"`
 }
 
 type GroupMemberResponse struct {
@@ -101,6 +101,7 @@ func (h *GroupHandler) CreateGroup(w http.ResponseWriter, r *http.Request) {
 		groupType = req.Type
 	}
 
+	slog.Info("Creating group", "name", req.Name, "description", req.Description, "user", userUUID, "type", groupType)
 	var groupID string
 	err = tx.QueryRow(r.Context(),
 		"INSERT INTO groups (name, description, created_by, type) VALUES ($1, $2, $3, $4) RETURNING id",
@@ -120,6 +121,7 @@ func (h *GroupHandler) CreateGroup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to create group", http.StatusInternalServerError)
 		return
 	}
+	slog.Info("Added creator as admin", "group", groupID, "user", userUUID)
 
 	if err := tx.Commit(r.Context()); err != nil {
 		http.Error(w, "Transaction commit failed", http.StatusInternalServerError)
@@ -140,6 +142,7 @@ func (h *GroupHandler) ListMyGroups(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+	slog.Info("ListMyGroups", "user", userUUID)
 
 	rows, err := h.db.Query(r.Context(),
 		`SELECT g.id, g.name, g.description, g.created_by, g.type, gm.role
@@ -155,10 +158,13 @@ func (h *GroupHandler) ListMyGroups(w http.ResponseWriter, r *http.Request) {
 	var groups []GroupResponse
 	for rows.Next() {
 		var g GroupResponse
+		var description *string
 		var groupType *string
-		if err := rows.Scan(&g.ID, &g.Name, &g.Description, &g.CreatedBy, &groupType, &g.Role); err != nil {
+		if err := rows.Scan(&g.ID, &g.Name, &description, &g.CreatedBy, &groupType, &g.Role); err != nil {
+			slog.Warn("Failed to scan group row", "error", err)
 			continue
 		}
+		g.Description = description
 		if groupType != nil {
 			g.Type = *groupType
 		} else {
@@ -166,6 +172,7 @@ func (h *GroupHandler) ListMyGroups(w http.ResponseWriter, r *http.Request) {
 		}
 		groups = append(groups, g)
 	}
+	slog.Info("ListMyGroups returning", "count", len(groups))
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(groups); err != nil {
@@ -203,10 +210,13 @@ func (h *GroupHandler) SearchGroups(w http.ResponseWriter, r *http.Request) {
 	var groups []GroupResponse
 	for rows.Next() {
 		var g GroupResponse
+		var description *string
 		var groupType *string
-		if err := rows.Scan(&g.ID, &g.Name, &g.Description, &g.CreatedBy, &groupType, &g.Role); err != nil {
+		if err := rows.Scan(&g.ID, &g.Name, &description, &g.CreatedBy, &groupType, &g.Role); err != nil {
+			slog.Warn("Failed to scan group row", "error", err)
 			continue
 		}
+		g.Description = description
 		if groupType != nil {
 			g.Type = *groupType
 		} else {
