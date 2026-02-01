@@ -3,6 +3,7 @@ package integration
 import (
 	"context"
 	"testing"
+	"time"
 
 	"discipleship_journal_api/models"
 	"discipleship_journal_api/services"
@@ -76,18 +77,30 @@ func TestGroupService_Integration(t *testing.T) {
 		_, err = service.CreateGroup(ctx, user3ID, "Beta Theta", nil, "group")
 		require.NoError(t, err)
 
+		// Create a direct group (should be excluded)
+		// We need to simulate direct group creation via SQL or Service if possible
+		// Service GetOrCreateDirectGroup requires connection, which might be tedious to set up just for this check
+		// So we insert directly into DB to ensure it exists and has name containing "Alpha"
+		_, err = pool.Exec(ctx, "INSERT INTO groups (name, type, created_by) VALUES ($1, $2, $3)", "Direct Alpha", "direct", user3ID)
+		require.NoError(t, err)
+
 		// Search
 		results, err := service.SearchGroups(ctx, "Alpha", user1ID)
 		require.NoError(t, err)
 		assert.NotEmpty(t, results)
-		found := false
+
+		foundAlpha := false
+		foundDirect := false
 		for _, g := range results {
 			if g.Name == "Alpha Omega" {
-				found = true
-				break
+				foundAlpha = true
+			}
+			if g.Name == "Direct Alpha" {
+				foundDirect = true
 			}
 		}
-		assert.True(t, found)
+		assert.True(t, foundAlpha, "Should find 'Alpha Omega'")
+		assert.False(t, foundDirect, "Should NOT find 'Direct Alpha'")
 	})
 
 	t.Run("Join and Leave Group", func(t *testing.T) {
@@ -121,7 +134,7 @@ func TestGroupService_Integration(t *testing.T) {
 		assert.ErrorIs(t, err, models.ErrNotFound)
 	})
 
-	t.Run("AddGroupMember (Admin Only & Connection Required)", func(t *testing.T) {
+	t.Run("AddGroupMember (Admin Only & Connection Required & Notification)", func(t *testing.T) {
 		g, err := service.CreateGroup(ctx, user1ID, "Admin Group", nil, "group")
 		require.NoError(t, err)
 
@@ -134,9 +147,26 @@ func TestGroupService_Integration(t *testing.T) {
 		_, err = pool.Exec(ctx, "INSERT INTO connections (requester_id, receiver_id, status) VALUES ($1, $2, 'accepted')", user1ID, user2ID)
 		require.NoError(t, err)
 
+		// Setup Notification Mock
+		notifyChan := make(chan struct{}, 1)
+		notificationService.SendNotificationFunc = func(ctx context.Context, userID, title, body string, data map[string]string) error {
+			assert.Equal(t, user2ID, userID)
+			assert.Equal(t, "Group Invitation", title)
+			notifyChan <- struct{}{}
+			return nil
+		}
+
 		// 3. Try to add user2 (Connected) -> Success
 		err = service.AddGroupMember(ctx, user1ID, g.ID, user2ID)
 		require.NoError(t, err)
+
+		// Verify notification received
+		select {
+		case <-notifyChan:
+			// Success
+		case <-time.After(2 * time.Second):
+			t.Fatal("Notification not sent within timeout")
+		}
 
 		// 4. Verify user2 is member
 		members, err := service.GetGroupMembers(ctx, g.ID, user1ID)
@@ -151,9 +181,6 @@ func TestGroupService_Integration(t *testing.T) {
 		assert.True(t, found)
 
 		// 5. Try to add user3 by user2 (user2 is member, not admin) -> Fail
-		// Need to connect user2 and user3 first to pass connection check, or maybe it fails at admin check first?
-		// Logic: 1. Check Admin Role. 2. Check Connection.
-		// So it should fail at Admin Role check.
 		err = service.AddGroupMember(ctx, user2ID, g.ID, user3ID)
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "admin rights required")
@@ -186,6 +213,11 @@ func TestGroupService_Integration(t *testing.T) {
 		members, err := service.GetGroupMembers(ctx, group1.ID, user2ID)
 		require.NoError(t, err)
 		assert.Len(t, members, 2)
+
+		// 4. Try to create direct group with self
+		_, _, err = service.GetOrCreateDirectGroup(ctx, user2ID, user2ID)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "cannot create direct group with yourself")
 	})
 
 	t.Run("RemoveGroupMember", func(t *testing.T) {

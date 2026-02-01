@@ -1,6 +1,6 @@
 ---
 id: TESTING-20251231-014339-VIF
-status: in_progress
+status: review_requested
 title: Backend Testing Strategy Improvement
 priority: high
 created: 2025-12-31 01:43:39
@@ -30,7 +30,7 @@ To achieve "100% certainty" in backend releases, we will implement a multi-layer
 
 ### 2. Implement Service Integration Tests
 *   [x] Port key `NoteService` tests to run against the real DB.
-*   [ ] Port `GroupService` (logic in handlers currently, might need refactoring or direct handler integration testing) tests.
+*   [x] Port `GroupService` (logic in handlers currently, might need refactoring or direct handler integration testing) tests.
 *   [x] Verify complex queries (e.g., full-text search, date filtering) which are hard to mock accurately with `pgxmock`.
 
 ### 3. Implement "Frontend Contract" API Tests
@@ -105,4 +105,4 @@ By running these tests in CI (where Docker is available), we will catch:
 *   Logic errors in complex queries.
 
 ## Next Steps
-1.  Port GroupService tests.
+*   None.
