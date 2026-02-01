@@ -51,6 +51,8 @@ func NewUserHandler(db DBInterface) *UserHandler {
 func (h *UserHandler) CreateOrUpdateUser(w http.ResponseWriter, r *http.Request) {
 	var uid string
 	var email string
+	var testUserID string
+	isTestMode := false
 
 	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
 		uid = token.UID
@@ -58,9 +60,9 @@ func (h *UserHandler) CreateOrUpdateUser(w http.ResponseWriter, r *http.Request)
 		if emailClaim, ok := token.Claims["email"].(string); ok {
 			email = emailClaim
 		}
-	} else if testUserID, ok := r.Context().Value(TestUserKey).(string); ok {
-		// Mock ID, but we need a uid for the DB query logic below if we were to support it
-		// For now just error if not authenticated properly
+	} else if val, ok := r.Context().Value(TestUserKey).(string); ok {
+		testUserID = val
+		isTestMode = true
 		if testUserID == "" {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
@@ -68,7 +70,8 @@ func (h *UserHandler) CreateOrUpdateUser(w http.ResponseWriter, r *http.Request)
 		// In test mode without firebase token, we might not have email easily unless injected
 		// Assume "test@example.com" if missing for test
 		email = "test@example.com"
-		uid = "test-firebase-uid"
+		// Generate unique firebase UID for test user
+		uid = "test-firebase-uid-" + testUserID
 	} else {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -97,10 +100,24 @@ func (h *UserHandler) CreateOrUpdateUser(w http.ResponseWriter, r *http.Request)
 	var settingsBytes []byte
 
 	// 1. Try to find user
-	err := h.db.QueryRow(r.Context(), `
-		SELECT id, firebase_uid, email, username, settings, created_at, updated_at
-		FROM users
-		WHERE firebase_uid=$1`, uid).Scan(
+	var selectQuery string
+	var selectArgs []interface{}
+
+	if isTestMode {
+		selectQuery = `
+			SELECT id, firebase_uid, email, username, settings, created_at, updated_at
+			FROM users
+			WHERE id=$1`
+		selectArgs = []interface{}{testUserID}
+	} else {
+		selectQuery = `
+			SELECT id, firebase_uid, email, username, settings, created_at, updated_at
+			FROM users
+			WHERE firebase_uid=$1`
+		selectArgs = []interface{}{uid}
+	}
+
+	err := h.db.QueryRow(r.Context(), selectQuery, selectArgs...).Scan(
 		&user.ID, &user.FirebaseUID, &user.Email, &user.Username, &settingsBytes, &user.CreatedAt, &user.UpdatedAt,
 	)
 
@@ -111,7 +128,6 @@ func (h *UserHandler) CreateOrUpdateUser(w http.ResponseWriter, r *http.Request)
 			if req.Settings != nil {
 				settingsJSON, _ = json.Marshal(req.Settings)
 			} else {
-				// Initialize with empty object
 				settingsJSON = []byte("{}")
 			}
 
@@ -120,11 +136,24 @@ func (h *UserHandler) CreateOrUpdateUser(w http.ResponseWriter, r *http.Request)
 				usernameVal = nil
 			}
 
-			err = h.db.QueryRow(r.Context(), `
-				INSERT INTO users (firebase_uid, email, username, settings)
-				VALUES ($1, $2, $3, $4)
-				RETURNING id, firebase_uid, email, username, settings, created_at, updated_at`,
-				uid, email, usernameVal, settingsJSON).Scan(
+			var insertQuery string
+			var insertArgs []interface{}
+
+			if isTestMode {
+				insertQuery = `
+					INSERT INTO users (id, firebase_uid, email, username, settings)
+					VALUES ($1, $2, $3, $4, $5)
+					RETURNING id, firebase_uid, email, username, settings, created_at, updated_at`
+				insertArgs = []interface{}{testUserID, uid, email, usernameVal, settingsJSON}
+			} else {
+				insertQuery = `
+					INSERT INTO users (firebase_uid, email, username, settings)
+					VALUES ($1, $2, $3, $4)
+					RETURNING id, firebase_uid, email, username, settings, created_at, updated_at`
+				insertArgs = []interface{}{uid, email, usernameVal, settingsJSON}
+			}
+
+			err = h.db.QueryRow(r.Context(), insertQuery, insertArgs...).Scan(
 				&user.ID, &user.FirebaseUID, &user.Email, &user.Username, &settingsBytes, &user.CreatedAt, &user.UpdatedAt,
 			)
 			if err != nil {
@@ -139,7 +168,6 @@ func (h *UserHandler) CreateOrUpdateUser(w http.ResponseWriter, r *http.Request)
 				}
 			}
 
-			// Respond and return immediately - no need to update
 			w.WriteHeader(http.StatusOK)
 			if err := json.NewEncoder(w).Encode(user); err != nil {
 				slog.Error("Failed to encode response", "error", err)
@@ -179,11 +207,17 @@ func (h *UserHandler) CreateOrUpdateUser(w http.ResponseWriter, r *http.Request)
 	}
 
 	if shouldUpdate {
-		updateQuery += fmt.Sprintf(" WHERE firebase_uid = $%d", argIdx)
-		args = append(args, uid)
+		// Use ID for update if test mode, or firebase_uid if production
+		if isTestMode {
+			updateQuery += fmt.Sprintf(" WHERE id = $%d", argIdx)
+			args = append(args, testUserID)
+		} else {
+			updateQuery += fmt.Sprintf(" WHERE firebase_uid = $%d", argIdx)
+			args = append(args, uid)
+		}
 		updateQuery += " RETURNING id, firebase_uid, email, username, settings, created_at, updated_at"
 
-		err = h.db.QueryRow(r.Context(), updateQuery, args...).Scan(
+		err := h.db.QueryRow(r.Context(), updateQuery, args...).Scan(
 			&user.ID, &user.FirebaseUID, &user.Email, &user.Username, &settingsBytes, &user.CreatedAt, &user.UpdatedAt,
 		)
 		if err != nil {

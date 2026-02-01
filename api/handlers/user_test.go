@@ -124,6 +124,82 @@ func TestUserHandler_CreateOrUpdateUser(t *testing.T) {
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
+
+	t.Run("Create User (Upsert - Test Mode)", func(t *testing.T) {
+		req, _ := http.NewRequest("POST", "/users", strings.NewReader(reqBody))
+
+		// Inject TestUserKey
+		ctx := context.WithValue(req.Context(), TestUserKey, userUUID.String())
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+
+		expectedFirebaseUID := "test-firebase-uid-" + userUUID.String()
+
+		// 1. SELECT returns No Rows (Search by ID)
+		mockDB.ExpectQuery(regexp.QuoteMeta("SELECT id, firebase_uid, email, username, settings, created_at, updated_at FROM users WHERE id=$1")).
+			WithArgs(userUUID.String()).
+			WillReturnError(pgx.ErrNoRows)
+
+		// 2. INSERT with Explicit ID
+		settingsJSON := []byte(`{"theme":"dark"}`)
+		testUser := "TestUser"
+		rows := pgxmock.NewRows([]string{"id", "firebase_uid", "email", "username", "settings", "created_at", "updated_at"}).
+			AddRow(userUUID.String(), expectedFirebaseUID, email, &testUser, settingsJSON, time.Now(), time.Now())
+
+		mockDB.ExpectQuery(regexp.QuoteMeta("INSERT INTO users (id, firebase_uid, email, username, settings)")).
+			WithArgs(userUUID.String(), expectedFirebaseUID, email, pgxmock.AnyArg(), pgxmock.AnyArg()).
+			WillReturnRows(rows)
+
+		handler.CreateOrUpdateUser(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		var user User
+		err := json.NewDecoder(w.Body).Decode(&user)
+		assert.NoError(t, err)
+		assert.Equal(t, userUUID.String(), user.ID)
+		assert.Equal(t, expectedFirebaseUID, user.FirebaseUID)
+	})
+
+	t.Run("Update User (Existing - Test Mode)", func(t *testing.T) {
+		req, _ := http.NewRequest("PUT", "/users", strings.NewReader(reqBody))
+
+		// Inject TestUserKey
+		ctx := context.WithValue(req.Context(), TestUserKey, userUUID.String())
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+
+		expectedFirebaseUID := "test-firebase-uid-" + userUUID.String()
+
+		// 1. SELECT returns User (Search by ID)
+		oldUser := "OldName"
+		settingsJSON := []byte("{}")
+		rows := pgxmock.NewRows([]string{"id", "firebase_uid", "email", "username", "settings", "created_at", "updated_at"}).
+			AddRow(userUUID.String(), expectedFirebaseUID, email, &oldUser, settingsJSON, time.Now(), time.Now())
+
+		mockDB.ExpectQuery(regexp.QuoteMeta("SELECT id, firebase_uid, email, username, settings, created_at, updated_at FROM users WHERE id=$1")).
+			WithArgs(userUUID.String()).
+			WillReturnRows(rows)
+
+		// 2. UPDATE with WHERE id
+		updatedUser := "TestUser"
+		updatedSettings := []byte(`{"theme":"dark"}`)
+		updatedRows := pgxmock.NewRows([]string{"id", "firebase_uid", "email", "username", "settings", "created_at", "updated_at"}).
+			AddRow(userUUID.String(), expectedFirebaseUID, email, &updatedUser, updatedSettings, time.Now(), time.Now())
+
+		mockDB.ExpectQuery(regexp.QuoteMeta("UPDATE users SET updated_at = NOW(), username = $1, settings = $2 WHERE id = $3 RETURNING")).
+			WithArgs(pgxmock.AnyArg(), pgxmock.AnyArg(), userUUID.String()).
+			WillReturnRows(updatedRows)
+
+		handler.UpdateUser(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		var user User
+		err := json.NewDecoder(w.Body).Decode(&user)
+		assert.NoError(t, err)
+		assert.Equal(t, "TestUser", *user.Username)
+	})
 }
 
 func TestUserHandler_GetMe(t *testing.T) {
