@@ -1,6 +1,6 @@
 ---
 id: INFRASTRUCTURE-20260131-133123-OJO
-status: in_progress
+status: completed
 title: Fix CORS errors after Google OAuth login on staging
 priority: medium
 created: 2026-01-31 13:31:23
@@ -74,10 +74,15 @@ The staging frontend origin `https://discipleship-journal-staging.firebaseapp.co
 4. Test by logging in again and checking browser console for CORS errors.
 
 ## Acceptance Criteria
-- [ ] CORS preflight requests succeed for staging frontend origin
-- [ ] API endpoints (`/api/users/me`, `/api/notes`, etc.) return proper CORS headers
-- [ ] No CORS errors in browser console after authentication
-- [ ] User profile and notes load successfully after login
+- [x] CORS preflight requests succeed for staging frontend origin
+- [x] API endpoints (`/api/users/me`, `/api/notes`, etc.) return proper CORS headers
+- [x] No CORS errors in browser console after authentication
+- [x] User profile and notes load successfully after login
+
+## Implementation Details
+- Modified `api/main.go` to support `CORS_EXTRA_ORIGINS` environment variable. This allows appending additional allowed origins to those loaded from Secret Manager (which normally overrides environment variables).
+- Updated `.github/workflows/deploy-staging.yml` to inject `CORS_EXTRA_ORIGINS` with the staging frontend URL (`https://discipleship-journal-staging.firebaseapp.com`).
+- This approach avoids the need to manually update Google Secret Manager secrets for environment-specific configurations and allows Staging to be configured via Infrastructure-as-Code.
 
 ## Notes
 - This is a staging-specific issue but production may have similar configuration

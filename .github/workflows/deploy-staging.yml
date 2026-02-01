@@ -87,6 +87,7 @@ jobs:
             GOOGLE_CLOUD_PROJECT=${{ env.GCP_PROJECT_ID }}
             FIREBASE_PROJECT_ID=${{ secrets.STG_FIREBASE_PROJECT_ID }}
             CLOUD_SQL_INSTANCE=${{ secrets.STG_CLOUD_SQL_INSTANCE }}
+            CORS_EXTRA_ORIGINS=https://discipleship-journal-staging.firebaseapp.com
             # Note: CLOUD_SQL_INSTANCE env var is required for the app to detect Cloud SQL connection
             # Application secrets (DB_USERNAME, DB_PASSWORD, DB_NAME) are loaded from Google Secret Manager at runtime
 
