@@ -2,10 +2,10 @@
 
 ## Objective
 Implement scripts or logic to seed the database with four new Bible reading plans:
-1.  **Whole Bible in 3 Years** (1 chapter/day)
-2.  **Old Testament in a Year**
-3.  **New Testament in a Year**
-4.  **Psalms & Proverbs**
+1.  **Whole Bible in 3 Years** (1 chapter/day) - **Completed**
+2.  **Old Testament in a Year** - **Completed**
+3.  **New Testament in a Year** - *Pending*
+4.  **Psalms & Proverbs** - **Completed**
 
 ## Strategy & Sources
 
@@ -17,6 +17,7 @@ Implement scripts or logic to seed the database with four new Bible reading plan
     *   Total chapters: 1,189.
     *   Duration: ~3 years and 3 months.
 *   **Implementation**: Create a Go script/function that utilizes a map/list of Bible book chapter counts.
+*   **Status**: Completed. Implemented in `scripts/generate_algorithmic_plans/main.go` and migration `000023_add_algorithmic_plans`.
 
 ### 2. Old Testament in a Year
 *   **Method**: Algorithmic Generation.
@@ -26,6 +27,7 @@ Implement scripts or logic to seed the database with four new Bible reading plan
     *   Target duration: 365 days.
     *   Daily rate: `math.Ceil(929 / 365)`. Some days will have 2 chapters, some 3.
     *   Alternatively, simple sequential chunks.
+*   **Status**: Completed. Implemented in `scripts/generate_algorithmic_plans/main.go`.
 
 ### 3. New Testament in a Year
 *   **Method**: Scraping (Primary) or Algorithmic (Secondary).
@@ -49,6 +51,7 @@ Implement scripts or logic to seed the database with four new Bible reading plan
         *   Cycle through Proverbs (e.g., Proverbs 1 on Day 1, Proverbs 31 on Day 31, repeat).
         *   Combine: "Psalm {X}; Proverbs {Y}".
     *   **Duration**: Indefinite (or set to 365 days).
+*   **Status**: Completed. Implemented in `scripts/generate_algorithmic_plans/main.go`.
 
 ## Output Format
 Generate a SQL migration file (e.g., `api/migrations/YYYYMMDD_add_new_plans.up.sql`) containing:
