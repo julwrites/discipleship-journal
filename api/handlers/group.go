@@ -117,7 +117,7 @@ func (h *GroupHandler) ListMyGroups(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rows, err := h.db.Query(r.Context(),
-		`SELECT g.id, g.name, g.description, g.created_by, g.type, gm.role
+		`SELECT g.id, g.name, COALESCE(g.description, ''), g.created_by, g.type, gm.role
 		 FROM groups g
 		 JOIN group_members gm ON g.id = gm.group_id
 		 WHERE gm.user_id = $1`, userUUID)
@@ -167,7 +167,7 @@ func (h *GroupHandler) SearchGroups(w http.ResponseWriter, r *http.Request) {
 
 	// Only search for standard groups, not direct messages
 	rows, err := h.db.Query(r.Context(),
-		`SELECT g.id, g.name, g.description, g.created_by, g.type,
+		`SELECT g.id, g.name, COALESCE(g.description, ''), g.created_by, g.type,
 		 COALESCE((SELECT role FROM group_members WHERE group_id = g.id AND user_id = $2), '') as role
 		 FROM groups g
 		 WHERE g.name ILIKE $1 AND (g.type = 'group' OR g.type IS NULL) LIMIT 20`, "%"+query+"%", userUUID)
