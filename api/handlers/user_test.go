@@ -261,3 +261,75 @@ func TestUserHandler_GetMe(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, w.Code)
 	})
 }
+
+func TestUserHandler_CreateOrUpdateUser_MergesSettings(t *testing.T) {
+	mockDB, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	handler := NewUserHandler(mockDB)
+	userUUID := uuid.New()
+	firebaseUID := "test-firebase-uid"
+	email := "test@example.com"
+
+	// Original settings in DB
+	originalSettings := []byte(`{"theme":"dark", "notifications": true}`)
+
+	// Request updates only bible_version
+	reqBody := `{"settings": {"bible_version": "ESV"}}`
+
+	req, _ := http.NewRequest("PUT", "/users", strings.NewReader(reqBody))
+
+	token := &auth.Token{
+		UID: firebaseUID,
+		Claims: map[string]interface{}{
+			"email": email,
+		},
+	}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
+
+	// 1. SELECT returns User with original settings
+	oldUser := "OldName"
+	rows := pgxmock.NewRows([]string{"id", "firebase_uid", "email", "username", "settings", "created_at", "updated_at"}).
+		AddRow(userUUID.String(), firebaseUID, email, &oldUser, originalSettings, time.Now(), time.Now())
+
+	mockDB.ExpectQuery(regexp.QuoteMeta("SELECT id, firebase_uid, email, username, settings, created_at, updated_at FROM users WHERE firebase_uid=$1")).
+		WithArgs(firebaseUID).
+		WillReturnRows(rows)
+
+	// 2. UPDATE should use merged settings
+	// Expected merged settings: theme: dark, notifications: true, bible_version: ESV
+	// The order of keys in JSON map is not guaranteed, so we might need a more robust check or rely on stable marshalling if keys are sorted.
+	// Go's json.Marshal sorts map keys.
+	// {"bible_version":"ESV","notifications":true,"theme":"dark"}
+	expectedSettings := []byte(`{"bible_version":"ESV","notifications":true,"theme":"dark"}`)
+
+	updatedUser := "OldName"
+	updatedRows := pgxmock.NewRows([]string{"id", "firebase_uid", "email", "username", "settings", "created_at", "updated_at"}).
+		AddRow(userUUID.String(), firebaseUID, email, &updatedUser, expectedSettings, time.Now(), time.Now())
+
+	mockDB.ExpectQuery(regexp.QuoteMeta("UPDATE users SET updated_at = NOW(), settings = $1 WHERE firebase_uid = $2 RETURNING")).
+		WithArgs(expectedSettings, firebaseUID).
+		WillReturnRows(updatedRows)
+
+	handler.UpdateUser(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var user User
+	err = json.NewDecoder(w.Body).Decode(&user)
+	assert.NoError(t, err)
+
+	// Verify settings in response
+	assert.Equal(t, "ESV", user.Settings["bible_version"])
+	assert.Equal(t, "dark", user.Settings["theme"])
+	assert.Equal(t, true, user.Settings["notifications"])
+
+	if err := mockDB.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
