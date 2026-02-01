@@ -43,6 +43,14 @@ var configs = []ReadingPlanConfig{
 		MaxDays:     100, // It's around 88-90 days, we'll stop when we see repetition
 		MigrationID: "000025_add_bible_in_90_days",
 	},
+	{
+		Title:       "New Testament in a Year",
+		Slug:        "new-testament-in-a-year",
+		Description: "Read through the entire New Testament in one year.",
+		Type:        "calendar",
+		MaxDays:     365,
+		MigrationID: "000026_add_new_testament_in_a_year",
+	},
 }
 
 func main() {

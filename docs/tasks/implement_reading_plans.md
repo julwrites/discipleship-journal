@@ -4,7 +4,7 @@
 Implement scripts or logic to seed the database with four new Bible reading plans:
 1.  **Whole Bible in 3 Years** (1 chapter/day) - **Completed**
 2.  **Old Testament in a Year** - **Completed**
-3.  **New Testament in a Year** - *Pending*
+3.  **New Testament in a Year** - **Completed**
 4.  **Psalms & Proverbs** - **Completed**
 
 ## Strategy & Sources
@@ -40,6 +40,7 @@ Implement scripts or logic to seed the database with four new Bible reading plan
     *   Extract reference from the breadcrumb (e.g., `New Testament in a Year / Matthew 20:17-34`) or the header text.
     *   Clean the string to get just the reference (e.g., "Matthew 20:17-34").
 *   **Note**: This plan is 5 days/week in some variations, or 365 days. BibleGateway's version appears to be 365 days.
+*   **Status**: Completed. Implemented in `scripts/generate_scraped_plans/main.go` and migration `000026_add_new_testament_in_a_year`.
 
 ### 4. Psalms & Proverbs
 *   **Method**: Algorithmic Generation.
