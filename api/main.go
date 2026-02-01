@@ -124,6 +124,17 @@ func main() {
 
 	// Load CORS allowed origins from Secret Manager
 	corsOrigins := loadSecret("CORS_ALLOWED_ORIGINS")
+
+	// Check for extra origins from environment (e.g. injected by deployment script)
+	if extraOrigins := os.Getenv("CORS_EXTRA_ORIGINS"); extraOrigins != "" {
+		if corsOrigins != "" {
+			corsOrigins = corsOrigins + "," + extraOrigins
+		} else {
+			corsOrigins = extraOrigins
+		}
+		logger.Info("Added extra CORS origins", "extra", extraOrigins)
+	}
+
 	if corsOrigins != "" {
 		_ = os.Setenv("CORS_ALLOWED_ORIGINS", corsOrigins)
 		logger.Info("Loaded CORS allowed origins", "value", corsOrigins)
