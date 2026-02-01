@@ -38,10 +38,9 @@ func SetupIntegrationDB(t *testing.T) (*pgxpool.Pool, func()) {
 	dbUser := "testuser"
 	dbPassword := "testpassword"
 
-	// Use ECR public mirror to avoid Docker Hub rate limits, fallback to Docker Hub
-	// public.ecr.aws/docker/library/postgres:15-alpine
+	// Use standard Docker Hub image. ECR public mirror was flaky in CI.
 	postgresContainer, err := postgres.Run(ctx,
-		"public.ecr.aws/docker/library/postgres:15-alpine",
+		"postgres:15-alpine",
 		postgres.WithDatabase(dbName),
 		postgres.WithUsername(dbUser),
 		postgres.WithPassword(dbPassword),
