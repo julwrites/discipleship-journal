@@ -135,25 +135,9 @@ func (h *GroupHandler) CreateGroup(w http.ResponseWriter, r *http.Request) {
 
 // ListMyGroups lists groups the user belongs to
 func (h *GroupHandler) ListMyGroups(w http.ResponseWriter, r *http.Request) {
-	var userUUID uuid.UUID
-	var err error
-
-	// Check for test user first
-	if testUserID := r.Context().Value(TestUserKey); testUserID != nil {
-		if idStr, ok := testUserID.(string); ok {
-			userUUID, err = uuid.Parse(idStr)
-		} else if id, ok := testUserID.(uuid.UUID); ok {
-			userUUID = id
-		}
-	} else if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
-		// Regular auth flow
-		userUUID, err = GetUserUUID(r.Context(), token.UID)
-	} else {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
+	userUUID, err := GetUserUUIDFromContext(r.Context())
 	if err != nil {
-		http.Error(w, "User not found", http.StatusInternalServerError)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
@@ -198,8 +182,7 @@ func (h *GroupHandler) SearchGroups(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// List groups and check if current user is a member
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	userUUID, err := GetUserUUID(r.Context(), token.UID)
+	userUUID, err := GetUserUUIDFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
 		return
@@ -241,8 +224,7 @@ func (h *GroupHandler) SearchGroups(w http.ResponseWriter, r *http.Request) {
 // JoinGroup allows a user to join a group
 func (h *GroupHandler) JoinGroup(w http.ResponseWriter, r *http.Request) {
 	groupID := chi.URLParam(r, "id")
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	userUUID, err := GetUserUUID(r.Context(), token.UID)
+	userUUID, err := GetUserUUIDFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
 		return
@@ -279,8 +261,7 @@ func (h *GroupHandler) JoinGroup(w http.ResponseWriter, r *http.Request) {
 // LeaveGroup allows a user to leave a group
 func (h *GroupHandler) LeaveGroup(w http.ResponseWriter, r *http.Request) {
 	groupID := chi.URLParam(r, "id")
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	userUUID, err := GetUserUUID(r.Context(), token.UID)
+	userUUID, err := GetUserUUIDFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
 		return
@@ -313,8 +294,7 @@ func (h *GroupHandler) GetGroupMembers(w http.ResponseWriter, r *http.Request) {
 
 	// Check if user is a member of the group (or group is public? Assuming public read of members for now)
 	// For privacy, maybe only members can see members. Let's enforce membership.
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	userUUID, err := GetUserUUID(r.Context(), token.UID)
+	userUUID, err := GetUserUUIDFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
 		return
@@ -374,8 +354,7 @@ func (h *GroupHandler) AddGroupMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	userUUID, err := GetUserUUID(r.Context(), token.UID)
+	userUUID, err := GetUserUUIDFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
 		return
@@ -464,8 +443,7 @@ func (h *GroupHandler) GetOrCreateDirectGroup(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	userUUID, err := GetUserUUID(r.Context(), token.UID)
+	userUUID, err := GetUserUUIDFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
 		return
@@ -584,8 +562,7 @@ func (h *GroupHandler) RemoveGroupMember(w http.ResponseWriter, r *http.Request)
 	groupID := chi.URLParam(r, "id")
 	targetUserID := chi.URLParam(r, "userId")
 
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	userUUID, err := GetUserUUID(r.Context(), token.UID)
+	userUUID, err := GetUserUUIDFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
 		return

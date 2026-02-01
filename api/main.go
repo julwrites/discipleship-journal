@@ -348,6 +348,7 @@ func main() {
 		r.Post("/api/groups", groupHandler.CreateGroup)
 		r.Get("/api/groups", groupHandler.ListMyGroups)
 		r.Get("/api/groups/search", groupHandler.SearchGroups)
+		r.Post("/api/groups/direct", groupHandler.GetOrCreateDirectGroup)
 		r.Post("/api/groups/{id}/join", groupHandler.JoinGroup)
 		r.Delete("/api/groups/{id}/leave", groupHandler.LeaveGroup)
 		r.Get("/api/groups/{id}/members", groupHandler.GetGroupMembers)

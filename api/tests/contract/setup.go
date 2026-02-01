@@ -20,24 +20,36 @@ func SetupContractTest(t *testing.T) (*chi.Mux, *pgxpool.Pool, func()) {
 
 	// Initialize Services
 	noteService := services.NewNoteService(pool)
+	// Mock Notification Service for tests
+	notificationService := services.NewMockNotificationService()
+	readingPlanService := services.NewReadingPlanService(pool)
 
 	// Initialize Handlers
 	noteHandler := handlers.NewNoteHandler(pool, noteService)
+	groupHandler := handlers.NewGroupHandler(pool, notificationService)
+	connectionHandler := handlers.NewConnectionHandler(pool, notificationService)
+	readingPlanHandler := handlers.NewReadingPlanHandler(readingPlanService)
 
 	// Setup Router
 	r := chi.NewRouter()
 
 	testAuthMiddleware := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Check for override header
+			userID := r.Header.Get("X-Test-User-ID")
+			if userID == "" {
+				userID = "00000000-0000-0000-0000-000000000001"
+			}
+
 			// Inject a test user into context.
-			// Using a valid UUID to ensure DB compatibility.
-			ctx := context.WithValue(r.Context(), handlers.TestUserKey, "00000000-0000-0000-0000-000000000001")
+			ctx := context.WithValue(r.Context(), handlers.TestUserKey, userID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 
 	r.Use(testAuthMiddleware)
 
+	// Notes
 	r.Route("/api/notes", func(r chi.Router) {
 		r.Get("/", noteHandler.GetNotes)
 		r.Post("/", noteHandler.CreateNote)
@@ -46,6 +58,39 @@ func SetupContractTest(t *testing.T) (*chi.Mux, *pgxpool.Pool, func()) {
 			r.Put("/", noteHandler.UpdateNote)
 			r.Delete("/", noteHandler.DeleteNote)
 		})
+	})
+
+	// Groups
+	r.Post("/api/groups", groupHandler.CreateGroup)
+	r.Get("/api/groups", groupHandler.ListMyGroups)
+	r.Get("/api/groups/search", groupHandler.SearchGroups)
+	r.Post("/api/groups/direct", groupHandler.GetOrCreateDirectGroup) // Matches api.ts
+	r.Route("/api/groups/{id}", func(r chi.Router) {
+		r.Post("/join", groupHandler.JoinGroup)
+		r.Delete("/leave", groupHandler.LeaveGroup)
+		r.Get("/members", groupHandler.GetGroupMembers)
+		r.Post("/members", groupHandler.AddGroupMember)
+		r.Delete("/members/{userId}", groupHandler.RemoveGroupMember)
+	})
+
+	// Connections
+	r.Get("/api/users/search", connectionHandler.SearchUsers)
+	r.Post("/api/connections/request", connectionHandler.SendConnectionRequest)
+	r.Get("/api/connections", connectionHandler.ListConnections)
+	r.Route("/api/connections/{id}", func(r chi.Router) {
+		r.Put("/", connectionHandler.AcceptConnectionRequest)
+		r.Delete("/", connectionHandler.DeleteConnectionRequest)
+	})
+
+	// Reading Plans
+	r.Get("/api/reading-plans", readingPlanHandler.GetAllPlans)
+	r.Get("/api/reading-plans/{id}", readingPlanHandler.GetPlan)
+	r.Post("/api/reading-plans/{id}/subscribe", readingPlanHandler.Subscribe)
+
+	r.Get("/api/my-reading-plans", readingPlanHandler.GetUserPlans)
+	r.Route("/api/my-reading-plans/{id}/progress", func(r chi.Router) {
+		r.Get("/", readingPlanHandler.GetPlanProgress)
+		r.Post("/", readingPlanHandler.MarkDayComplete)
 	})
 
 	return r, pool, cleanup

@@ -7,9 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/services"
-	"firebase.google.com/go/v4/auth"
 	chi "github.com/go-chi/chi/v5"
 	pgx "github.com/jackc/pgx/v5"
 )
@@ -39,15 +37,6 @@ func NewConnectionHandler(db DBInterface, notificationService services.Notificat
 	return &ConnectionHandler{db: db, notificationService: notificationService}
 }
 
-func (h *ConnectionHandler) getUserUUID(ctx context.Context, firebaseUID string) (string, error) {
-	var id string
-	err := h.db.QueryRow(ctx, "SELECT id FROM users WHERE firebase_uid=$1", firebaseUID).Scan(&id)
-	if err != nil {
-		return "", err
-	}
-	return id, nil
-}
-
 // SearchUsers searches for users by email or username
 func (h *ConnectionHandler) SearchUsers(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
@@ -56,13 +45,7 @@ func (h *ConnectionHandler) SearchUsers(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	requesterUID := token.UID
-	requesterUUID, err := h.getUserUUID(r.Context(), requesterUID)
+	requesterUUID, err := GetUserUUIDFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -118,15 +101,9 @@ func (h *ConnectionHandler) SendConnectionRequest(w http.ResponseWriter, r *http
 		return
 	}
 
-	token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	requesterUID := token.UID
-	requesterUUID, err := h.getUserUUID(r.Context(), requesterUID)
+	requesterUUID, err := GetUserUUIDFromContext(r.Context())
 	if err != nil {
-		http.Error(w, "Requester not found", http.StatusInternalServerError)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
@@ -153,7 +130,7 @@ func (h *ConnectionHandler) SendConnectionRequest(w http.ResponseWriter, r *http
 		return
 	}
 
-	if requesterUUID == receiverUUID {
+	if requesterUUID.String() == receiverUUID {
 		http.Error(w, "Cannot connect with yourself", http.StatusBadRequest)
 		return
 	}
@@ -204,15 +181,9 @@ func (h *ConnectionHandler) SendConnectionRequest(w http.ResponseWriter, r *http
 
 // ListConnections lists all connections for the current user
 func (h *ConnectionHandler) ListConnections(w http.ResponseWriter, r *http.Request) {
-	token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	uid := token.UID
-	userUUID, err := h.getUserUUID(r.Context(), uid)
+	userUUID, err := GetUserUUIDFromContext(r.Context())
 	if err != nil {
-		http.Error(w, "User not found", http.StatusInternalServerError)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
@@ -249,15 +220,9 @@ func (h *ConnectionHandler) ListConnections(w http.ResponseWriter, r *http.Reque
 func (h *ConnectionHandler) AcceptConnectionRequest(w http.ResponseWriter, r *http.Request) {
 	connID := chi.URLParam(r, "id")
 
-	token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	uid := token.UID
-	userUUID, err := h.getUserUUID(r.Context(), uid)
+	userUUID, err := GetUserUUIDFromContext(r.Context())
 	if err != nil {
-		http.Error(w, "User not found", http.StatusInternalServerError)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
@@ -285,15 +250,9 @@ func (h *ConnectionHandler) AcceptConnectionRequest(w http.ResponseWriter, r *ht
 func (h *ConnectionHandler) DeleteConnectionRequest(w http.ResponseWriter, r *http.Request) {
 	connID := chi.URLParam(r, "id")
 
-	token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	uid := token.UID
-	userUUID, err := h.getUserUUID(r.Context(), uid)
+	userUUID, err := GetUserUUIDFromContext(r.Context())
 	if err != nil {
-		http.Error(w, "User not found", http.StatusInternalServerError)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
