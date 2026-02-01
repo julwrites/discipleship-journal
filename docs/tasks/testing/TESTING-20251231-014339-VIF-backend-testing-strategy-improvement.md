@@ -38,12 +38,12 @@ To achieve "100% certainty" in backend releases, we will implement a multi-layer
 *   [x] These tests will use `httptest` to spin up the `chi` router.
 *   [x] **Crucial**: The test payloads (JSON bodies) must be copied *verbatim* or derived directly from `web/src/services/api.ts` logic.
 *   [x] **Crucial**: The assertions must verify that the response JSON structure matches exactly what `web/src/services/api.ts` expects (e.g., field names, date formats, nullability).
-*   [x] Cover the "Happy Path" for all major entities: Notes (Done), Groups (Todo), Connections (Todo), Reading Plans (Todo).
+*   [x] Cover the "Happy Path" for all major entities: Notes (Done), Groups (Done), Connections (Done), Reading Plans (Done).
 
 ### 4. Review and Refine Unit Tests
-*   [ ] Audit existing `api/handlers/*_test.go`.
-*   [ ] Ensure `pgxmock` expectations match the actual SQL used in production (drift is a common cause of failure).
-*   [ ] Add tests for edge cases: invalid JSON, missing required fields, permission denied.
+*   [x] Audit existing `api/handlers/*_test.go` (Specifically GroupHandler).
+*   [x] Ensure `pgxmock` expectations match the actual SQL used in production (drift is a common cause of failure).
+*   [x] Add tests for edge cases: invalid JSON, missing required fields, permission denied (e.g., Direct Groups, Search).
 
 ## Implementation Details
 
@@ -106,4 +106,3 @@ By running these tests in CI (where Docker is available), we will catch:
 
 ## Next Steps
 1.  Port GroupService tests.
-2.  Add Contract tests for Groups, Connections, Reading Plans.
