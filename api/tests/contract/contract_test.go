@@ -64,9 +64,10 @@ func SetupRouter(t *testing.T) (*chi.Mux, func(), string) {
 
 	// Real Services using the integration DB pool
 	noteService := services.NewNoteService(pool)
+	groupService := services.NewGroupService(pool, mockNotification)
 
 	noteHandler := handlers.NewNoteHandler(pool, noteService)
-	groupHandler := handlers.NewGroupHandler(pool, mockNotification)
+	groupHandler := handlers.NewGroupHandler(groupService)
 	connectionHandler := handlers.NewConnectionHandler(pool, mockNotification)
 
 	r := chi.NewRouter()
