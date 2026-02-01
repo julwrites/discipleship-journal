@@ -6,7 +6,8 @@ Implement scripts or logic to seed the database with additional well-established
 ## 1. Chronological Plan (1 Year)
 *   **Description**: Read the Bible in the chronological order in which its stories and events occurred.
 *   **Type**: Calendar (365 Days)
-*   **Method**: Scraping.
+*   **Method**: Scraping (Implemented in `scripts/generate_scraped_plans/main.go`).
+*   **Status**: Completed. Migration `000024_add_chronological_plan` added.
 *   **Source**: BibleGateway "Chronological"
 *   **URL Pattern**: `https://www.biblegateway.com/reading-plans/chronological/{year}/{month}/{day}?version=ESV`
     *   Example: `https://www.biblegateway.com/reading-plans/chronological/2026/01/01?version=ESV`
@@ -19,7 +20,8 @@ Implement scripts or logic to seed the database with additional well-established
 ## 2. Bible in 90 Days
 *   **Description**: An intensive Bible reading plan that walks through the entire Bible in 90 days.
 *   **Type**: Sequential (88-90 Days)
-*   **Method**: Scraping.
+*   **Method**: Scraping (Implemented in `scripts/generate_scraped_plans/main.go`).
+*   **Status**: Completed. Migration `000025_add_bible_in_90_days` added.
 *   **Source**: BibleGateway "Bible in 90 Days"
 *   **URL Pattern**: `https://www.biblegateway.com/reading-plans/bible-in-90-days/{year}/{month}/{day}?version=ESV`
     *   Example: `https://www.biblegateway.com/reading-plans/bible-in-90-days/2026/01/01?version=ESV`
