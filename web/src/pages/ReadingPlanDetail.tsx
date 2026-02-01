@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { getReadingPlan, markPlanDayComplete, getPlanProgress } from "@/services/api";
+import { getReadingPlan, markPlanDayComplete, unmarkPlanDayComplete, getPlanProgress } from "@/services/api";
 import { toast } from "sonner";
 import { ArrowLeft, CheckCircle, Calendar } from "lucide-react";
 
@@ -59,21 +59,38 @@ export default function ReadingPlanDetail() {
 
     const handleMarkComplete = async (dayNumber: number) => {
         if (!id) return;
-        try {
-            // Optimistic update
-            const newCompleted = new Set(completedDays);
-            newCompleted.add(dayNumber);
-            setCompletedDays(newCompleted);
 
-            await markPlanDayComplete(id, dayNumber);
-            toast.success(`Day ${dayNumber} completed!`);
-        } catch (error) {
-            console.error(error);
-            toast.error("Failed to update progress");
-            // Revert
-            const reverted = new Set(completedDays);
-            reverted.delete(dayNumber);
-            setCompletedDays(reverted);
+        const isCompleted = completedDays.has(dayNumber);
+        const newCompleted = new Set(completedDays);
+
+        if (isCompleted) {
+            newCompleted.delete(dayNumber);
+            setCompletedDays(newCompleted); // Optimistic
+
+            try {
+                await unmarkPlanDayComplete(id, dayNumber);
+                toast.success(`Day ${dayNumber} unmarked`);
+            } catch (error) {
+                console.error(error);
+                toast.error("Failed to unmark day");
+                // Revert
+                newCompleted.add(dayNumber);
+                setCompletedDays(new Set(newCompleted));
+            }
+        } else {
+            newCompleted.add(dayNumber);
+            setCompletedDays(newCompleted); // Optimistic
+
+            try {
+                await markPlanDayComplete(id, dayNumber);
+                toast.success(`Day ${dayNumber} completed!`);
+            } catch (error) {
+                console.error(error);
+                toast.error("Failed to update progress");
+                // Revert
+                newCompleted.delete(dayNumber);
+                setCompletedDays(new Set(newCompleted));
+            }
         }
     };
 
@@ -145,7 +162,13 @@ export default function ReadingPlanDetail() {
                                         </div>
                                     </div>
                                     {isCompleted ? (
-                                        <Button variant="ghost" size="icon" disabled className="text-green-600 dark:text-green-400">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => handleMarkComplete(day.day_number)}
+                                            className="text-green-600 dark:text-green-400 hover:text-destructive hover:bg-destructive/10"
+                                            title="Unmark"
+                                        >
                                             <CheckCircle className="h-6 w-6" />
                                         </Button>
                                     ) : (

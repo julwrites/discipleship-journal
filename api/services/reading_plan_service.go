@@ -16,6 +16,7 @@ type ReadingPlanService interface {
 	Subscribe(ctx context.Context, userID, planID uuid.UUID) (*models.UserReadingPlan, error)
 	GetUserPlans(ctx context.Context, userID uuid.UUID) ([]*models.UserReadingPlan, error)
 	MarkDayComplete(ctx context.Context, userID, planID uuid.UUID, dayNumber int) error
+	UnmarkDayComplete(ctx context.Context, userID, planID uuid.UUID, dayNumber int) error
 	GetPlanProgress(ctx context.Context, userID, planID uuid.UUID) ([]int, error)
 }
 
@@ -174,6 +175,30 @@ func (s *readingPlanService) MarkDayComplete(ctx context.Context, userID, planID
 		ON CONFLICT (user_reading_plan_id, day_number) DO NOTHING
 	`
 	_, err = s.db.Exec(ctx, query, userPlanID, dayNumber, time.Now())
+	return err
+}
+
+func (s *readingPlanService) UnmarkDayComplete(ctx context.Context, userID, planID uuid.UUID, dayNumber int) error {
+	// First find the user's active plan
+	var userPlanID uuid.UUID
+	err := s.db.QueryRow(ctx, `
+		SELECT id FROM user_reading_plans
+		WHERE user_id = $1 AND reading_plan_id = $2 AND status = 'active'
+	`, userID, planID).Scan(&userPlanID)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return models.ErrNotFound
+		}
+		return err
+	}
+
+	// Delete progress
+	query := `
+		DELETE FROM user_reading_plan_progress
+		WHERE user_reading_plan_id = $1 AND day_number = $2
+	`
+	_, err = s.db.Exec(ctx, query, userPlanID, dayNumber)
 	return err
 }
 

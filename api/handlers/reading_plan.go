@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"discipleship_journal_api/models"
 	"discipleship_journal_api/services"
@@ -36,6 +37,55 @@ func (h *ReadingPlanHandler) GetAllPlans(w http.ResponseWriter, r *http.Request)
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(map[string]interface{}{
 		"data": plans,
+	}); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+// UnmarkDayComplete godoc
+// @Summary      Unmark a day as complete
+// @Description  Unmark (undo completion) a specific day in a reading plan
+// @Tags         reading-plans
+// @Accept       json
+// @Produce      json
+// @Param        id   path      string  true  "Plan ID"
+// @Param        day_number path int true "Day Number"
+// @Success      200  {object}  map[string]bool
+// @Router       /api/my-reading-plans/{id}/progress/{day_number} [delete]
+func (h *ReadingPlanHandler) UnmarkDayComplete(w http.ResponseWriter, r *http.Request) {
+	userID, err := h.getUserID(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	idStr := chi.URLParam(r, "id")
+	planID, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(w, "Invalid plan ID", http.StatusBadRequest)
+		return
+	}
+
+	dayStr := chi.URLParam(r, "day_number")
+	dayNumber, err := strconv.Atoi(dayStr)
+	if err != nil {
+		http.Error(w, "Invalid day number", http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.UnmarkDayComplete(r.Context(), userID, planID, dayNumber)
+	if err != nil {
+		if err == models.ErrNotFound {
+			http.Error(w, "User plan not found or not active", http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(map[string]bool{
+		"success": true,
 	}); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

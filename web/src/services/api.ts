@@ -12,7 +12,7 @@ async function getHeaders() {
           token = "mock-token";
       }
   } else {
-      token = await auth.currentUser?.getIdToken();
+      token = await auth?.currentUser?.getIdToken();
   }
 
   return {
@@ -523,6 +523,16 @@ export async function markPlanDayComplete(planId: string, dayNumber: number) {
         body: JSON.stringify({ day_number: dayNumber }),
     });
     if (!res.ok) throw new Error("Failed to mark day as complete");
+    return res.json();
+}
+
+export async function unmarkPlanDayComplete(planId: string, dayNumber: number) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/my-reading-plans/${planId}/progress/${dayNumber}`, {
+        method: "DELETE",
+        headers,
+    });
+    if (!res.ok) throw new Error("Failed to unmark day as complete");
     return res.json();
 }
 
