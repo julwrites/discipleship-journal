@@ -230,7 +230,8 @@ func TestGroupAPI_Contract(t *testing.T) {
 		t.Logf("DEBUG: Direct query results for user %s:", user1ID)
 		directCount := 0
 		for rows.Next() {
-			var id, name, description, createdBy, gtype, role string
+			var id, name, createdBy, gtype, role string
+			var description *string
 			err := rows.Scan(&id, &name, &description, &createdBy, &gtype, &role)
 			if err != nil {
 				t.Logf("DEBUG: Scan error: %v", err)

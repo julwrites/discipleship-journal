@@ -241,7 +241,8 @@ func main() {
 
 	// Update handlers to use notification service
 	connectionHandler := handlers.NewConnectionHandler(dbWrapper, notificationService)
-	groupHandler := handlers.NewGroupHandler(dbWrapper, notificationService)
+	groupService := services.NewGroupService(dbWrapper, notificationService)
+	groupHandler := handlers.NewGroupHandler(groupService)
 	groupShareHandler := handlers.NewGroupShareHandler(dbWrapper, notificationService)
 	notificationHandler := handlers.NewNotificationHandler(notificationService)
 

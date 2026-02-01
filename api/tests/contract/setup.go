@@ -26,7 +26,8 @@ func SetupContractTest(t *testing.T) (*chi.Mux, *pgxpool.Pool, func()) {
 
 	// Initialize Handlers
 	noteHandler := handlers.NewNoteHandler(pool, noteService)
-	groupHandler := handlers.NewGroupHandler(pool, notificationService)
+	groupService := services.NewGroupService(pool, notificationService)
+	groupHandler := handlers.NewGroupHandler(groupService)
 	groupShareHandler := handlers.NewGroupShareHandler(pool, notificationService)
 	connectionHandler := handlers.NewConnectionHandler(pool, notificationService)
 	readingPlanHandler := handlers.NewReadingPlanHandler(readingPlanService)
