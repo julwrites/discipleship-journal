@@ -199,6 +199,48 @@ func TestGroupAPI_Contract(t *testing.T) {
 		require.NoError(t, err)
 		groupID := resp["id"]
 
+		// DEBUG: Check database directly
+		var memberCount int
+		err = pool.QueryRow(ctx, "SELECT COUNT(*) FROM group_members WHERE group_id = $1 AND user_id = $2", groupID, user1ID).Scan(&memberCount)
+		require.NoError(t, err)
+		t.Logf("DEBUG: Database check: group_members count for group %s, user %s: %d", groupID, user1ID, memberCount)
+
+		var groupName string
+		err = pool.QueryRow(ctx, "SELECT name FROM groups WHERE id = $1", groupID).Scan(&groupName)
+		require.NoError(t, err)
+		t.Logf("DEBUG: Group name in database: %s", groupName)
+
+		var groupDesc *string
+		err = pool.QueryRow(ctx, "SELECT description FROM groups WHERE id = $1", groupID).Scan(&groupDesc)
+		require.NoError(t, err)
+		if groupDesc == nil {
+			t.Logf("DEBUG: Feature Group description is NULL in database!")
+		} else {
+			t.Logf("DEBUG: Feature Group description: %s", *groupDesc)
+		}
+
+		// DEBUG: Run the actual ListMyGroups query directly
+		rows, err := pool.Query(ctx, `
+			SELECT g.id, g.name, g.description, g.created_by, g.type, gm.role
+			FROM groups g
+			JOIN group_members gm ON g.id = gm.group_id
+			WHERE gm.user_id = $1`, user1ID)
+		require.NoError(t, err)
+		defer rows.Close()
+		t.Logf("DEBUG: Direct query results for user %s:", user1ID)
+		directCount := 0
+		for rows.Next() {
+			var id, name, description, createdBy, gtype, role string
+			err := rows.Scan(&id, &name, &description, &createdBy, &gtype, &role)
+			if err != nil {
+				t.Logf("DEBUG: Scan error: %v", err)
+				continue
+			}
+			t.Logf("DEBUG:   Group: id=%s, name=%s, type=%s, role=%s", id, name, gtype, role)
+			directCount++
+		}
+		t.Logf("DEBUG: Direct query returned %d groups", directCount)
+
 		// 2. ListMyGroups (User 1)
 		reqList := httptest.NewRequest("GET", "/api/groups", nil)
 		reqList.Header.Set("X-Test-User-ID", user1ID)
@@ -208,6 +250,11 @@ func TestGroupAPI_Contract(t *testing.T) {
 		var listResp []map[string]interface{}
 		err = json.Unmarshal(wList.Body.Bytes(), &listResp)
 		require.NoError(t, err)
+		// DEBUG
+		t.Logf("DEBUG: ListMyGroups returned %d groups, looking for group ID: %s", len(listResp), groupID)
+		for i, g := range listResp {
+			t.Logf("DEBUG: Group %d: %v", i, g)
+		}
 		found := false
 		for _, g := range listResp {
 			if g["id"] == groupID {
