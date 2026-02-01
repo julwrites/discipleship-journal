@@ -199,7 +199,23 @@ func (h *UserHandler) CreateOrUpdateUser(w http.ResponseWriter, r *http.Request)
 		shouldUpdate = true
 	}
 	if req.Settings != nil {
-		settingsJSON, _ := json.Marshal(req.Settings)
+		// Merge with existing settings
+		var currentSettings map[string]interface{}
+		if len(settingsBytes) > 0 {
+			if err := json.Unmarshal(settingsBytes, &currentSettings); err != nil {
+				slog.Error("Failed to unmarshal existing settings during update", "error", err)
+				// Fallback to empty map
+				currentSettings = make(map[string]interface{})
+			}
+		} else {
+			currentSettings = make(map[string]interface{})
+		}
+
+		for k, v := range req.Settings {
+			currentSettings[k] = v
+		}
+
+		settingsJSON, _ := json.Marshal(currentSettings)
 		updateQuery += fmt.Sprintf(", settings = $%d", argIdx)
 		args = append(args, settingsJSON)
 		argIdx++
