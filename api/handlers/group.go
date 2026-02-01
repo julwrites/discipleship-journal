@@ -7,11 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/services"
-	"firebase.google.com/go/v4/auth"
 	chi "github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 	pgx "github.com/jackc/pgx/v5"
 )
 
@@ -54,32 +51,10 @@ func (h *GroupHandler) CreateGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var userUUID string
-	var err error
-
-	// Check for test override first to avoid DB lookup
-	if testUserID := r.Context().Value(TestUserKey); testUserID != nil {
-		if idStr, ok := testUserID.(string); ok {
-			userUUID = idStr
-		} else if id, ok := testUserID.(uuid.UUID); ok {
-			userUUID = id.String()
-		}
-	}
-
-	// If not found in test override, try standard auth
-	if userUUID == "" {
-		if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
-			var id uuid.UUID
-			id, err = GetUserUUID(r.Context(), token.UID)
-			if err != nil {
-				http.Error(w, "User not found", http.StatusInternalServerError)
-				return
-			}
-			userUUID = id.String()
-		} else {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
+	userUUID, err := GetUserUUIDFromContext(r.Context())
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
 	}
 
 	tx, err := h.db.Begin(r.Context())
@@ -156,7 +131,9 @@ func (h *GroupHandler) ListMyGroups(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var g GroupResponse
 		var groupType *string
+		// Use error logging instead of silent failure
 		if err := rows.Scan(&g.ID, &g.Name, &g.Description, &g.CreatedBy, &groupType, &g.Role); err != nil {
+			slog.Error("Failed to scan group row", "error", err)
 			continue
 		}
 		if groupType != nil {
@@ -205,6 +182,7 @@ func (h *GroupHandler) SearchGroups(w http.ResponseWriter, r *http.Request) {
 		var g GroupResponse
 		var groupType *string
 		if err := rows.Scan(&g.ID, &g.Name, &g.Description, &g.CreatedBy, &groupType, &g.Role); err != nil {
+			slog.Error("Failed to scan group search result", "error", err)
 			continue
 		}
 		if groupType != nil {
@@ -330,6 +308,7 @@ func (h *GroupHandler) GetGroupMembers(w http.ResponseWriter, r *http.Request) {
 		var m GroupMemberResponse
 		var joinedAt time.Time
 		if err := rows.Scan(&m.UserID, &m.DisplayName, &m.Email, &m.Role, &joinedAt); err != nil {
+			slog.Error("Failed to scan group member", "error", err)
 			continue
 		}
 		m.JoinedAt = joinedAt.Format(time.RFC3339)
