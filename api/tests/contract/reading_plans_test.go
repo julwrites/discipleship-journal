@@ -135,4 +135,28 @@ func TestReadingPlanAPI_Contract(t *testing.T) {
 		days := resp["completed_days"].([]interface{})
 		assert.Contains(t, days, float64(1)) // JSON numbers are float64
 	})
+
+	t.Run("UnmarkPlanDayComplete", func(t *testing.T) {
+		// Prerequisite: Day 1 marked complete in previous test
+
+		// Delete /api/my-reading-plans/{id}/progress/1
+		req := httptest.NewRequest("DELETE", "/api/my-reading-plans/"+planID+"/progress/1", nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		// Verify Progress (should be empty or not contain 1)
+		reqProg := httptest.NewRequest("GET", "/api/my-reading-plans/"+planID+"/progress", nil)
+		wProg := httptest.NewRecorder()
+		r.ServeHTTP(wProg, reqProg)
+
+		assert.Equal(t, http.StatusOK, wProg.Code)
+		var resp map[string]interface{}
+		err := json.Unmarshal(wProg.Body.Bytes(), &resp)
+		require.NoError(t, err)
+
+		days := resp["completed_days"].([]interface{})
+		assert.NotContains(t, days, float64(1))
+	})
 }

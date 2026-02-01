@@ -1,6 +1,6 @@
 ---
 id: FEATURES-20260131-163351-BCH
-status: pending
+status: completed
 title: Add unmark functionality to Bible reading plans: allow users to undo accidental day completions
 priority: medium
 created: 2026-01-31 16:33:51
@@ -72,9 +72,14 @@ Currently, Bible reading plans only allow users to mark days as complete, with n
 ### Completed Work
 - ✅ Codebase exploration completed
 - ✅ Current limitations identified
+- ✅ Backend: Implemented `UnmarkDayComplete` in Service and Handler
+- ✅ Backend: Added API endpoint `DELETE /api/my-reading-plans/{id}/progress/{day}`
+- ✅ Backend: Updated contract tests and mock tests
+- ✅ Frontend: Added `unmarkPlanDayComplete` to API service
+- ✅ Frontend: Updated `ReadingPlanDetail.tsx` to allow unmarking completed days
 
 ### Blockers
-None yet.
+None.
 
 ## Notes
 - **Data integrity**: Unmarking should delete the progress record, not just set `completed_at` to NULL

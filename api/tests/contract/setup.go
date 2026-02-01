@@ -99,6 +99,7 @@ func SetupContractTest(t *testing.T) (*chi.Mux, *pgxpool.Pool, func()) {
 	r.Route("/api/my-reading-plans/{id}/progress", func(r chi.Router) {
 		r.Get("/", readingPlanHandler.GetPlanProgress)
 		r.Post("/", readingPlanHandler.MarkDayComplete)
+		r.Delete("/{day_number}", readingPlanHandler.UnmarkDayComplete)
 	})
 
 	return r, pool, cleanup

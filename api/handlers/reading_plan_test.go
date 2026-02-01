@@ -64,6 +64,11 @@ func (m *MockReadingPlanService) MarkDayComplete(ctx context.Context, userID, pl
 	return args.Error(0)
 }
 
+func (m *MockReadingPlanService) UnmarkDayComplete(ctx context.Context, userID, planID uuid.UUID, dayNumber int) error {
+	args := m.Called(ctx, userID, planID, dayNumber)
+	return args.Error(0)
+}
+
 func (m *MockReadingPlanService) GetPlanProgress(ctx context.Context, userID, planID uuid.UUID) ([]int, error) {
 	args := m.Called(ctx, userID, planID)
 	if args.Get(0) == nil {
@@ -180,6 +185,31 @@ func TestMarkDayComplete_Handler(t *testing.T) {
 
 	reqBody := `{"day_number": 1}`
 	req := httptest.NewRequest("POST", "/api/my-reading-plans/"+planID.String()+"/progress", strings.NewReader(reqBody))
+	ctx := context.WithValue(req.Context(), TestUserKey, userID)
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
+
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockService.AssertExpectations(t)
+}
+
+func TestUnmarkDayComplete_Handler(t *testing.T) {
+	mockService := new(MockReadingPlanService)
+	handler := NewReadingPlanHandler(mockService)
+
+	planID := uuid.New()
+	userID := uuid.New()
+	dayNumber := 1
+
+	mockService.On("UnmarkDayComplete", mock.Anything, userID, planID, dayNumber).Return(nil)
+
+	r := chi.NewRouter()
+	r.Delete("/api/my-reading-plans/{id}/progress/{day_number}", handler.UnmarkDayComplete)
+
+	req := httptest.NewRequest("DELETE", "/api/my-reading-plans/"+planID.String()+"/progress/1", nil)
 	ctx := context.WithValue(req.Context(), TestUserKey, userID)
 	req = req.WithContext(ctx)
 
