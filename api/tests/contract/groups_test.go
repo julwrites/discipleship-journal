@@ -195,7 +195,8 @@ func TestGroupAPI_Contract(t *testing.T) {
 		assert.Equal(t, http.StatusCreated, w.Code)
 
 		var resp map[string]string
-		json.Unmarshal(w.Body.Bytes(), &resp)
+		err = json.Unmarshal(w.Body.Bytes(), &resp)
+		require.NoError(t, err)
 		groupID := resp["id"]
 
 		// 2. ListMyGroups (User 1)
@@ -205,7 +206,8 @@ func TestGroupAPI_Contract(t *testing.T) {
 		r.ServeHTTP(wList, reqList)
 		assert.Equal(t, http.StatusOK, wList.Code)
 		var listResp []map[string]interface{}
-		json.Unmarshal(wList.Body.Bytes(), &listResp)
+		err = json.Unmarshal(wList.Body.Bytes(), &listResp)
+		require.NoError(t, err)
 		found := false
 		for _, g := range listResp {
 			if g["id"] == groupID {
@@ -222,7 +224,8 @@ func TestGroupAPI_Contract(t *testing.T) {
 		r.ServeHTTP(wSearch, reqSearch)
 		assert.Equal(t, http.StatusOK, wSearch.Code)
 		var searchResp []map[string]interface{}
-		json.Unmarshal(wSearch.Body.Bytes(), &searchResp)
+		err = json.Unmarshal(wSearch.Body.Bytes(), &searchResp)
+		require.NoError(t, err)
 		foundSearch := false
 		for _, g := range searchResp {
 			if g["id"] == groupID {
@@ -279,7 +282,8 @@ func TestGroupAPI_Contract(t *testing.T) {
 		assert.Equal(t, http.StatusOK, wShares.Code)
 
 		var sharesResp []map[string]interface{}
-		json.Unmarshal(wShares.Body.Bytes(), &sharesResp)
+		err = json.Unmarshal(wShares.Body.Bytes(), &sharesResp)
+		require.NoError(t, err)
 		assert.NotEmpty(t, sharesResp)
 		shareID := sharesResp[0]["id"].(string)
 		assert.Equal(t, "Shared Note", sharesResp[0]["title"])
@@ -292,7 +296,8 @@ func TestGroupAPI_Contract(t *testing.T) {
 		r.ServeHTTP(wDetail, reqDetail)
 		assert.Equal(t, http.StatusOK, wDetail.Code)
 		var detailResp map[string]interface{}
-		json.Unmarshal(wDetail.Body.Bytes(), &detailResp)
+		err = json.Unmarshal(wDetail.Body.Bytes(), &detailResp)
+		require.NoError(t, err)
 		assert.Equal(t, shareID, detailResp["id"])
 		assert.Equal(t, noteID, detailResp["note_id"])
 

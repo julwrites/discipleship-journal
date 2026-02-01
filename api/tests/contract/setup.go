@@ -27,7 +27,6 @@ func SetupContractTest(t *testing.T) (*chi.Mux, *pgxpool.Pool, func()) {
 	// Initialize Handlers
 	noteHandler := handlers.NewNoteHandler(pool, noteService)
 	groupHandler := handlers.NewGroupHandler(pool, notificationService)
-	groupShareHandler := handlers.NewGroupShareHandler(pool, notificationService)
 	connectionHandler := handlers.NewConnectionHandler(pool, notificationService)
 	readingPlanHandler := handlers.NewReadingPlanHandler(readingPlanService)
 
@@ -72,11 +71,6 @@ func SetupContractTest(t *testing.T) (*chi.Mux, *pgxpool.Pool, func()) {
 		r.Get("/members", groupHandler.GetGroupMembers)
 		r.Post("/members", groupHandler.AddGroupMember)
 		r.Delete("/members/{userId}", groupHandler.RemoveGroupMember)
-
-		// Group Shares
-		r.Post("/shares", groupShareHandler.ShareItemToGroup)
-		r.Get("/shares", groupShareHandler.ListGroupShares)
-		r.Get("/shares/{shareId}", groupShareHandler.GetSharedItemDetails)
 	})
 
 	// Connections
