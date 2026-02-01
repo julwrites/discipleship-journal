@@ -101,7 +101,8 @@ func TestGroupAPI_Contract(t *testing.T) {
 			r.ServeHTTP(wMembers, reqMembers)
 
 			var members []map[string]interface{}
-			json.Unmarshal(wMembers.Body.Bytes(), &members)
+			err := json.Unmarshal(wMembers.Body.Bytes(), &members)
+			require.NoError(t, err)
 			assert.Len(t, members, 2)
 		})
 
@@ -121,7 +122,8 @@ func TestGroupAPI_Contract(t *testing.T) {
 			r.ServeHTTP(wMembers, reqMembers)
 
 			var members []map[string]interface{}
-			json.Unmarshal(wMembers.Body.Bytes(), &members)
+			err := json.Unmarshal(wMembers.Body.Bytes(), &members)
+			require.NoError(t, err)
 			assert.Len(t, members, 1)
 		})
 	})
@@ -165,7 +167,8 @@ func TestGroupAPI_Contract(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, w2.Code)
 		var resp2 map[string]string
-		json.Unmarshal(w2.Body.Bytes(), &resp2)
+		err = json.Unmarshal(w2.Body.Bytes(), &resp2)
+		require.NoError(t, err)
 		assert.Equal(t, groupID, resp2["id"])
 	})
 }

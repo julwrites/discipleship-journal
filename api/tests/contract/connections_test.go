@@ -51,7 +51,8 @@ func TestConnectionAPI_Contract(t *testing.T) {
 
 		assert.Equal(t, http.StatusCreated, w.Code)
 		var resp map[string]interface{}
-		json.Unmarshal(w.Body.Bytes(), &resp)
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		require.NoError(t, err)
 		assert.NotEmpty(t, resp["id"])
 		assert.Equal(t, "pending", resp["status"])
 
@@ -65,7 +66,8 @@ func TestConnectionAPI_Contract(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, wList.Code)
 		var listResp []map[string]interface{}
-		json.Unmarshal(wList.Body.Bytes(), &listResp)
+		err = json.Unmarshal(wList.Body.Bytes(), &listResp)
+		require.NoError(t, err)
 
 		found := false
 		for _, c := range listResp {
@@ -93,7 +95,8 @@ func TestConnectionAPI_Contract(t *testing.T) {
 		r.ServeHTTP(wListA, reqListA)
 
 		var listRespA []map[string]interface{}
-		json.Unmarshal(wListA.Body.Bytes(), &listRespA)
+		err = json.Unmarshal(wListA.Body.Bytes(), &listRespA)
+		require.NoError(t, err)
 
 		foundA := false
 		for _, c := range listRespA {

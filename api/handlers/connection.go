@@ -37,15 +37,6 @@ func NewConnectionHandler(db DBInterface, notificationService services.Notificat
 	return &ConnectionHandler{db: db, notificationService: notificationService}
 }
 
-func (h *ConnectionHandler) getUserUUID(ctx context.Context, firebaseUID string) (string, error) {
-	var id string
-	err := h.db.QueryRow(ctx, "SELECT id FROM users WHERE firebase_uid=$1", firebaseUID).Scan(&id)
-	if err != nil {
-		return "", err
-	}
-	return id, nil
-}
-
 // SearchUsers searches for users by email or username
 func (h *ConnectionHandler) SearchUsers(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")

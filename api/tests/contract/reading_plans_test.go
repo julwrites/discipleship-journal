@@ -55,7 +55,8 @@ func TestReadingPlanAPI_Contract(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, w.Code)
 		var resp map[string]interface{}
-		json.Unmarshal(w.Body.Bytes(), &resp)
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		require.NoError(t, err)
 
 		plans, ok := resp["data"].([]interface{})
 		assert.True(t, ok)
@@ -89,7 +90,8 @@ func TestReadingPlanAPI_Contract(t *testing.T) {
 		r.ServeHTTP(wMy, reqMy)
 
 		var resp map[string]interface{}
-		json.Unmarshal(wMy.Body.Bytes(), &resp)
+		err = json.Unmarshal(wMy.Body.Bytes(), &resp)
+		require.NoError(t, err)
 		myPlans := resp["data"].([]interface{})
 
 		found := false
@@ -127,7 +129,8 @@ func TestReadingPlanAPI_Contract(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, wProg.Code)
 		var resp map[string]interface{}
-		json.Unmarshal(wProg.Body.Bytes(), &resp)
+		err := json.Unmarshal(wProg.Body.Bytes(), &resp)
+		require.NoError(t, err)
 
 		days := resp["completed_days"].([]interface{})
 		assert.Contains(t, days, float64(1)) // JSON numbers are float64
