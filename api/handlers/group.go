@@ -203,8 +203,11 @@ func (h *GroupHandler) GetGroupMembers(w http.ResponseWriter, r *http.Request) {
 
 	members, err := h.service.GetGroupMembers(r.Context(), groupID, userUUID.String())
 	if err != nil {
-		// Can refine error handling if needed (e.g. Forbidden)
-		http.Error(w, "Access denied or database error", http.StatusInternalServerError)
+		if err.Error() == "access denied" {
+			http.Error(w, "Access denied", http.StatusForbidden)
+		} else {
+			http.Error(w, "Database error", http.StatusInternalServerError)
+		}
 		return
 	}
 

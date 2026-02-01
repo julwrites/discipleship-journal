@@ -23,7 +23,9 @@ func TestGroupService_Integration(t *testing.T) {
 	createUser := func(firebaseUID string) string {
 		var id string
 		// Ensure firebase_uid is unique
-		err := pool.QueryRow(ctx, "INSERT INTO users (id, firebase_uid, email, created_at, updated_at) VALUES (gen_random_uuid(), $1, $1 || '@test.com', NOW(), NOW()) RETURNING id", firebaseUID).Scan(&id)
+		// Explicitly cast parameter or use explicit string formatting to avoid type inference issues
+		email := firebaseUID + "@test.com"
+		err := pool.QueryRow(ctx, "INSERT INTO users (id, firebase_uid, email, created_at, updated_at) VALUES (gen_random_uuid(), $1, $2, NOW(), NOW()) RETURNING id", firebaseUID, email).Scan(&id)
 		require.NoError(t, err)
 		return id
 	}
