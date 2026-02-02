@@ -78,7 +78,9 @@ func (s *NoteService) CreateNote(ctx context.Context, userID, title string, cont
 	if err != nil {
 		return nil, err
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		_ = tx.Rollback(ctx)
+	}()
 
 	query := `
 		INSERT INTO notes (user_id, title, content, status)
@@ -139,7 +141,9 @@ func (s *NoteService) UpdateNote(ctx context.Context, userID, noteID, title stri
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		_ = tx.Rollback(ctx)
+	}()
 
 	var query string
 	var args []interface{}
