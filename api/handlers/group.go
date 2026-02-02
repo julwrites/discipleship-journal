@@ -67,7 +67,7 @@ func (h *GroupHandler) CreateGroup(w http.ResponseWriter, r *http.Request) {
 
 	// If not found in test override, try standard auth
 	if userUUID == "" {
-		if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+		if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 			var id uuid.UUID
 			id, err = GetUserUUID(r.Context(), token.UID)
 			if err != nil {

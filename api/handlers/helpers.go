@@ -29,7 +29,7 @@ func GetUserUUIDFromContext(ctx context.Context) (uuid.UUID, error) {
 
 	// 2. Check for production auth token
 	if val := ctx.Value(middleware.UserContextKey); val != nil {
-		if token, ok := val.(*auth.Token); ok {
+		if token, ok := val.(*auth.Token); ok && token != nil {
 			return GetUserUUID(ctx, token.UID)
 		}
 	}

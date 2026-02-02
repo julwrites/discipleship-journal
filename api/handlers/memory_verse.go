@@ -23,7 +23,7 @@ func NewMemoryVerseHandler(service services.MemoryVerseService) *MemoryVerseHand
 // GetPacks lists packs (system or user)
 func (h *MemoryVerseHandler) GetPacks(w http.ResponseWriter, r *http.Request) {
 	firebaseUID := ""
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		firebaseUID = token.UID
 	}
 
@@ -53,7 +53,7 @@ func (h *MemoryVerseHandler) GetPacks(w http.ResponseWriter, r *http.Request) {
 // CreatePack creates a new user pack
 func (h *MemoryVerseHandler) CreatePack(w http.ResponseWriter, r *http.Request) {
 	firebaseUID := ""
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		firebaseUID = token.UID
 	}
 
@@ -88,7 +88,7 @@ func (h *MemoryVerseHandler) CreatePack(w http.ResponseWriter, r *http.Request) 
 // GetPackDetails gets verses in a pack
 func (h *MemoryVerseHandler) GetPackDetails(w http.ResponseWriter, r *http.Request) {
 	firebaseUID := ""
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		firebaseUID = token.UID
 	}
 
@@ -137,7 +137,7 @@ func (h *MemoryVerseHandler) GetPackDetails(w http.ResponseWriter, r *http.Reque
 // CreateVerseInPack adds a verse to a pack
 func (h *MemoryVerseHandler) CreateVerseInPack(w http.ResponseWriter, r *http.Request) {
 	firebaseUID := ""
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		firebaseUID = token.UID
 	}
 
@@ -189,7 +189,7 @@ func (h *MemoryVerseHandler) CreateVerseInPack(w http.ResponseWriter, r *http.Re
 // ClonePack clones a pack to user library
 func (h *MemoryVerseHandler) ClonePack(w http.ResponseWriter, r *http.Request) {
 	firebaseUID := ""
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		firebaseUID = token.UID
 	}
 
@@ -227,7 +227,7 @@ func (h *MemoryVerseHandler) ClonePack(w http.ResponseWriter, r *http.Request) {
 
 func (h *MemoryVerseHandler) DeletePack(w http.ResponseWriter, r *http.Request) {
 	firebaseUID := ""
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		firebaseUID = token.UID
 	}
 
@@ -261,7 +261,7 @@ func (h *MemoryVerseHandler) DeletePack(w http.ResponseWriter, r *http.Request) 
 // SearchVerses (for backward compatibility and global search)
 func (h *MemoryVerseHandler) SearchVerses(w http.ResponseWriter, r *http.Request) {
 	firebaseUID := ""
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		firebaseUID = token.UID
 	}
 
@@ -288,7 +288,7 @@ func (h *MemoryVerseHandler) SearchVerses(w http.ResponseWriter, r *http.Request
 // UpdateVerse updates a verse
 func (h *MemoryVerseHandler) UpdateVerse(w http.ResponseWriter, r *http.Request) {
 	firebaseUID := ""
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		firebaseUID = token.UID
 	}
 
@@ -330,7 +330,7 @@ func (h *MemoryVerseHandler) UpdateVerse(w http.ResponseWriter, r *http.Request)
 // DeleteVerse deletes a verse
 func (h *MemoryVerseHandler) DeleteVerse(w http.ResponseWriter, r *http.Request) {
 	firebaseUID := ""
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		firebaseUID = token.UID
 	}
 

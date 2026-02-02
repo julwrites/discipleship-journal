@@ -1,6 +1,6 @@
 ---
 id: INFRASTRUCTURE-20251231-205433-DTT
-status: pending
+status: review_requested
 title: Investigate and fix Cloud Run panic on /api/notes endpoint
 priority: high
 created: 2025-12-31 20:54:33

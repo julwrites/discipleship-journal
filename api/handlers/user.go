@@ -54,7 +54,7 @@ func (h *UserHandler) CreateOrUpdateUser(w http.ResponseWriter, r *http.Request)
 	var testUserID string
 	isTestMode := false
 
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		uid = token.UID
 		// Extract email from claims
 		if emailClaim, ok := token.Claims["email"].(string); ok {
@@ -281,7 +281,7 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var settingsBytes []byte
 
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		// Real Firebase auth - query by firebase_uid
 		uid := token.UID
 		err = h.db.QueryRow(r.Context(), `
