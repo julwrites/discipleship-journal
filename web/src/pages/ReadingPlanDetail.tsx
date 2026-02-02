@@ -1,10 +1,10 @@
 import { useEffect, useState, useRef } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getReadingPlan, markPlanDayComplete, unmarkPlanDayComplete, getPlanProgress } from "@/services/api";
 import { toast } from "sonner";
-import { ArrowLeft, CheckCircle, Calendar } from "lucide-react";
+import { ArrowLeft, CheckCircle, Calendar, StickyNote } from "lucide-react";
 
 interface ReadingPlanDay {
     id: string;
@@ -22,6 +22,7 @@ interface ReadingPlan {
 
 export default function ReadingPlanDetail() {
     const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
     const [plan, setPlan] = useState<ReadingPlan | null>(null);
     const [completedDays, setCompletedDays] = useState<Set<number>>(new Set());
     const [loading, setLoading] = useState(true);
@@ -94,6 +95,22 @@ export default function ReadingPlanDetail() {
         }
     };
 
+    const handleCreateNote = (day: ReadingPlanDay) => {
+        if (!plan) return;
+        navigate("/notes/new", {
+            state: {
+                title: `Bible Reading: ${day.passage}`,
+                tags: ["Bible Reading"],
+                passageRef: day.passage,
+                context: {
+                    planId: plan.id,
+                    planTitle: plan.title,
+                    dayNumber: day.day_number
+                }
+            }
+        });
+    };
+
     const getDayOfYear = () => {
         const now = new Date();
         const start = new Date(now.getFullYear(), 0, 0);
@@ -161,21 +178,31 @@ export default function ReadingPlanDetail() {
                                             <div className="text-sm text-muted-foreground">{day.passage}</div>
                                         </div>
                                     </div>
-                                    {isCompleted ? (
+                                    <div className="flex items-center gap-2">
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            onClick={() => handleMarkComplete(day.day_number)}
-                                            className="text-green-600 dark:text-green-400 hover:text-destructive hover:bg-destructive/10"
-                                            title="Unmark"
+                                            onClick={() => handleCreateNote(day)}
+                                            title="Create Note"
                                         >
-                                            <CheckCircle className="h-6 w-6" />
+                                            <StickyNote className="h-4 w-4" />
                                         </Button>
-                                    ) : (
-                                        <Button variant="outline" size="sm" onClick={() => handleMarkComplete(day.day_number)}>
-                                            Mark Complete
-                                        </Button>
-                                    )}
+                                        {isCompleted ? (
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handleMarkComplete(day.day_number)}
+                                                className="text-green-600 dark:text-green-400 hover:text-destructive hover:bg-destructive/10"
+                                                title="Unmark"
+                                            >
+                                                <CheckCircle className="h-6 w-6" />
+                                            </Button>
+                                        ) : (
+                                            <Button variant="outline" size="sm" onClick={() => handleMarkComplete(day.day_number)}>
+                                                Mark Complete
+                                            </Button>
+                                        )}
+                                    </div>
                                 </CardContent>
                             </Card>
                         </div>

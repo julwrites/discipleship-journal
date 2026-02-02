@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useParams, useNavigate, useBlocker } from "react-router-dom";
+import { useParams, useNavigate, useBlocker, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -58,6 +58,7 @@ import { BibleReferenceInput } from "@/components/BibleReferenceInput";
 export default function NoteEditor() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [tags, setTags] = useState<string[]>([]);
@@ -101,6 +102,8 @@ export default function NoteEditor() {
     const [aiVersion, setAiVersion] = useState("ESV");
     const [askingAI, setAskingAI] = useState(false);
     const [aiDialogOpen, setAiDialogOpen] = useState(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const fetchingPromiseRef = useRef<Promise<any> | null>(null);
 
     // Sharing State
     const [myGroups, setMyGroups] = useState<{ id: string, name: string }[]>([]);
@@ -160,9 +163,33 @@ export default function NoteEditor() {
                 setLoading(false);
             });
         } else {
-            setLoading(false);
+            // Handle pre-population from location state
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const state = location.state as any;
+            let promise = Promise.resolve();
+
+            if (state) {
+                if (state.title) setTitle(state.title);
+                if (state.tags) setTags(state.tags);
+                if (state.content) setContent(state.content);
+
+                // Fetch passage if provided
+                if (state.passageRef) {
+                    if (!fetchingPromiseRef.current) {
+                        const version = state.passageVersion || "ESV";
+                        fetchingPromiseRef.current = getBiblePassage(state.passageRef, version).then(res => {
+                            const text = res.verse || res.text || res.content || "";
+                            const html = `<blockquote><p><strong>${state.passageRef} (${version})</strong></p>${text}</blockquote><p></p>`;
+                            setContent(prev => prev + html);
+                        }).catch(console.error);
+                    }
+                    promise = fetchingPromiseRef.current;
+                }
+            }
+
+            promise.finally(() => setLoading(false));
         }
-    }, [id]);
+    }, [id, location.state]);
 
     useEffect(() => {
         if (verseDialogOpen) {
