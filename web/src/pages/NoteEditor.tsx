@@ -15,9 +15,11 @@ import {
     MemoryVerse,
     syncUser,
     getConnections,
-    getOrCreateDirectGroup
+    getOrCreateDirectGroup,
+    getTags
 } from "@/services/api";
 import RichTextEditor from "@/components/RichTextEditor";
+import { TagInput } from "@/components/TagInput";
 import { Editor } from "@tiptap/react";
 import {
   Dialog,
@@ -57,12 +59,15 @@ export default function NoteEditor() {
     const navigate = useNavigate();
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
+    const [tags, setTags] = useState<string[]>([]);
+    const [suggestions, setSuggestions] = useState<string[]>([]);
     const [initialTitle, setInitialTitle] = useState("");
     const [initialContent, setInitialContent] = useState("");
+    const [initialTags, setInitialTags] = useState<string[]>([]);
     const [mode, setMode] = useState<"edit" | "preview">("edit");
 
     // Derived state for dirty check
-    const isDirty = (title !== initialTitle) || (content !== initialContent);
+    const isDirty = (title !== initialTitle) || (content !== initialContent) || (JSON.stringify(tags) !== JSON.stringify(initialTags));
 
     const [saving, setSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<string | null>(null);
@@ -120,6 +125,9 @@ export default function NoteEditor() {
             }
         }).catch(console.error);
 
+        // Load tags for autocomplete
+        getTags().then(tags => setSuggestions(tags.map((t: any) => t.name))).catch(console.error);
+
         if (id && id !== "new") {
             setLoading(true);
             getNote(id).then(note => {
@@ -137,6 +145,12 @@ export default function NoteEditor() {
                 }
                 setContent(noteContent as string);
                 setInitialContent(noteContent as string);
+
+                // Set tags
+                const noteTags = note.tags ? note.tags.map((t: any) => t.name) : [];
+                setTags(noteTags);
+                setInitialTags(noteTags);
+
                 setLastSaved("Loaded");
             }).catch(e => {
                 console.error(e);
@@ -165,19 +179,21 @@ export default function NoteEditor() {
         setSaveError(false);
         try {
             if (id === "new") {
-                const res = await createNote(title, content);
+                const res = await createNote(title, content, tags);
                 if (shouldNavigate) {
                     navigate(`/notes/${res.id}`, { replace: true });
                 }
                 setLastSaved(new Date().toLocaleTimeString());
                 setInitialTitle(title);
                 setInitialContent(content);
+                setInitialTags(tags);
                 return true;
             } else if (id) {
-                await updateNote(id, title, content);
+                await updateNote(id, title, content, tags);
                 setLastSaved(new Date().toLocaleTimeString());
                 setInitialTitle(title);
                 setInitialContent(content);
+                setInitialTags(tags);
                 return true;
             }
         } catch (e) {
@@ -742,6 +758,10 @@ export default function NoteEditor() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
             />
+
+            <div className="mb-4">
+                <TagInput value={tags} onChange={setTags} suggestions={suggestions} />
+            </div>
 
             <div className="flex-1 overflow-hidden flex flex-col">
                 {mode === "edit" ? (

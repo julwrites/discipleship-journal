@@ -338,6 +338,28 @@ func TestGetNotes(t *testing.T) {
 		assert.Equal(t, 1, total)
 	})
 
+	t.Run("success with tag filter", func(t *testing.T) {
+		tag := "tag1"
+		mock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM notes").
+			WithArgs(userID, tag).
+			WillReturnRows(pgxmock.NewRows([]string{"count"}).AddRow(1))
+
+		mock.ExpectQuery("SELECT id, user_id, title, content, status, created_at, updated_at, deleted_at FROM notes").
+			WithArgs(userID, tag).
+			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at", "deleted_at"}).
+				AddRow("note-123", userID, title, content, "active", now, now, nil))
+
+		mock.ExpectQuery("SELECT .* FROM tags .* JOIN note_tags").
+			WithArgs([]string{"note-123"}).
+			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "name", "created_at", "note_id"}))
+
+		notes, total, err := service.GetNotes(ctx, userID, page, limit, NoteFilter{Tag: tag})
+
+		assert.NoError(t, err)
+		assert.Len(t, notes, 1)
+		assert.Equal(t, 1, total)
+	})
+
 	t.Run("count error", func(t *testing.T) {
 		mock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM notes").
 			WithArgs(userID).
