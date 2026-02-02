@@ -69,6 +69,10 @@ type Tag struct {
 }
 
 func (s *NoteService) CreateNote(ctx context.Context, userID, title string, content json.RawMessage, tags []string, status ...string) (*Note, error) {
+	if s.db == nil {
+		return nil, fmt.Errorf("database connection is nil")
+	}
+
 	var note Note
 	statusVal := "active"
 	if len(status) > 0 {
@@ -126,6 +130,9 @@ func (s *NoteService) CreateNote(ctx context.Context, userID, title string, cont
 }
 
 func (s *NoteService) DeleteNote(ctx context.Context, userID, noteID string) error {
+	if s.db == nil {
+		return fmt.Errorf("database connection is nil")
+	}
 	query := `UPDATE notes SET deleted_at=NOW() WHERE id=$1 AND user_id=$2 AND deleted_at IS NULL`
 	commandTag, err := s.db.Exec(ctx, query, noteID, userID)
 	if err != nil {
@@ -138,6 +145,9 @@ func (s *NoteService) DeleteNote(ctx context.Context, userID, noteID string) err
 }
 
 func (s *NoteService) UpdateNote(ctx context.Context, userID, noteID, title string, content json.RawMessage, tags []string, status ...string) error {
+	if s.db == nil {
+		return fmt.Errorf("database connection is nil")
+	}
 	tx, err := s.db.Begin(ctx)
 	if err != nil {
 		return err
@@ -207,6 +217,9 @@ func (s *NoteService) UpdateNote(ctx context.Context, userID, noteID, title stri
 }
 
 func (s *NoteService) GetNote(ctx context.Context, userID, noteID string) (*Note, error) {
+	if s.db == nil {
+		return nil, fmt.Errorf("database connection is nil")
+	}
 	var note Note
 	query := "SELECT id, user_id, title, content, status, created_at, updated_at, deleted_at FROM notes WHERE id=$1 AND user_id=$2 AND deleted_at IS NULL"
 	err := s.db.QueryRow(ctx, query, noteID, userID).Scan(
@@ -246,6 +259,9 @@ func (s *NoteService) GetNote(ctx context.Context, userID, noteID string) (*Note
 }
 
 func (s *NoteService) GetNotes(ctx context.Context, userID string, page, limit int, filter NoteFilter) ([]Note, int, error) {
+	if s.db == nil {
+		return nil, 0, fmt.Errorf("database connection is nil")
+	}
 	if page < 1 {
 		page = 1
 	}
@@ -378,6 +394,9 @@ func (s *NoteService) GetNotes(ctx context.Context, userID string, page, limit i
 }
 
 func (s *NoteService) CreateTag(ctx context.Context, userID, name string) (*Tag, error) {
+	if s.db == nil {
+		return nil, fmt.Errorf("database connection is nil")
+	}
 	var tag Tag
 	query := `
 		INSERT INTO tags (user_id, name)
@@ -393,6 +412,9 @@ func (s *NoteService) CreateTag(ctx context.Context, userID, name string) (*Tag,
 }
 
 func (s *NoteService) GetUserTags(ctx context.Context, userID string) ([]Tag, error) {
+	if s.db == nil {
+		return nil, fmt.Errorf("database connection is nil")
+	}
 	query := "SELECT id, user_id, name, created_at FROM tags WHERE user_id=$1 ORDER BY name"
 	rows, err := s.db.Query(ctx, query, userID)
 	if err != nil {
@@ -415,6 +437,9 @@ func (s *NoteService) GetUserTags(ctx context.Context, userID string) ([]Tag, er
 }
 
 func (s *NoteService) DeleteTag(ctx context.Context, userID, tagID string) error {
+	if s.db == nil {
+		return fmt.Errorf("database connection is nil")
+	}
 	query := "DELETE FROM tags WHERE id=$1 AND user_id=$2"
 	commandTag, err := s.db.Exec(ctx, query, tagID, userID)
 	if err != nil {
