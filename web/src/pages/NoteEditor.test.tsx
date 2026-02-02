@@ -89,6 +89,10 @@ vi.mock('@/services/api', () => ({
     syncUser: vi.fn().mockResolvedValue({ settings: { bible_version: 'ESV' } }),
     getBibleVersions: vi.fn().mockResolvedValue({ data: [] }),
     searchMemoryVerses: vi.fn().mockResolvedValue({ data: [] }),
+    getTags: vi.fn().mockResolvedValue([]),
+    getOrCreateDirectGroup: vi.fn(),
+    shareItem: vi.fn(),
+    getConnections: vi.fn().mockResolvedValue([]),
 }));
 
 // Mock scrollIntoView
@@ -168,7 +172,7 @@ describe('NoteEditor', () => {
         fireEvent.click(saveBtn);
 
         await waitFor(() => {
-            expect(mockUpdateNote).toHaveBeenCalledWith('123', 'Test Note', 'Updated content');
+            expect(mockUpdateNote).toHaveBeenCalledWith('123', 'Test Note', 'Updated content', []);
             expect(screen.getByText(/Saved at/i)).toBeInTheDocument();
         });
     });
