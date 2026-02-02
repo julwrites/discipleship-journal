@@ -3,7 +3,7 @@ import { auth } from "@/lib/firebase";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { fetchNotes, syncUser, NoteFilter, deleteNote, getGroups, shareNote, getNote, askAIStream, getConnections, getOrCreateDirectGroup, Connection, getTags } from "@/services/api";
+import { fetchNotes, syncUser, NoteFilter, deleteNote, getGroups, shareNote, getNote, askAIStream, getConnections, getOrCreateDirectGroup, Connection, getTags, Tag } from "@/services/api";
 import { Link } from "react-router-dom";
 import { Settings, Users, BookOpen, Filter, CalendarIcon, User as UserIcon, Book, LogOut } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -46,7 +46,7 @@ export default function Dashboard() {
   const prevFilterRef = useRef({ startDate, endDate, sortBy, sortOrder, tag: tagFilter });
 
   useEffect(() => {
-    getTags().then(tags => setAvailableTags(tags.map((t: any) => t.name))).catch(console.error);
+    getTags().then(tags => setAvailableTags(tags.map((t: Tag) => t.name))).catch(console.error);
   }, []);
 
   // --- Actions State ---
@@ -144,7 +144,7 @@ export default function Dashboard() {
       };
       load();
       return () => { ignore = true; };
-  }, [page, debouncedSearch, startDate, endDate, sortBy, sortOrder]);
+  }, [page, debouncedSearch, startDate, endDate, sortBy, sortOrder, tagFilter]);
 
   const handleSearch = (val: string) => {
       setSearch(val);

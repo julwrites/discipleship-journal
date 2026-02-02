@@ -16,7 +16,8 @@ import {
     syncUser,
     getConnections,
     getOrCreateDirectGroup,
-    getTags
+    getTags,
+    Tag
 } from "@/services/api";
 import RichTextEditor from "@/components/RichTextEditor";
 import { TagInput } from "@/components/TagInput";
@@ -126,7 +127,7 @@ export default function NoteEditor() {
         }).catch(console.error);
 
         // Load tags for autocomplete
-        getTags().then(tags => setSuggestions(tags.map((t: any) => t.name))).catch(console.error);
+        getTags().then(tags => setSuggestions(tags.map((t: Tag) => t.name))).catch(console.error);
 
         if (id && id !== "new") {
             setLoading(true);
@@ -147,7 +148,7 @@ export default function NoteEditor() {
                 setInitialContent(noteContent as string);
 
                 // Set tags
-                const noteTags = note.tags ? note.tags.map((t: any) => t.name) : [];
+                const noteTags = note.tags ? note.tags.map((t: Tag) => t.name) : [];
                 setTags(noteTags);
                 setInitialTags(noteTags);
 
@@ -210,7 +211,7 @@ export default function NoteEditor() {
             setSaving(false);
         }
         return false;
-    }, [id, title, content, navigate]);
+    }, [id, title, content, tags, navigate]);
 
     const handleSave = useCallback(() => {
         saveNote(true);
