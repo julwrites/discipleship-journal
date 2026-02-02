@@ -331,6 +331,10 @@ func main() {
 		r.Put("/api/notes/{id}", noteHandler.UpdateNote)
 		r.Delete("/api/notes/{id}", noteHandler.DeleteNote)
 
+		r.Get("/api/tags", noteHandler.GetTags)
+		r.Post("/api/tags", noteHandler.CreateTag)
+		r.Delete("/api/tags/{id}", noteHandler.DeleteTag)
+
 		r.Get("/api/bible/passage", bibleHandler.GetBiblePassage)
 		r.Get("/api/bible/versions", bibleHandler.GetBibleVersions) // Added this
 		r.Post("/api/chat", chatHandler.ChatWithAI)

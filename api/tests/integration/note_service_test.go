@@ -51,7 +51,7 @@ func TestNoteService_Integration(t *testing.T) {
 		content := json.RawMessage(`{"text": "integration content"}`)
 
 		// 1. Create
-		note, err := service.CreateNote(ctx, internalUserID, title, content)
+		note, err := service.CreateNote(ctx, internalUserID, title, content, nil)
 		require.NoError(t, err)
 		assert.NotEmpty(t, note.ID)
 		assert.Equal(t, internalUserID, note.UserID)
@@ -67,7 +67,7 @@ func TestNoteService_Integration(t *testing.T) {
 		// 3. Update
 		newTitle := "Updated Title"
 		newContent := json.RawMessage(`{"text": "updated content"}`)
-		err = service.UpdateNote(ctx, internalUserID, note.ID, newTitle, newContent)
+		err = service.UpdateNote(ctx, internalUserID, note.ID, newTitle, newContent, nil)
 		require.NoError(t, err)
 
 		updated, err := service.GetNote(ctx, internalUserID, note.ID)
@@ -100,15 +100,15 @@ func TestNoteService_Integration(t *testing.T) {
 
 		// Create 3 notes with different timestamps/titles
 		// Note 1: "Alpha"
-		n1, err := service.CreateNote(ctx, internalUserID, baseTitle+" Alpha", json.RawMessage(`{}`))
+		n1, err := service.CreateNote(ctx, internalUserID, baseTitle+" Alpha", json.RawMessage(`{}`), nil)
 		require.NoError(t, err)
 
 		// Note 2: "Beta"
-		n2, err := service.CreateNote(ctx, internalUserID, baseTitle+" Beta", json.RawMessage(`{}`))
+		n2, err := service.CreateNote(ctx, internalUserID, baseTitle+" Beta", json.RawMessage(`{}`), nil)
 		require.NoError(t, err)
 
 		// Note 3: "Gamma"
-		n3, err := service.CreateNote(ctx, internalUserID, baseTitle+" Gamma", json.RawMessage(`{}`))
+		n3, err := service.CreateNote(ctx, internalUserID, baseTitle+" Gamma", json.RawMessage(`{}`), nil)
 		require.NoError(t, err)
 
 		// Manually update timestamps to test date filtering and sorting
@@ -204,5 +204,39 @@ func TestNoteService_Integration(t *testing.T) {
 		assert.False(t, foundN1, "N1 (48h old) should be excluded")
 		assert.True(t, foundN2, "N2 (24h old) should be included")
 		assert.True(t, foundN3, "N3 (new) should be included")
+	})
+
+	t.Run("Tags Integration", func(t *testing.T) {
+		title := "Tagged Note"
+		content := json.RawMessage(`{}`)
+		tags := []string{"integration-tag", "another-tag"}
+
+		// Create with tags
+		note, err := service.CreateNote(ctx, internalUserID, title, content, tags)
+		require.NoError(t, err)
+		assert.Len(t, note.Tags, 2)
+
+		// Verify tags are retrievable via GetUserTags
+		userTags, err := service.GetUserTags(ctx, internalUserID)
+		require.NoError(t, err)
+		assert.GreaterOrEqual(t, len(userTags), 2)
+
+		// Update tags
+		newTags := []string{"integration-tag", "updated-tag"}
+		err = service.UpdateNote(ctx, internalUserID, note.ID, title, content, newTags)
+		require.NoError(t, err)
+
+		updated, err := service.GetNote(ctx, internalUserID, note.ID)
+		require.NoError(t, err)
+		assert.Len(t, updated.Tags, 2)
+		// Check if "updated-tag" is present
+		found := false
+		for _, tag := range updated.Tags {
+			if tag.Name == "updated-tag" {
+				found = true
+				break
+			}
+		}
+		assert.True(t, found)
 	})
 }

@@ -30,12 +30,14 @@ func TestCreateNote(t *testing.T) {
 	now := time.Now()
 
 	t.Run("success", func(t *testing.T) {
+		mock.ExpectBegin()
 		mock.ExpectQuery("INSERT INTO notes").
 			WithArgs(userID, title, content, "active").
 			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at"}).
 				AddRow("note-123", userID, title, content, "active", now, now))
+		mock.ExpectCommit()
 
-		note, err := service.CreateNote(ctx, userID, title, content)
+		note, err := service.CreateNote(ctx, userID, title, content, nil)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, note)
@@ -45,12 +47,43 @@ func TestCreateNote(t *testing.T) {
 		assert.Equal(t, "active", note.Status)
 	})
 
+	t.Run("success with tags", func(t *testing.T) {
+		tags := []string{"tag1"}
+		mock.ExpectBegin()
+		mock.ExpectQuery("INSERT INTO notes").
+			WithArgs(userID, title, content, "active").
+			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at"}).
+				AddRow("note-123", userID, title, content, "active", now, now))
+
+		// Tag creation/lookup
+		mock.ExpectQuery("INSERT INTO tags").
+			WithArgs(userID, "tag1").
+			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "name", "created_at"}).
+				AddRow("tag-1", userID, "tag1", now))
+
+		// Link creation
+		mock.ExpectExec("INSERT INTO note_tags").
+			WithArgs("note-123", "tag-1").
+			WillReturnResult(pgxmock.NewResult("INSERT", 1))
+
+		mock.ExpectCommit()
+
+		note, err := service.CreateNote(ctx, userID, title, content, tags)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, note)
+		assert.Len(t, note.Tags, 1)
+		assert.Equal(t, "tag1", note.Tags[0].Name)
+	})
+
 	t.Run("database error", func(t *testing.T) {
+		mock.ExpectBegin()
 		mock.ExpectQuery("INSERT INTO notes").
 			WithArgs(userID, title, content, "active").
 			WillReturnError(errors.New("db error"))
+		mock.ExpectRollback()
 
-		note, err := service.CreateNote(ctx, userID, title, content)
+		note, err := service.CreateNote(ctx, userID, title, content, nil)
 
 		assert.Error(t, err)
 		assert.Nil(t, note)
@@ -128,32 +161,46 @@ func TestUpdateNote(t *testing.T) {
 	content := json.RawMessage(`{"text": "updated"}`)
 
 	t.Run("success", func(t *testing.T) {
+		mock.ExpectBegin()
 		mock.ExpectExec("UPDATE notes").
 			WithArgs(title, content, noteID, userID).
 			WillReturnResult(pgxmock.NewResult("UPDATE", 1))
 
-		err := service.UpdateNote(ctx, userID, noteID, title, content)
+		mock.ExpectExec("DELETE FROM note_tags").
+			WithArgs(noteID).
+			WillReturnResult(pgxmock.NewResult("DELETE", 0))
+
+		mock.ExpectCommit()
+
+		err := service.UpdateNote(ctx, userID, noteID, title, content, nil)
 
 		assert.NoError(t, err)
 	})
 
 	t.Run("not found", func(t *testing.T) {
+		mock.ExpectBegin()
 		mock.ExpectExec("UPDATE notes").
 			WithArgs(title, content, noteID, userID).
 			WillReturnResult(pgxmock.NewResult("UPDATE", 0))
+		// Rollback is deferred, but CreateNote returns early.
+		// Wait, in my implementation UpdateNote returns error early if rows affected == 0.
+		// And deferred Rollback will be called.
+		mock.ExpectRollback()
 
-		err := service.UpdateNote(ctx, userID, noteID, title, content)
+		err := service.UpdateNote(ctx, userID, noteID, title, content, nil)
 
 		assert.Error(t, err)
 		assert.Equal(t, models.ErrNotFound, err)
 	})
 
 	t.Run("database error", func(t *testing.T) {
+		mock.ExpectBegin()
 		mock.ExpectExec("UPDATE notes").
 			WithArgs(title, content, noteID, userID).
 			WillReturnError(errors.New("db error"))
+		mock.ExpectRollback()
 
-		err := service.UpdateNote(ctx, userID, noteID, title, content)
+		err := service.UpdateNote(ctx, userID, noteID, title, content, nil)
 
 		assert.Error(t, err)
 		assert.Equal(t, "db error", err.Error())
@@ -185,6 +232,10 @@ func TestGetNote(t *testing.T) {
 			WithArgs(noteID, userID).
 			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at", "deleted_at"}).
 				AddRow(noteID, userID, title, content, "active", now, now, nil))
+
+		mock.ExpectQuery("SELECT .* FROM tags .* JOIN note_tags").
+			WithArgs(noteID).
+			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "name", "created_at"}))
 
 		note, err := service.GetNote(ctx, userID, noteID)
 
@@ -251,6 +302,11 @@ func TestGetNotes(t *testing.T) {
 			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at", "deleted_at"}).
 				AddRow("note-123", userID, title, content, "active", now, now, nil))
 
+		// Tags query
+		mock.ExpectQuery("SELECT .* FROM tags .* JOIN note_tags").
+			WithArgs([]string{"note-123"}).
+			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "name", "created_at", "note_id"}))
+
 		notes, total, err := service.GetNotes(ctx, userID, page, limit, NoteFilter{})
 
 		assert.NoError(t, err)
@@ -270,6 +326,10 @@ func TestGetNotes(t *testing.T) {
 			WithArgs(userID, "%"+searchQuery+"%").
 			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at", "deleted_at"}).
 				AddRow("note-123", userID, title, content, "active", now, now, nil))
+
+		mock.ExpectQuery("SELECT .* FROM tags .* JOIN note_tags").
+			WithArgs([]string{"note-123"}).
+			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "name", "created_at", "note_id"}))
 
 		notes, total, err := service.GetNotes(ctx, userID, page, limit, NoteFilter{SearchQuery: searchQuery})
 

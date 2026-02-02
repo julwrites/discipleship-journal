@@ -43,11 +43,11 @@ func TestChatWithAI(t *testing.T) {
 	t.Run("AskAI Success", func(t *testing.T) {
 		testUserID := "00000000-0000-0000-0000-000000000001"
 
-		mockService.On("CreateNote", mock.Anything, testUserID, mock.Anything, mock.Anything, []string{"pending"}).
+		mockService.On("CreateNote", mock.Anything, testUserID, mock.Anything, mock.Anything, mock.Anything, []string{"pending"}).
 			Return(&services.Note{ID: "note-123"}, nil).
 			Once()
 
-		mockService.On("UpdateNote", mock.Anything, testUserID, "note-123", mock.Anything, mock.Anything, []string{"active"}).
+		mockService.On("UpdateNote", mock.Anything, testUserID, "note-123", mock.Anything, mock.Anything, mock.Anything, []string{"active"}).
 			Return(nil).
 			Maybe()
 
@@ -99,11 +99,11 @@ func TestChatWithAI(t *testing.T) {
 			WithArgs(uid).
 			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
 
-		mockService.On("CreateNote", mock.Anything, userUUID.String(), mock.Anything, mock.Anything, []string{"pending"}).
+		mockService.On("CreateNote", mock.Anything, userUUID.String(), mock.Anything, mock.Anything, mock.Anything, []string{"pending"}).
 			Return(&services.Note{ID: "note-456"}, nil).
 			Once()
 
-		mockService.On("UpdateNote", mock.Anything, userUUID.String(), "note-456", mock.Anything, mock.Anything, []string{"active"}).
+		mockService.On("UpdateNote", mock.Anything, userUUID.String(), "note-456", mock.Anything, mock.Anything, mock.Anything, []string{"active"}).
 			Return(nil).
 			Maybe()
 

@@ -11,8 +11,8 @@ type MockNoteService struct {
 	mock.Mock
 }
 
-func (m *MockNoteService) CreateNote(ctx context.Context, userID, title string, content json.RawMessage, status ...string) (*services.Note, error) {
-	args := m.Called(ctx, userID, title, content, status)
+func (m *MockNoteService) CreateNote(ctx context.Context, userID, title string, content json.RawMessage, tags []string, status ...string) (*services.Note, error) {
+	args := m.Called(ctx, userID, title, content, tags, status)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -24,8 +24,29 @@ func (m *MockNoteService) DeleteNote(ctx context.Context, userID, noteID string)
 	return args.Error(0)
 }
 
-func (m *MockNoteService) UpdateNote(ctx context.Context, userID, noteID, title string, content json.RawMessage, status ...string) error {
-	args := m.Called(ctx, userID, noteID, title, content, status)
+func (m *MockNoteService) UpdateNote(ctx context.Context, userID, noteID, title string, content json.RawMessage, tags []string, status ...string) error {
+	args := m.Called(ctx, userID, noteID, title, content, tags, status)
+	return args.Error(0)
+}
+
+func (m *MockNoteService) CreateTag(ctx context.Context, userID, name string) (*services.Tag, error) {
+	args := m.Called(ctx, userID, name)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*services.Tag), args.Error(1)
+}
+
+func (m *MockNoteService) GetUserTags(ctx context.Context, userID string) ([]services.Tag, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]services.Tag), args.Error(1)
+}
+
+func (m *MockNoteService) DeleteTag(ctx context.Context, userID, tagID string) error {
+	args := m.Called(ctx, userID, tagID)
 	return args.Error(0)
 }
 
