@@ -25,10 +25,17 @@ async function getHeaders() {
 
 export interface NoteFilter {
   search?: string;
+  tag?: string;
   startDate?: Date;
   endDate?: Date;
   sortBy?: "updated_at" | "created_at" | "title";
   sortOrder?: "asc" | "desc";
+}
+
+export interface Tag {
+    id: string;
+    name: string;
+    created_at?: string;
 }
 
 export async function fetchNotes(page = 1, limit = 20, filter: NoteFilter | string = {}) {
@@ -42,6 +49,7 @@ export async function fetchNotes(page = 1, limit = 20, filter: NoteFilter | stri
       if (filter) params.append("q", filter);
   } else {
       if (filter.search) params.append("q", filter.search);
+      if (filter.tag) params.append("tag", filter.tag);
       if (filter.startDate) params.append("startDate", filter.startDate.toISOString());
 
       // Fix: Adjust endDate to be the end of the day (23:59:59.999)
@@ -60,12 +68,12 @@ export async function fetchNotes(page = 1, limit = 20, filter: NoteFilter | stri
   return res.json();
 }
 
-export async function createNote(title: string, content: string | Record<string, unknown>) {
+export async function createNote(title: string, content: string | Record<string, unknown>, tags: string[] = []) {
   const headers = await getHeaders();
   const res = await fetch(`${API_URL}/notes`, {
     method: "POST",
     headers,
-    body: JSON.stringify({ title, content }),
+    body: JSON.stringify({ title, content, tags }),
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
@@ -85,12 +93,12 @@ export async function getNote(id: string) {
     return res.json();
 }
 
-export async function updateNote(id: string, title: string, content: string | Record<string, unknown>) {
+export async function updateNote(id: string, title: string, content: string | Record<string, unknown>, tags: string[] = []) {
     const headers = await getHeaders();
     const res = await fetch(`${API_URL}/notes/${id}`, {
         method: "PUT",
         headers,
-        body: JSON.stringify({ title, content })
+        body: JSON.stringify({ title, content, tags })
     });
     if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -109,6 +117,33 @@ export async function deleteNote(id: string) {
         headers,
     });
     if (!res.ok) throw new Error("Failed to delete note");
+}
+
+export async function getTags() {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/tags`, { headers });
+    if (!res.ok) throw new Error("Failed to fetch tags");
+    return res.json();
+}
+
+export async function createTag(name: string) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/tags`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ name }),
+    });
+    if (!res.ok) throw new Error("Failed to create tag");
+    return res.json();
+}
+
+export async function deleteTag(id: string) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/tags/${id}`, {
+        method: "DELETE",
+        headers,
+    });
+    if (!res.ok) throw new Error("Failed to delete tag");
 }
 
 // --- User ---

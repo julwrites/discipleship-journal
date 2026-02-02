@@ -15,6 +15,7 @@ import (
 // NoteFilter defines the criteria for filtering notes.
 type NoteFilter struct {
 	SearchQuery string
+	Tag         string
 	StartDate   *time.Time
 	EndDate     *time.Time
 	SortBy      string // "updated_at", "created_at", "title"
@@ -265,6 +266,12 @@ func (s *NoteService) GetNotes(ctx context.Context, userID string, page, limit i
 	if filter.SearchQuery != "" {
 		whereClause += fmt.Sprintf(" AND (title ILIKE $%d OR content::text ILIKE $%d)", argIdx, argIdx)
 		args = append(args, "%"+filter.SearchQuery+"%")
+		argIdx++
+	}
+
+	if filter.Tag != "" {
+		whereClause += fmt.Sprintf(" AND EXISTS (SELECT 1 FROM note_tags nt JOIN tags t ON nt.tag_id = t.id WHERE nt.note_id = notes.id AND t.name = $%d)", argIdx)
+		args = append(args, filter.Tag)
 		argIdx++
 	}
 

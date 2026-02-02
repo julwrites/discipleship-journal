@@ -39,6 +39,9 @@ vi.mock('@/services/api', () => ({
     fetchNotes: vi.fn(),
     syncUser: vi.fn(),
     askAIStream: vi.fn(),
+    getTags: vi.fn().mockResolvedValue([]),
+    getGroups: vi.fn().mockResolvedValue([]),
+    getConnections: vi.fn().mockResolvedValue([]),
 }));
 
 // Mock Firebase

@@ -3,7 +3,7 @@ import { auth } from "@/lib/firebase";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { fetchNotes, syncUser, NoteFilter, deleteNote, getGroups, shareNote, getNote, askAIStream, getConnections, getOrCreateDirectGroup, Connection } from "@/services/api";
+import { fetchNotes, syncUser, NoteFilter, deleteNote, getGroups, shareNote, getNote, askAIStream, getConnections, getOrCreateDirectGroup, Connection, getTags, Tag } from "@/services/api";
 import { Link } from "react-router-dom";
 import { Settings, Users, BookOpen, Filter, CalendarIcon, User as UserIcon, Book, LogOut } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -39,9 +39,15 @@ export default function Dashboard() {
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [sortBy, setSortBy] = useState<"updated_at" | "created_at" | "title">("updated_at");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [tagFilter, setTagFilter] = useState<string>("");
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
 
   // Ref to track if filters changed to reset page
-  const prevFilterRef = useRef({ startDate, endDate, sortBy, sortOrder });
+  const prevFilterRef = useRef({ startDate, endDate, sortBy, sortOrder, tag: tagFilter });
+
+  useEffect(() => {
+    getTags().then(tags => setAvailableTags(tags.map((t: Tag) => t.name))).catch(console.error);
+  }, []);
 
   // --- Actions State ---
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
@@ -75,12 +81,13 @@ export default function Dashboard() {
   useEffect(() => {
       let ignore = false;
 
-      const currentFilters = { startDate, endDate, sortBy, sortOrder };
+      const currentFilters = { startDate, endDate, sortBy, sortOrder, tag: tagFilter };
       const filtersChanged =
           prevFilterRef.current.startDate !== startDate ||
           prevFilterRef.current.endDate !== endDate ||
           prevFilterRef.current.sortBy !== sortBy ||
-          prevFilterRef.current.sortOrder !== sortOrder;
+          prevFilterRef.current.sortOrder !== sortOrder ||
+          prevFilterRef.current.tag !== tagFilter;
 
       // Handle search or filter changes
       if (prevSearchRef.current !== debouncedSearch || filtersChanged) {
@@ -106,7 +113,8 @@ export default function Dashboard() {
                   startDate,
                   endDate,
                   sortBy,
-                  sortOrder
+                  sortOrder,
+                  tag: tagFilter === "_all" ? undefined : tagFilter
               };
               const response = await fetchNotes(page, 20, filter);
               if (!ignore) {
@@ -136,7 +144,7 @@ export default function Dashboard() {
       };
       load();
       return () => { ignore = true; };
-  }, [page, debouncedSearch, startDate, endDate, sortBy, sortOrder]);
+  }, [page, debouncedSearch, startDate, endDate, sortBy, sortOrder, tagFilter]);
 
   const handleSearch = (val: string) => {
       setSearch(val);
@@ -147,6 +155,7 @@ export default function Dashboard() {
       setEndDate(undefined);
       setSortBy("updated_at");
       setSortOrder("desc");
+      setTagFilter("");
   };
 
   // --- Handlers ---
@@ -372,6 +381,21 @@ export default function Dashboard() {
                                 </SelectContent>
                             </Select>
                         </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <h4 className="font-medium leading-none">Tag</h4>
+                        <Select value={tagFilter} onValueChange={setTagFilter}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="All Tags" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="_all">All Tags</SelectItem>
+                                {availableTags.map(t => (
+                                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
 
                     <div className="space-y-2">

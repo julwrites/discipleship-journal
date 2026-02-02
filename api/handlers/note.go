@@ -126,6 +126,7 @@ func (h *NoteHandler) getNotesWithUUID(w http.ResponseWriter, r *http.Request, u
 	// Filter parameters
 	filter := services.NoteFilter{
 		SearchQuery: r.URL.Query().Get("q"),
+		Tag:         r.URL.Query().Get("tag"),
 		SortBy:      r.URL.Query().Get("sortBy"),
 		SortOrder:   r.URL.Query().Get("sortOrder"),
 	}
