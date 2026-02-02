@@ -23,11 +23,14 @@ type NoteFilter struct {
 
 // NoteServiceInterface defines the methods for note operations.
 type NoteServiceInterface interface {
-	CreateNote(ctx context.Context, userID, title string, content json.RawMessage, status ...string) (*Note, error)
+	CreateNote(ctx context.Context, userID, title string, content json.RawMessage, tags []string, status ...string) (*Note, error)
 	DeleteNote(ctx context.Context, userID, noteID string) error
-	UpdateNote(ctx context.Context, userID, noteID, title string, content json.RawMessage, status ...string) error
+	UpdateNote(ctx context.Context, userID, noteID, title string, content json.RawMessage, tags []string, status ...string) error
 	GetNote(ctx context.Context, userID, noteID string) (*Note, error)
 	GetNotes(ctx context.Context, userID string, page, limit int, filter NoteFilter) ([]Note, int, error)
+	CreateTag(ctx context.Context, userID, name string) (*Tag, error)
+	GetUserTags(ctx context.Context, userID string) ([]Tag, error)
+	DeleteTag(ctx context.Context, userID, tagID string) error
 }
 
 type NoteService struct {
@@ -54,26 +57,70 @@ type Note struct {
 	CreatedAt time.Time       `json:"created_at"`
 	UpdatedAt time.Time       `json:"updated_at"`
 	DeletedAt *time.Time      `json:"deleted_at,omitempty"`
+	Tags      []Tag           `json:"tags"`
 }
 
-func (s *NoteService) CreateNote(ctx context.Context, userID, title string, content json.RawMessage, status ...string) (*Note, error) {
+type Tag struct {
+	ID        string    `json:"id"`
+	UserID    string    `json:"user_id"`
+	Name      string    `json:"name"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+func (s *NoteService) CreateNote(ctx context.Context, userID, title string, content json.RawMessage, tags []string, status ...string) (*Note, error) {
 	var note Note
 	statusVal := "active"
 	if len(status) > 0 {
 		statusVal = status[0]
 	}
 
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		_ = tx.Rollback(ctx)
+	}()
+
 	query := `
 		INSERT INTO notes (user_id, title, content, status)
 		VALUES ($1, $2, $3, $4)
 		RETURNING id, user_id, title, content, status, created_at, updated_at
 	`
-	err := s.db.QueryRow(ctx, query, userID, title, content, statusVal).Scan(
+	err = tx.QueryRow(ctx, query, userID, title, content, statusVal).Scan(
 		&note.ID, &note.UserID, &note.Title, &note.Content, &note.Status, &note.CreatedAt, &note.UpdatedAt,
 	)
 	if err != nil {
 		return nil, err
 	}
+
+	note.Tags = []Tag{}
+	for _, tagName := range tags {
+		// Ensure tag exists
+		var tag Tag
+		tagQuery := `
+			INSERT INTO tags (user_id, name) VALUES ($1, $2)
+			ON CONFLICT (user_id, name) DO UPDATE SET name=EXCLUDED.name
+			RETURNING id, user_id, name, created_at
+		`
+		err := tx.QueryRow(ctx, tagQuery, userID, tagName).Scan(&tag.ID, &tag.UserID, &tag.Name, &tag.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+
+		// Link tag to note
+		linkQuery := `INSERT INTO note_tags (note_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`
+		_, err = tx.Exec(ctx, linkQuery, note.ID, tag.ID)
+		if err != nil {
+			return nil, err
+		}
+		note.Tags = append(note.Tags, tag)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+
 	return &note, nil
 }
 
@@ -89,7 +136,15 @@ func (s *NoteService) DeleteNote(ctx context.Context, userID, noteID string) err
 	return nil
 }
 
-func (s *NoteService) UpdateNote(ctx context.Context, userID, noteID, title string, content json.RawMessage, status ...string) error {
+func (s *NoteService) UpdateNote(ctx context.Context, userID, noteID, title string, content json.RawMessage, tags []string, status ...string) error {
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = tx.Rollback(ctx)
+	}()
+
 	var query string
 	var args []interface{}
 
@@ -109,14 +164,45 @@ func (s *NoteService) UpdateNote(ctx context.Context, userID, noteID, title stri
 		args = []interface{}{title, content, noteID, userID}
 	}
 
-	commandTag, err := s.db.Exec(ctx, query, args...)
+	commandTag, err := tx.Exec(ctx, query, args...)
 	if err != nil {
 		return err
 	}
 	if commandTag.RowsAffected() == 0 {
 		return models.ErrNotFound
 	}
-	return nil
+
+	// Update tags
+	// First, remove existing tags that are not in the new list?
+	// Or just wipe and recreate?
+	// Wipe and recreate is easiest for now, but preserve IDs?
+	// note_tags table only has (note_id, tag_id).
+	// So deleting all from note_tags where note_id=$1 is fine.
+	_, err = tx.Exec(ctx, "DELETE FROM note_tags WHERE note_id=$1", noteID)
+	if err != nil {
+		return err
+	}
+
+	for _, tagName := range tags {
+		var tag Tag
+		tagQuery := `
+			INSERT INTO tags (user_id, name) VALUES ($1, $2)
+			ON CONFLICT (user_id, name) DO UPDATE SET name=EXCLUDED.name
+			RETURNING id, user_id, name, created_at
+		`
+		err := tx.QueryRow(ctx, tagQuery, userID, tagName).Scan(&tag.ID, &tag.UserID, &tag.Name, &tag.CreatedAt)
+		if err != nil {
+			return err
+		}
+
+		linkQuery := `INSERT INTO note_tags (note_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`
+		_, err = tx.Exec(ctx, linkQuery, noteID, tag.ID)
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit(ctx)
 }
 
 func (s *NoteService) GetNote(ctx context.Context, userID, noteID string) (*Note, error) {
@@ -131,6 +217,30 @@ func (s *NoteService) GetNote(ctx context.Context, userID, noteID string) (*Note
 		}
 		return nil, err
 	}
+
+	// Fetch tags
+	tagsQuery := `
+		SELECT t.id, t.user_id, t.name, t.created_at
+		FROM tags t
+		JOIN note_tags nt ON t.id = nt.tag_id
+		WHERE nt.note_id = $1
+		ORDER BY t.name
+	`
+	rows, err := s.db.Query(ctx, tagsQuery, note.ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	note.Tags = []Tag{}
+	for rows.Next() {
+		var t Tag
+		if err := rows.Scan(&t.ID, &t.UserID, &t.Name, &t.CreatedAt); err != nil {
+			return nil, err
+		}
+		note.Tags = append(note.Tags, t)
+	}
+
 	return &note, nil
 }
 
@@ -217,5 +327,94 @@ func (s *NoteService) GetNotes(ctx context.Context, userID string, page, limit i
 		notes = []Note{}
 	}
 
+	// Fetch tags for all notes (optimize to avoid N+1)
+	if len(notes) > 0 {
+		tagsQuery := `
+			SELECT t.id, t.user_id, t.name, t.created_at, nt.note_id
+			FROM tags t
+			JOIN note_tags nt ON t.id = nt.tag_id
+			WHERE nt.note_id = ANY($1)
+			ORDER BY t.name
+		`
+		// Extract IDs as string array
+		ids := make([]string, len(notes))
+		for i, n := range notes {
+			ids[i] = n.ID
+		}
+
+		rowsTags, err := s.db.Query(ctx, tagsQuery, ids)
+		if err != nil {
+			return nil, 0, err
+		}
+		defer rowsTags.Close()
+
+		tagsMap := make(map[string][]Tag)
+		for rowsTags.Next() {
+			var t Tag
+			var noteID string
+			if err := rowsTags.Scan(&t.ID, &t.UserID, &t.Name, &t.CreatedAt, &noteID); err != nil {
+				return nil, 0, err
+			}
+			tagsMap[noteID] = append(tagsMap[noteID], t)
+		}
+
+		for i := range notes {
+			if tags, ok := tagsMap[notes[i].ID]; ok {
+				notes[i].Tags = tags
+			} else {
+				notes[i].Tags = []Tag{}
+			}
+		}
+	}
+
 	return notes, total, nil
+}
+
+func (s *NoteService) CreateTag(ctx context.Context, userID, name string) (*Tag, error) {
+	var tag Tag
+	query := `
+		INSERT INTO tags (user_id, name)
+		VALUES ($1, $2)
+		ON CONFLICT (user_id, name) DO UPDATE SET name=EXCLUDED.name
+		RETURNING id, user_id, name, created_at
+	`
+	err := s.db.QueryRow(ctx, query, userID, name).Scan(&tag.ID, &tag.UserID, &tag.Name, &tag.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &tag, nil
+}
+
+func (s *NoteService) GetUserTags(ctx context.Context, userID string) ([]Tag, error) {
+	query := "SELECT id, user_id, name, created_at FROM tags WHERE user_id=$1 ORDER BY name"
+	rows, err := s.db.Query(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tags []Tag
+	for rows.Next() {
+		var t Tag
+		if err := rows.Scan(&t.ID, &t.UserID, &t.Name, &t.CreatedAt); err != nil {
+			return nil, err
+		}
+		tags = append(tags, t)
+	}
+	if tags == nil {
+		tags = []Tag{}
+	}
+	return tags, nil
+}
+
+func (s *NoteService) DeleteTag(ctx context.Context, userID, tagID string) error {
+	query := "DELETE FROM tags WHERE id=$1 AND user_id=$2"
+	commandTag, err := s.db.Exec(ctx, query, tagID, userID)
+	if err != nil {
+		return err
+	}
+	if commandTag.RowsAffected() == 0 {
+		return models.ErrNotFound
+	}
+	return nil
 }

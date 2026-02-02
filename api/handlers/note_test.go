@@ -117,7 +117,7 @@ func TestCreateNoteHandler(t *testing.T) {
 
 		noteServiceMock.On("CreateNote", mock.Anything, userUUID, title, mock.MatchedBy(func(c json.RawMessage) bool {
 			return string(c) == string(contentJSON)
-		}), mock.Anything).Return(createdNote, nil)
+		}), mock.Anything, mock.Anything).Return(createdNote, nil)
 
 		body, _ := json.Marshal(validReq)
 		req := httptest.NewRequest("POST", "/api/notes", bytes.NewBuffer(body))
@@ -254,7 +254,7 @@ func TestUpdateNoteHandler(t *testing.T) {
 
 		noteServiceMock.On("UpdateNote", mock.Anything, userUUID, noteID, title, mock.MatchedBy(func(c json.RawMessage) bool {
 			return string(c) == string(contentJSON)
-		}), mock.Anything).Return(nil)
+		}), mock.Anything, mock.Anything).Return(nil)
 
 		body, _ := json.Marshal(validReq)
 		req := httptest.NewRequest("PUT", "/api/notes/"+noteID, bytes.NewBuffer(body))
@@ -285,7 +285,7 @@ func TestUpdateNoteHandler(t *testing.T) {
 			WithArgs(firebaseUID).
 			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
 
-		noteServiceMock.On("UpdateNote", mock.Anything, userUUID, noteID, title, mock.Anything, mock.Anything).Return(models.ErrNotFound)
+		noteServiceMock.On("UpdateNote", mock.Anything, userUUID, noteID, title, mock.Anything, mock.Anything, mock.Anything).Return(models.ErrNotFound)
 
 		body, _ := json.Marshal(validReq)
 		req := httptest.NewRequest("PUT", "/api/notes/"+noteID, bytes.NewBuffer(body))
