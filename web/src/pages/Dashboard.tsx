@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchNotes, syncUser, NoteFilter, deleteNote, getGroups, shareNote, getNote, askAIStream, getConnections, getOrCreateDirectGroup, Connection, getTags, Tag } from "@/services/api";
 import { Link } from "react-router-dom";
-import { Settings, Users, BookOpen, Filter, CalendarIcon, User as UserIcon, Book, LogOut } from "lucide-react";
+import { Settings, Users, BookOpen, Filter, CalendarIcon, User as UserIcon, Book, LogOut, Tag as TagIcon } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -314,6 +314,11 @@ export default function Dashboard() {
               <Link to="/templates">
                 <DropdownMenuItem className="cursor-pointer">
                   <Filter className="mr-2 h-4 w-4" /> Templates
+                </DropdownMenuItem>
+              </Link>
+              <Link to="/tags">
+                <DropdownMenuItem className="cursor-pointer">
+                  <TagIcon className="mr-2 h-4 w-4" /> Tags
                 </DropdownMenuItem>
               </Link>
             </DropdownMenuContent>

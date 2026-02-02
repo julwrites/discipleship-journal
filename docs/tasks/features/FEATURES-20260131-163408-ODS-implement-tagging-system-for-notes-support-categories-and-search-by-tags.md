@@ -1,6 +1,6 @@
 ---
 id: FEATURES-20260131-163408-ODS
-status: pending
+status: review_requested
 title: Implement tagging system for notes: support categories and search by tags
 priority: medium
 created: 2026-01-31 16:34:08
