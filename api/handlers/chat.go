@@ -97,7 +97,7 @@ func (h *ChatHandler) AskAI(w http.ResponseWriter, r *http.Request) {
 func (h *ChatHandler) handleRequest(w http.ResponseWriter, r *http.Request, reqType string, reqData interface{}) {
 	// 1. Authenticate & Create Note
 	var userUUID uuid.UUID
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		uid := token.UID
 		if err := h.DB.QueryRow(r.Context(), "SELECT id FROM users WHERE firebase_uid=$1", uid).Scan(&userUUID); err != nil {
 			http.Error(w, "User not found", http.StatusNotFound)

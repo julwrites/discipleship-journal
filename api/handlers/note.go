@@ -93,7 +93,7 @@ func (h *NoteHandler) GetNotes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var uid string
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		uid = token.UID
 	} else if testUserID, ok := r.Context().Value(TestUserKey).(string); ok {
 		// Test environment override
@@ -217,7 +217,7 @@ func (h *NoteHandler) DeleteNote(w http.ResponseWriter, r *http.Request) {
 	}
 	var userUUID string
 	var err error
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		userUUID, err = h.getUserUUID(r.Context(), token.UID)
 		if err != nil {
 			http.Error(w, "User not found", http.StatusNotFound)
@@ -269,7 +269,7 @@ func (h *NoteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
 	}
 	var userUUID string
 	var err error
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		userUUID, err = h.getUserUUID(r.Context(), token.UID)
 		if err != nil {
 			http.Error(w, "User not found", http.StatusNotFound)
@@ -328,7 +328,7 @@ func (h *NoteHandler) UpdateNote(w http.ResponseWriter, r *http.Request) {
 	}
 	var userUUID string
 	var err error
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		userUUID, err = h.getUserUUID(r.Context(), token.UID)
 		if err != nil {
 			http.Error(w, "User not found", http.StatusNotFound)
@@ -390,7 +390,7 @@ func (h *NoteHandler) GetNote(w http.ResponseWriter, r *http.Request) {
 	}
 	var userUUID string
 	var err error
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		userUUID, err = h.getUserUUID(r.Context(), token.UID)
 		if err != nil {
 			http.Error(w, "User not found", http.StatusNotFound)
@@ -450,7 +450,7 @@ func (h *NoteHandler) GetTags(w http.ResponseWriter, r *http.Request) {
 	}
 	var userUUID string
 	var err error
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		userUUID, err = h.getUserUUID(r.Context(), token.UID)
 		if err != nil {
 			http.Error(w, "User not found", http.StatusNotFound)
@@ -496,7 +496,7 @@ func (h *NoteHandler) CreateTag(w http.ResponseWriter, r *http.Request) {
 	}
 	var userUUID string
 	var err error
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		userUUID, err = h.getUserUUID(r.Context(), token.UID)
 		if err != nil {
 			http.Error(w, "User not found", http.StatusNotFound)
@@ -548,7 +548,7 @@ func (h *NoteHandler) DeleteTag(w http.ResponseWriter, r *http.Request) {
 	}
 	var userUUID string
 	var err error
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		userUUID, err = h.getUserUUID(r.Context(), token.UID)
 		if err != nil {
 			http.Error(w, "User not found", http.StatusNotFound)

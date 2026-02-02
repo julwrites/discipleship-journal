@@ -211,7 +211,7 @@ func (h *TemplateHandler) Generate(w http.ResponseWriter, r *http.Request) {
 
 func (h *TemplateHandler) getUserID(r *http.Request) (uuid.UUID, error) {
 	firebaseUID := ""
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		firebaseUID = token.UID
 	}
 	return GetUserUUID(r.Context(), firebaseUID)
