@@ -14,7 +14,7 @@ type MemoryVerseService interface {
 	GetPacks(ctx context.Context, userID uuid.UUID, typeFilter string) ([]*models.VersePack, error)
 	GetPack(ctx context.Context, packID uuid.UUID, userID uuid.UUID) (*models.VersePack, error)
 	CreatePack(ctx context.Context, pack *models.VersePack) (*models.VersePack, error)
-	GetVerses(ctx context.Context, packID uuid.UUID) ([]*models.MemoryVerse, error)
+	GetVerses(ctx context.Context, packID uuid.UUID, userID uuid.UUID) ([]*models.MemoryVerse, error)
 	CreateVerse(ctx context.Context, verse *models.MemoryVerse) (*models.MemoryVerse, error)
 	ClonePack(ctx context.Context, packID uuid.UUID, userID uuid.UUID, newTitle string) (*models.VersePack, error)
 	DeletePack(ctx context.Context, packID uuid.UUID, userID uuid.UUID) error
@@ -22,6 +22,8 @@ type MemoryVerseService interface {
 	DeleteVerse(ctx context.Context, verseID uuid.UUID, userID uuid.UUID) error
 	// SearchVerses searches for verses across all accessible packs (user's or system's)
 	SearchVerses(ctx context.Context, userID uuid.UUID, query string) ([]*models.MemoryVerse, error)
+	SetVersePreference(ctx context.Context, userID, verseID uuid.UUID, version string) error
+	RemoveVersePreference(ctx context.Context, userID, verseID uuid.UUID) error
 }
 
 type memoryVerseService struct {
@@ -118,14 +120,28 @@ func (s *memoryVerseService) CreatePack(ctx context.Context, pack *models.VerseP
 	return pack, nil
 }
 
-func (s *memoryVerseService) GetVerses(ctx context.Context, packID uuid.UUID) ([]*models.MemoryVerse, error) {
+func (s *memoryVerseService) GetVerses(ctx context.Context, packID uuid.UUID, userID uuid.UUID) ([]*models.MemoryVerse, error) {
+	// Query to fetch verses along with user preferences and default settings
+	// Priority: 1. User Override (user_verse_preferences)
+	//           2. User Default (users.settings->>'bible_version')
+	//           3. Original Verse Version (memory_verses.version)
 	query := `
-		SELECT id, verse_pack_id, reference, title, version, tags, created_at, updated_at
-		FROM memory_verses
-		WHERE verse_pack_id = $1
-		ORDER BY created_at ASC
+		SELECT
+			mv.id,
+			mv.verse_pack_id,
+			mv.reference,
+			mv.title,
+			COALESCE(uvp.version_override, u.settings->>'bible_version', mv.version) as effective_version,
+			mv.tags,
+			mv.created_at,
+			mv.updated_at
+		FROM memory_verses mv
+		LEFT JOIN user_verse_preferences uvp ON mv.id = uvp.verse_id AND uvp.user_id = $2
+		LEFT JOIN users u ON u.id = $2
+		WHERE mv.verse_pack_id = $1
+		ORDER BY mv.created_at ASC
 	`
-	rows, err := s.db.Query(ctx, query, packID)
+	rows, err := s.db.Query(ctx, query, packID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +188,6 @@ func (s *memoryVerseService) CreateVerse(ctx context.Context, verse *models.Memo
 
 func (s *memoryVerseService) ClonePack(ctx context.Context, packID uuid.UUID, userID uuid.UUID, newTitle string) (*models.VersePack, error) {
 	// 1. Get original pack
-	// We can use GetPack but we need to fetch without ownership check if it's public (GetPack handles public)
 	original, err := s.GetPack(ctx, packID, userID)
 	if err != nil {
 		return nil, err
@@ -195,8 +210,8 @@ func (s *memoryVerseService) ClonePack(ctx context.Context, packID uuid.UUID, us
 		return nil, err
 	}
 
-	// 3. Copy verses
-	verses, err := s.GetVerses(ctx, packID)
+	// 3. Copy verses using GetVerses (which now resolves effective version based on user prefs)
+	verses, err := s.GetVerses(ctx, packID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +221,7 @@ func (s *memoryVerseService) ClonePack(ctx context.Context, packID uuid.UUID, us
 			VersePackID: createdPack.ID,
 			Reference:   v.Reference,
 			Title:       v.Title,
-			Version:     v.Version,
+			Version:     v.Version, // This will be the effective version (user default or override)
 			Tags:        v.Tags,
 		}
 		if _, err := s.CreateVerse(ctx, newVerse); err != nil {
@@ -214,9 +229,7 @@ func (s *memoryVerseService) ClonePack(ctx context.Context, packID uuid.UUID, us
 		}
 	}
 
-	// Update verse count in response
 	createdPack.VerseCount = len(verses)
-
 	return createdPack, nil
 }
 
@@ -276,10 +289,22 @@ func (s *memoryVerseService) DeleteVerse(ctx context.Context, verseID uuid.UUID,
 
 func (s *memoryVerseService) SearchVerses(ctx context.Context, userID uuid.UUID, queryStr string) ([]*models.MemoryVerse, error) {
 	// Search in user's packs OR public packs
+	// We also apply version resolution here
 	query := `
-		SELECT mv.id, mv.verse_pack_id, mv.reference, mv.title, mv.version, mv.tags, vp.title, mv.created_at, mv.updated_at
+		SELECT
+			mv.id,
+			mv.verse_pack_id,
+			mv.reference,
+			mv.title,
+			COALESCE(uvp.version_override, u.settings->>'bible_version', mv.version) as effective_version,
+			mv.tags,
+			vp.title,
+			mv.created_at,
+			mv.updated_at
 		FROM memory_verses mv
 		JOIN verse_packs vp ON mv.verse_pack_id = vp.id
+		LEFT JOIN user_verse_preferences uvp ON mv.id = uvp.verse_id AND uvp.user_id = $1
+		LEFT JOIN users u ON u.id = $1
 		WHERE (vp.user_id = $1 OR vp.is_public = true)
 		AND (mv.reference ILIKE $2 OR vp.title ILIKE $2 OR mv.title ILIKE $2)
 		ORDER BY mv.reference ASC
@@ -308,4 +333,20 @@ func (s *memoryVerseService) SearchVerses(ctx context.Context, userID uuid.UUID,
 		verses = append(verses, &v)
 	}
 	return verses, nil
+}
+
+func (s *memoryVerseService) SetVersePreference(ctx context.Context, userID, verseID uuid.UUID, version string) error {
+	query := `
+		INSERT INTO user_verse_preferences (user_id, verse_id, version_override)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (user_id, verse_id) DO UPDATE SET version_override = EXCLUDED.version_override, updated_at = NOW()
+	`
+	_, err := s.db.Exec(ctx, query, userID, verseID, version)
+	return err
+}
+
+func (s *memoryVerseService) RemoveVersePreference(ctx context.Context, userID, verseID uuid.UUID) error {
+	query := `DELETE FROM user_verse_preferences WHERE user_id = $1 AND verse_id = $2`
+	_, err := s.db.Exec(ctx, query, userID, verseID)
+	return err
 }

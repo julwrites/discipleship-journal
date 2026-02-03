@@ -41,8 +41,8 @@ func (m *MockMemoryVerseService) CreatePack(ctx context.Context, pack *models.Ve
 	return args.Get(0).(*models.VersePack), args.Error(1)
 }
 
-func (m *MockMemoryVerseService) GetVerses(ctx context.Context, packID uuid.UUID) ([]*models.MemoryVerse, error) {
-	args := m.Called(ctx, packID)
+func (m *MockMemoryVerseService) GetVerses(ctx context.Context, packID uuid.UUID, userID uuid.UUID) ([]*models.MemoryVerse, error) {
+	args := m.Called(ctx, packID, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -82,6 +82,16 @@ func (m *MockMemoryVerseService) UpdateVerse(ctx context.Context, verse *models.
 
 func (m *MockMemoryVerseService) DeleteVerse(ctx context.Context, verseID uuid.UUID, userID uuid.UUID) error {
 	args := m.Called(ctx, verseID, userID)
+	return args.Error(0)
+}
+
+func (m *MockMemoryVerseService) SetVersePreference(ctx context.Context, userID, verseID uuid.UUID, version string) error {
+	args := m.Called(ctx, userID, verseID, version)
+	return args.Error(0)
+}
+
+func (m *MockMemoryVerseService) RemoveVersePreference(ctx context.Context, userID, verseID uuid.UUID) error {
+	args := m.Called(ctx, userID, verseID)
 	return args.Error(0)
 }
 

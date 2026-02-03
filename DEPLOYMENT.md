@@ -34,7 +34,7 @@ These secrets are used to build the Docker image and deploy it to Google Cloud R
 | `GCP_SERVICE_ACCOUNT` | `GCP_SERVICE_ACCOUNT` | The email of the Service Account to run the Cloud Run service as. | ✅ |
 | `CLOUD_SQL_INSTANCE` | `STG_CLOUD_SQL_INSTANCE` | The Cloud SQL connection name (e.g., `project:region:instance`). | ❌ |
 
-**Note**: The backend application loads application-level secrets (like database credentials, API keys) directly from Google Secret Manager at runtime. Since staging and production backends share the same GCP project, ensure the shared GCP project's Secret Manager contains both production and staging secrets (you may use secret versions or different secret names to distinguish environments).
+**Note**: The backend application loads application-level secrets (like database credentials, API keys) directly from Google Secret Manager at runtime. For a full list of required secrets and the loading strategy, see [docs/infrastructure/secrets.md](docs/infrastructure/secrets.md).
 
 ### Frontend / Firebase Hosting
 
