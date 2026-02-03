@@ -228,14 +228,16 @@ function LinkPopover({ editor }: { editor: Editor }) {
 
 function ImagePopover({ editor }: { editor: Editor }) {
     const [url, setUrl] = useState('')
+    const [alt, setAlt] = useState('')
     const [open, setOpen] = useState(false)
 
     const addImage = () => {
         if (url) {
-            editor.chain().focus().setImage({ src: url }).run()
+            editor.chain().focus().setImage({ src: url, alt: alt }).run()
         }
         setOpen(false)
         setUrl('')
+        setAlt('')
     }
 
     return (
@@ -261,6 +263,19 @@ function ImagePopover({ editor }: { editor: Editor }) {
                                 value={url}
                                 onChange={(e) => setUrl(e.target.value)}
                                 className="col-span-2 h-8"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') addImage()
+                                }}
+                            />
+                        </div>
+                        <div className="grid grid-cols-3 items-center gap-4">
+                            <Label htmlFor="img-alt">Alt Text</Label>
+                            <Input
+                                id="img-alt"
+                                value={alt}
+                                onChange={(e) => setAlt(e.target.value)}
+                                className="col-span-2 h-8"
+                                placeholder="Optional"
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter') addImage()
                                 }}
