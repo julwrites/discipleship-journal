@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Dashboard() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -462,6 +463,23 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {loading && notes.length === 0 && Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex flex-col space-y-3 p-6 border rounded-xl shadow-sm bg-card text-card-foreground">
+                <div className="space-y-2">
+                    <Skeleton className="h-5 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                </div>
+                <div className="space-y-2 pt-4">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-2/3" />
+                </div>
+                <div className="flex gap-2 pt-4 mt-auto">
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                </div>
+            </div>
+        ))}
         {notes.length === 0 && !loading && <p className="text-muted-foreground col-span-full">No notes found.</p>}
         {notes.map((note) => (
           <NoteCard
