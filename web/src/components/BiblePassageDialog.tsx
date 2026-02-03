@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { getBiblePassage } from "@/services/api";
 import { Button } from "@/components/ui/button";
+import { BibleVersionSelector } from "@/components/BibleVersionSelector";
 
 interface BiblePassageDialogProps {
   reference: string;
@@ -24,19 +25,20 @@ export function BiblePassageDialog({ reference, isOpen, onClose, defaultVersion 
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isOpen && reference) {
-      loadPassage();
+    if (isOpen) {
+        loadPassage();
     }
-  }, [isOpen, reference]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, reference, version]);
 
   const loadPassage = async () => {
+    if (!reference) return;
     setLoading(true);
     setError(null);
     try {
-      const data = await getBiblePassage(reference, defaultVersion);
+      const data = await getBiblePassage(reference, version);
       setPassageText(data.text || data.verse);
       setPassageRef(data.reference || reference);
-      setVersion(data.version || defaultVersion);
     } catch (err) {
       console.error(err);
       setError("Failed to load bible passage.");
@@ -50,9 +52,17 @@ export function BiblePassageDialog({ reference, isOpen, onClose, defaultVersion 
       <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{passageRef || reference}</DialogTitle>
-          <DialogDescription>
-             {version}
+          <DialogDescription className="sr-only">
+             Read Bible passage {reference} in {version}
           </DialogDescription>
+          <div className="mt-2 flex items-center justify-between gap-2 text-sm text-muted-foreground">
+             <span>Reading from:</span>
+             <BibleVersionSelector
+                value={version}
+                onChange={setVersion}
+                className="w-[120px] h-8"
+             />
+          </div>
         </DialogHeader>
 
         <div className="mt-4">
@@ -69,7 +79,7 @@ export function BiblePassageDialog({ reference, isOpen, onClose, defaultVersion 
             </div>
           ) : (
             <div className="prose dark:prose-invert text-sm leading-relaxed whitespace-pre-wrap">
-              {passageText}
+              <div dangerouslySetInnerHTML={{ __html: passageText }} />
             </div>
           )}
         </div>

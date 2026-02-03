@@ -1,6 +1,6 @@
 ---
 id: FEATURES-20260131-163414-VGI
-status: review_requested
+status: completed
 title: Integrate Bible reading plans with note creation: allow users to create notes from passages with 'Bible Reading' tag
 priority: medium
 created: 2026-01-31 16:34:14
@@ -96,6 +96,7 @@ Allow users to create notes directly from Bible reading plan passages, automatic
 - ✅ Frontend integration in `ReadingPlanDetail.tsx` (added "Create Note" button)
 - ✅ Note creation page updated (`NoteEditor.tsx`) to handle pre-populated data from reading plans
 - ✅ Automatic "Bible Reading" tagging and passage fetching implemented
+- ✅ Passage text insertion into note content implemented
 
 ### Blockers
 None.
