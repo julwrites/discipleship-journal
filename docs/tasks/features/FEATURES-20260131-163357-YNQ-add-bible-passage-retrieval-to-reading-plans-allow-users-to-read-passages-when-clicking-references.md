@@ -1,6 +1,6 @@
 ---
 id: FEATURES-20260131-163357-YNQ
-status: review_requested
+status: completed
 title: Add Bible passage retrieval to reading plans: allow users to read passages when clicking references
 priority: medium
 created: 2026-01-31 16:33:57
@@ -79,10 +79,14 @@ Currently, Bible reading plans only show passage references (e.g., "Genesis 1-3"
 ## Implementation Status
 ### Completed Work
 - ✅ Codebase exploration completed
-- ✅ Existing Bible API integration identified
+- ✅ Integration design planned
+- ✅ Frontend component `BiblePassageDialog` implemented
+- ✅ Integration with `ReadingPlanDetail` (click to view passage)
+- ✅ Bible Passage API is working
+- ✅ Added version selector to `BiblePassageDialog`
 
 ### Blockers
-None yet.
+None.
 
 ## Notes
 - **Bible API limitations**: Some references may not be supported by the Bible AI API
