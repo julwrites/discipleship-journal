@@ -2,9 +2,10 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { getReadingPlan, markPlanDayComplete, unmarkPlanDayComplete, getPlanProgress } from "@/services/api";
+import { getReadingPlan, markPlanDayComplete, unmarkPlanDayComplete, getPlanProgress, syncUser } from "@/services/api";
 import { toast } from "sonner";
 import { ArrowLeft, CheckCircle, Calendar, StickyNote } from "lucide-react";
+import { BiblePassageDialog } from "@/components/BiblePassageDialog";
 
 interface ReadingPlanDay {
     id: string;
@@ -26,6 +27,8 @@ export default function ReadingPlanDetail() {
     const [plan, setPlan] = useState<ReadingPlan | null>(null);
     const [completedDays, setCompletedDays] = useState<Set<number>>(new Set());
     const [loading, setLoading] = useState(true);
+    const [selectedPassageRef, setSelectedPassageRef] = useState<string | null>(null);
+    const [userVersion, setUserVersion] = useState("ESV");
     const todayRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -44,12 +47,16 @@ export default function ReadingPlanDetail() {
     const loadData = async (planId: string) => {
         setLoading(true);
         try {
-            const [planRes, progressRes] = await Promise.all([
+            const [planRes, progressRes, userRes] = await Promise.all([
                 getReadingPlan(planId),
-                getPlanProgress(planId)
+                getPlanProgress(planId),
+                syncUser()
             ]);
             setPlan(planRes);
             setCompletedDays(new Set(progressRes.completed_days));
+            if (userRes?.settings?.bible_version) {
+                setUserVersion(userRes.settings.bible_version);
+            }
         } catch (error) {
             console.error(error);
             toast.error("Failed to load reading plan details");
@@ -175,7 +182,12 @@ export default function ReadingPlanDetail() {
                                                 <div className="font-medium">Day {day.day_number}</div>
                                                 {isToday && <span className="text-xs bg-primary/20 text-primary px-1.5 rounded">Today</span>}
                                             </div>
-                                            <div className="text-sm text-muted-foreground">{day.passage}</div>
+                                            <button
+                                                className="text-sm text-muted-foreground hover:text-primary hover:underline text-left"
+                                                onClick={() => setSelectedPassageRef(day.passage)}
+                                            >
+                                                {day.passage}
+                                            </button>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -209,6 +221,15 @@ export default function ReadingPlanDetail() {
                     );
                 })}
             </div>
+
+            {selectedPassageRef && (
+                <BiblePassageDialog
+                    reference={selectedPassageRef}
+                    isOpen={!!selectedPassageRef}
+                    onClose={() => setSelectedPassageRef(null)}
+                    defaultVersion={userVersion}
+                />
+            )}
         </div>
     );
 }

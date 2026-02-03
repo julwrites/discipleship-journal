@@ -10,6 +10,9 @@ vi.mock("@/services/api", () => ({
     getReadingPlan: vi.fn(),
     getPlanProgress: vi.fn(),
     markPlanDayComplete: vi.fn(),
+    unmarkPlanDayComplete: vi.fn(),
+    syncUser: vi.fn(),
+    getBiblePassage: vi.fn(),
 }));
 
 // Mock Auth

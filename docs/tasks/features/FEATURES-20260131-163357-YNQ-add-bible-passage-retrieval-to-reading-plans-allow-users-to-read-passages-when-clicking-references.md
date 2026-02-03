@@ -1,6 +1,6 @@
 ---
 id: FEATURES-20260131-163357-YNQ
-status: pending
+status: review_requested
 title: Add Bible passage retrieval to reading plans: allow users to read passages when clicking references
 priority: medium
 created: 2026-01-31 16:33:57
