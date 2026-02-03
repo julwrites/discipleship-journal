@@ -39,13 +39,13 @@ Implement scripts or logic to seed the database with additional well-established
 ## 4. Discipleship Journal Bible Reading Plan
 *   **Description**: Four daily readings starting in: Genesis, Psalms, Matthew, and Acts. 25 readings per month to allow catch-up days.
 *   **Type**: Calendar (365 days, with rest days)
-*   **Method**: Manual Entry or Scraping if source found.
-*   **Source**: The Navigators / Discipleship Journal.
+*   **Method**: Algorithmic Generation (Implemented in `scripts/generate_dj_plan/main.go`).
+*   **Status**: Completed. Migration `000028_add_discipleship_journal_plan` added.
+*   **Source**: The Navigators / Discipleship Journal (Adapted).
 *   **Strategy**:
-    *   Since this plan uses "Day 1" to "Day 25" for each month, it maps well to a 365-day plan where days 26-End of month might be empty or skipped in a sequential implementation.
-    *   Alternatively, populate a JSON file manually from the PDF source (`navigators.org`) if no clean digital list is available.
+    *   Implemented a "Balanced 4-Stream" approach that distributes biblical books into 4 streams over 300 active days (25 days * 12 months).
     *   Structure:
-        *   Stream 1: Law/History
-        *   Stream 2: Psalms/Poetry
-        *   Stream 3: Gospels
-        *   Stream 4: Epistles
+        *   Stream 1: Law/History (Genesis - Esther)
+        *   Stream 2: Psalms/Prophets (Job - Malachi)
+        *   Stream 3: Gospels (Matthew - John, looped)
+        *   Stream 4: Epistles (Acts - Revelation, looped)
