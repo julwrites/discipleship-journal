@@ -37,18 +37,18 @@ func (m *MockMemoryVerseService) EXPECT() *MockMemoryVerseServiceMockRecorder {
 }
 
 // ClonePack mocks base method.
-func (m *MockMemoryVerseService) ClonePack(ctx context.Context, packID, userID uuid.UUID, newTitle string) (*models.VersePack, error) {
+func (m *MockMemoryVerseService) ClonePack(ctx context.Context, packID, userID uuid.UUID, newTitle string, useUserDefault bool) (*models.VersePack, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ClonePack", ctx, packID, userID, newTitle)
+	ret := m.ctrl.Call(m, "ClonePack", ctx, packID, userID, newTitle, useUserDefault)
 	ret0, _ := ret[0].(*models.VersePack)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ClonePack indicates an expected call of ClonePack.
-func (mr *MockMemoryVerseServiceMockRecorder) ClonePack(ctx, packID, userID, newTitle interface{}) *gomock.Call {
+func (mr *MockMemoryVerseServiceMockRecorder) ClonePack(ctx, packID, userID, newTitle, useUserDefault interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClonePack", reflect.TypeOf((*MockMemoryVerseService)(nil).ClonePack), ctx, packID, userID, newTitle)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClonePack", reflect.TypeOf((*MockMemoryVerseService)(nil).ClonePack), ctx, packID, userID, newTitle, useUserDefault)
 }
 
 // CreatePack mocks base method.
@@ -126,16 +126,31 @@ func (mr *MockMemoryVerseServiceMockRecorder) GetPacks(ctx, userID, typeFilter i
 }
 
 // GetVerses mocks base method.
-func (m *MockMemoryVerseService) GetVerses(ctx context.Context, packID uuid.UUID) ([]*models.MemoryVerse, error) {
+func (m *MockMemoryVerseService) GetVerses(ctx context.Context, packID, userID uuid.UUID) ([]*models.MemoryVerse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetVerses", ctx, packID)
+	ret := m.ctrl.Call(m, "GetVerses", ctx, packID, userID)
 	ret0, _ := ret[0].([]*models.MemoryVerse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetVerses indicates an expected call of GetVerses.
-func (mr *MockMemoryVerseServiceMockRecorder) GetVerses(ctx, packID interface{}) *gomock.Call {
+func (mr *MockMemoryVerseServiceMockRecorder) GetVerses(ctx, packID, userID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVerses", reflect.TypeOf((*MockMemoryVerseService)(nil).GetVerses), ctx, packID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVerses", reflect.TypeOf((*MockMemoryVerseService)(nil).GetVerses), ctx, packID, userID)
+}
+
+// GetOriginalVerses mocks base method.
+func (m *MockMemoryVerseService) GetOriginalVerses(ctx context.Context, packID uuid.UUID) ([]*models.MemoryVerse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOriginalVerses", ctx, packID)
+	ret0, _ := ret[0].([]*models.MemoryVerse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOriginalVerses indicates an expected call of GetOriginalVerses.
+func (mr *MockMemoryVerseServiceMockRecorder) GetOriginalVerses(ctx, packID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOriginalVerses", reflect.TypeOf((*MockMemoryVerseService)(nil).GetOriginalVerses), ctx, packID)
 }

@@ -1,6 +1,6 @@
 ---
 id: FEATURES-20260131-162514-WAF
-status: pending
+status: in_progress
 title: Apply user's default Bible version when cloning memory verse packs
 priority: medium
 created: 2026-01-31 16:25:14
