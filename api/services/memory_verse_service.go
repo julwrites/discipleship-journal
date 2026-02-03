@@ -132,6 +132,11 @@ func (s *memoryVerseService) GetVerses(ctx context.Context, packID uuid.UUID, us
 			mv.reference,
 			mv.title,
 			COALESCE(uvp.version_override, u.settings->>'bible_version', mv.version) as effective_version,
+			CASE
+				WHEN uvp.version_override IS NOT NULL THEN 'override'
+				WHEN u.settings->>'bible_version' IS NOT NULL THEN 'user_default'
+				ELSE 'original'
+			END as version_source,
 			mv.tags,
 			mv.created_at,
 			mv.updated_at
@@ -152,7 +157,7 @@ func (s *memoryVerseService) GetVerses(ctx context.Context, packID uuid.UUID, us
 		var v models.MemoryVerse
 		var tagsBytes []byte
 		var title *string
-		if err := rows.Scan(&v.ID, &v.VersePackID, &v.Reference, &title, &v.Version, &tagsBytes, &v.CreatedAt, &v.UpdatedAt); err != nil {
+		if err := rows.Scan(&v.ID, &v.VersePackID, &v.Reference, &title, &v.Version, &v.VersionSource, &tagsBytes, &v.CreatedAt, &v.UpdatedAt); err != nil {
 			return nil, err
 		}
 		if title != nil {
@@ -297,6 +302,11 @@ func (s *memoryVerseService) SearchVerses(ctx context.Context, userID uuid.UUID,
 			mv.reference,
 			mv.title,
 			COALESCE(uvp.version_override, u.settings->>'bible_version', mv.version) as effective_version,
+			CASE
+				WHEN uvp.version_override IS NOT NULL THEN 'override'
+				WHEN u.settings->>'bible_version' IS NOT NULL THEN 'user_default'
+				ELSE 'original'
+			END as version_source,
 			mv.tags,
 			vp.title,
 			mv.created_at,
@@ -321,7 +331,7 @@ func (s *memoryVerseService) SearchVerses(ctx context.Context, userID uuid.UUID,
 		var v models.MemoryVerse
 		var tagsBytes []byte
 		var title *string
-		if err := rows.Scan(&v.ID, &v.VersePackID, &v.Reference, &title, &v.Version, &tagsBytes, &v.PackTitle, &v.CreatedAt, &v.UpdatedAt); err != nil {
+		if err := rows.Scan(&v.ID, &v.VersePackID, &v.Reference, &title, &v.Version, &v.VersionSource, &tagsBytes, &v.PackTitle, &v.CreatedAt, &v.UpdatedAt); err != nil {
 			return nil, err
 		}
 		if title != nil {

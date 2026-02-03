@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { getVersePacks, createVersePack, VersePack, getPackDetails, deletePack, createVerseInPack, MemoryVerse, clonePack, syncUser, updateMemoryVerse, deleteMemoryVerse, getBiblePassage } from "@/services/api";
+import { getVersePacks, createVersePack, VersePack, getPackDetails, deletePack, createVerseInPack, MemoryVerse, clonePack, syncUser, updateMemoryVerse, deleteMemoryVerse, getBiblePassage, setVersePreference, removeVersePreference } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -229,12 +229,31 @@ export function VersePackDetail() {
     const handleUpdateVerse = async () => {
         if (!editVerseData.id || !editVerseData.reference) return;
         try {
-            await updateMemoryVerse(editVerseData.id, editVerseData);
-            toast.success("Verse updated");
+            if (isMyPack) {
+                await updateMemoryVerse(editVerseData.id, editVerseData);
+                toast.success("Verse updated");
+            } else {
+                if (editVerseData.version) {
+                    await setVersePreference(editVerseData.id, editVerseData.version);
+                    toast.success("Verse preference saved");
+                }
+            }
             setIsEditOpen(false);
             loadDetails();
         } catch {
             toast.error("Failed to update verse");
+        }
+    };
+
+    const handleResetPreference = async () => {
+        if (!editVerseData.id) return;
+        try {
+            await removeVersePreference(editVerseData.id);
+            toast.success("Reset to default version");
+            setIsEditOpen(false);
+            loadDetails();
+        } catch {
+            toast.error("Failed to reset preference");
         }
     };
 
@@ -449,62 +468,78 @@ export function VersePackDetail() {
             <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Edit Verse</DialogTitle>
+                        <DialogTitle>{isMyPack ? "Edit Verse" : "Verse Preferences"}</DialogTitle>
                         <DialogDescription>
-                            Make changes to your memory verse.
+                            {isMyPack ? "Make changes to your memory verse." : "Customize the Bible version for this verse."}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
-                        <div className="grid gap-2">
-                            <Label>Title (Optional)</Label>
-                            <Input
-                                value={editVerseData.title || ""}
-                                onChange={e => setEditVerseData({...editVerseData, title: e.target.value})}
-                                placeholder="e.g. God's Love"
-                            />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label>Reference</Label>
-                            <BibleReferenceInput
-                                value={editVerseData.reference || ""}
-                                onChange={val => setEditVerseData({...editVerseData, reference: val})}
-                                placeholder="e.g. John 3:16"
-                            />
-                        </div>
+                        {isMyPack && (
+                            <>
+                                <div className="grid gap-2">
+                                    <Label>Title (Optional)</Label>
+                                    <Input
+                                        value={editVerseData.title || ""}
+                                        onChange={e => setEditVerseData({...editVerseData, title: e.target.value})}
+                                        placeholder="e.g. God's Love"
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label>Reference</Label>
+                                    <BibleReferenceInput
+                                        value={editVerseData.reference || ""}
+                                        onChange={val => setEditVerseData({...editVerseData, reference: val})}
+                                        placeholder="e.g. John 3:16"
+                                    />
+                                </div>
+                            </>
+                        )}
                         <div className="grid gap-2">
                             <Label>Version</Label>
                             <BibleVersionSelector
                                 value={editVerseData.version || "ESV"}
                                 onChange={v => setEditVerseData({...editVerseData, version: v})}
                             />
+                            {!isMyPack && editVerseData.version_source === 'override' && (
+                                <p className="text-xs text-muted-foreground">
+                                    You have customized this version.
+                                </p>
+                            )}
                         </div>
-                        <div className="grid gap-2">
-                            <Label>Tags</Label>
-                            <div className="flex gap-2">
-                                <Input
-                                    value={editTagInput}
-                                    onChange={e => setEditTagInput(e.target.value)}
-                                    onKeyDown={e => e.key === 'Enter' && addEditTag()}
-                                    placeholder="Add tag..."
-                                />
-                                <Button type="button" variant="secondary" onClick={addEditTag}>Add</Button>
+                        {isMyPack && (
+                            <div className="grid gap-2">
+                                <Label>Tags</Label>
+                                <div className="flex gap-2">
+                                    <Input
+                                        value={editTagInput}
+                                        onChange={e => setEditTagInput(e.target.value)}
+                                        onKeyDown={e => e.key === 'Enter' && addEditTag()}
+                                        placeholder="Add tag..."
+                                    />
+                                    <Button type="button" variant="secondary" onClick={addEditTag}>Add</Button>
+                                </div>
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                    {editVerseData.tags?.map((tag, i) => (
+                                        <span key={i} className="bg-secondary text-secondary-foreground px-2 py-1 rounded text-xs flex items-center gap-1">
+                                            {tag}
+                                            <button
+                                                onClick={() => setEditVerseData(prev => ({...prev, tags: prev.tags?.filter((_, idx) => idx !== i)}))}
+                                                className="hover:text-destructive"
+                                            >
+                                                ×
+                                            </button>
+                                        </span>
+                                    ))}
+                                </div>
                             </div>
-                            <div className="flex flex-wrap gap-2 mt-2">
-                                {editVerseData.tags?.map((tag, i) => (
-                                    <span key={i} className="bg-secondary text-secondary-foreground px-2 py-1 rounded text-xs flex items-center gap-1">
-                                        {tag}
-                                        <button
-                                            onClick={() => setEditVerseData(prev => ({...prev, tags: prev.tags?.filter((_, idx) => idx !== i)}))}
-                                            className="hover:text-destructive"
-                                        >
-                                            ×
-                                        </button>
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
+                        )}
                     </div>
-                    <DialogFooter>
+                    <DialogFooter className="flex-col sm:flex-row gap-2">
+                        {!isMyPack && editVerseData.version_source === 'override' && (
+                            <Button variant="outline" onClick={handleResetPreference} type="button">
+                                Reset to Default
+                            </Button>
+                        )}
                         <Button onClick={handleUpdateVerse}>Save Changes</Button>
                     </DialogFooter>
                 </DialogContent>
@@ -560,11 +595,11 @@ export function VersePackDetail() {
                                     </div>
                                 </div>
                             </div>
-                            {isMyPack && (
-                                <div className="flex gap-2">
-                                    <Button variant="ghost" size="icon" onClick={(e) => openEdit(e, verse)}>
-                                        <Pencil className="h-4 w-4" />
-                                    </Button>
+                            <div className="flex gap-2">
+                                <Button variant="ghost" size="icon" onClick={(e) => openEdit(e, verse)}>
+                                    <Pencil className="h-4 w-4" />
+                                </Button>
+                                {isMyPack && (
                                     <Button 
                                         variant="ghost" 
                                         size="icon" 
@@ -576,8 +611,8 @@ export function VersePackDetail() {
                                     >
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </CardContent>
                     </Card>
                 ))}

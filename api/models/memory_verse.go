@@ -24,6 +24,7 @@ type MemoryVerse struct {
 	Reference   string    `json:"reference"`
 	Title       string    `json:"title"`
 	Version     string    `json:"version"`
+	VersionSource string  `json:"version_source,omitempty"` // "override", "user_default", "original"
 	Tags        []string  `json:"tags"`
 	PackTitle   string    `json:"pack_title,omitempty"` // Populated in searches
 	CreatedAt   time.Time `json:"created_at"`

@@ -360,3 +360,75 @@ func (h *MemoryVerseHandler) DeleteVerse(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(map[string]bool{"success": true})
 }
+
+// SetVersePreference sets a user-specific version for a verse
+func (h *MemoryVerseHandler) SetVersePreference(w http.ResponseWriter, r *http.Request) {
+	firebaseUID := ""
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
+		firebaseUID = token.UID
+	}
+
+	userID, err := GetUserUUID(r.Context(), firebaseUID)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	verseIDStr := chi.URLParam(r, "verseId")
+	verseID, err := uuid.Parse(verseIDStr)
+	if err != nil {
+		http.Error(w, "Invalid verse ID", http.StatusBadRequest)
+		return
+	}
+
+	var req struct {
+		Version string `json:"version"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid body", http.StatusBadRequest)
+		return
+	}
+	if req.Version == "" {
+		http.Error(w, "Version is required", http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.SetVersePreference(r.Context(), userID, verseID, req.Version)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(map[string]bool{"success": true})
+}
+
+// RemoveVersePreference removes a user-specific version preference
+func (h *MemoryVerseHandler) RemoveVersePreference(w http.ResponseWriter, r *http.Request) {
+	firebaseUID := ""
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
+		firebaseUID = token.UID
+	}
+
+	userID, err := GetUserUUID(r.Context(), firebaseUID)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	verseIDStr := chi.URLParam(r, "verseId")
+	verseID, err := uuid.Parse(verseIDStr)
+	if err != nil {
+		http.Error(w, "Invalid verse ID", http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.RemoveVersePreference(r.Context(), userID, verseID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(map[string]bool{"success": true})
+}
