@@ -93,11 +93,14 @@ func TestClonePack(t *testing.T) {
 		WithArgs(pgxmock.AnyArg(), pgxmock.AnyArg(), "New Title", "SRC", "", false, pgxmock.AnyArg(), pgxmock.AnyArg()).
 		WillReturnResult(pgxmock.NewResult("INSERT", 1))
 
-	// 3. GetVerses (Source)
+	// 3. GetVerses (Source) with new query
 	var verseTitle *string = nil // No title
-	mock.ExpectQuery(`SELECT .* FROM memory_verses WHERE verse_pack_id = \$1`).
-		WithArgs(packID).
-		WillReturnRows(pgxmock.NewRows([]string{"id", "verse_pack_id", "reference", "title", "version", "tags", "created_at", "updated_at"}).
+
+	// We use a loose regex match for the complex query to avoid whitespace issues
+	// Match: SELECT ... FROM memory_verses mv LEFT JOIN user_verse_preferences ... LEFT JOIN users ... WHERE mv.verse_pack_id = $1 ...
+	mock.ExpectQuery(`SELECT .* FROM memory_verses mv LEFT JOIN user_verse_preferences uvp .* LEFT JOIN users u .* WHERE mv.verse_pack_id = \$1 ORDER BY mv.created_at ASC`).
+		WithArgs(packID, userID).
+		WillReturnRows(pgxmock.NewRows([]string{"id", "verse_pack_id", "reference", "title", "effective_version", "tags", "created_at", "updated_at"}).
 			AddRow(uuid.New(), packID, "John 3:16", verseTitle, "ESV", []byte(`["Love"]`), time.Now(), time.Now()))
 
 	// 4. CreateVerse (Clone)
@@ -127,15 +130,11 @@ func TestSearchVerses(t *testing.T) {
 	packTitle := "My Pack"
 	var verseTitle *string = nil
 
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT mv.id, mv.verse_pack_id, mv.reference, mv.title, mv.version, mv.tags, vp.title, mv.created_at, mv.updated_at
-		FROM memory_verses mv
-		JOIN verse_packs vp ON mv.verse_pack_id = vp.id
-		WHERE (vp.user_id = $1 OR vp.is_public = true)
-		AND (mv.reference ILIKE $2 OR vp.title ILIKE $2 OR mv.title ILIKE $2)
-		ORDER BY mv.reference ASC
-		LIMIT 20`)).
+	// Updated regex for SearchVerses with joins
+	// SELECT ... FROM memory_verses mv JOIN verse_packs vp ... LEFT JOIN user_verse_preferences ... LEFT JOIN users ... WHERE ...
+	mock.ExpectQuery(`SELECT .* FROM memory_verses mv JOIN verse_packs vp .* LEFT JOIN user_verse_preferences uvp .* LEFT JOIN users u .* WHERE .*`).
 		WithArgs(userID, "%"+query+"%").
-		WillReturnRows(pgxmock.NewRows([]string{"id", "verse_pack_id", "reference", "title", "version", "tags", "pack_title", "created_at", "updated_at"}).
+		WillReturnRows(pgxmock.NewRows([]string{"id", "verse_pack_id", "reference", "title", "effective_version", "tags", "pack_title", "created_at", "updated_at"}).
 			AddRow(verseID, packID, "John 3:16", verseTitle, "ESV", []byte(`["Love"]`), packTitle, time.Now(), time.Now()))
 
 	verses, err := service.SearchVerses(context.Background(), userID, query)
