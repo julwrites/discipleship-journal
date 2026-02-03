@@ -596,6 +596,7 @@ export interface MemoryVerse {
     reference: string;
     title?: string;
     version: string;
+    version_source?: 'override' | 'user_default' | 'original';
     tags: string[];
     pack_title?: string;
 }
@@ -675,6 +676,27 @@ export async function deleteMemoryVerse(id: string) {
         headers,
     });
     if (!res.ok) throw new Error("Failed to delete verse");
+    return res.json();
+}
+
+export async function setVersePreference(verseId: string, version: string) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/memory-verses/${verseId}/preference`, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify({ version }),
+    });
+    if (!res.ok) throw new Error("Failed to set verse preference");
+    return res.json();
+}
+
+export async function removeVersePreference(verseId: string) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/memory-verses/${verseId}/preference`, {
+        method: "DELETE",
+        headers,
+    });
+    if (!res.ok) throw new Error("Failed to remove verse preference");
     return res.json();
 }
 

@@ -241,3 +241,48 @@ func TestMemoryVerseHandler_DeleteVerse(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 }
+
+func TestMemoryVerseHandler_SetVersePreference(t *testing.T) {
+	mockService := new(MockMemoryVerseService)
+	handler := NewMemoryVerseHandler(mockService)
+
+	userID := uuid.New()
+	verseID := uuid.New()
+	ctx := context.WithValue(context.Background(), TestUserKey, userID.String())
+
+	r := chi.NewRouter()
+	r.Put("/api/memory-verses/{verseId}/preference", handler.SetVersePreference)
+
+	payload := `{"version": "NIV"}`
+	req := httptest.NewRequest("PUT", "/api/memory-verses/"+verseID.String()+"/preference", strings.NewReader(payload))
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	mockService.On("SetVersePreference", mock.Anything, userID, verseID, "NIV").Return(nil)
+
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestMemoryVerseHandler_RemoveVersePreference(t *testing.T) {
+	mockService := new(MockMemoryVerseService)
+	handler := NewMemoryVerseHandler(mockService)
+
+	userID := uuid.New()
+	verseID := uuid.New()
+	ctx := context.WithValue(context.Background(), TestUserKey, userID.String())
+
+	r := chi.NewRouter()
+	r.Delete("/api/memory-verses/{verseId}/preference", handler.RemoveVersePreference)
+
+	req := httptest.NewRequest("DELETE", "/api/memory-verses/"+verseID.String()+"/preference", nil)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	mockService.On("RemoveVersePreference", mock.Anything, userID, verseID).Return(nil)
+
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}

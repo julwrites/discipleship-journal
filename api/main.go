@@ -385,6 +385,8 @@ func main() {
 		r.Post("/api/verse-packs/{id}/clone", memoryVerseHandler.ClonePack)
 		r.Put("/api/memory-verses/{verseId}", memoryVerseHandler.UpdateVerse)
 		r.Delete("/api/memory-verses/{verseId}", memoryVerseHandler.DeleteVerse)
+		r.Put("/api/memory-verses/{verseId}/preference", memoryVerseHandler.SetVersePreference)
+		r.Delete("/api/memory-verses/{verseId}/preference", memoryVerseHandler.RemoveVersePreference)
 
 		// Study Templates
 		r.Post("/api/templates", templateHandler.CreateTemplate)
