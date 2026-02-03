@@ -1,6 +1,6 @@
 ---
 id: FEATURES-20260131-162601-LPD
-status: pending
+status: verified
 title: Implement user-specific Bible version preferences with default fallback for memory verses
 priority: medium
 created: 2026-01-31 16:26:01

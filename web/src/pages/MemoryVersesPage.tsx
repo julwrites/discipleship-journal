@@ -7,9 +7,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Plus, BookOpen, Trash2, ArrowLeft, Copy, Pencil } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Plus, BookOpen, Trash2, ArrowLeft, Copy, Pencil, Settings } from "lucide-react";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { BibleVersionSelector } from "@/components/BibleVersionSelector";
+import { cn } from "@/lib/utils";
 import { BibleReferenceInput } from "@/components/BibleReferenceInput";
 
 export default function MemoryVersesPage() {
@@ -184,6 +185,8 @@ export function VersePackDetail() {
     const [isCloneOpen, setIsCloneOpen] = useState(false);
     const [cloneTitle, setCloneTitle] = useState("");
 
+    const [userDefaultVersion, setUserDefaultVersion] = useState<string | null>(null);
+
     const loadDetails = useCallback(async () => {
         if (!id) return;
         setLoading(true);
@@ -208,9 +211,26 @@ export function VersePackDetail() {
         syncUser().then(u => {
             if (u.settings?.bible_version) {
                 setNewVerse(prev => ({ ...prev, version: u.settings.bible_version }));
+                setUserDefaultVersion(u.settings.bible_version);
             }
         }).catch(console.error);
     }, []);
+
+    const handleApplyDefaultToAll = async () => {
+        if (!id || !userDefaultVersion) return;
+        if (!confirm(`This will set your preference for all verses in this pack to ${userDefaultVersion}. Continue?`)) return;
+
+        try {
+            const promises = verses.map(v =>
+                v.id ? setVersePreference(v.id, userDefaultVersion) : Promise.resolve()
+            );
+            await Promise.all(promises);
+            toast.success(`Applied ${userDefaultVersion} to all verses`);
+            loadDetails();
+        } catch {
+            toast.error("Failed to apply preferences");
+        }
+    };
 
     const handleAddVerse = async () => {
         if (!id || !newVerse.reference) return;
@@ -360,14 +380,20 @@ export function VersePackDetail() {
                 </div>
                 <div className="flex gap-2">
                     {!isMyPack ? (
-                        <Dialog open={isCloneOpen} onOpenChange={setIsCloneOpen}>
-                            <DialogTrigger asChild>
-                                <Button variant="secondary">
-                                    <Copy className="mr-2 h-4 w-4" />
-                                    Save to My Packs
+                        <>
+                            {userDefaultVersion && (
+                                <Button variant="outline" onClick={handleApplyDefaultToAll}>
+                                    Set all to {userDefaultVersion}
                                 </Button>
-                            </DialogTrigger>
-                            <DialogContent>
+                            )}
+                            <Dialog open={isCloneOpen} onOpenChange={setIsCloneOpen}>
+                                <DialogTrigger asChild>
+                                    <Button variant="secondary">
+                                        <Copy className="mr-2 h-4 w-4" />
+                                        Save to My Packs
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent>
                                 <DialogHeader>
                                     <DialogTitle>Save Pack</DialogTitle>
                                     <DialogDescription>Save a copy of this pack to your library.</DialogDescription>
@@ -386,6 +412,7 @@ export function VersePackDetail() {
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
+                        </>
                     ) : (
                         <>
                             <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
@@ -505,6 +532,11 @@ export function VersePackDetail() {
                                     You have customized this version.
                                 </p>
                             )}
+                            {!isMyPack && (
+                                <Link to="/settings" className="text-xs text-primary hover:underline flex items-center gap-1 mt-1">
+                                    <Settings className="h-3 w-3" /> Manage default version
+                                </Link>
+                            )}
                         </div>
                         {isMyPack && (
                             <div className="grid gap-2">
@@ -588,7 +620,20 @@ export function VersePackDetail() {
                                         ) : verse.reference}
                                     </div>
                                     <div className="text-xs text-muted-foreground flex gap-2 mt-1">
-                                        <span className="bg-muted px-1.5 rounded">{verse.version}</span>
+                                        <span
+                                            className={cn("px-1.5 rounded text-xs font-medium",
+                                                verse.version_source === 'override' ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100" :
+                                                verse.version_source === 'user_default' ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" :
+                                                "bg-muted text-muted-foreground"
+                                            )}
+                                            title={
+                                                verse.version_source === 'override' ? "Your custom preference" :
+                                                verse.version_source === 'user_default' ? "Your default setting" :
+                                                "Original version"
+                                            }
+                                        >
+                                            {verse.version}
+                                        </span>
                                         {verse.tags?.map(t => (
                                             <span key={t}>#{t}</span>
                                         ))}
