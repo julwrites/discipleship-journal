@@ -15,8 +15,9 @@ type MemoryVerseService interface {
 	GetPack(ctx context.Context, packID uuid.UUID, userID uuid.UUID) (*models.VersePack, error)
 	CreatePack(ctx context.Context, pack *models.VersePack) (*models.VersePack, error)
 	GetVerses(ctx context.Context, packID uuid.UUID, userID uuid.UUID) ([]*models.MemoryVerse, error)
+	GetOriginalVerses(ctx context.Context, packID uuid.UUID) ([]*models.MemoryVerse, error)
 	CreateVerse(ctx context.Context, verse *models.MemoryVerse) (*models.MemoryVerse, error)
-	ClonePack(ctx context.Context, packID uuid.UUID, userID uuid.UUID, newTitle string) (*models.VersePack, error)
+	ClonePack(ctx context.Context, packID uuid.UUID, userID uuid.UUID, newTitle string, useUserDefault bool) (*models.VersePack, error)
 	DeletePack(ctx context.Context, packID uuid.UUID, userID uuid.UUID) error
 	UpdateVerse(ctx context.Context, verse *models.MemoryVerse, userID uuid.UUID) error
 	DeleteVerse(ctx context.Context, verseID uuid.UUID, userID uuid.UUID) error
@@ -171,6 +172,48 @@ func (s *memoryVerseService) GetVerses(ctx context.Context, packID uuid.UUID, us
 	return verses, nil
 }
 
+func (s *memoryVerseService) GetOriginalVerses(ctx context.Context, packID uuid.UUID) ([]*models.MemoryVerse, error) {
+	// Query to fetch verses exactly as they are in the database, ignoring user preferences
+	query := `
+		SELECT
+			mv.id,
+			mv.verse_pack_id,
+			mv.reference,
+			mv.title,
+			mv.version,
+			'original' as version_source,
+			mv.tags,
+			mv.created_at,
+			mv.updated_at
+		FROM memory_verses mv
+		WHERE mv.verse_pack_id = $1
+		ORDER BY mv.created_at ASC
+	`
+	rows, err := s.db.Query(ctx, query, packID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var verses []*models.MemoryVerse
+	for rows.Next() {
+		var v models.MemoryVerse
+		var tagsBytes []byte
+		var title *string
+		if err := rows.Scan(&v.ID, &v.VersePackID, &v.Reference, &title, &v.Version, &v.VersionSource, &tagsBytes, &v.CreatedAt, &v.UpdatedAt); err != nil {
+			return nil, err
+		}
+		if title != nil {
+			v.Title = *title
+		}
+		if len(tagsBytes) > 0 {
+			_ = json.Unmarshal(tagsBytes, &v.Tags)
+		}
+		verses = append(verses, &v)
+	}
+	return verses, nil
+}
+
 func (s *memoryVerseService) CreateVerse(ctx context.Context, verse *models.MemoryVerse) (*models.MemoryVerse, error) {
 	verse.ID = uuid.New()
 	verse.CreatedAt = time.Now()
@@ -191,7 +234,7 @@ func (s *memoryVerseService) CreateVerse(ctx context.Context, verse *models.Memo
 	return verse, nil
 }
 
-func (s *memoryVerseService) ClonePack(ctx context.Context, packID uuid.UUID, userID uuid.UUID, newTitle string) (*models.VersePack, error) {
+func (s *memoryVerseService) ClonePack(ctx context.Context, packID uuid.UUID, userID uuid.UUID, newTitle string, useUserDefault bool) (*models.VersePack, error) {
 	// 1. Get original pack
 	original, err := s.GetPack(ctx, packID, userID)
 	if err != nil {
@@ -215,8 +258,16 @@ func (s *memoryVerseService) ClonePack(ctx context.Context, packID uuid.UUID, us
 		return nil, err
 	}
 
-	// 3. Copy verses using GetVerses (which now resolves effective version based on user prefs)
-	verses, err := s.GetVerses(ctx, packID, userID)
+	// 3. Copy verses
+	var verses []*models.MemoryVerse
+	if useUserDefault {
+		// Use GetVerses which resolves effective version based on user prefs/defaults
+		verses, err = s.GetVerses(ctx, packID, userID)
+	} else {
+		// Use GetOriginalVerses which gets raw versions
+		verses, err = s.GetOriginalVerses(ctx, packID)
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -226,7 +277,7 @@ func (s *memoryVerseService) ClonePack(ctx context.Context, packID uuid.UUID, us
 			VersePackID: createdPack.ID,
 			Reference:   v.Reference,
 			Title:       v.Title,
-			Version:     v.Version, // This will be the effective version (user default or override)
+			Version:     v.Version,
 			Tags:        v.Tags,
 		}
 		if _, err := s.CreateVerse(ctx, newVerse); err != nil {

@@ -108,7 +108,53 @@ func TestClonePack(t *testing.T) {
 		WithArgs(pgxmock.AnyArg(), pgxmock.AnyArg(), "John 3:16", "", "ESV", []byte(`["Love"]`), pgxmock.AnyArg(), pgxmock.AnyArg()).
 		WillReturnResult(pgxmock.NewResult("INSERT", 1))
 
-	newPack, err := service.ClonePack(context.Background(), packID, userID, "New Title")
+	newPack, err := service.ClonePack(context.Background(), packID, userID, "New Title", true)
+	assert.NoError(t, err)
+	assert.Equal(t, "New Title", newPack.Title)
+	assert.Equal(t, 1, newPack.VerseCount)
+}
+
+func TestClonePack_Original(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
+
+	service := NewMemoryVerseService(mock)
+	userID := uuid.New()
+	packID := uuid.New()
+	identifier := "SRC"
+	sourcePack := &models.VersePack{
+		ID: packID, Title: "Source Pack", Identifier: identifier, IsPublic: true,
+	}
+
+	// 1. GetPack
+	mock.ExpectQuery(`SELECT .* FROM verse_packs vp WHERE vp.id = \$1 .*`).
+		WithArgs(packID, userID).
+		WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "identifier", "description", "is_public", "created_at", "updated_at", "verse_count"}).
+			AddRow(sourcePack.ID, nil, sourcePack.Title, &sourcePack.Identifier, nil, sourcePack.IsPublic, time.Now(), time.Now(), 10))
+
+	// 2. CreatePack
+	mock.ExpectExec(`INSERT INTO verse_packs`).
+		WithArgs(pgxmock.AnyArg(), pgxmock.AnyArg(), "New Title", "SRC", "", false, pgxmock.AnyArg(), pgxmock.AnyArg()).
+		WillReturnResult(pgxmock.NewResult("INSERT", 1))
+
+	// 3. GetOriginalVerses (Source)
+	var verseTitle *string = nil
+
+	// Match simple query: SELECT ... FROM memory_verses mv WHERE mv.verse_pack_id = $1 ORDER BY mv.created_at ASC
+	mock.ExpectQuery(`SELECT .* FROM memory_verses mv WHERE mv.verse_pack_id = \$1 ORDER BY mv.created_at ASC`).
+		WithArgs(packID).
+		WillReturnRows(pgxmock.NewRows([]string{"id", "verse_pack_id", "reference", "title", "version", "version_source", "tags", "created_at", "updated_at"}).
+			AddRow(uuid.New(), packID, "John 3:16", verseTitle, "KJV", "original", []byte(`["Love"]`), time.Now(), time.Now()))
+
+	// 4. CreateVerse (Clone) - Should use KJV from original
+	mock.ExpectExec(`INSERT INTO memory_verses`).
+		WithArgs(pgxmock.AnyArg(), pgxmock.AnyArg(), "John 3:16", "", "KJV", []byte(`["Love"]`), pgxmock.AnyArg(), pgxmock.AnyArg()).
+		WillReturnResult(pgxmock.NewResult("INSERT", 1))
+
+	newPack, err := service.ClonePack(context.Background(), packID, userID, "New Title", false)
 	assert.NoError(t, err)
 	assert.Equal(t, "New Title", newPack.Title)
 	assert.Equal(t, 1, newPack.VerseCount)

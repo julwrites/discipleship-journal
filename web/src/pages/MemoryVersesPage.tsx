@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
@@ -184,6 +185,7 @@ export function VersePackDetail() {
     // Clone Form
     const [isCloneOpen, setIsCloneOpen] = useState(false);
     const [cloneTitle, setCloneTitle] = useState("");
+    const [cloneUseUserDefault, setCloneUseUserDefault] = useState(true);
 
     const [userDefaultVersion, setUserDefaultVersion] = useState<string | null>(null);
 
@@ -317,7 +319,7 @@ export function VersePackDetail() {
     const handleClonePack = async () => {
         if (!id) return;
         try {
-            await clonePack(id, cloneTitle || undefined);
+            await clonePack(id, cloneTitle || undefined, cloneUseUserDefault);
             toast.success("Pack cloned to your library");
             setIsCloneOpen(false);
             navigate("/memory-verses"); // Or navigate to new pack?
@@ -398,14 +400,28 @@ export function VersePackDetail() {
                                     <DialogTitle>Save Pack</DialogTitle>
                                     <DialogDescription>Save a copy of this pack to your library.</DialogDescription>
                                 </DialogHeader>
-                                <div className="py-4">
-                                    <Label>New Title (Optional)</Label>
-                                    <Input
-                                        value={cloneTitle}
-                                        onChange={e => setCloneTitle(e.target.value)}
-                                        placeholder={pack.title}
-                                        className="mt-2"
-                                    />
+                                <div className="py-4 space-y-4">
+                                    <div>
+                                        <Label>New Title (Optional)</Label>
+                                        <Input
+                                            value={cloneTitle}
+                                            onChange={e => setCloneTitle(e.target.value)}
+                                            placeholder={pack.title}
+                                            className="mt-2"
+                                        />
+                                    </div>
+                                    {userDefaultVersion && (
+                                        <div className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id="use-default"
+                                                checked={cloneUseUserDefault}
+                                                onCheckedChange={(c) => setCloneUseUserDefault(!!c)}
+                                            />
+                                            <Label htmlFor="use-default" className="font-normal cursor-pointer">
+                                                Apply my default version ({userDefaultVersion}) to all verses
+                                            </Label>
+                                        </div>
+                                    )}
                                 </div>
                                 <DialogFooter>
                                     <Button onClick={handleClonePack}>Save</Button>

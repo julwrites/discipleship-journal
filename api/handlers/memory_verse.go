@@ -207,12 +207,19 @@ func (h *MemoryVerseHandler) ClonePack(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		Title string `json:"title"`
+		Title          string `json:"title"`
+		UseUserDefault *bool  `json:"use_user_default"`
 	}
 	// Ignore error if body is empty or malformed, default values will be used
 	_ = json.NewDecoder(r.Body).Decode(&req)
 
-	pack, err := h.service.ClonePack(r.Context(), packID, userID, req.Title)
+	// Default to true (preserve existing behavior)
+	useDefault := true
+	if req.UseUserDefault != nil {
+		useDefault = *req.UseUserDefault
+	}
+
+	pack, err := h.service.ClonePack(r.Context(), packID, userID, req.Title, useDefault)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

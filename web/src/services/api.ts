@@ -637,12 +637,12 @@ export async function createVerseInPack(packId: string, verse: Omit<MemoryVerse,
     return res.json();
 }
 
-export async function clonePack(id: string, title?: string) {
+export async function clonePack(id: string, title?: string, useUserDefault?: boolean) {
     const headers = await getHeaders();
     const res = await fetch(`${API_URL}/verse-packs/${id}/clone`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ title }),
+        body: JSON.stringify({ title, use_user_default: useUserDefault }),
     });
     if (!res.ok) throw new Error("Failed to clone pack");
     return res.json();
