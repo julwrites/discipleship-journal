@@ -100,8 +100,8 @@ func TestClonePack(t *testing.T) {
 	// Match: SELECT ... FROM memory_verses mv LEFT JOIN user_verse_preferences ... LEFT JOIN users ... WHERE mv.verse_pack_id = $1 ...
 	mock.ExpectQuery(`SELECT .* FROM memory_verses mv LEFT JOIN user_verse_preferences uvp .* LEFT JOIN users u .* WHERE mv.verse_pack_id = \$1 ORDER BY mv.created_at ASC`).
 		WithArgs(packID, userID).
-		WillReturnRows(pgxmock.NewRows([]string{"id", "verse_pack_id", "reference", "title", "effective_version", "tags", "created_at", "updated_at"}).
-			AddRow(uuid.New(), packID, "John 3:16", verseTitle, "ESV", []byte(`["Love"]`), time.Now(), time.Now()))
+		WillReturnRows(pgxmock.NewRows([]string{"id", "verse_pack_id", "reference", "title", "effective_version", "version_source", "tags", "created_at", "updated_at"}).
+			AddRow(uuid.New(), packID, "John 3:16", verseTitle, "ESV", "original", []byte(`["Love"]`), time.Now(), time.Now()))
 
 	// 4. CreateVerse (Clone)
 	mock.ExpectExec(`INSERT INTO memory_verses`).
@@ -134,8 +134,8 @@ func TestSearchVerses(t *testing.T) {
 	// SELECT ... FROM memory_verses mv JOIN verse_packs vp ... LEFT JOIN user_verse_preferences ... LEFT JOIN users ... WHERE ...
 	mock.ExpectQuery(`SELECT .* FROM memory_verses mv JOIN verse_packs vp .* LEFT JOIN user_verse_preferences uvp .* LEFT JOIN users u .* WHERE .*`).
 		WithArgs(userID, "%"+query+"%").
-		WillReturnRows(pgxmock.NewRows([]string{"id", "verse_pack_id", "reference", "title", "effective_version", "tags", "pack_title", "created_at", "updated_at"}).
-			AddRow(verseID, packID, "John 3:16", verseTitle, "ESV", []byte(`["Love"]`), packTitle, time.Now(), time.Now()))
+		WillReturnRows(pgxmock.NewRows([]string{"id", "verse_pack_id", "reference", "title", "effective_version", "version_source", "tags", "pack_title", "created_at", "updated_at"}).
+			AddRow(verseID, packID, "John 3:16", verseTitle, "ESV", "original", []byte(`["Love"]`), packTitle, time.Now(), time.Now()))
 
 	verses, err := service.SearchVerses(context.Background(), userID, query)
 	assert.NoError(t, err)
