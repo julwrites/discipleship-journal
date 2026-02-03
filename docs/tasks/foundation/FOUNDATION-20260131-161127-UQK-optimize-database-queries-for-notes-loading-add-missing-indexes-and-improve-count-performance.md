@@ -1,6 +1,6 @@
 ---
 id: FOUNDATION-20260131-161127-UQK
-status: review_requested
+status: completed
 title: Optimize database queries for notes loading: add missing indexes and improve COUNT performance
 priority: medium
 created: 2026-01-31 16:11:27

@@ -117,7 +117,7 @@ func (h *MemoryVerseHandler) GetPackDetails(w http.ResponseWriter, r *http.Reque
 	}
 
 	// 2. Get Verses
-	verses, err := h.service.GetVerses(r.Context(), packID)
+	verses, err := h.service.GetVerses(r.Context(), packID, userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
