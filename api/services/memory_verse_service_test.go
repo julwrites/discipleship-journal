@@ -9,7 +9,7 @@ import (
 
 	"discipleship_journal_api/models"
 	"github.com/google/uuid"
-	"github.com/pashagolub/pgxmock/v3"
+	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 )
 

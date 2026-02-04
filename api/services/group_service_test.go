@@ -8,6 +8,7 @@ import (
 
 	"discipleship_journal_api/models"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
@@ -28,7 +29,8 @@ func TestCreateGroup(t *testing.T) {
 	service := NewGroupService(mock, mockNotif)
 
 	ctx := context.Background()
-	userID := "user-1"
+	userID := uuid.New().String()
+	groupID := uuid.New().String()
 	name := "Test Group"
 	desc := "A test group"
 	groupType := "group"
@@ -37,10 +39,10 @@ func TestCreateGroup(t *testing.T) {
 		mock.ExpectBegin()
 		mock.ExpectQuery("INSERT INTO groups").
 			WithArgs(name, &desc, userID, groupType).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow("group-1"))
+			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(groupID))
 
 		mock.ExpectExec("INSERT INTO group_members").
-			WithArgs("group-1", userID).
+			WithArgs(groupID, userID).
 			WillReturnResult(pgxmock.NewResult("INSERT", 1))
 
 		mock.ExpectCommit()
@@ -49,7 +51,7 @@ func TestCreateGroup(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.NotNil(t, group)
-		assert.Equal(t, "group-1", group.ID)
+		assert.Equal(t, groupID, group.ID)
 		assert.Equal(t, name, group.Name)
 		assert.Equal(t, &desc, group.Description)
 		assert.Equal(t, userID, group.CreatedBy)
@@ -73,10 +75,10 @@ func TestCreateGroup(t *testing.T) {
 		mock.ExpectBegin()
 		mock.ExpectQuery("INSERT INTO groups").
 			WithArgs(name, &desc, userID, groupType).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow("group-1"))
+			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(groupID))
 
 		mock.ExpectExec("INSERT INTO group_members").
-			WithArgs("group-1", userID).
+			WithArgs(groupID, userID).
 			WillReturnError(errors.New("db error member"))
 		mock.ExpectRollback()
 
@@ -102,22 +104,25 @@ func TestListUserGroups(t *testing.T) {
 	service := NewGroupService(mock, mockNotif)
 
 	ctx := context.Background()
-	userID := "user-1"
+	userID := uuid.New().String()
+	group1ID := uuid.New().String()
+	group2ID := uuid.New().String()
+	user2ID := uuid.New().String()
 
 	t.Run("success", func(t *testing.T) {
 		mock.ExpectQuery("SELECT g.id, g.name, g.description, g.created_by, g.type, gm.role").
 			WithArgs(userID).
 			WillReturnRows(pgxmock.NewRows([]string{"id", "name", "description", "created_by", "type", "role"}).
-				AddRow("group-1", "Group 1", strPtr("Desc 1"), "user-2", strPtr("group"), "member").
-				AddRow("group-2", "Group 2", nil, "user-1", strPtr("group"), "admin"))
+				AddRow(group1ID, "Group 1", strPtr("Desc 1"), user2ID, strPtr("group"), "member").
+				AddRow(group2ID, "Group 2", nil, userID, strPtr("group"), "admin"))
 
 		groups, err := service.ListUserGroups(ctx, userID)
 
 		assert.NoError(t, err)
 		if assert.Len(t, groups, 2) {
-			assert.Equal(t, "group-1", groups[0].ID)
+			assert.Equal(t, group1ID, groups[0].ID)
 			assert.Equal(t, "member", groups[0].Role)
-			assert.Equal(t, "group-2", groups[1].ID)
+			assert.Equal(t, group2ID, groups[1].ID)
 			assert.Equal(t, "admin", groups[1].Role)
 			assert.Nil(t, groups[1].Description)
 		}
@@ -150,20 +155,22 @@ func TestSearchGroups(t *testing.T) {
 	service := NewGroupService(mock, mockNotif)
 
 	ctx := context.Background()
-	userID := "user-1"
+	userID := uuid.New().String()
+	groupID := uuid.New().String()
+	user2ID := uuid.New().String()
 	query := "test"
 
 	t.Run("success", func(t *testing.T) {
 		mock.ExpectQuery("SELECT g.id, g.name, g.description, g.created_by, g.type").
 			WithArgs("%"+query+"%", userID).
 			WillReturnRows(pgxmock.NewRows([]string{"id", "name", "description", "created_by", "type", "role"}).
-				AddRow("group-1", "Test Group", strPtr("Desc"), "user-2", strPtr("group"), ""))
+				AddRow(groupID, "Test Group", strPtr("Desc"), user2ID, strPtr("group"), ""))
 
 		groups, err := service.SearchGroups(ctx, query, userID)
 
 		assert.NoError(t, err)
 		if assert.Len(t, groups, 1) {
-			assert.Equal(t, "group-1", groups[0].ID)
+			assert.Equal(t, groupID, groups[0].ID)
 		}
 	})
 
@@ -194,8 +201,8 @@ func TestJoinGroup(t *testing.T) {
 	service := NewGroupService(mock, mockNotif)
 
 	ctx := context.Background()
-	userID := "user-1"
-	groupID := "group-1"
+	userID := uuid.New().String()
+	groupID := uuid.New().String()
 
 	t.Run("success", func(t *testing.T) {
 		mock.ExpectQuery("SELECT EXISTS").
@@ -232,8 +239,8 @@ func TestLeaveGroup(t *testing.T) {
 	service := NewGroupService(mock, mockNotif)
 
 	ctx := context.Background()
-	userID := "user-1"
-	groupID := "group-1"
+	userID := uuid.New().String()
+	groupID := uuid.New().String()
 
 	t.Run("success", func(t *testing.T) {
 		mock.ExpectExec("DELETE FROM group_members").
@@ -266,8 +273,8 @@ func TestGetGroupMembers(t *testing.T) {
 	service := NewGroupService(mock, mockNotif)
 
 	ctx := context.Background()
-	userID := "user-1"
-	groupID := "group-1"
+	userID := uuid.New().String()
+	groupID := uuid.New().String()
 	now := time.Now()
 
 	t.Run("success", func(t *testing.T) {
@@ -309,9 +316,9 @@ func TestAddGroupMember(t *testing.T) {
 	service := NewGroupService(mock, mockNotif)
 
 	ctx := context.Background()
-	adminID := "admin-1"
-	targetID := "user-2"
-	groupID := "group-1"
+	adminID := uuid.New().String()
+	targetID := uuid.New().String()
+	groupID := uuid.New().String()
 
 	t.Run("success", func(t *testing.T) {
 		mock.ExpectQuery("SELECT role FROM group_members").
@@ -369,9 +376,9 @@ func TestRemoveGroupMember(t *testing.T) {
 	service := NewGroupService(mock, mockNotif)
 
 	ctx := context.Background()
-	adminID := "admin-1"
-	targetID := "user-2"
-	groupID := "group-1"
+	adminID := uuid.New().String()
+	targetID := uuid.New().String()
+	groupID := uuid.New().String()
 
 	t.Run("success", func(t *testing.T) {
 		mock.ExpectQuery("SELECT role FROM group_members").
@@ -408,8 +415,10 @@ func TestGetOrCreateDirectGroup(t *testing.T) {
 	service := NewGroupService(mock, mockNotif)
 
 	ctx := context.Background()
-	userID := "user-1"
-	partnerID := "user-2"
+	userID := uuid.New().String()
+	partnerID := uuid.New().String()
+	groupID := uuid.New().String()
+	existingGroupID := uuid.New().String()
 
 	t.Run("success new group", func(t *testing.T) {
 		// 1. Check connection
@@ -435,13 +444,13 @@ func TestGetOrCreateDirectGroup(t *testing.T) {
 		mock.ExpectBegin()
 		mock.ExpectQuery("INSERT INTO groups").
 			WithArgs("Direct: User 1 & User 2", userID).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow("group-direct"))
+			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(groupID))
 
 		mock.ExpectExec("INSERT INTO group_members").
-			WithArgs("group-direct", userID).
+			WithArgs(groupID, userID).
 			WillReturnResult(pgxmock.NewResult("INSERT", 1))
 		mock.ExpectExec("INSERT INTO group_members").
-			WithArgs("group-direct", partnerID).
+			WithArgs(groupID, partnerID).
 			WillReturnResult(pgxmock.NewResult("INSERT", 1))
 
 		mock.ExpectCommit()
@@ -449,7 +458,7 @@ func TestGetOrCreateDirectGroup(t *testing.T) {
 		group, isNew, err := service.GetOrCreateDirectGroup(ctx, userID, partnerID)
 		assert.NoError(t, err)
 		assert.True(t, isNew)
-		assert.Equal(t, "group-direct", group.ID)
+		assert.Equal(t, groupID, group.ID)
 	})
 
 	t.Run("success existing group", func(t *testing.T) {
@@ -461,11 +470,11 @@ func TestGetOrCreateDirectGroup(t *testing.T) {
 		// 2. Check existing
 		mock.ExpectQuery("SELECT g.id FROM groups g").
 			WithArgs(userID, partnerID).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow("group-existing"))
+			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(existingGroupID))
 
 		group, isNew, err := service.GetOrCreateDirectGroup(ctx, userID, partnerID)
 		assert.NoError(t, err)
 		assert.False(t, isNew)
-		assert.Equal(t, "group-existing", group.ID)
+		assert.Equal(t, existingGroupID, group.ID)
 	})
 }
