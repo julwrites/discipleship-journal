@@ -34,7 +34,21 @@ jobs:
         run: go test -v -coverprofile=coverage.out ./...
 
       - name: Check coverage
-        run: go tool cover -func=coverage.out
+        if: always()
+        run: |
+          if [ -f coverage.out ]; then
+            go tool cover -func=coverage.out > coverage.txt
+            ../scripts/check_backend_coverage.sh coverage.txt 40
+          else
+            echo "coverage.out not found, skipping coverage check"
+          fi
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-coverage
+          path: api/coverage.txt
 
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v4
@@ -66,6 +80,13 @@ jobs:
 
       - name: Test
         run: npm run test:coverage
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-coverage
+          path: web/coverage/coverage-summary.json
 
       - name: Build
         run: npm run build
@@ -109,3 +130,93 @@ jobs:
           name: playwright-report
           path: web/playwright-report/
           retention-days: 30
+
+  coverage-report:
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    if: always() && github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Download backend coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-coverage
+          path: coverage/backend
+
+      - name: Download frontend coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-coverage
+          path: coverage/frontend
+
+      - name: Post coverage comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            let backendCoverage = 'N/A';
+            let frontendStats = { statements: 'N/A', branches: 'N/A', functions: 'N/A', lines: 'N/A' };
+
+            try {
+              const backendOutput = fs.readFileSync('coverage/backend/coverage.txt', 'utf8');
+              const totalLine = backendOutput.split('\n').find(line => line.includes('total:'));
+              if (totalLine) {
+                const parts = totalLine.trim().split(/\s+/);
+                backendCoverage = parts[parts.length - 1];
+              }
+            } catch (e) {
+              console.log('Error reading backend coverage:', e);
+            }
+
+            try {
+              const frontendOutput = JSON.parse(fs.readFileSync('coverage/frontend/coverage-summary.json', 'utf8'));
+              const total = frontendOutput.total;
+              frontendStats = {
+                statements: total.statements.pct + '%',
+                branches: total.branches.pct + '%',
+                functions: total.functions.pct + '%',
+                lines: total.lines.pct + '%'
+              };
+            } catch (e) {
+               console.log('Error reading frontend coverage:', e);
+            }
+
+            const header = '## Code Coverage Report';
+            const body = `${header}
+
+            | Component | Metric | Percentage |
+            |---|---|---|
+            | **Backend** | Total | ${backendCoverage} |
+            | **Frontend** | Statements | ${frontendStats.statements} |
+            | **Frontend** | Branches | ${frontendStats.branches} |
+            | **Frontend** | Functions | ${frontendStats.functions} |
+            | **Frontend** | Lines | ${frontendStats.lines} |
+            `;
+
+            const { owner, repo, number } = context.issue;
+
+            const comments = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number: number,
+            });
+
+            const botComment = comments.data.find(c => c.body.startsWith(header) && c.user.type === 'Bot');
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: number,
+                body: body
+              });
+            }
