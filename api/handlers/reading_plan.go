@@ -42,6 +42,42 @@ func (h *ReadingPlanHandler) GetAllPlans(w http.ResponseWriter, r *http.Request)
 	}
 }
 
+// Unsubscribe godoc
+// @Summary      Unsubscribe from a reading plan
+// @Description  Unsubscribe the current user from a reading plan, deleting their progress
+// @Tags         reading-plans
+// @Accept       json
+// @Produce      json
+// @Param        id   path      string  true  "Plan ID"
+// @Success      204  {object}  nil
+// @Router       /api/reading-plans/{id}/subscribe [delete]
+func (h *ReadingPlanHandler) Unsubscribe(w http.ResponseWriter, r *http.Request) {
+	userID, err := h.getUserID(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	idStr := chi.URLParam(r, "id")
+	planID, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(w, "Invalid plan ID", http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.Unsubscribe(r.Context(), userID, planID)
+	if err != nil {
+		if err == models.ErrNotFound {
+			http.Error(w, "Subscription not found or not active", http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // UnmarkDayComplete godoc
 // @Summary      Unmark a day as complete
 // @Description  Unmark (undo completion) a specific day in a reading plan

@@ -224,8 +224,60 @@ func TestMarkDayComplete(t *testing.T) {
 		WithArgs(userPlanID, dayNumber, pgxmock.AnyArg()).
 		WillReturnResult(pgxmock.NewResult("INSERT", 1))
 
+	// Expect check completion queries
+	// 1. Get total days
+	mock.ExpectQuery(`SELECT days FROM reading_plans`).
+		WithArgs(planID).
+		WillReturnRows(mock.NewRows([]string{"days"}).AddRow(30))
+
+	// 2. Get completed count
+	mock.ExpectQuery(`SELECT COUNT\(\*\) FROM user_reading_plan_progress`).
+		WithArgs(userPlanID).
+		WillReturnRows(mock.NewRows([]string{"count"}).AddRow(1)) // 1 completed, total 30 -> not complete
+
 	err = service.MarkDayComplete(context.Background(), userID, planID, dayNumber)
 	assert.NoError(t, err)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestUnsubscribe(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	assert.NoError(t, err)
+	defer mock.Close()
+
+	service := NewReadingPlanService(mock)
+	userID := uuid.New()
+	planID := uuid.New()
+
+	// Mock Delete
+	mock.ExpectExec(`DELETE FROM user_reading_plans`).
+		WithArgs(userID, planID).
+		WillReturnResult(pgxmock.NewResult("DELETE", 1))
+
+	err = service.Unsubscribe(context.Background(), userID, planID)
+	assert.NoError(t, err)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestUnsubscribe_NotFound(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	assert.NoError(t, err)
+	defer mock.Close()
+
+	service := NewReadingPlanService(mock)
+	userID := uuid.New()
+	planID := uuid.New()
+
+	// Mock Delete - No rows affected
+	mock.ExpectExec(`DELETE FROM user_reading_plans`).
+		WithArgs(userID, planID).
+		WillReturnResult(pgxmock.NewResult("DELETE", 0))
+
+	err = service.Unsubscribe(context.Background(), userID, planID)
+	assert.Error(t, err)
+	assert.Equal(t, models.ErrNotFound, err)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

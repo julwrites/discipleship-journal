@@ -479,6 +479,17 @@ export async function sendConnectionRequest(receiverEmailOrId: string, isId: boo
     return res.json();
 }
 
+export async function unsubscribeFromPlan(id: string) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/reading-plans/${id}/subscribe`, {
+        method: "DELETE",
+        headers,
+    });
+    if (!res.ok) {
+        throw new Error("Failed to unsubscribe from plan");
+    }
+}
+
 export async function getOrCreateDirectGroup(partnerId: string) {
     const headers = await getHeaders();
     const res = await fetch(`${API_URL}/groups/direct`, {

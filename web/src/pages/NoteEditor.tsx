@@ -184,11 +184,24 @@ export default function NoteEditor() {
                 if (state.passageRef) {
                     if (!fetchingPromiseRef.current) {
                         const version = state.passageVersion || "ESV";
-                        fetchingPromiseRef.current = getBiblePassage(state.passageRef, version).then(res => {
-                            const text = res.verse || res.text || res.content || "";
-                            const html = `<blockquote><p><strong>${state.passageRef} (${version})</strong></p>${text}</blockquote><p></p>`;
-                            setContent(prev => prev + html);
-                        }).catch(console.error);
+                        const refs = state.passageRef.split(';').map((r: string) => r.trim()).filter((r: string) => r.length > 0);
+
+                        fetchingPromiseRef.current = Promise.all(refs.map((ref: string) =>
+                            getBiblePassage(ref, version).then(res => ({ ref, res })).catch(err => ({ ref, err }))
+                        )).then((results) => {
+                            let combinedHtml = "";
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            results.forEach(({ ref, res, err }: any) => {
+                                if (err) {
+                                    console.error(`Failed to fetch ${ref}`, err);
+                                    combinedHtml += `<blockquote><p><strong>${ref} (${version})</strong></p>Failed to load text.</blockquote><p></p>`;
+                                } else {
+                                    const text = res.verse || res.text || res.content || "";
+                                    combinedHtml += `<blockquote><p><strong>${ref} (${version})</strong></p>${text}</blockquote><p></p>`;
+                                }
+                            });
+                            setContent(prev => prev + combinedHtml);
+                        });
                     }
                     promise = fetchingPromiseRef.current;
                 }
