@@ -77,6 +77,11 @@ func (m *MockReadingPlanService) GetPlanProgress(ctx context.Context, userID, pl
 	return args.Get(0).([]int), args.Error(1)
 }
 
+func (m *MockReadingPlanService) Unsubscribe(ctx context.Context, userID, planID uuid.UUID) error {
+	args := m.Called(ctx, userID, planID)
+	return args.Error(0)
+}
+
 func TestGetAllPlans_Handler(t *testing.T) {
 	mockService := new(MockReadingPlanService)
 	handler := NewReadingPlanHandler(mockService)
@@ -142,6 +147,31 @@ func TestSubscribe_Handler(t *testing.T) {
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusCreated, w.Code)
+	mockService.AssertExpectations(t)
+}
+
+func TestUnsubscribe_Handler(t *testing.T) {
+	mockService := new(MockReadingPlanService)
+	handler := NewReadingPlanHandler(mockService)
+
+	planID := uuid.New()
+	userID := uuid.New()
+
+	mockService.On("Unsubscribe", mock.Anything, userID, planID).Return(nil)
+
+	r := chi.NewRouter()
+	r.Delete("/api/reading-plans/{id}/subscribe", handler.Unsubscribe)
+
+	req := httptest.NewRequest("DELETE", "/api/reading-plans/"+planID.String()+"/subscribe", nil)
+	// Inject user ID for testing
+	ctx := context.WithValue(req.Context(), TestUserKey, userID)
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
+
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusNoContent, w.Code)
 	mockService.AssertExpectations(t)
 }
 
