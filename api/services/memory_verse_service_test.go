@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"regexp"
 	"testing"
 	"time"
@@ -188,4 +189,105 @@ func TestSearchVerses(t *testing.T) {
 	assert.Len(t, verses, 1)
 	assert.Equal(t, "John 3:16", verses[0].Reference)
 	assert.Equal(t, packTitle, verses[0].PackTitle)
+}
+
+func TestDeletePack(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
+
+	service := NewMemoryVerseService(mock)
+	userID := uuid.New()
+	packID := uuid.New()
+
+	t.Run("success", func(t *testing.T) {
+		mock.ExpectExec("DELETE FROM verse_packs").
+			WithArgs(packID, userID).
+			WillReturnResult(pgxmock.NewResult("DELETE", 1))
+
+		err := service.DeletePack(context.Background(), packID, userID)
+		assert.NoError(t, err)
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		mock.ExpectExec("DELETE FROM verse_packs").
+			WithArgs(packID, userID).
+			WillReturnResult(pgxmock.NewResult("DELETE", 0))
+
+		err := service.DeletePack(context.Background(), packID, userID)
+		assert.Error(t, err)
+		assert.Equal(t, models.ErrNotFound, err)
+	})
+}
+
+func TestDeleteVerse(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
+
+	service := NewMemoryVerseService(mock)
+	userID := uuid.New()
+	verseID := uuid.New()
+
+	t.Run("success", func(t *testing.T) {
+		mock.ExpectExec("DELETE FROM memory_verses mv USING verse_packs vp").
+			WithArgs(verseID, userID).
+			WillReturnResult(pgxmock.NewResult("DELETE", 1))
+
+		err := service.DeleteVerse(context.Background(), verseID, userID)
+		assert.NoError(t, err)
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		mock.ExpectExec("DELETE FROM memory_verses mv USING verse_packs vp").
+			WithArgs(verseID, userID).
+			WillReturnResult(pgxmock.NewResult("DELETE", 0))
+
+		err := service.DeleteVerse(context.Background(), verseID, userID)
+		assert.Error(t, err)
+		assert.Equal(t, models.ErrNotFound, err)
+	})
+}
+
+func TestUpdateVerse(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
+
+	service := NewMemoryVerseService(mock)
+	userID := uuid.New()
+	verseID := uuid.New()
+	verse := &models.MemoryVerse{
+		ID:        verseID,
+		Reference: "John 3:16",
+		Title:     "The Gospel",
+		Version:   "ESV",
+		Tags:      []string{"Love"},
+	}
+	tagsJSON, _ := json.Marshal(verse.Tags)
+
+	t.Run("success", func(t *testing.T) {
+		mock.ExpectExec("UPDATE memory_verses mv SET").
+			WithArgs(verseID, verse.Reference, verse.Title, verse.Version, tagsJSON, userID).
+			WillReturnResult(pgxmock.NewResult("UPDATE", 1))
+
+		err := service.UpdateVerse(context.Background(), verse, userID)
+		assert.NoError(t, err)
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		mock.ExpectExec("UPDATE memory_verses mv SET").
+			WithArgs(verseID, verse.Reference, verse.Title, verse.Version, tagsJSON, userID).
+			WillReturnResult(pgxmock.NewResult("UPDATE", 0))
+
+		err := service.UpdateVerse(context.Background(), verse, userID)
+		assert.Error(t, err)
+		assert.Equal(t, models.ErrNotFound, err)
+	})
 }

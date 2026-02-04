@@ -377,3 +377,84 @@ func TestGetNotes(t *testing.T) {
 		t.Errorf("there were unfulfilled expectations: %s", err)
 	}
 }
+
+func TestCreateTag(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mock.Close()
+
+	service := NewNoteService(mock)
+	ctx := context.Background()
+	userID := "user-123"
+	tagName := "tag1"
+	now := time.Now()
+
+	t.Run("success", func(t *testing.T) {
+		mock.ExpectQuery("INSERT INTO tags").
+			WithArgs(userID, tagName).
+			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "name", "created_at"}).
+				AddRow("tag-1", userID, tagName, now))
+
+		tag, err := service.CreateTag(ctx, userID, tagName)
+		assert.NoError(t, err)
+		assert.Equal(t, tagName, tag.Name)
+	})
+}
+
+func TestGetUserTags(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mock.Close()
+
+	service := NewNoteService(mock)
+	ctx := context.Background()
+	userID := "user-123"
+	now := time.Now()
+
+	t.Run("success", func(t *testing.T) {
+		mock.ExpectQuery("SELECT id, user_id, name, created_at FROM tags").
+			WithArgs(userID).
+			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "name", "created_at"}).
+				AddRow("tag-1", userID, "tag1", now))
+
+		tags, err := service.GetUserTags(ctx, userID)
+		assert.NoError(t, err)
+		assert.Len(t, tags, 1)
+	})
+}
+
+func TestDeleteTag(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mock.Close()
+
+	service := NewNoteService(mock)
+	ctx := context.Background()
+	userID := "user-123"
+	tagID := "tag-1"
+
+	t.Run("success", func(t *testing.T) {
+		mock.ExpectExec("DELETE FROM tags").
+			WithArgs(tagID, userID).
+			WillReturnResult(pgxmock.NewResult("DELETE", 1))
+
+		err := service.DeleteTag(ctx, userID, tagID)
+		assert.NoError(t, err)
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		mock.ExpectExec("DELETE FROM tags").
+			WithArgs(tagID, userID).
+			WillReturnResult(pgxmock.NewResult("DELETE", 0))
+
+		err := service.DeleteTag(ctx, userID, tagID)
+		assert.Error(t, err)
+		assert.Equal(t, models.ErrNotFound, err)
+	})
+}
