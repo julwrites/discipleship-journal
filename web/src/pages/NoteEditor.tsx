@@ -133,7 +133,14 @@ export default function NoteEditor() {
         getTags().then(tags => setSuggestions(tags.map((t: Tag) => t.name))).catch(console.error);
 
         if (id && id !== "new") {
-            setLoading(true);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const state = location.state as any;
+            // Optimization: If we just created the note (auto-save), don't set loading to true
+            // to avoid unmounting the editor and losing cursor focus/scroll.
+            if (!state?.fromCreate) {
+                setLoading(true);
+            }
+
             getNote(id).then(note => {
                 setTitle(note.title);
                 setInitialTitle(note.title);
@@ -209,7 +216,8 @@ export default function NoteEditor() {
             if (id === "new") {
                 const res = await createNote(title, content, tags);
                 if (shouldNavigate) {
-                    navigate(`/notes/${res.id}`, { replace: true });
+                    // Pass fromCreate state to prevent reloading/flashing
+                    navigate(`/notes/${res.id}`, { replace: true, state: { ...location.state, fromCreate: true } });
                 }
                 setLastSaved(new Date().toLocaleTimeString());
                 setInitialTitle(title);
@@ -243,6 +251,18 @@ export default function NoteEditor() {
     const handleSave = useCallback(() => {
         saveNote(true);
     }, [saveNote]);
+
+    // Auto-save effect
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            // Auto-save if dirty, not currently saving, and we have a title
+            if (isDirty && !saving && title.trim()) {
+                saveNote(true);
+            }
+        }, 2000);
+
+        return () => clearTimeout(timeoutId);
+    }, [isDirty, saving, title, saveNote]);
 
     // Handle Ctrl+S / Cmd+S
     useEffect(() => {
