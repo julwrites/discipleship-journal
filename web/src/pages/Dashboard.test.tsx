@@ -51,6 +51,14 @@ vi.mock('@/lib/firebase', () => ({
     }
 }));
 
+// Mock useAuth
+vi.mock('@/hooks/useAuth', () => ({
+    useAuth: vi.fn().mockReturnValue({
+        user: { uid: 'test-user-id', email: 'test@example.com' },
+        loading: false
+    })
+}));
+
 describe('Dashboard', () => {
     beforeEach(() => {
         vi.clearAllMocks();

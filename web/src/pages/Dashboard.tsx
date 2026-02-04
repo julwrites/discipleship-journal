@@ -1,9 +1,11 @@
 import { useEffect, useState, useRef } from "react";
 import { auth } from "@/lib/firebase";
+import { useAuth } from "@/hooks/useAuth";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchNotes, syncUser, NoteFilter, deleteNote, getGroups, shareNote, getNote, askAIStream, getConnections, getOrCreateDirectGroup, Connection, getTags, Tag } from "@/services/api";
+import { getCachedNotes, setCachedNotes } from "@/services/cache";
 import { Link } from "react-router-dom";
 import { Settings, Users, BookOpen, Filter, CalendarIcon, User as UserIcon, Book, LogOut, Tag as TagIcon } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -27,12 +29,14 @@ import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Dashboard() {
+  const { user } = useAuth();
   const [notes, setNotes] = useState<Note[]>([]);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(true);
+  const isInitialLoad = useRef(true);
   const prevSearchRef = useRef(debouncedSearch);
 
   // Filter state
@@ -107,7 +111,21 @@ export default function Dashboard() {
       }
 
       const load = async () => {
-          setLoading(true);
+          const isDefaultView = page === 1 && !debouncedSearch && !startDate && !endDate && sortBy === "updated_at" && (!tagFilter || tagFilter === "_all");
+
+          if (isInitialLoad.current && isDefaultView && user?.uid) {
+              const cached = getCachedNotes(user.uid);
+              if (cached) {
+                  setNotes(cached.notes);
+                  setHasMore(cached.hasMore);
+                  setLoading(false); // Show cached content immediately
+              } else {
+                  setLoading(true);
+              }
+          } else {
+              setLoading(true);
+          }
+
           try {
               const filter: NoteFilter = {
                   search: debouncedSearch,
@@ -120,32 +138,37 @@ export default function Dashboard() {
               const response = await fetchNotes(page, 20, filter);
               if (!ignore) {
                   const newNotes = response.data || response;
+                  let newHasMore = false;
+
+                  if (response.meta) {
+                      newHasMore = page < response.meta.total_pages;
+                  } else {
+                      newHasMore = newNotes.length >= 20;
+                  }
 
                   if (page === 1) {
                       setNotes(newNotes);
+                      if (isDefaultView && user?.uid) {
+                          setCachedNotes(user.uid, newNotes, newHasMore);
+                      }
                   } else {
                       setNotes(prev => [...prev, ...newNotes]);
                   }
 
-                  if (response.meta) {
-                      setHasMore(page < response.meta.total_pages);
-                  } else {
-                      if (newNotes.length < 20) {
-                          setHasMore(false);
-                      } else {
-                          setHasMore(true);
-                      }
-                  }
+                  setHasMore(newHasMore);
               }
           } catch (error) {
               if (!ignore) console.error(error);
           } finally {
-              if (!ignore) setLoading(false);
+              if (!ignore) {
+                  setLoading(false);
+                  isInitialLoad.current = false;
+              }
           }
       };
       load();
       return () => { ignore = true; };
-  }, [page, debouncedSearch, startDate, endDate, sortBy, sortOrder, tagFilter]);
+  }, [page, debouncedSearch, startDate, endDate, sortBy, sortOrder, tagFilter, user?.uid]);
 
   const handleSearch = (val: string) => {
       setSearch(val);
