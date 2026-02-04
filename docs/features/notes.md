@@ -16,6 +16,7 @@ The Journaling feature allows users to create, edit, and manage rich text notes.
 
 ### Notes
 - `GET /api/notes`: Fetch notes. Supports pagination, search (`q`), filtering (`tag`, `startDate`, `endDate`), and sorting (`sortBy`, `sortOrder`).
+  - Search (`q`) performs a partial match on title and content. Title searches are optimized using a trigram index (`pg_trgm`).
 - `POST /api/notes`: Create a new note. Payload: `{ title, content (JSON), tags: [] }`.
 - `GET /api/notes/{id}`: Fetch a specific note by ID.
 - `PUT /api/notes/{id}`: Update a note. Payload: `{ title, content (JSON), tags: [] }`.
@@ -52,7 +53,7 @@ The Journaling feature allows users to create, edit, and manage rich text notes.
 - **NotesPage**: Displays a list of notes with a search bar and filter controls.
 - **NoteEditor**: The core component for creating and editing notes.
   - **Rich Text**: Uses [TipTap](https://tiptap.dev/) for rich text editing (Markdown support, bold, italic, lists).
-  - **Images**: Supports adding images via URL.
+  - **Images**: Supports adding images via URL, including support for Alt Text to improve accessibility.
   - **Tags**: Allows selecting existing tags or creating new ones on the fly.
   - **Bible Context**: Can be pre-populated with a Bible reference (e.g., when navigating from a Reading Plan).
 - **TagsPage**: A dedicated page (`/tags`) for managing tag definitions (create, delete).
