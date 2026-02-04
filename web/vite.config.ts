@@ -63,7 +63,13 @@ export default defineConfig({
     exclude: ['**/e2e/**', '**/node_modules/**', '**/verification/**'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      reporter: ['text', 'json', 'html', 'json-summary'],
+      thresholds: {
+        statements: 50,
+        branches: 40,
+        functions: 40,
+        lines: 50,
+      },
     },
   },
 })
