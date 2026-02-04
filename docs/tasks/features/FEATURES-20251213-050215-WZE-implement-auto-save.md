@@ -26,6 +26,6 @@ Currently, users must manually click "Save" in the Note Editor. If they forget o
 5.  Consider local storage backup for offline support (optional for MVP but good practice).
 
 ## Acceptance Criteria
-- [ ] Typing in the editor triggers a save after a pause.
-- [ ] UI shows "Saving..." and then "Saved".
-- [ ] Navigating away and returning preserves the latest changes (via the server fetch).
+- [x] Typing in the editor triggers a save after a pause.
+- [x] UI shows "Saving..." and then "Saved".
+- [x] Navigating away and returning preserves the latest changes (via the server fetch).

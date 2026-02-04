@@ -123,7 +123,7 @@ describe('NoteEditor', () => {
         return render(<RouterProvider router={router} />);
     };
 
-    it('does NOT auto-save changes', async () => {
+    it('auto-saves changes', async () => {
         const mockGetNote = vi.mocked(api.getNote).mockResolvedValue({
             id: '123',
             title: 'Test Note',
@@ -147,7 +147,7 @@ describe('NoteEditor', () => {
 
         vi.useRealTimers();
 
-        expect(mockUpdateNote).not.toHaveBeenCalled();
+        expect(mockUpdateNote).toHaveBeenCalledWith('123', 'Test Note', 'Updated content', []);
     });
 
     it('saves manually when save button clicked', async () => {
