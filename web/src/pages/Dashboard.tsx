@@ -32,7 +32,7 @@ export default function Dashboard() {
   const debouncedSearch = useDebounce(search, 500);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const prevSearchRef = useRef(debouncedSearch);
 
   // Filter state

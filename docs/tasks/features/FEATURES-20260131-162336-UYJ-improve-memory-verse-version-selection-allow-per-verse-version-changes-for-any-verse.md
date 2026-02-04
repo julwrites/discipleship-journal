@@ -1,6 +1,6 @@
 ---
 id: FEATURES-20260131-162336-UYJ
-status: pending
+status: completed
 title: Improve memory verse version selection: allow per-verse version changes for any verse
 priority: medium
 created: 2026-01-31 16:23:36
