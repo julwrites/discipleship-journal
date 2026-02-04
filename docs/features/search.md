@@ -14,7 +14,7 @@ The Advanced Search feature allows users to filter and sort their journal notes 
 
 ### Notes Search
 - `GET /api/notes`: Fetch notes with optional filters.
-  - `q`: Search query string (partial match on title or content).
+  - `q`: Search query string (partial match on title or content). Title searches are optimized using a trigram index (`pg_trgm`).
   - `tag`: Filter by tag name (exact match).
   - `startDate`: Filter notes created or updated after this date (RFC3339).
   - `endDate`: Filter notes created or updated before this date (RFC3339).
