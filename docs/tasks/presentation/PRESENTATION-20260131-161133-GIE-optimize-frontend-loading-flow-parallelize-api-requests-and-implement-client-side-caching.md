@@ -1,6 +1,6 @@
 ---
 id: PRESENTATION-20260131-161133-GIE
-status: pending
+status: review_requested
 title: Optimize frontend loading flow: parallelize API requests and implement client-side caching
 priority: medium
 created: 2026-01-31 16:11:33
@@ -56,15 +56,21 @@ Optimize the frontend loading sequence to reduce perceived latency. Parallelize 
    - Measure performance improvement with caching
 
 ### Acceptance Criteria
-- [ ] API requests parallelized where possible (reducing total load time)
-- [ ] Client-side caching implemented for notes data
-- [ ] Stale-while-revalidate pattern: show cached data immediately
-- [ ] Cache invalidation on note modifications
-- [ ] No regression in data consistency (always show latest data eventually)
+- [x] API requests parallelized where possible (reducing total load time)
+- [x] Client-side caching implemented for notes data
+- [x] Stale-while-revalidate pattern: show cached data immediately
+- [x] Cache invalidation on note modifications (handled via SWR updates)
+- [x] No regression in data consistency (always show latest data eventually)
 
 ## Implementation Status
 ### Completed Work
 - ✅ Initial analysis of API call sequence completed
+- ✅ Implemented client-side caching in `web/src/services/cache.ts` using `localStorage`
+- ✅ Scoped cache keys to `userId` to ensure privacy
+- ✅ Updated `Dashboard.tsx` to use `stale-while-revalidate` pattern:
+    - Loads cached notes immediately if available (initial load, default view)
+    - Fetches fresh notes in background and updates UI/cache
+- ✅ Parallelized `syncUser` and `fetchNotes` (via concurrent effects)
 
 ### Blockers
 None yet.
