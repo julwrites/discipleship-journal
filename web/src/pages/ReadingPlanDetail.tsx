@@ -2,10 +2,20 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { getReadingPlan, markPlanDayComplete, unmarkPlanDayComplete, getPlanProgress, syncUser } from "@/services/api";
+import { getReadingPlan, markPlanDayComplete, unmarkPlanDayComplete, getPlanProgress, syncUser, unsubscribeFromPlan } from "@/services/api";
 import { toast } from "sonner";
-import { ArrowLeft, CheckCircle, Calendar, StickyNote } from "lucide-react";
+import { ArrowLeft, CheckCircle, Calendar, StickyNote, XCircle } from "lucide-react";
 import { BiblePassageDialog } from "@/components/BiblePassageDialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ReadingPlanDay {
     id: string;
@@ -29,6 +39,8 @@ export default function ReadingPlanDetail() {
     const [loading, setLoading] = useState(true);
     const [selectedPassageRef, setSelectedPassageRef] = useState<string | null>(null);
     const [userVersion, setUserVersion] = useState("ESV");
+    const [unsubscribeConfirmOpen, setUnsubscribeConfirmOpen] = useState(false);
+    const [unsubscribing, setUnsubscribing] = useState(false);
     const todayRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -118,6 +130,20 @@ export default function ReadingPlanDetail() {
         });
     };
 
+    const handleUnsubscribe = async () => {
+        if (!id) return;
+        setUnsubscribing(true);
+        try {
+            await unsubscribeFromPlan(id);
+            toast.success("Unsubscribed from plan");
+            navigate("/reading-plans");
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to unsubscribe");
+            setUnsubscribing(false);
+        }
+    };
+
     const getDayOfYear = () => {
         const now = new Date();
         const start = new Date(now.getFullYear(), 0, 0);
@@ -146,15 +172,21 @@ export default function ReadingPlanDetail() {
                         <h1 className="text-3xl font-bold mb-2">{plan.title}</h1>
                         <p className="text-muted-foreground">{plan.description}</p>
                     </div>
-                    {plan.plan_type === 'calendar' && (
-                        <Button
-                            variant="outline"
-                            onClick={() => todayRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-                        >
-                            <Calendar className="mr-2 h-4 w-4" />
-                            Jump to Today
+                    <div className="flex gap-2">
+                        {plan.plan_type === 'calendar' && (
+                            <Button
+                                variant="outline"
+                                onClick={() => todayRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+                            >
+                                <Calendar className="mr-2 h-4 w-4" />
+                                Jump to Today
+                            </Button>
+                        )}
+                        <Button variant="destructive" onClick={() => setUnsubscribeConfirmOpen(true)}>
+                            <XCircle className="mr-2 h-4 w-4" />
+                            Stop Plan
                         </Button>
-                    )}
+                    </div>
                 </div>
 
                 <div className="mt-4 flex items-center gap-2 text-sm font-medium">
@@ -182,12 +214,20 @@ export default function ReadingPlanDetail() {
                                                 <div className="font-medium">Day {day.day_number}</div>
                                                 {isToday && <span className="text-xs bg-primary/20 text-primary px-1.5 rounded">Today</span>}
                                             </div>
-                                            <button
-                                                className="text-sm text-muted-foreground hover:text-primary hover:underline text-left"
-                                                onClick={() => setSelectedPassageRef(day.passage)}
-                                            >
-                                                {day.passage}
-                                            </button>
+                                            <div className="flex flex-col items-start gap-1 mt-1">
+                                                {day.passage.split(';').map((p) => {
+                                                    const passageRef = p.trim();
+                                                    return (
+                                                        <button
+                                                            key={passageRef}
+                                                            className="text-sm text-muted-foreground hover:text-primary hover:underline text-left"
+                                                            onClick={() => setSelectedPassageRef(passageRef)}
+                                                        >
+                                                            {passageRef}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -230,6 +270,23 @@ export default function ReadingPlanDetail() {
                     defaultVersion={userVersion}
                 />
             )}
+
+            <AlertDialog open={unsubscribeConfirmOpen} onOpenChange={setUnsubscribeConfirmOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Stop Reading Plan?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to stop this reading plan? Your progress will be reset if you start it again later. Your notes will be preserved.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setUnsubscribeConfirmOpen(false)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={(e) => { e.preventDefault(); handleUnsubscribe(); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            {unsubscribing ? "Stopping..." : "Stop Plan"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

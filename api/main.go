@@ -370,6 +370,7 @@ func main() {
 		r.Get("/api/reading-plans", readingPlanHandler.GetAllPlans)
 		r.Get("/api/reading-plans/{id}", readingPlanHandler.GetPlan)
 		r.Post("/api/reading-plans/{id}/subscribe", readingPlanHandler.Subscribe)
+		r.Delete("/api/reading-plans/{id}/subscribe", readingPlanHandler.Unsubscribe)
 		r.Get("/api/my-reading-plans", readingPlanHandler.GetUserPlans)
 		r.Post("/api/my-reading-plans/{id}/progress", readingPlanHandler.MarkDayComplete)
 		r.Delete("/api/my-reading-plans/{id}/progress/{day_number}", readingPlanHandler.UnmarkDayComplete)

@@ -18,6 +18,7 @@ type ReadingPlanService interface {
 	MarkDayComplete(ctx context.Context, userID, planID uuid.UUID, dayNumber int) error
 	UnmarkDayComplete(ctx context.Context, userID, planID uuid.UUID, dayNumber int) error
 	GetPlanProgress(ctx context.Context, userID, planID uuid.UUID) ([]int, error)
+	Unsubscribe(ctx context.Context, userID, planID uuid.UUID) error
 }
 
 type readingPlanService struct {
@@ -175,7 +176,42 @@ func (s *readingPlanService) MarkDayComplete(ctx context.Context, userID, planID
 		ON CONFLICT (user_reading_plan_id, day_number) DO NOTHING
 	`
 	_, err = s.db.Exec(ctx, query, userPlanID, dayNumber, time.Now())
-	return err
+	if err != nil {
+		return err
+	}
+
+	// Check for plan completion
+	return s.checkAndMarkPlanCompleted(ctx, userPlanID, planID)
+}
+
+func (s *readingPlanService) checkAndMarkPlanCompleted(ctx context.Context, userPlanID, planID uuid.UUID) error {
+	// Get total days in plan
+	var totalDays int
+	err := s.db.QueryRow(ctx, "SELECT days FROM reading_plans WHERE id = $1", planID).Scan(&totalDays)
+	if err != nil {
+		return err
+	}
+
+	// Get completed days count
+	var completedCount int
+	err = s.db.QueryRow(ctx, "SELECT COUNT(*) FROM user_reading_plan_progress WHERE user_reading_plan_id = $1", userPlanID).Scan(&completedCount)
+	if err != nil {
+		return err
+	}
+
+	// If completed all days, update status
+	if completedCount >= totalDays {
+		_, err = s.db.Exec(ctx, `
+			UPDATE user_reading_plans
+			SET status = 'completed', updated_at = NOW()
+			WHERE id = $1 AND status = 'active'
+		`, userPlanID)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (s *readingPlanService) UnmarkDayComplete(ctx context.Context, userID, planID uuid.UUID, dayNumber int) error {
@@ -237,4 +273,20 @@ func (s *readingPlanService) GetPlanProgress(ctx context.Context, userID, planID
 		completedDays = append(completedDays, d)
 	}
 	return completedDays, nil
+}
+
+func (s *readingPlanService) Unsubscribe(ctx context.Context, userID, planID uuid.UUID) error {
+	// Delete the subscription. Cascade delete will handle progress.
+	query := `
+		DELETE FROM user_reading_plans
+		WHERE user_id = $1 AND reading_plan_id = $2 AND status = 'active'
+	`
+	cmd, err := s.db.Exec(ctx, query, userID, planID)
+	if err != nil {
+		return err
+	}
+	if cmd.RowsAffected() == 0 {
+		return models.ErrNotFound
+	}
+	return nil
 }
