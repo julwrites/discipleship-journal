@@ -33,13 +33,13 @@ export default function ConnectionsPage() {
     const [loading, setLoading] = useState(false);
 
     const pendingIncoming = useMemo(() =>
-        connections.filter(c => c.status === 'pending' && c.receiver_email === user?.email),
-        [connections, user?.email]
+        connections.filter(c => c.status === 'pending' && c.receiver_id === user?.uid),
+        [connections, user?.uid]
     );
 
     const pendingOutgoing = useMemo(() =>
-        connections.filter(c => c.status === 'pending' && c.requester_email === user?.email),
-        [connections, user?.email]
+        connections.filter(c => c.status === 'pending' && c.requester_id === user?.uid),
+        [connections, user?.uid]
     );
 
     const acceptedConnections = useMemo(() =>
@@ -109,7 +109,7 @@ export default function ConnectionsPage() {
     };
 
     const handleMessage = async (connection: Connection) => {
-        const otherId = connection.requester_email === user?.email ? connection.receiver_id : connection.requester_id;
+        const otherId = connection.requester_id === user?.uid ? connection.receiver_id : connection.requester_id;
         try {
             const group = await getOrCreateDirectGroup(otherId);
             navigate(`/groups?id=${group.id}`);
@@ -164,7 +164,7 @@ export default function ConnectionsPage() {
 
                     <h2 className="text-xl font-semibold mt-8">My Network</h2>
                     {connections.filter(c => c.status === 'accepted').map(c => {
-                    const isRequester = c.requester_email === user?.email;
+                    const isRequester = c.requester_id === user?.uid;
                     const otherEmail = isRequester ? c.receiver_email : c.requester_email;
                     const otherUsername = isRequester ? c.receiver_username : c.requester_username;
                         return (

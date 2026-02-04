@@ -595,8 +595,7 @@ export default function Dashboard() {
                               )}
                               {connections.filter(c => c.status === 'accepted').map(c => {
                                   // Determine other user
-                                  const myEmail = auth.currentUser?.email;
-                                  const isReq = c.requester_email === myEmail;
+                          const isReq = c.requester_id === user?.uid;
                                   const otherId = isReq ? c.receiver_id : c.requester_id;
                                   const otherEmail = isReq ? c.receiver_email : c.requester_email;
                                   const otherName = isReq ? c.receiver_username : c.requester_username;
