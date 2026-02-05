@@ -52,7 +52,7 @@ describe('useAuth', () => {
 
   it('should handle auth state change error', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    (onAuthStateChanged as Mock).mockImplementation((_auth: unknown, _cb: any, errorCallback: (error: Error) => void) => {
+    (onAuthStateChanged as Mock).mockImplementation((_auth: unknown, _cb: unknown, errorCallback: (error: Error) => void) => {
       errorCallback(new Error('Auth error'));
       return () => {};
     });

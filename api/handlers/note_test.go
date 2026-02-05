@@ -84,6 +84,44 @@ func TestGetNotes(t *testing.T) {
 			t.Errorf("there were unfulfilled expectations: %s", err)
 		}
 	})
+
+	t.Run("with_params", func(t *testing.T) {
+		dbMock, noteServiceMock, handler := setupTest(t)
+		defer dbMock.Close()
+
+		dbMock.ExpectQuery("SELECT id FROM users").
+			WithArgs(firebaseUID).
+			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+
+		serviceNotes := []services.Note{}
+
+		startDateStr := "2023-01-01T00:00:00Z"
+		endDateStr := "2023-12-31T23:59:59Z"
+		startDate, _ := time.Parse(time.RFC3339, startDateStr)
+		endDate, _ := time.Parse(time.RFC3339, endDateStr)
+
+		expectedFilter := services.NoteFilter{
+			SearchQuery: "term",
+			Tag:         "tag1",
+			SortBy:      "title",
+			SortOrder:   "desc",
+			StartDate:   &startDate,
+			EndDate:     &endDate,
+		}
+
+		noteServiceMock.On("GetNotes", mock.Anything, userUUID, 2, 50, expectedFilter).Return(serviceNotes, 0, nil)
+
+		req := httptest.NewRequest("GET", "/api/notes?page=2&limit=50&q=term&tag=tag1&sortBy=title&sortOrder=desc&startDate="+startDateStr+"&endDate="+endDateStr, nil)
+		token := &auth.Token{UID: firebaseUID}
+		ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		handler.GetNotes(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		noteServiceMock.AssertExpectations(t)
+	})
 }
 
 func TestCreateNoteHandler(t *testing.T) {
