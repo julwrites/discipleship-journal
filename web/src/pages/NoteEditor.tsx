@@ -259,7 +259,7 @@ export default function NoteEditor() {
             setSaving(false);
         }
         return false;
-    }, [id, title, content, tags, navigate]);
+    }, [id, title, content, tags, navigate, location.state]);
 
     const handleSave = useCallback(() => {
         saveNote(true);
