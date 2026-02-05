@@ -5,7 +5,7 @@ describe('parseBibleReference', () => {
     it('returns null for empty or null input', () => {
         expect(parseBibleReference('')).toBeNull();
         expect(parseBibleReference('   ')).toBeNull();
-        // @ts-ignore
+        // @ts-expect-error: Testing null input for JS consumers
         expect(parseBibleReference(null)).toBeNull();
     });
 
