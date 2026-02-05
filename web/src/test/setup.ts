@@ -26,3 +26,13 @@ const localStorageMock = {
 Object.defineProperty(window, 'localStorage', {
     value: localStorageMock,
 });
+
+// Mock ResizeObserver
+global.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+
+// Mock scrollIntoView
+Element.prototype.scrollIntoView = () => {};
