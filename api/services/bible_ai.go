@@ -290,7 +290,9 @@ func (c *RealBibleAIClient) GetPassage(
 		slog.Warn("Bible API response missing verse field", "status", resp.Status(), "body_length", len(resp.Body()))
 		// Fallback manual check
 		var raw map[string]interface{}
-		_ = json.Unmarshal(resp.Body(), &raw)
+		if err := json.Unmarshal(resp.Body(), &raw); err != nil {
+			slog.Warn("Failed to unmarshal fallback response", "error", err)
+		}
 		if v, ok := raw["verse"].(string); ok {
 			result.Verse = v
 		} else if t, ok := raw["text"].(string); ok {
