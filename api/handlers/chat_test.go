@@ -45,13 +45,19 @@ func TestChatHandler_ChatWithAI(t *testing.T) {
 			"response": "Hello there",
 		}, nil)
 
+        // Mock CreateNote
         mockNoteService.On("CreateNote", mock.Anything, testUserID, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
             Return(createMockNote("note-1", testUserID), nil)
 
+        // Mock UpdateNote
         mockNoteService.On("UpdateNote", mock.Anything, testUserID, "note-1", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
             Return(nil)
 
+        // Mock Query (since default is blocking)
         mockClient.On("Query", mock.Anything, mock.Anything, mock.Anything).Return("Response from AI", "", nil)
+
+        // Mock Notification
+        mockNotificationService.On("SendNotification", mock.Anything, testUserID, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 		req := httptest.NewRequest("POST", "/api/chat", bytes.NewBuffer(body))
 		ctx := context.WithValue(req.Context(), TestUserKey, testUserID)
@@ -93,6 +99,9 @@ func TestChatHandler_ChatWithAI(t *testing.T) {
 
         mockClient.On("Stream", mock.Anything, mock.Anything).Return((<-chan string)(outChan), "", nil)
 
+        // Mock Notification (called after stream)
+        mockNotificationService.On("SendNotification", mock.Anything, testUserID, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
 		req := httptest.NewRequest("POST", "/api/chat", bytes.NewBuffer(body))
 		ctx := context.WithValue(req.Context(), TestUserKey, testUserID)
 		req = req.WithContext(ctx)
@@ -115,6 +124,12 @@ func TestChatHandler_AskAI(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		mockClient := new(MockBibleAIClient)
         mockNoteService := new(MockNoteService)
+		// No notification service for AskAI in some cases? Or maybe yes?
+		// AskAI calls handleRequest which calls sendNotification if NoteService updates to active.
+		// So yes, it needs notification mock too?
+		// Check NewChatHandler signature in test: previously passed nil.
+		// If nil, sendNotification check `if h.NotificationService != nil`.
+		// So passing nil is safe.
 		handler := NewChatHandler(mockClient, mockNoteService, nil, nil)
 
 		payload := map[string]interface{}{

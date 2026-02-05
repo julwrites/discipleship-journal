@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -124,30 +125,76 @@ func TestGetPlan_Handler(t *testing.T) {
 }
 
 func TestSubscribe_Handler(t *testing.T) {
-	mockService := new(MockReadingPlanService)
-	handler := NewReadingPlanHandler(mockService)
+	t.Run("Success", func(t *testing.T) {
+		mockService := new(MockReadingPlanService)
+		handler := NewReadingPlanHandler(mockService)
 
-	planID := uuid.New()
-	userID := uuid.New()
+		planID := uuid.New()
+		userID := uuid.New()
 
-	mockService.On("Subscribe", mock.Anything, userID, planID).Return(&models.UserReadingPlan{
-		UserID: userID, ReadingPlanID: planID, Status: "active",
-	}, nil)
+		mockService.On("Subscribe", mock.Anything, userID, planID).Return(&models.UserReadingPlan{
+			UserID: userID, ReadingPlanID: planID, Status: "active",
+		}, nil)
 
-	r := chi.NewRouter()
-	r.Post("/api/reading-plans/{id}/subscribe", handler.Subscribe)
+		r := chi.NewRouter()
+		r.Post("/api/reading-plans/{id}/subscribe", handler.Subscribe)
 
-	req := httptest.NewRequest("POST", "/api/reading-plans/"+planID.String()+"/subscribe", nil)
-	// Inject user ID for testing
-	ctx := context.WithValue(req.Context(), TestUserKey, userID)
-	req = req.WithContext(ctx)
+		req := httptest.NewRequest("POST", "/api/reading-plans/"+planID.String()+"/subscribe", nil)
+		ctx := context.WithValue(req.Context(), TestUserKey, userID)
+		req = req.WithContext(ctx)
 
-	w := httptest.NewRecorder()
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
 
-	r.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusCreated, w.Code)
+		mockService.AssertExpectations(t)
+	})
 
-	assert.Equal(t, http.StatusCreated, w.Code)
-	mockService.AssertExpectations(t)
+	t.Run("Already Exists", func(t *testing.T) {
+		mockService := new(MockReadingPlanService)
+		handler := NewReadingPlanHandler(mockService)
+
+		planID := uuid.New()
+		userID := uuid.New()
+
+		mockService.On("Subscribe", mock.Anything, userID, planID).Return(nil, models.ErrAlreadyExists)
+
+		r := chi.NewRouter()
+		r.Post("/api/reading-plans/{id}/subscribe", handler.Subscribe)
+
+		req := httptest.NewRequest("POST", "/api/reading-plans/"+planID.String()+"/subscribe", nil)
+		ctx := context.WithValue(req.Context(), TestUserKey, userID)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusConflict, w.Code)
+		mockService.AssertExpectations(t)
+	})
+
+	t.Run("Service Error", func(t *testing.T) {
+		mockService := new(MockReadingPlanService)
+		handler := NewReadingPlanHandler(mockService)
+
+		planID := uuid.New()
+		userID := uuid.New()
+
+		mockService.On("Subscribe", mock.Anything, userID, planID).Return(nil, errors.New("db error"))
+
+		r := chi.NewRouter()
+		r.Post("/api/reading-plans/{id}/subscribe", handler.Subscribe)
+
+		req := httptest.NewRequest("POST", "/api/reading-plans/"+planID.String()+"/subscribe", nil)
+		ctx := context.WithValue(req.Context(), TestUserKey, userID)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		mockService.AssertExpectations(t)
+	})
 }
 
 func TestUnsubscribe_Handler(t *testing.T) {
@@ -163,12 +210,10 @@ func TestUnsubscribe_Handler(t *testing.T) {
 	r.Delete("/api/reading-plans/{id}/subscribe", handler.Unsubscribe)
 
 	req := httptest.NewRequest("DELETE", "/api/reading-plans/"+planID.String()+"/subscribe", nil)
-	// Inject user ID for testing
 	ctx := context.WithValue(req.Context(), TestUserKey, userID)
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
-
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusNoContent, w.Code)
@@ -193,7 +238,6 @@ func TestGetUserPlans_Handler(t *testing.T) {
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
-
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -201,29 +245,51 @@ func TestGetUserPlans_Handler(t *testing.T) {
 }
 
 func TestMarkDayComplete_Handler(t *testing.T) {
-	mockService := new(MockReadingPlanService)
-	handler := NewReadingPlanHandler(mockService)
+	t.Run("Success", func(t *testing.T) {
+		mockService := new(MockReadingPlanService)
+		handler := NewReadingPlanHandler(mockService)
 
-	planID := uuid.New()
-	userID := uuid.New()
-	dayNumber := 1
+		planID := uuid.New()
+		userID := uuid.New()
+		dayNumber := 1
 
-	mockService.On("MarkDayComplete", mock.Anything, userID, planID, dayNumber).Return(nil)
+		mockService.On("MarkDayComplete", mock.Anything, userID, planID, dayNumber).Return(nil)
 
-	r := chi.NewRouter()
-	r.Post("/api/my-reading-plans/{id}/progress", handler.MarkDayComplete)
+		r := chi.NewRouter()
+		r.Post("/api/my-reading-plans/{id}/progress", handler.MarkDayComplete)
 
-	reqBody := `{"day_number": 1}`
-	req := httptest.NewRequest("POST", "/api/my-reading-plans/"+planID.String()+"/progress", strings.NewReader(reqBody))
-	ctx := context.WithValue(req.Context(), TestUserKey, userID)
-	req = req.WithContext(ctx)
+		reqBody := `{"day_number": 1}`
+		req := httptest.NewRequest("POST", "/api/my-reading-plans/"+planID.String()+"/progress", strings.NewReader(reqBody))
+		ctx := context.WithValue(req.Context(), TestUserKey, userID)
+		req = req.WithContext(ctx)
 
-	w := httptest.NewRecorder()
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
 
-	r.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusOK, w.Code)
+		mockService.AssertExpectations(t)
+	})
 
-	assert.Equal(t, http.StatusOK, w.Code)
-	mockService.AssertExpectations(t)
+	t.Run("Invalid Body", func(t *testing.T) {
+		mockService := new(MockReadingPlanService)
+		handler := NewReadingPlanHandler(mockService)
+
+		planID := uuid.New()
+		userID := uuid.New()
+
+		r := chi.NewRouter()
+		r.Post("/api/my-reading-plans/{id}/progress", handler.MarkDayComplete)
+
+		reqBody := `{"day_number": "invalid"}`
+		req := httptest.NewRequest("POST", "/api/my-reading-plans/"+planID.String()+"/progress", strings.NewReader(reqBody))
+		ctx := context.WithValue(req.Context(), TestUserKey, userID)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
 }
 
 func TestUnmarkDayComplete_Handler(t *testing.T) {
@@ -244,7 +310,6 @@ func TestUnmarkDayComplete_Handler(t *testing.T) {
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
-
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -268,7 +333,6 @@ func TestGetPlanProgress_Handler(t *testing.T) {
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
-
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
