@@ -1,7 +1,13 @@
 package services
 
 import (
+	"context"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCleanHTML(t *testing.T) {
@@ -26,12 +32,8 @@ func TestCleanHTML(t *testing.T) {
 			expected: "<ul><li>Item 1</li><li>Item 2</li></ul>",
 		},
 		{
-			name:  "Empty list items with newlines",
-			input: "<ul><li>Item 1</li>\n<li>   </li>\n<li>Item 2</li></ul>",
-			// Explanation of change:
-			// 1. Newlines -> Space: "<ul><li>Item 1</li> <li>   </li> <li>Item 2</li></ul>"
-			// 2. Empty Li -> Removes `<li>   </li>`. Result: "<ul><li>Item 1</li>  <li>Item 2</li></ul>"
-			// 3. List Whitespace -> Collapses "</li>  <li>". Result: "<ul><li>Item 1</li><li>Item 2</li></ul>"
+			name:     "Empty list items with newlines",
+			input:    "<ul><li>Item 1</li>\n<li>   </li>\n<li>Item 2</li></ul>",
 			expected: "<ul><li>Item 1</li><li>Item 2</li></ul>",
 		},
 		{
@@ -54,4 +56,54 @@ func TestCleanHTML(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestBibleAIClient_GetVersions(t *testing.T) {
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/bible-versions" {
+			http.Error(w, "not found", http.StatusNotFound)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintln(w, `{"versions": ["ESV", "NIV"]}`)
+	}
+	server := httptest.NewServer(http.HandlerFunc(handler))
+	defer server.Close()
+
+	client := NewRealBibleAIClient(server.URL, "key", "")
+	ctx := context.Background()
+
+	res, err := client.GetVersions(ctx, nil)
+	assert.NoError(t, err)
+	assert.NotNil(t, res)
+
+	versions, ok := res["versions"].([]interface{})
+	assert.True(t, ok)
+	assert.Len(t, versions, 2)
+}
+
+func TestBibleAIClient_GetVersions_Error(t *testing.T) {
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "server error", http.StatusInternalServerError)
+	}
+	server := httptest.NewServer(http.HandlerFunc(handler))
+	defer server.Close()
+
+	client := NewRealBibleAIClient(server.URL, "key", "")
+	ctx := context.Background()
+
+	res, err := client.GetVersions(ctx, nil)
+	assert.Error(t, err)
+	assert.Nil(t, res)
+}
+
+func TestBibleAIClient_GetSystemPrompt(t *testing.T) {
+	prompts := `{"ask": "You are a helpful assistant."}`
+	client := NewRealBibleAIClient("url", "key", prompts)
+
+	p := client.GetSystemPrompt("ask")
+	assert.Equal(t, "You are a helpful assistant.", p)
+
+	p2 := client.GetSystemPrompt("unknown")
+	assert.Equal(t, "", p2)
 }
