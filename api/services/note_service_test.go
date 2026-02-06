@@ -558,3 +558,161 @@ func TestGetNotes_TagsQueryError(t *testing.T) {
 	assert.Equal(t, 0, total)
 	assert.Equal(t, "tags error", err.Error())
 }
+
+func TestUpdateNote_WithTags(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mock.Close()
+
+	service := NewNoteService(mock)
+	ctx := context.Background()
+	userID := uuid.New().String()
+	noteID := uuid.New().String()
+	tagID := uuid.New().String()
+	title := "Updated Title"
+	content := json.RawMessage(`{"text": "updated"}`)
+	tags := []string{"tag1"}
+	now := time.Now()
+
+	mock.ExpectBegin()
+	mock.ExpectExec("UPDATE notes").
+		WithArgs(title, content, noteID, userID).
+		WillReturnResult(pgxmock.NewResult("UPDATE", 1))
+
+	// Delete existing tags
+	mock.ExpectExec("DELETE FROM note_tags").
+		WithArgs(noteID).
+		WillReturnResult(pgxmock.NewResult("DELETE", 1))
+
+	// Create/Get tag
+	mock.ExpectQuery("INSERT INTO tags").
+		WithArgs(userID, "tag1").
+		WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "name", "created_at"}).
+			AddRow(tagID, userID, "tag1", now))
+
+	// Link tag
+	mock.ExpectExec("INSERT INTO note_tags").
+		WithArgs(noteID, tagID).
+		WillReturnResult(pgxmock.NewResult("INSERT", 1))
+
+	mock.ExpectCommit()
+
+	err = service.UpdateNote(ctx, userID, noteID, title, content, tags)
+	assert.NoError(t, err)
+}
+
+func TestUpdateNote_WithStatus(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mock.Close()
+
+	service := NewNoteService(mock)
+	ctx := context.Background()
+	userID := uuid.New().String()
+	noteID := uuid.New().String()
+	title := "Updated Title"
+	content := json.RawMessage(`{"text": "updated"}`)
+	status := "archived"
+
+	mock.ExpectBegin()
+	mock.ExpectExec("UPDATE notes").
+		WithArgs(title, content, status, noteID, userID).
+		WillReturnResult(pgxmock.NewResult("UPDATE", 1))
+
+	// Delete existing tags (empty tags list passed)
+	mock.ExpectExec("DELETE FROM note_tags").
+		WithArgs(noteID).
+		WillReturnResult(pgxmock.NewResult("DELETE", 0))
+
+	mock.ExpectCommit()
+
+	err = service.UpdateNote(ctx, userID, noteID, title, content, nil, status)
+	assert.NoError(t, err)
+}
+
+func TestUpdateNote_TagError(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mock.Close()
+
+	service := NewNoteService(mock)
+	ctx := context.Background()
+	userID := uuid.New().String()
+	noteID := uuid.New().String()
+	title := "Updated Title"
+	content := json.RawMessage(`{"text": "updated"}`)
+	tags := []string{"tag1"}
+
+	mock.ExpectBegin()
+	mock.ExpectExec("UPDATE notes").
+		WithArgs(title, content, noteID, userID).
+		WillReturnResult(pgxmock.NewResult("UPDATE", 1))
+
+	mock.ExpectExec("DELETE FROM note_tags").
+		WithArgs(noteID).
+		WillReturnResult(pgxmock.NewResult("DELETE", 1))
+
+	// Tag error
+	mock.ExpectQuery("INSERT INTO tags").
+		WithArgs(userID, "tag1").
+		WillReturnError(errors.New("tag error"))
+
+	// Rollback is deferred but implicit on error return?
+	// NoteService returns error immediately.
+	// We expect rollback.
+	// The implementation has `defer func() { _ = tx.Rollback(ctx) }()`
+	mock.ExpectRollback()
+
+	err = service.UpdateNote(ctx, userID, noteID, title, content, tags)
+	assert.Error(t, err)
+	assert.Equal(t, "tag error", err.Error())
+}
+
+func TestUpdateNote_LinkTagError(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mock.Close()
+
+	service := NewNoteService(mock)
+	ctx := context.Background()
+	userID := uuid.New().String()
+	noteID := uuid.New().String()
+	tagID := uuid.New().String()
+	title := "Updated Title"
+	content := json.RawMessage(`{"text": "updated"}`)
+	tags := []string{"tag1"}
+	now := time.Now()
+
+	mock.ExpectBegin()
+	mock.ExpectExec("UPDATE notes").
+		WithArgs(title, content, noteID, userID).
+		WillReturnResult(pgxmock.NewResult("UPDATE", 1))
+
+	mock.ExpectExec("DELETE FROM note_tags").
+		WithArgs(noteID).
+		WillReturnResult(pgxmock.NewResult("DELETE", 1))
+
+	mock.ExpectQuery("INSERT INTO tags").
+		WithArgs(userID, "tag1").
+		WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "name", "created_at"}).
+			AddRow(tagID, userID, "tag1", now))
+
+	// Link error
+	mock.ExpectExec("INSERT INTO note_tags").
+		WithArgs(noteID, tagID).
+		WillReturnError(errors.New("link error"))
+
+	mock.ExpectRollback()
+
+	err = service.UpdateNote(ctx, userID, noteID, title, content, tags)
+	assert.Error(t, err)
+	assert.Equal(t, "link error", err.Error())
+}
