@@ -2,12 +2,14 @@ package services
 
 import (
 	"context"
+	"errors"
 	"regexp"
 	"testing"
 	"time"
 
 	"discipleship_journal_api/models"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -290,6 +292,111 @@ func TestTemplateService_ListPublicTemplates(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, list, 1)
 	assert.Equal(t, "Public Template", list[0].Title)
+
+	assert.NoError(t, mockDB.ExpectationsWereMet())
+}
+
+func TestTemplateService_CreateTemplate_Error(t *testing.T) {
+	mockDB, err := pgxmock.NewPool()
+	require.NoError(t, err)
+	defer mockDB.Close()
+
+	mockAI := NewMockBibleAIClient()
+	service := NewTemplateService(mockDB, mockAI)
+
+	userID := uuid.New()
+	tmpl := &models.StudyTemplate{
+		CreatorID:       userID,
+		Title:           "Test Template",
+		Description:     "Desc",
+		IsPublic:        false,
+		BibleReferences: []string{"John 3:16"},
+	}
+
+	mockDB.ExpectExec("INSERT INTO study_templates").
+		WithArgs(pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg()).
+		WillReturnError(errors.New("db error"))
+
+	created, err := service.CreateTemplate(context.Background(), tmpl)
+	assert.Error(t, err)
+	assert.Nil(t, created)
+	assert.EqualError(t, err, "db error")
+
+	assert.NoError(t, mockDB.ExpectationsWereMet())
+}
+
+func TestTemplateService_UpdateTemplate_Error(t *testing.T) {
+	mockDB, err := pgxmock.NewPool()
+	require.NoError(t, err)
+	defer mockDB.Close()
+
+	mockAI := NewMockBibleAIClient()
+	service := NewTemplateService(mockDB, mockAI)
+
+	tmplID := uuid.New()
+	userID := uuid.New()
+	tmpl := &models.StudyTemplate{
+		ID:              tmplID,
+		CreatorID:       userID,
+		Title:           "Updated Title",
+		Description:     "Updated Desc",
+		BibleReferences: []string{"Gen 1:1"},
+	}
+
+	mockDB.ExpectExec(regexp.QuoteMeta("UPDATE study_templates SET")).
+		WithArgs(
+			"Updated Title", "Updated Desc", pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), false,
+			pgxmock.AnyArg(), false, "", "", tmplID, userID,
+		).
+		WillReturnError(errors.New("db error"))
+
+	err = service.UpdateTemplate(context.Background(), tmpl)
+	assert.Error(t, err)
+	assert.EqualError(t, err, "db error")
+
+	assert.NoError(t, mockDB.ExpectationsWereMet())
+}
+
+func TestTemplateService_DeleteTemplate_Error(t *testing.T) {
+	mockDB, err := pgxmock.NewPool()
+	require.NoError(t, err)
+	defer mockDB.Close()
+
+	mockAI := NewMockBibleAIClient()
+	service := NewTemplateService(mockDB, mockAI)
+
+	tmplID := uuid.New()
+	userID := uuid.New()
+
+	mockDB.ExpectExec("DELETE FROM study_templates").
+		WithArgs(tmplID, userID).
+		WillReturnError(errors.New("db error"))
+
+	err = service.DeleteTemplate(context.Background(), tmplID, userID)
+	assert.Error(t, err)
+	assert.EqualError(t, err, "db error")
+
+	assert.NoError(t, mockDB.ExpectationsWereMet())
+}
+
+func TestTemplateService_GetTemplate_NotFound(t *testing.T) {
+	mockDB, err := pgxmock.NewPool()
+	require.NoError(t, err)
+	defer mockDB.Close()
+
+	mockAI := NewMockBibleAIClient()
+	service := NewTemplateService(mockDB, mockAI)
+
+	tmplID := uuid.New()
+
+	mockDB.ExpectQuery(regexp.QuoteMeta("SELECT id, creator_id, title, description")).
+		WithArgs(tmplID).
+		WillReturnError(pgx.ErrNoRows)
+
+	result, err := service.GetTemplate(context.Background(), tmplID)
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Equal(t, models.ErrNotFound, err)
 
 	assert.NoError(t, mockDB.ExpectationsWereMet())
 }
