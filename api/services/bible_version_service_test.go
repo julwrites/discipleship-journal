@@ -125,3 +125,99 @@ func TestBibleVersionService_ScrapeVersions_Error(t *testing.T) {
 	assert.Nil(t, versions)
 	assert.Contains(t, err.Error(), "unexpected status code: 500")
 }
+
+func TestBibleVersionService_SyncVersions_ScrapeError(t *testing.T) {
+	// Mock server returning 500
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}))
+	defer ts.Close()
+
+	mockDB, err := pgxmock.NewPool()
+	require.NoError(t, err)
+	defer mockDB.Close()
+
+	service := &bibleVersionService{
+		db:         mockDB,
+		httpClient: ts.Client(),
+		scrapeURL:  ts.URL,
+	}
+
+	err = service.SyncVersions(context.Background())
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unexpected status code: 500")
+}
+
+func TestBibleVersionService_SyncVersions_DBError(t *testing.T) {
+	// Mock server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, `
+			<select name="version" class="search-dropdown">
+				<option value="ESV">English Standard Version</option>
+			</select>
+		`)
+	}))
+	defer ts.Close()
+
+	t.Run("begin_error", func(t *testing.T) {
+		mockDB, err := pgxmock.NewPool()
+		require.NoError(t, err)
+		defer mockDB.Close()
+
+		service := &bibleVersionService{
+			db:         mockDB,
+			httpClient: ts.Client(),
+			scrapeURL:  ts.URL,
+		}
+
+		mockDB.ExpectBegin().WillReturnError(fmt.Errorf("begin error"))
+
+		err = service.SyncVersions(context.Background())
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "begin error")
+	})
+
+	t.Run("exec_error", func(t *testing.T) {
+		mockDB, err := pgxmock.NewPool()
+		require.NoError(t, err)
+		defer mockDB.Close()
+
+		service := &bibleVersionService{
+			db:         mockDB,
+			httpClient: ts.Client(),
+			scrapeURL:  ts.URL,
+		}
+
+		mockDB.ExpectBegin()
+		mockDB.ExpectExec("INSERT INTO bible_versions").
+			WithArgs("English Standard Version", "ESV").
+			WillReturnError(fmt.Errorf("exec error"))
+		mockDB.ExpectRollback()
+
+		err = service.SyncVersions(context.Background())
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "exec error")
+	})
+
+	t.Run("commit_error", func(t *testing.T) {
+		mockDB, err := pgxmock.NewPool()
+		require.NoError(t, err)
+		defer mockDB.Close()
+
+		service := &bibleVersionService{
+			db:         mockDB,
+			httpClient: ts.Client(),
+			scrapeURL:  ts.URL,
+		}
+
+		mockDB.ExpectBegin()
+		mockDB.ExpectExec("INSERT INTO bible_versions").
+			WithArgs("English Standard Version", "ESV").
+			WillReturnResult(pgxmock.NewResult("INSERT", 1))
+		mockDB.ExpectCommit().WillReturnError(fmt.Errorf("commit error"))
+
+		err = service.SyncVersions(context.Background())
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "commit error")
+	})
+}

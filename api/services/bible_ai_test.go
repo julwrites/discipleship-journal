@@ -97,6 +97,52 @@ func TestBibleAIClient_GetVersions_Error(t *testing.T) {
 	assert.Nil(t, res)
 }
 
+func TestBibleAIClient_GetPassage_Fallback(t *testing.T) {
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		// Missing "verse", has "text"
+		fmt.Fprintln(w, `{"text": "John 3:16 (ESV) For God so loved..."}`)
+	}
+	server := httptest.NewServer(http.HandlerFunc(handler))
+	defer server.Close()
+
+	client := NewRealBibleAIClient(server.URL, "key", "")
+	ctx := context.Background()
+
+	res, err := client.GetPassage(ctx, "John 3:16", "ESV")
+	assert.NoError(t, err)
+	assert.Equal(t, "John 3:16", res["reference"])
+	assert.Contains(t, res["text"], "For God so loved")
+}
+
+func TestBibleAIClient_Stream_Fallback(t *testing.T) {
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		// If stream requested, fail or return JSON (not SSE)
+		// Resty checks Content-Type for "text/event-stream"
+		// We return application/json to trigger fallback
+		w.Header().Set("Content-Type", "application/json")
+		// Return a normal V2 response which ChatCompletion expects
+		fmt.Fprintln(w, `{"data": {"text": "Fallback Response", "references": []}, "meta": {}}`)
+	}
+	server := httptest.NewServer(http.HandlerFunc(handler))
+	defer server.Close()
+
+	client := NewRealBibleAIClient(server.URL, "key", "")
+	ctx := context.Background()
+
+	// Stream should fall back to ChatCompletion
+	ch, provider, err := client.Stream(ctx, "prompt")
+	assert.NoError(t, err)
+	assert.Equal(t, "bible-ai", provider)
+
+	var chunks []string
+	for chunk := range ch {
+		chunks = append(chunks, chunk)
+	}
+
+	assert.Equal(t, []string{"Fallback Response"}, chunks)
+}
+
 func TestBibleAIClient_GetSystemPrompt(t *testing.T) {
 	prompts := `{"ask": "You are a helpful assistant."}`
 	client := NewRealBibleAIClient("url", "key", prompts)

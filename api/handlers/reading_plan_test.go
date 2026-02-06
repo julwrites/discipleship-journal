@@ -173,6 +173,37 @@ func TestGetPlan_Handler_Errors(t *testing.T) {
 	})
 }
 
+func TestReadingPlanHandler_Unauthorized(t *testing.T) {
+	mockService := new(MockReadingPlanService)
+	handler := NewReadingPlanHandler(mockService)
+
+	tests := []struct {
+		name        string
+		method      string
+		path        string
+		handlerFunc http.HandlerFunc
+	}{
+		{"Subscribe", "POST", "/api/reading-plans/uuid/subscribe", handler.Subscribe},
+		{"Unsubscribe", "DELETE", "/api/reading-plans/uuid/subscribe", handler.Unsubscribe},
+		{"GetUserPlans", "GET", "/api/my-reading-plans", handler.GetUserPlans},
+		{"MarkDayComplete", "POST", "/api/my-reading-plans/uuid/progress", handler.MarkDayComplete},
+		{"UnmarkDayComplete", "DELETE", "/api/my-reading-plans/uuid/progress/1", handler.UnmarkDayComplete},
+		{"GetPlanProgress", "GET", "/api/my-reading-plans/uuid/progress", handler.GetPlanProgress},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest(tt.method, tt.path, nil)
+			// No context with UserID
+
+			w := httptest.NewRecorder()
+			tt.handlerFunc(w, req)
+
+			assert.Equal(t, http.StatusUnauthorized, w.Code)
+		})
+	}
+}
+
 func TestSubscribe_Handler(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		mockService := new(MockReadingPlanService)

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -80,6 +81,128 @@ func TestGetTagsHandler(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 		noteServiceMock.AssertExpectations(t)
 	})
+}
+
+func TestCreateTagHandler_ServiceError(t *testing.T) {
+	firebaseUID := "firebase-uid-123"
+	userUUID := "user-uuid-123"
+	tagName := "New Tag"
+
+	validReq := CreateTagRequest{
+		Name: tagName,
+	}
+
+	dbMock, noteServiceMock, handler := setupTest(t)
+	defer dbMock.Close()
+
+	dbMock.ExpectQuery("SELECT id FROM users").
+		WithArgs(firebaseUID).
+		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+
+	noteServiceMock.On("CreateTag", mock.Anything, userUUID, tagName).Return(nil, errors.New("service error"))
+
+	body, _ := json.Marshal(validReq)
+	req := httptest.NewRequest("POST", "/api/tags", bytes.NewBuffer(body))
+	token := &auth.Token{UID: firebaseUID}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
+	handler.CreateTag(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+}
+
+func TestDeleteTagHandler_ServiceError(t *testing.T) {
+	firebaseUID := "firebase-uid-123"
+	userUUID := "user-uuid-123"
+	tagID := "tag-123"
+
+	dbMock, noteServiceMock, handler := setupTest(t)
+	defer dbMock.Close()
+
+	dbMock.ExpectQuery("SELECT id FROM users").
+		WithArgs(firebaseUID).
+		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+
+	noteServiceMock.On("DeleteTag", mock.Anything, userUUID, tagID).Return(errors.New("service error"))
+
+	req := httptest.NewRequest("DELETE", "/api/tags/"+tagID, nil)
+	rctx := chi.NewRouteContext()
+	rctx.URLParams.Add("id", tagID)
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+	token := &auth.Token{UID: firebaseUID}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
+	handler.DeleteTag(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+}
+
+func TestGetTags_UserNotFound(t *testing.T) {
+	firebaseUID := "firebase-uid-123"
+	dbMock, noteServiceMock, handler := setupTest(t)
+	defer dbMock.Close()
+
+	dbMock.ExpectQuery("SELECT id FROM users").
+		WithArgs(firebaseUID).
+		WillReturnError(errors.New("db error"))
+
+	req := httptest.NewRequest("GET", "/api/tags", nil)
+	token := &auth.Token{UID: firebaseUID}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
+	handler.GetTags(w, req)
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+	noteServiceMock.AssertNotCalled(t, "GetUserTags")
+}
+
+func TestCreateTag_UserNotFound(t *testing.T) {
+	firebaseUID := "firebase-uid-123"
+	dbMock, noteServiceMock, handler := setupTest(t)
+	defer dbMock.Close()
+
+	dbMock.ExpectQuery("SELECT id FROM users").
+		WithArgs(firebaseUID).
+		WillReturnError(errors.New("db error"))
+
+	req := httptest.NewRequest("POST", "/api/tags", bytes.NewBufferString("{}"))
+	token := &auth.Token{UID: firebaseUID}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
+	handler.CreateTag(w, req)
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+	noteServiceMock.AssertNotCalled(t, "CreateTag")
+}
+
+func TestDeleteTag_UserNotFound(t *testing.T) {
+	firebaseUID := "firebase-uid-123"
+	dbMock, noteServiceMock, handler := setupTest(t)
+	defer dbMock.Close()
+
+	dbMock.ExpectQuery("SELECT id FROM users").
+		WithArgs(firebaseUID).
+		WillReturnError(errors.New("db error"))
+
+	req := httptest.NewRequest("DELETE", "/api/tags/1", nil)
+	token := &auth.Token{UID: firebaseUID}
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
+	handler.DeleteTag(w, req)
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+	noteServiceMock.AssertNotCalled(t, "DeleteTag")
 }
 
 func TestCreateTagHandler(t *testing.T) {
