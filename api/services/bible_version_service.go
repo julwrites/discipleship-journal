@@ -12,6 +12,11 @@ import (
 	"golang.org/x/net/html"
 )
 
+// HTTPClient interface for mocking
+type HTTPClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
 // BibleVersionService handles bible version operations.
 type BibleVersionService interface {
 	GetVersions(ctx context.Context) ([]BibleVersion, error)
@@ -20,17 +25,28 @@ type BibleVersionService interface {
 }
 
 type bibleVersionService struct {
-	db database.DBInterface
+	db         database.DBInterface
+	httpClient HTTPClient
+	scrapeURL  string
 }
 
 // NewBibleVersionService creates a new BibleVersionService.
 func NewBibleVersionService(db database.DBInterface) BibleVersionService {
-	return &bibleVersionService{db: db}
+	return &bibleVersionService{
+		db:         db,
+		httpClient: &http.Client{Timeout: 30 * time.Second},
+		scrapeURL:  "https://classic.biblegateway.com/versions/",
+	}
 }
 
 // ScrapeVersions scrapes bible versions from BibleGateway.
 func (s *bibleVersionService) ScrapeVersions(ctx context.Context) (map[string]string, error) {
-	resp, err := http.Get("https://classic.biblegateway.com/versions/")
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, s.scrapeURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := s.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch versions page: %w", err)
 	}

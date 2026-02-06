@@ -107,3 +107,74 @@ func TestBibleAIClient_GetSystemPrompt(t *testing.T) {
 	p2 := client.GetSystemPrompt("unknown")
 	assert.Equal(t, "", p2)
 }
+
+func TestBibleAIClient_Name(t *testing.T) {
+	client := NewRealBibleAIClient("url", "key", "")
+	assert.Equal(t, "bible-ai", client.Name())
+}
+
+func TestBibleAIClient_Query(t *testing.T) {
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/query" {
+			http.Error(w, "not found", http.StatusNotFound)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		// Expect V2 response format
+		fmt.Fprintln(w, `{"data": {"text": "Response text", "references": []}, "meta": {}}`)
+	}
+	server := httptest.NewServer(http.HandlerFunc(handler))
+	defer server.Close()
+
+	client := NewRealBibleAIClient(server.URL, "key", "")
+	ctx := context.Background()
+
+	text, provider, err := client.Query(ctx, "prompt", "schema")
+	assert.NoError(t, err)
+	assert.Equal(t, "Response text", text)
+	assert.Equal(t, "bible-ai", provider)
+}
+
+func TestBibleAIClient_Stream(t *testing.T) {
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/event-stream")
+		// Send SSE data
+		fmt.Fprintln(w, `data: {"delta": "Hello"}`)
+		fmt.Fprintln(w, `data: {"delta": " World"}`)
+		fmt.Fprintln(w, `data: [DONE]`)
+	}
+	server := httptest.NewServer(http.HandlerFunc(handler))
+	defer server.Close()
+
+	client := NewRealBibleAIClient(server.URL, "key", "")
+	ctx := context.Background()
+
+	ch, provider, err := client.Stream(ctx, "prompt")
+	assert.NoError(t, err)
+	assert.Equal(t, "bible-ai", provider)
+
+	var chunks []string
+	for chunk := range ch {
+		chunks = append(chunks, chunk)
+	}
+
+	assert.Equal(t, []string{"Hello", " World"}, chunks)
+}
+
+func TestBibleAIClient_GetPassage(t *testing.T) {
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintln(w, `{"verse": "John 3:16 (ESV) For God so loved the world..."}`)
+	}
+	server := httptest.NewServer(http.HandlerFunc(handler))
+	defer server.Close()
+
+	client := NewRealBibleAIClient(server.URL, "key", "")
+	ctx := context.Background()
+
+	res, err := client.GetPassage(ctx, "John 3:16", "ESV")
+	assert.NoError(t, err)
+	assert.Equal(t, "John 3:16", res["reference"])
+	assert.Equal(t, "ESV", res["version"])
+	assert.Contains(t, res["text"], "For God so loved")
+}
