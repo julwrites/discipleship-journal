@@ -178,3 +178,34 @@ func TestBibleAIClient_GetPassage(t *testing.T) {
 	assert.Equal(t, "ESV", res["version"])
 	assert.Contains(t, res["text"], "For God so loved")
 }
+
+func TestBibleAIClient_GetPassage_Error(t *testing.T) {
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "server error", http.StatusInternalServerError)
+	}
+	server := httptest.NewServer(http.HandlerFunc(handler))
+	defer server.Close()
+
+	client := NewRealBibleAIClient(server.URL, "key", "")
+	ctx := context.Background()
+
+	res, err := client.GetPassage(ctx, "John 3:16", "ESV")
+	assert.Error(t, err)
+	assert.Nil(t, res)
+}
+
+func TestBibleAIClient_ChatCompletion_Error(t *testing.T) {
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "server error", http.StatusInternalServerError)
+	}
+	server := httptest.NewServer(http.HandlerFunc(handler))
+	defer server.Close()
+
+	client := NewRealBibleAIClient(server.URL, "key", "")
+	ctx := context.Background()
+
+	payload := map[string]interface{}{"prompt": "hello"}
+	res, err := client.ChatCompletion(ctx, payload)
+	assert.Error(t, err)
+	assert.Nil(t, res)
+}
