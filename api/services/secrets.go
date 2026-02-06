@@ -8,13 +8,21 @@ import (
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
+	"github.com/googleapis/gax-go/v2"
 	"google.golang.org/api/option"
 )
+
+// SecretManagerClient defines the interface for interacting with Google Secret Manager.
+// This allows for mocking the client in tests.
+type SecretManagerClient interface {
+	AccessSecretVersion(ctx context.Context, req *secretmanagerpb.AccessSecretVersionRequest, opts ...gax.CallOption) (*secretmanagerpb.AccessSecretVersionResponse, error)
+	Close() error
+}
 
 // SecretLoader handles loading secrets from Google Secret Manager with fallback to environment variables
 type SecretLoader struct {
 	projectID string
-	client    *secretmanager.Client
+	client    SecretManagerClient
 }
 
 // NewSecretLoader creates a new SecretLoader

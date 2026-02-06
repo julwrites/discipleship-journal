@@ -108,3 +108,14 @@ func TestAuthMiddleware_InvalidToken(t *testing.T) {
 		t.Errorf("handler returned unexpected body: %v", rr.Body.String())
 	}
 }
+
+func TestNewAuthMiddlewareFromClient(t *testing.T) {
+	mockClient := &MockFirebaseAuthClient{}
+	am := NewAuthMiddlewareFromClient(mockClient)
+	if am == nil {
+		t.Fatal("NewAuthMiddlewareFromClient returned nil")
+	}
+	if am.AuthClient != mockClient {
+		t.Error("AuthClient not set correctly")
+	}
+}

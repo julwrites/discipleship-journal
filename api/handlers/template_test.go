@@ -268,3 +268,162 @@ func TestTemplateHandler_ListPublicTemplates(t *testing.T) {
 		assert.Equal(t, http.StatusOK, rr.Code)
 	})
 }
+
+func TestTemplateHandler_CreateTemplate_InvalidPayload(t *testing.T) {
+	mockService := new(MockTemplateService)
+	handler := NewTemplateHandler(mockService)
+
+	userID := uuid.New()
+	ctx := context.WithValue(context.Background(), TestUserKey, userID.String())
+
+	payload := `{"title": "New Template", "invalid":`
+	req := httptest.NewRequest("POST", "/api/templates", strings.NewReader(payload))
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler.CreateTemplate(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestTemplateHandler_CreateTemplate_ServiceError(t *testing.T) {
+	mockService := new(MockTemplateService)
+	handler := NewTemplateHandler(mockService)
+
+	userID := uuid.New()
+	ctx := context.WithValue(context.Background(), TestUserKey, userID.String())
+
+	payload := `{"title": "New Template"}`
+	req := httptest.NewRequest("POST", "/api/templates", strings.NewReader(payload))
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	mockService.On("CreateTemplate", mock.Anything, mock.Anything).Return(nil, assert.AnError)
+
+	handler.CreateTemplate(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+}
+
+func TestTemplateHandler_GetTemplate_ServiceError(t *testing.T) {
+	mockService := new(MockTemplateService)
+	handler := NewTemplateHandler(mockService)
+
+	tmplID := uuid.New()
+	req := httptest.NewRequest("GET", "/api/templates/"+tmplID.String(), nil)
+
+	r := chi.NewRouter()
+	r.Get("/api/templates/{id}", handler.GetTemplate)
+
+	w := httptest.NewRecorder()
+
+	mockService.On("GetTemplate", mock.Anything, tmplID).Return(nil, assert.AnError)
+
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+}
+
+func TestTemplateHandler_UpdateTemplate_ServiceError(t *testing.T) {
+	mockService := new(MockTemplateService)
+	handler := NewTemplateHandler(mockService)
+
+	userID := uuid.New()
+	tmplID := uuid.New()
+	ctx := context.WithValue(context.Background(), TestUserKey, userID.String())
+
+	r := chi.NewRouter()
+	r.Put("/api/templates/{id}", handler.UpdateTemplate)
+
+	payload := `{"title": "Updated Template"}`
+	req := httptest.NewRequest("PUT", "/api/templates/"+tmplID.String(), strings.NewReader(payload))
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	mockService.On("UpdateTemplate", mock.Anything, mock.Anything).Return(assert.AnError)
+
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+}
+
+func TestTemplateHandler_DeleteTemplate_ServiceError(t *testing.T) {
+	mockService := new(MockTemplateService)
+	handler := NewTemplateHandler(mockService)
+
+	userID := uuid.New()
+	tmplID := uuid.New()
+	ctx := context.WithValue(context.Background(), TestUserKey, userID.String())
+
+	r := chi.NewRouter()
+	r.Delete("/api/templates/{id}", handler.DeleteTemplate)
+
+	req := httptest.NewRequest("DELETE", "/api/templates/"+tmplID.String(), nil)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	mockService.On("DeleteTemplate", mock.Anything, tmplID, userID).Return(assert.AnError)
+
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+}
+
+func TestTemplateHandler_CloneTemplate_ServiceError(t *testing.T) {
+	mockService := new(MockTemplateService)
+	handler := NewTemplateHandler(mockService)
+
+	templateID := uuid.New()
+	userID := uuid.New()
+
+	mockService.On("CloneTemplate", mock.Anything, templateID, userID).Return(nil, assert.AnError)
+
+	r := chi.NewRouter()
+	r.Post("/api/templates/{id}/clone", handler.CloneTemplate)
+
+	req := httptest.NewRequest("POST", "/api/templates/"+templateID.String()+"/clone", nil)
+	ctx := context.WithValue(req.Context(), TestUserKey, userID.String())
+	req = req.WithContext(ctx)
+
+	rr := httptest.NewRecorder()
+	r.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
+}
+
+func TestTemplateHandler_Generate_ServiceError(t *testing.T) {
+	mockService := new(MockTemplateService)
+	handler := NewTemplateHandler(mockService)
+
+	templateID := uuid.New()
+	userID := uuid.New()
+
+	payload := `{"inputs": {"theme": "grace"}}`
+
+	mockService.On("GenerateContent", mock.Anything, templateID, mock.Anything).Return("", assert.AnError)
+
+	r := chi.NewRouter()
+	r.Post("/api/templates/{id}/generate", handler.Generate)
+
+	req := httptest.NewRequest("POST", "/api/templates/"+templateID.String()+"/generate", strings.NewReader(payload))
+	ctx := context.WithValue(req.Context(), TestUserKey, userID.String())
+	req = req.WithContext(ctx)
+
+	rr := httptest.NewRecorder()
+	r.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
+}
+
+func TestTemplateHandler_ListPublicTemplates_ServiceError(t *testing.T) {
+	mockService := new(MockTemplateService)
+	handler := NewTemplateHandler(mockService)
+
+	mockService.On("ListPublicTemplates", mock.Anything).Return(nil, assert.AnError)
+
+	req := httptest.NewRequest("GET", "/api/templates/public", nil)
+	rr := httptest.NewRecorder()
+	handler.ListPublicTemplates(rr, req)
+
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
+}
