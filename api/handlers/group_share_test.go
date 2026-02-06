@@ -88,6 +88,12 @@ func TestShareItemToGroup(t *testing.T) {
 		time.Sleep(50 * time.Millisecond) // Allow goroutine
 
 		assert.Equal(t, http.StatusCreated, w.Code)
+
+		var resp map[string]interface{}
+		err = json.Unmarshal(w.Body.Bytes(), &resp)
+		assert.NoError(t, err)
+		assert.Equal(t, true, resp["success"])
+
 		assert.NoError(t, mockDB.ExpectationsWereMet())
 		mockNotify.AssertExpectations(t)
 	})
