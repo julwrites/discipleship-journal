@@ -113,7 +113,7 @@ func TestNewAuthMiddlewareFromClient(t *testing.T) {
 	mockClient := &MockFirebaseAuthClient{}
 	am := NewAuthMiddlewareFromClient(mockClient)
 	if am == nil {
-		t.Error("NewAuthMiddlewareFromClient returned nil")
+		t.Fatal("NewAuthMiddlewareFromClient returned nil")
 	}
 	if am.AuthClient != mockClient {
 		t.Error("AuthClient not set correctly")
