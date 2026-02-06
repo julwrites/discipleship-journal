@@ -207,9 +207,7 @@ func (s *memoryVerseService) GetOriginalVerses(ctx context.Context, packID uuid.
 			v.Title = *title
 		}
 		if len(tagsBytes) > 0 {
-			if err := json.Unmarshal(tagsBytes, &v.Tags); err != nil {
-				// Log error? For now, we accept empty tags on error
-			}
+			_ = json.Unmarshal(tagsBytes, &v.Tags)
 		}
 		verses = append(verses, &v)
 	}
@@ -391,9 +389,7 @@ func (s *memoryVerseService) SearchVerses(ctx context.Context, userID uuid.UUID,
 			v.Title = *title
 		}
 		if len(tagsBytes) > 0 {
-			if err := json.Unmarshal(tagsBytes, &v.Tags); err != nil {
-				// Log error? For now, we accept empty tags on error
-			}
+			_ = json.Unmarshal(tagsBytes, &v.Tags)
 		}
 		verses = append(verses, &v)
 	}
