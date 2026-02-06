@@ -265,3 +265,31 @@ func TestTemplateService_GenerateContent(t *testing.T) {
 
 	assert.NoError(t, mockDB.ExpectationsWereMet())
 }
+
+func TestTemplateService_ListPublicTemplates(t *testing.T) {
+	mockDB, err := pgxmock.NewPool()
+	require.NoError(t, err)
+	defer mockDB.Close()
+
+	mockAI := NewMockBibleAIClient()
+	service := NewTemplateService(mockDB, mockAI)
+
+	rows := pgxmock.NewRows([]string{
+		"id", "creator_id", "title", "description", "structure", "prompts", "fields", "is_public",
+		"bible_references", "allow_user_passages", "template_body", "required_version", "created_at", "updated_at",
+	}).AddRow(
+		uuid.New(), uuid.New(), "Public Template", "Desc", []byte("{}"), []byte("{}"), []byte("[]"), true,
+		[]byte("[]"), false, "", "", time.Now(), time.Now(),
+	)
+
+	mockDB.ExpectQuery(regexp.QuoteMeta("SELECT id, creator_id, title, description")).
+		WithArgs().
+		WillReturnRows(rows)
+
+	list, err := service.ListPublicTemplates(context.Background())
+	assert.NoError(t, err)
+	assert.Len(t, list, 1)
+	assert.Equal(t, "Public Template", list[0].Title)
+
+	assert.NoError(t, mockDB.ExpectationsWereMet())
+}

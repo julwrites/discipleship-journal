@@ -311,3 +311,52 @@ func TestGetUserPlans(t *testing.T) {
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestUnmarkDayComplete(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	assert.NoError(t, err)
+	defer mock.Close()
+
+	service := NewReadingPlanService(mock)
+	userID := uuid.New()
+	planID := uuid.New()
+	userPlanID := uuid.New()
+	dayNumber := 1
+
+	// Mock find active plan
+	mock.ExpectQuery(`SELECT id FROM user_reading_plans`).
+		WithArgs(userID, planID).
+		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(userPlanID))
+
+	// Mock Delete Progress
+	mock.ExpectExec(`DELETE FROM user_reading_plan_progress`).
+		WithArgs(userPlanID, dayNumber).
+		WillReturnResult(pgxmock.NewResult("DELETE", 1))
+
+	err = service.UnmarkDayComplete(context.Background(), userID, planID, dayNumber)
+	assert.NoError(t, err)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestUnmarkDayComplete_NotFound(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	assert.NoError(t, err)
+	defer mock.Close()
+
+	service := NewReadingPlanService(mock)
+	userID := uuid.New()
+	planID := uuid.New()
+	dayNumber := 1
+
+	// Mock find active plan - Not Found
+	mock.ExpectQuery(`SELECT id FROM user_reading_plans`).
+		WithArgs(userID, planID).
+		WillReturnError(pgx.ErrNoRows)
+
+	err = service.UnmarkDayComplete(context.Background(), userID, planID, dayNumber)
+	assert.Error(t, err)
+	assert.Equal(t, models.ErrNotFound, err)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
