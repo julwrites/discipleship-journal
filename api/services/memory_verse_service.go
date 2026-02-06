@@ -165,9 +165,7 @@ func (s *memoryVerseService) GetVerses(ctx context.Context, packID uuid.UUID, us
 			v.Title = *title
 		}
 		if len(tagsBytes) > 0 {
-			if err := json.Unmarshal(tagsBytes, &v.Tags); err != nil {
-				// Log error? For now, we accept empty tags on error
-			}
+			_ = json.Unmarshal(tagsBytes, &v.Tags)
 		}
 		verses = append(verses, &v)
 	}

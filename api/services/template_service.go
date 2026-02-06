@@ -79,18 +79,10 @@ func (s *templateService) GetTemplate(ctx context.Context, id uuid.UUID) (*model
 		return nil, err
 	}
 
-	if err := json.Unmarshal(structureBytes, &t.Structure); err != nil {
-		// ignore
-	}
-	if err := json.Unmarshal(promptsBytes, &t.Prompts); err != nil {
-		// ignore
-	}
-	if err := json.Unmarshal(fieldsBytes, &t.Fields); err != nil {
-		// ignore
-	}
-	if err := json.Unmarshal(bibleRefsBytes, &t.BibleReferences); err != nil {
-		// ignore
-	}
+	_ = json.Unmarshal(structureBytes, &t.Structure)
+	_ = json.Unmarshal(promptsBytes, &t.Prompts)
+	_ = json.Unmarshal(fieldsBytes, &t.Fields)
+	_ = json.Unmarshal(bibleRefsBytes, &t.BibleReferences)
 
 	return &t, nil
 }
@@ -133,18 +125,10 @@ func (s *templateService) scanTemplates(ctx context.Context, query string, args 
 		); err != nil {
 			return nil, err
 		}
-		if err := json.Unmarshal(structureBytes, &t.Structure); err != nil {
-			// ignore
-		}
-		if err := json.Unmarshal(promptsBytes, &t.Prompts); err != nil {
-			// ignore
-		}
-		if err := json.Unmarshal(fieldsBytes, &t.Fields); err != nil {
-			// ignore
-		}
-		if err := json.Unmarshal(bibleRefsBytes, &t.BibleReferences); err != nil {
-			// ignore
-		}
+		_ = json.Unmarshal(structureBytes, &t.Structure)
+		_ = json.Unmarshal(promptsBytes, &t.Prompts)
+		_ = json.Unmarshal(fieldsBytes, &t.Fields)
+		_ = json.Unmarshal(bibleRefsBytes, &t.BibleReferences)
 		templates = append(templates, &t)
 	}
 	return templates, nil
