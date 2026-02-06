@@ -100,6 +100,21 @@ func TestGetAllPlans_Handler(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
+func TestGetAllPlans_Handler_Error(t *testing.T) {
+	mockService := new(MockReadingPlanService)
+	handler := NewReadingPlanHandler(mockService)
+
+	mockService.On("GetAllPlans", mock.Anything).Return(([]*models.ReadingPlan)(nil), errors.New("db error"))
+
+	req := httptest.NewRequest("GET", "/api/reading-plans", nil)
+	w := httptest.NewRecorder()
+
+	handler.GetAllPlans(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	mockService.AssertExpectations(t)
+}
+
 func TestGetPlan_Handler(t *testing.T) {
 	mockService := new(MockReadingPlanService)
 	handler := NewReadingPlanHandler(mockService)
@@ -122,6 +137,40 @@ func TestGetPlan_Handler(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	mockService.AssertExpectations(t)
+}
+
+func TestGetPlan_Handler_Errors(t *testing.T) {
+	t.Run("NotFound", func(t *testing.T) {
+		mockService := new(MockReadingPlanService)
+		handler := NewReadingPlanHandler(mockService)
+		id := uuid.New()
+
+		mockService.On("GetPlan", mock.Anything, id).Return((*models.ReadingPlan)(nil), models.ErrNotFound)
+
+		r := chi.NewRouter()
+		r.Get("/api/reading-plans/{id}", handler.GetPlan)
+		req := httptest.NewRequest("GET", "/api/reading-plans/"+id.String(), nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
+
+	t.Run("ServiceError", func(t *testing.T) {
+		mockService := new(MockReadingPlanService)
+		handler := NewReadingPlanHandler(mockService)
+		id := uuid.New()
+
+		mockService.On("GetPlan", mock.Anything, id).Return((*models.ReadingPlan)(nil), errors.New("db error"))
+
+		r := chi.NewRouter()
+		r.Get("/api/reading-plans/{id}", handler.GetPlan)
+		req := httptest.NewRequest("GET", "/api/reading-plans/"+id.String(), nil)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+	})
 }
 
 func TestSubscribe_Handler(t *testing.T) {
@@ -220,6 +269,44 @@ func TestUnsubscribe_Handler(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
+func TestUnsubscribe_Handler_Errors(t *testing.T) {
+	t.Run("NotFound", func(t *testing.T) {
+		mockService := new(MockReadingPlanService)
+		handler := NewReadingPlanHandler(mockService)
+		planID := uuid.New()
+		userID := uuid.New()
+
+		mockService.On("Unsubscribe", mock.Anything, userID, planID).Return(models.ErrNotFound)
+
+		r := chi.NewRouter()
+		r.Delete("/api/reading-plans/{id}/subscribe", handler.Unsubscribe)
+		req := httptest.NewRequest("DELETE", "/api/reading-plans/"+planID.String()+"/subscribe", nil)
+		ctx := context.WithValue(req.Context(), TestUserKey, userID)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req.WithContext(ctx))
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
+
+	t.Run("ServiceError", func(t *testing.T) {
+		mockService := new(MockReadingPlanService)
+		handler := NewReadingPlanHandler(mockService)
+		planID := uuid.New()
+		userID := uuid.New()
+
+		mockService.On("Unsubscribe", mock.Anything, userID, planID).Return(errors.New("db error"))
+
+		r := chi.NewRouter()
+		r.Delete("/api/reading-plans/{id}/subscribe", handler.Unsubscribe)
+		req := httptest.NewRequest("DELETE", "/api/reading-plans/"+planID.String()+"/subscribe", nil)
+		ctx := context.WithValue(req.Context(), TestUserKey, userID)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req.WithContext(ctx))
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+	})
+}
+
 func TestGetUserPlans_Handler(t *testing.T) {
 	mockService := new(MockReadingPlanService)
 	handler := NewReadingPlanHandler(mockService)
@@ -242,6 +329,23 @@ func TestGetUserPlans_Handler(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	mockService.AssertExpectations(t)
+}
+
+func TestGetUserPlans_Handler_Error(t *testing.T) {
+	mockService := new(MockReadingPlanService)
+	handler := NewReadingPlanHandler(mockService)
+	userID := uuid.New()
+
+	mockService.On("GetUserPlans", mock.Anything, userID).Return(([]*models.UserReadingPlan)(nil), errors.New("db error"))
+
+	r := chi.NewRouter()
+	r.Get("/api/my-reading-plans", handler.GetUserPlans)
+	req := httptest.NewRequest("GET", "/api/my-reading-plans", nil)
+	ctx := context.WithValue(req.Context(), TestUserKey, userID)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req.WithContext(ctx))
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
 }
 
 func TestMarkDayComplete_Handler(t *testing.T) {
@@ -290,6 +394,44 @@ func TestMarkDayComplete_Handler(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
+
+	t.Run("NotFound", func(t *testing.T) {
+		mockService := new(MockReadingPlanService)
+		handler := NewReadingPlanHandler(mockService)
+		planID := uuid.New()
+		userID := uuid.New()
+
+		mockService.On("MarkDayComplete", mock.Anything, userID, planID, 1).Return(models.ErrNotFound)
+
+		r := chi.NewRouter()
+		r.Post("/api/my-reading-plans/{id}/progress", handler.MarkDayComplete)
+		reqBody := `{"day_number": 1}`
+		req := httptest.NewRequest("POST", "/api/my-reading-plans/"+planID.String()+"/progress", strings.NewReader(reqBody))
+		ctx := context.WithValue(req.Context(), TestUserKey, userID)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req.WithContext(ctx))
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
+
+	t.Run("ServiceError", func(t *testing.T) {
+		mockService := new(MockReadingPlanService)
+		handler := NewReadingPlanHandler(mockService)
+		planID := uuid.New()
+		userID := uuid.New()
+
+		mockService.On("MarkDayComplete", mock.Anything, userID, planID, 1).Return(errors.New("db error"))
+
+		r := chi.NewRouter()
+		r.Post("/api/my-reading-plans/{id}/progress", handler.MarkDayComplete)
+		reqBody := `{"day_number": 1}`
+		req := httptest.NewRequest("POST", "/api/my-reading-plans/"+planID.String()+"/progress", strings.NewReader(reqBody))
+		ctx := context.WithValue(req.Context(), TestUserKey, userID)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req.WithContext(ctx))
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+	})
 }
 
 func TestUnmarkDayComplete_Handler(t *testing.T) {
@@ -316,6 +458,44 @@ func TestUnmarkDayComplete_Handler(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
+func TestUnmarkDayComplete_Handler_Errors(t *testing.T) {
+	t.Run("NotFound", func(t *testing.T) {
+		mockService := new(MockReadingPlanService)
+		handler := NewReadingPlanHandler(mockService)
+		planID := uuid.New()
+		userID := uuid.New()
+
+		mockService.On("UnmarkDayComplete", mock.Anything, userID, planID, 1).Return(models.ErrNotFound)
+
+		r := chi.NewRouter()
+		r.Delete("/api/my-reading-plans/{id}/progress/{day_number}", handler.UnmarkDayComplete)
+		req := httptest.NewRequest("DELETE", "/api/my-reading-plans/"+planID.String()+"/progress/1", nil)
+		ctx := context.WithValue(req.Context(), TestUserKey, userID)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req.WithContext(ctx))
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
+
+	t.Run("ServiceError", func(t *testing.T) {
+		mockService := new(MockReadingPlanService)
+		handler := NewReadingPlanHandler(mockService)
+		planID := uuid.New()
+		userID := uuid.New()
+
+		mockService.On("UnmarkDayComplete", mock.Anything, userID, planID, 1).Return(errors.New("db error"))
+
+		r := chi.NewRouter()
+		r.Delete("/api/my-reading-plans/{id}/progress/{day_number}", handler.UnmarkDayComplete)
+		req := httptest.NewRequest("DELETE", "/api/my-reading-plans/"+planID.String()+"/progress/1", nil)
+		ctx := context.WithValue(req.Context(), TestUserKey, userID)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req.WithContext(ctx))
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+	})
+}
+
 func TestGetPlanProgress_Handler(t *testing.T) {
 	mockService := new(MockReadingPlanService)
 	handler := NewReadingPlanHandler(mockService)
@@ -337,4 +517,42 @@ func TestGetPlanProgress_Handler(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	mockService.AssertExpectations(t)
+}
+
+func TestGetPlanProgress_Handler_Errors(t *testing.T) {
+	t.Run("NotFound", func(t *testing.T) {
+		mockService := new(MockReadingPlanService)
+		handler := NewReadingPlanHandler(mockService)
+		planID := uuid.New()
+		userID := uuid.New()
+
+		mockService.On("GetPlanProgress", mock.Anything, userID, planID).Return(([]int)(nil), models.ErrNotFound)
+
+		r := chi.NewRouter()
+		r.Get("/api/my-reading-plans/{id}/progress", handler.GetPlanProgress)
+		req := httptest.NewRequest("GET", "/api/my-reading-plans/"+planID.String()+"/progress", nil)
+		ctx := context.WithValue(req.Context(), TestUserKey, userID)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req.WithContext(ctx))
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
+
+	t.Run("ServiceError", func(t *testing.T) {
+		mockService := new(MockReadingPlanService)
+		handler := NewReadingPlanHandler(mockService)
+		planID := uuid.New()
+		userID := uuid.New()
+
+		mockService.On("GetPlanProgress", mock.Anything, userID, planID).Return(([]int)(nil), errors.New("db error"))
+
+		r := chi.NewRouter()
+		r.Get("/api/my-reading-plans/{id}/progress", handler.GetPlanProgress)
+		req := httptest.NewRequest("GET", "/api/my-reading-plans/"+planID.String()+"/progress", nil)
+		ctx := context.WithValue(req.Context(), TestUserKey, userID)
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req.WithContext(ctx))
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+	})
 }
