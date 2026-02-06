@@ -324,6 +324,8 @@ func TestGroupHandler_AddGroupMember(t *testing.T) {
 }
 
 func TestGroupHandler_GetOrCreateDirectGroup(t *testing.T) {
+	testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+
 	t.Run("Success - Created", func(t *testing.T) {
 		mockService := new(MockGroupService)
 		h := NewGroupHandler(mockService)
@@ -335,10 +337,7 @@ func TestGroupHandler_GetOrCreateDirectGroup(t *testing.T) {
 		req := httptest.NewRequest("POST", "/groups/direct", strings.NewReader(reqBody))
 		req.Header.Set("Content-Type", "application/json")
 
-		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
-		dummyToken := &auth.Token{UID: "firebase-uid-123"}
-		ctx = context.WithValue(ctx, middleware.UserContextKey, dummyToken)
 		req = req.WithContext(ctx)
 
 		w := httptest.NewRecorder()
@@ -359,16 +358,51 @@ func TestGroupHandler_GetOrCreateDirectGroup(t *testing.T) {
 		req := httptest.NewRequest("POST", "/groups/direct", strings.NewReader(reqBody))
 		req.Header.Set("Content-Type", "application/json")
 
-		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
-		dummyToken := &auth.Token{UID: "firebase-uid-123"}
-		ctx = context.WithValue(ctx, middleware.UserContextKey, dummyToken)
 		req = req.WithContext(ctx)
 
 		w := httptest.NewRecorder()
 		h.GetOrCreateDirectGroup(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
+		mockService.AssertExpectations(t)
+	})
+
+	t.Run("Invalid Request", func(t *testing.T) {
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
+
+		reqBody := `{"partner_id": ""}` // invalid
+		req := httptest.NewRequest("POST", "/groups/direct", strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		h.GetOrCreateDirectGroup(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("Service Error", func(t *testing.T) {
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
+
+		mockService.On("GetOrCreateDirectGroup", mock.Anything, mock.AnythingOfType("string"), "partner-1").
+			Return((*services.Group)(nil), false, errors.New("db error"))
+
+		reqBody := `{"partner_id": "partner-1"}`
+		req := httptest.NewRequest("POST", "/groups/direct", strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		h.GetOrCreateDirectGroup(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
 		mockService.AssertExpectations(t)
 	})
 }

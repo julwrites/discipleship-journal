@@ -194,3 +194,77 @@ func TestTemplateHandler_DeleteTemplate(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 }
+
+func TestTemplateHandler_CloneTemplate(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		mockService := new(MockTemplateService)
+		handler := NewTemplateHandler(mockService)
+
+		templateID := uuid.New()
+		userID := uuid.New()
+
+		mockService.On("CloneTemplate", mock.Anything, templateID, userID).Return(&models.StudyTemplate{
+			ID: uuid.New(),
+			Title: "Cloned Template",
+		}, nil)
+
+		r := chi.NewRouter()
+		r.Post("/api/templates/{id}/clone", handler.CloneTemplate)
+
+		req := httptest.NewRequest("POST", "/api/templates/"+templateID.String()+"/clone", nil)
+		ctx := context.WithValue(req.Context(), TestUserKey, userID.String())
+		req = req.WithContext(ctx)
+
+		rr := httptest.NewRecorder()
+		r.ServeHTTP(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+	})
+}
+
+func TestTemplateHandler_Generate(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		mockService := new(MockTemplateService)
+		handler := NewTemplateHandler(mockService)
+
+		templateID := uuid.New()
+		userID := uuid.New()
+
+		payload := `{"inputs": {"theme": "grace"}}`
+
+		mockService.On("GenerateContent", mock.Anything, templateID, mock.Anything).Return("Generated content", nil)
+
+		r := chi.NewRouter()
+		r.Post("/api/templates/{id}/generate", handler.Generate)
+
+		req := httptest.NewRequest("POST", "/api/templates/"+templateID.String()+"/generate", strings.NewReader(payload))
+		ctx := context.WithValue(req.Context(), TestUserKey, userID.String())
+		req = req.WithContext(ctx)
+
+		rr := httptest.NewRecorder()
+		r.ServeHTTP(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+	})
+}
+
+func TestTemplateHandler_ListPublicTemplates(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		mockService := new(MockTemplateService)
+		handler := NewTemplateHandler(mockService)
+
+		mockService.On("ListPublicTemplates", mock.Anything).Return([]*models.StudyTemplate{
+			{ID: uuid.New(), Title: "Public 1", IsPublic: true},
+		}, nil)
+
+		req := httptest.NewRequest("GET", "/api/templates/public", nil)
+
+		ctx := context.WithValue(req.Context(), TestUserKey, uuid.New().String())
+		req = req.WithContext(ctx)
+
+		rr := httptest.NewRecorder()
+		handler.ListPublicTemplates(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+	})
+}

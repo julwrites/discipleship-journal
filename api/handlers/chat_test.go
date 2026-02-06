@@ -6,136 +6,154 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"strings"
 	"testing"
-	"time"
+    "time"
 
-	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/services"
-	"firebase.google.com/go/v4/auth"
-	"github.com/google/uuid"
-	"github.com/pashagolub/pgxmock/v4"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
-func TestChatWithAI(t *testing.T) {
-	// Decide whether to use real or mock client based on env var
-	useReal := os.Getenv("TEST_REAL_BIBLE_API") == "true"
-	var client services.BibleAIClient
-	if useReal {
-		client = services.NewRealBibleAIClient(os.Getenv("BIBLE_API_URL"), os.Getenv("BIBLE_API_KEY"), os.Getenv("LLM_SYSTEM_PROMPTS"))
-	} else {
-		client = services.NewMockBibleAIClient()
-	}
+func createMockNote(id, userID string) *services.Note {
+    return &services.Note{
+        ID: id,
+        UserID: userID,
+        CreatedAt: time.Now(),
+        UpdatedAt: time.Now(),
+    }
+}
 
-	mockDB, err := pgxmock.NewPool()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
-	defer mockDB.Close()
+func TestChatHandler_ChatWithAI(t *testing.T) {
+    testUserID := "00000000-0000-0000-0000-000000000001"
 
-	mockService := new(MockNoteService)
-	mockNotificationService := services.NewMockNotificationService()
+	t.Run("Success_Blocking", func(t *testing.T) {
+		mockClient := new(MockBibleAIClient)
+		mockNoteService := new(MockNoteService)
+		mockNotificationService := new(MockNotificationService)
 
-	handler := NewChatHandler(client, mockService, mockNotificationService, mockDB)
+		handler := NewChatHandler(mockClient, mockNoteService, mockNotificationService, nil)
 
-	t.Run("AskAI Success", func(t *testing.T) {
-		testUserID := "00000000-0000-0000-0000-000000000001"
-
-		mockService.On("CreateNote", mock.Anything, testUserID, mock.Anything, mock.Anything, mock.Anything, []string{"pending"}).
-			Return(&services.Note{ID: "note-123"}, nil).
-			Once()
-
-		mockService.On("UpdateNote", mock.Anything, testUserID, "note-123", mock.Anything, mock.Anything, mock.Anything, []string{"active"}).
-			Return(nil).
-			Maybe()
-
-		reqBody := map[string]string{
-			"context": "I am feeling happy today.",
-			"prompt":  "What is happiness?",
+		payload := map[string]interface{}{
+			"prompt": "Hello",
+            "passage": "John 3:16",
+            "themes": []string{"Love"},
+            "options": map[string]bool{"stream": false},
 		}
-		bodyBytes, _ := json.Marshal(reqBody)
-		req, _ := http.NewRequest("POST", "/api/ai/ask", bytes.NewBuffer(bodyBytes))
-		req.Header.Set("Content-Type", "application/json")
+		body, _ := json.Marshal(payload)
 
+		mockClient.On("ChatCompletion", mock.Anything, mock.Anything).Return(map[string]interface{}{
+			"response": "Hello there",
+		}, nil)
+
+        // Mock CreateNote
+        mockNoteService.On("CreateNote", mock.Anything, testUserID, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+            Return(createMockNote("note-1", testUserID), nil)
+
+        // Mock UpdateNote
+        mockNoteService.On("UpdateNote", mock.Anything, testUserID, "note-1", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+            Return(nil)
+
+        // Mock Query (since default is blocking)
+        mockClient.On("Query", mock.Anything, mock.Anything, mock.Anything).Return("Response from AI", "", nil)
+
+        // Mock Notification
+        mockNotificationService.On("SendNotification", mock.Anything, testUserID, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		req := httptest.NewRequest("POST", "/api/chat", bytes.NewBuffer(body))
 		ctx := context.WithValue(req.Context(), TestUserKey, testUserID)
-		req = req.WithContext(ctx)
-
-		rr := httptest.NewRecorder()
-
-		handler.AskAI(rr, req)
-
-		if status := rr.Code; status != http.StatusOK {
-			t.Errorf("handler returned wrong status code: got %v want %v. Body: %s", status, http.StatusOK, rr.Body.String())
-		}
-
-		contentType := rr.Header().Get("Content-Type")
-		if contentType != "text/event-stream" {
-			t.Errorf("Expected Content-Type text/event-stream, got %s", contentType)
-		}
-
-		body := rr.Body.String()
-		if !strings.Contains(body, "event: start") {
-			t.Error("Expected event: start")
-		}
-		if !strings.Contains(body, "event: chunk") {
-			t.Error("Expected event: chunk")
-		}
-		if !strings.Contains(body, "event: done") {
-			t.Error("Expected event: done")
-		}
-	})
-
-	t.Run("ChatWithAI Success", func(t *testing.T) {
-		if useReal {
-			t.Skip("Skipping ChatWithAI test in real integration mode due to auth/DB complexity")
-		}
-
-		uid := "firebase_uid_123"
-		userUUID := uuid.New()
-
-		mockDB.ExpectQuery("SELECT id FROM users WHERE firebase_uid=\\$1").
-			WithArgs(uid).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
-
-		mockService.On("CreateNote", mock.Anything, userUUID.String(), mock.Anything, mock.Anything, mock.Anything, []string{"pending"}).
-			Return(&services.Note{ID: "note-456"}, nil).
-			Once()
-
-		mockService.On("UpdateNote", mock.Anything, userUUID.String(), "note-456", mock.Anything, mock.Anything, mock.Anything, []string{"active"}).
-			Return(nil).
-			Maybe()
-
-		reqBody := map[string]interface{}{
-			"passage": "John 3:16",
-			"themes":  []string{"Love"},
-			"prompt":  "What does this mean?",
-		}
-		bodyBytes, _ := json.Marshal(reqBody)
-		req, _ := http.NewRequest("POST", "/api/chat", bytes.NewBuffer(bodyBytes))
-		req.Header.Set("Content-Type", "application/json")
-
-		ctx := context.WithValue(req.Context(), middleware.UserContextKey, &auth.Token{UID: uid})
 		req = req.WithContext(ctx)
 
 		rr := httptest.NewRecorder()
 
 		handler.ChatWithAI(rr, req)
 
-		if status := rr.Code; status != http.StatusOK {
-			t.Errorf("handler returned wrong status code: got %v want %v. Body: %s", status, http.StatusOK, rr.Body.String())
-		}
+		assert.Equal(t, http.StatusOK, rr.Code)
+	})
 
-		if err := mockDB.ExpectationsWereMet(); err != nil {
-			t.Errorf("there were unfulfilled expectations: %s", err)
-		}
+    t.Run("Success_Streaming", func(t *testing.T) {
+		mockClient := new(MockBibleAIClient)
+		mockNoteService := new(MockNoteService)
+		mockNotificationService := new(MockNotificationService)
 
-		body := rr.Body.String()
-		if !strings.Contains(body, "event: start") {
-			t.Error("Expected event: start")
-		}
+		handler := NewChatHandler(mockClient, mockNoteService, mockNotificationService, nil)
 
-		time.Sleep(10 * time.Millisecond)
+		payload := map[string]interface{}{
+			"prompt": "Hello",
+            "passage": "John 3:16",
+            "themes": []string{"Love"},
+            "options": map[string]bool{"stream": true},
+		}
+		body, _ := json.Marshal(payload)
+
+        mockNoteService.On("CreateNote", mock.Anything, testUserID, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+            Return(createMockNote("note-stream", testUserID), nil)
+
+        mockNoteService.On("UpdateNote", mock.Anything, testUserID, "note-stream", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+            Return(nil)
+
+        // Mock Stream
+        outChan := make(chan string, 2)
+        outChan <- "Hello "
+        outChan <- "World"
+        close(outChan)
+
+        mockClient.On("Stream", mock.Anything, mock.Anything).Return((<-chan string)(outChan), "", nil)
+
+        // Mock Notification (called after stream)
+        mockNotificationService.On("SendNotification", mock.Anything, testUserID, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		req := httptest.NewRequest("POST", "/api/chat", bytes.NewBuffer(body))
+		ctx := context.WithValue(req.Context(), TestUserKey, testUserID)
+		req = req.WithContext(ctx)
+
+		rr := httptest.NewRecorder()
+
+		handler.ChatWithAI(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+        assert.Contains(t, rr.Body.String(), "event: start")
+        assert.Contains(t, rr.Body.String(), "Hello")
+        assert.Contains(t, rr.Body.String(), "World")
+        assert.Contains(t, rr.Body.String(), "event: done")
+	})
+}
+
+func TestChatHandler_AskAI(t *testing.T) {
+    testUserID := "00000000-0000-0000-0000-000000000001"
+
+	t.Run("Success", func(t *testing.T) {
+		mockClient := new(MockBibleAIClient)
+        mockNoteService := new(MockNoteService)
+		// No notification service for AskAI in some cases? Or maybe yes?
+		// AskAI calls handleRequest which calls sendNotification if NoteService updates to active.
+		// So yes, it needs notification mock too?
+		// Check NewChatHandler signature in test: previously passed nil.
+		// If nil, sendNotification check `if h.NotificationService != nil`.
+		// So passing nil is safe.
+		handler := NewChatHandler(mockClient, mockNoteService, nil, nil)
+
+		payload := map[string]interface{}{
+			"prompt": "What is faith?",
+            "context": "Context here",
+            "options": map[string]bool{"stream": false},
+		}
+		body, _ := json.Marshal(payload)
+
+        mockNoteService.On("CreateNote", mock.Anything, testUserID, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+            Return(createMockNote("note-2", testUserID), nil)
+
+        mockNoteService.On("UpdateNote", mock.Anything, testUserID, "note-2", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+            Return(nil)
+
+		mockClient.On("Query", mock.Anything, mock.Anything, mock.Anything).Return("Faith is...", "", nil)
+
+		req := httptest.NewRequest("POST", "/api/ai/ask", bytes.NewBuffer(body))
+        ctx := context.WithValue(req.Context(), TestUserKey, testUserID)
+        req = req.WithContext(ctx)
+		rr := httptest.NewRecorder()
+
+		handler.AskAI(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
 	})
 }

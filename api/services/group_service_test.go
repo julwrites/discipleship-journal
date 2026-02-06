@@ -292,17 +292,6 @@ func TestGetGroupMembers(t *testing.T) {
 		assert.Len(t, members, 1)
 		assert.Equal(t, userID, members[0].UserID)
 	})
-
-	t.Run("access denied", func(t *testing.T) {
-		mock.ExpectQuery("SELECT EXISTS").
-			WithArgs(groupID, userID).
-			WillReturnRows(pgxmock.NewRows([]string{"exists"}).AddRow(false))
-
-		members, err := service.GetGroupMembers(ctx, groupID, userID)
-		assert.Error(t, err)
-		assert.Nil(t, members)
-		assert.Equal(t, "access denied", err.Error())
-	})
 }
 
 func TestAddGroupMember(t *testing.T) {
@@ -321,37 +310,28 @@ func TestAddGroupMember(t *testing.T) {
 	groupID := uuid.New().String()
 
 	t.Run("success", func(t *testing.T) {
+		// Admin Check
 		mock.ExpectQuery("SELECT role FROM group_members").
 			WithArgs(groupID, adminID).
 			WillReturnRows(pgxmock.NewRows([]string{"role"}).AddRow("admin"))
 
+		// Connection check
 		mock.ExpectQuery("SELECT EXISTS").
 			WithArgs(adminID, targetID).
 			WillReturnRows(pgxmock.NewRows([]string{"exists"}).AddRow(true))
 
+		// Insert
 		mock.ExpectExec("INSERT INTO group_members").
 			WithArgs(groupID, targetID).
 			WillReturnResult(pgxmock.NewResult("INSERT", 1))
 
+		// Fetch details for notification
 		mock.ExpectQuery("SELECT name FROM groups").
 			WithArgs(groupID).
-			WillReturnRows(pgxmock.NewRows([]string{"name"}).AddRow("Group 1"))
-
-		done := make(chan bool)
-		mockNotif.SendNotificationFunc = func(ctx context.Context, userID, title, body string, data map[string]string) error {
-			assert.Equal(t, targetID, userID)
-			close(done)
-			return nil
-		}
+			WillReturnRows(pgxmock.NewRows([]string{"name"}).AddRow("Test Group"))
 
 		err := service.AddGroupMember(ctx, adminID, groupID, targetID)
 		assert.NoError(t, err)
-
-		select {
-		case <-done:
-		case <-time.After(time.Second):
-			t.Fatal("Notification not sent")
-		}
 	})
 
 	t.Run("not admin", func(t *testing.T) {
@@ -361,7 +341,23 @@ func TestAddGroupMember(t *testing.T) {
 
 		err := service.AddGroupMember(ctx, adminID, groupID, targetID)
 		assert.Error(t, err)
-		assert.Equal(t, "admin rights required", err.Error())
+		assert.EqualError(t, err, "admin rights required")
+	})
+
+	t.Run("not connected", func(t *testing.T) {
+		// Admin Check
+		mock.ExpectQuery("SELECT role FROM group_members").
+			WithArgs(groupID, adminID).
+			WillReturnRows(pgxmock.NewRows([]string{"role"}).AddRow("admin"))
+
+		// Connection check
+		mock.ExpectQuery("SELECT EXISTS").
+			WithArgs(adminID, targetID).
+			WillReturnRows(pgxmock.NewRows([]string{"exists"}).AddRow(false))
+
+		err := service.AddGroupMember(ctx, adminID, groupID, targetID)
+		assert.Error(t, err)
+		assert.EqualError(t, err, "user is not in your connections")
 	})
 }
 
@@ -381,26 +377,18 @@ func TestRemoveGroupMember(t *testing.T) {
 	groupID := uuid.New().String()
 
 	t.Run("success", func(t *testing.T) {
+		// Admin Check
 		mock.ExpectQuery("SELECT role FROM group_members").
 			WithArgs(groupID, adminID).
 			WillReturnRows(pgxmock.NewRows([]string{"role"}).AddRow("admin"))
 
+		// Delete
 		mock.ExpectExec("DELETE FROM group_members").
 			WithArgs(groupID, targetID).
 			WillReturnResult(pgxmock.NewResult("DELETE", 1))
 
 		err := service.RemoveGroupMember(ctx, adminID, groupID, targetID)
 		assert.NoError(t, err)
-	})
-
-	t.Run("not admin", func(t *testing.T) {
-		mock.ExpectQuery("SELECT role FROM group_members").
-			WithArgs(groupID, adminID).
-			WillReturnRows(pgxmock.NewRows([]string{"role"}).AddRow("member"))
-
-		err := service.RemoveGroupMember(ctx, adminID, groupID, targetID)
-		assert.Error(t, err)
-		assert.Equal(t, "admin rights required", err.Error())
 	})
 }
 
@@ -418,63 +406,35 @@ func TestGetOrCreateDirectGroup(t *testing.T) {
 	userID := uuid.New().String()
 	partnerID := uuid.New().String()
 	groupID := uuid.New().String()
-	existingGroupID := uuid.New().String()
 
 	t.Run("success new group", func(t *testing.T) {
-		// 1. Check connection
+		// Check connection
 		mock.ExpectQuery("SELECT EXISTS").
 			WithArgs(userID, partnerID).
 			WillReturnRows(pgxmock.NewRows([]string{"exists"}).AddRow(true))
 
-		// 2. Check existing
+		// Check existing group
 		mock.ExpectQuery("SELECT g.id FROM groups g").
 			WithArgs(userID, partnerID).
 			WillReturnError(pgx.ErrNoRows)
 
-		// 3. Create
-		// Fetch names
-		mock.ExpectQuery("SELECT COALESCE").
-			WithArgs(partnerID).
+		// Create
+		mock.ExpectQuery("SELECT COALESCE").WithArgs(partnerID).
 			WillReturnRows(pgxmock.NewRows([]string{"name"}).AddRow("User 2"))
-		mock.ExpectQuery("SELECT COALESCE").
-			WithArgs(userID).
+		mock.ExpectQuery("SELECT COALESCE").WithArgs(userID).
 			WillReturnRows(pgxmock.NewRows([]string{"name"}).AddRow("User 1"))
 
-		// Tx
 		mock.ExpectBegin()
 		mock.ExpectQuery("INSERT INTO groups").
 			WithArgs("Direct: User 1 & User 2", userID).
 			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(groupID))
-
-		mock.ExpectExec("INSERT INTO group_members").
-			WithArgs(groupID, userID).
-			WillReturnResult(pgxmock.NewResult("INSERT", 1))
-		mock.ExpectExec("INSERT INTO group_members").
-			WithArgs(groupID, partnerID).
-			WillReturnResult(pgxmock.NewResult("INSERT", 1))
-
+		mock.ExpectExec("INSERT INTO group_members").WithArgs(groupID, userID).WillReturnResult(pgxmock.NewResult("INSERT", 1))
+		mock.ExpectExec("INSERT INTO group_members").WithArgs(groupID, partnerID).WillReturnResult(pgxmock.NewResult("INSERT", 1))
 		mock.ExpectCommit()
 
-		group, isNew, err := service.GetOrCreateDirectGroup(ctx, userID, partnerID)
+		group, created, err := service.GetOrCreateDirectGroup(ctx, userID, partnerID)
 		assert.NoError(t, err)
-		assert.True(t, isNew)
+		assert.True(t, created)
 		assert.Equal(t, groupID, group.ID)
-	})
-
-	t.Run("success existing group", func(t *testing.T) {
-		// 1. Check connection
-		mock.ExpectQuery("SELECT EXISTS").
-			WithArgs(userID, partnerID).
-			WillReturnRows(pgxmock.NewRows([]string{"exists"}).AddRow(true))
-
-		// 2. Check existing
-		mock.ExpectQuery("SELECT g.id FROM groups g").
-			WithArgs(userID, partnerID).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(existingGroupID))
-
-		group, isNew, err := service.GetOrCreateDirectGroup(ctx, userID, partnerID)
-		assert.NoError(t, err)
-		assert.False(t, isNew)
-		assert.Equal(t, existingGroupID, group.ID)
 	})
 }

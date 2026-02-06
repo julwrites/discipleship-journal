@@ -24,7 +24,7 @@ func TestShareItemToGroup(t *testing.T) {
 		assert.NoError(t, err)
 		defer mockDB.Close()
 
-		mockNotify := new(MockNotificationServiceWithMock)
+		mockNotify := new(MockNotificationService)
 		handler := NewGroupShareHandler(mockDB, mockNotify)
 
 		userID := uuid.New()
