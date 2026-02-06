@@ -2,6 +2,9 @@ package services
 
 import (
 	"context"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -35,4 +38,90 @@ func TestBibleVersionService_GetVersions(t *testing.T) {
 	assert.Equal(t, "NIV", versions[1].Abbreviation)
 
 	assert.NoError(t, mockDB.ExpectationsWereMet())
+}
+
+func TestBibleVersionService_ScrapeVersions(t *testing.T) {
+	// Mock server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		fmt.Fprintln(w, `
+			<html>
+			<body>
+				<select name="version" class="search-dropdown">
+					<option value="ESV">English Standard Version</option>
+					<option value="NIV">New International Version</option>
+					<option value="">Select Version</option>
+				</select>
+			</body>
+			</html>
+		`)
+	}))
+	defer ts.Close()
+
+	// Instantiate service manually to inject dependencies
+	service := &bibleVersionService{
+		db:         nil, // Not needed for scraping
+		httpClient: ts.Client(),
+		scrapeURL:  ts.URL,
+	}
+
+	versions, err := service.ScrapeVersions(context.Background())
+	assert.NoError(t, err)
+	assert.Len(t, versions, 2)
+	assert.Equal(t, "English Standard Version", versions["ESV"])
+	assert.Equal(t, "New International Version", versions["NIV"])
+}
+
+func TestBibleVersionService_SyncVersions(t *testing.T) {
+	// Mock server
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, `
+			<select name="version" class="search-dropdown">
+				<option value="ESV">English Standard Version</option>
+			</select>
+		`)
+	}))
+	defer ts.Close()
+
+	mockDB, err := pgxmock.NewPool()
+	require.NoError(t, err)
+	defer mockDB.Close()
+
+	service := &bibleVersionService{
+		db:         mockDB,
+		httpClient: ts.Client(),
+		scrapeURL:  ts.URL,
+	}
+
+	// Expect transaction
+	mockDB.ExpectBegin()
+	// Expect insert
+	mockDB.ExpectExec("INSERT INTO bible_versions").
+		WithArgs("English Standard Version", "ESV").
+		WillReturnResult(pgxmock.NewResult("INSERT", 1))
+	// Expect commit
+	mockDB.ExpectCommit()
+
+	err = service.SyncVersions(context.Background())
+	assert.NoError(t, err)
+
+	assert.NoError(t, mockDB.ExpectationsWereMet())
+}
+
+func TestBibleVersionService_ScrapeVersions_Error(t *testing.T) {
+	// Mock server returning 500
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}))
+	defer ts.Close()
+
+	service := &bibleVersionService{
+		httpClient: ts.Client(),
+		scrapeURL:  ts.URL,
+	}
+
+	versions, err := service.ScrapeVersions(context.Background())
+	assert.Error(t, err)
+	assert.Nil(t, versions)
+	assert.Contains(t, err.Error(), "unexpected status code: 500")
 }
