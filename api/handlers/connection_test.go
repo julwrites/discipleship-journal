@@ -11,6 +11,7 @@ import (
 	"discipleship_journal_api/services"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 )
@@ -66,6 +67,57 @@ func TestSendConnectionRequest(t *testing.T) {
 	}
 }
 
+func TestSendConnectionRequest_Errors(t *testing.T) {
+	mockDB, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mockDB.Close()
+
+	handler := NewConnectionHandler(mockDB, nil)
+
+	t.Run("MissingReceiver", func(t *testing.T) {
+		reqBody := ConnectionRequest{}
+		bodyBytes, _ := json.Marshal(reqBody)
+		req := httptest.NewRequest("POST", "/api/connections/request", bytes.NewBuffer(bodyBytes))
+		req = req.WithContext(context.WithValue(req.Context(), TestUserKey, uuid.New()))
+		w := httptest.NewRecorder()
+		handler.SendConnectionRequest(w, req)
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("SelfConnection", func(t *testing.T) {
+		userID := uuid.New()
+
+		// Mock receiver lookup to return same ID
+		mockDB.ExpectQuery("SELECT id FROM users WHERE email =").
+			WithArgs("me@example.com").
+			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userID.String()))
+
+		reqBody := ConnectionRequest{ReceiverEmail: "me@example.com"}
+		bodyBytes, _ := json.Marshal(reqBody)
+		req := httptest.NewRequest("POST", "/api/connections/request", bytes.NewBuffer(bodyBytes))
+		req = req.WithContext(context.WithValue(req.Context(), TestUserKey, userID))
+		w := httptest.NewRecorder()
+		handler.SendConnectionRequest(w, req)
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("ReceiverNotFound", func(t *testing.T) {
+		mockDB.ExpectQuery("SELECT id FROM users WHERE email =").
+			WithArgs("missing@example.com").
+			WillReturnError(pgx.ErrNoRows)
+
+		reqBody := ConnectionRequest{ReceiverEmail: "missing@example.com"}
+		bodyBytes, _ := json.Marshal(reqBody)
+		req := httptest.NewRequest("POST", "/api/connections/request", bytes.NewBuffer(bodyBytes))
+		req = req.WithContext(context.WithValue(req.Context(), TestUserKey, uuid.New()))
+		w := httptest.NewRecorder()
+		handler.SendConnectionRequest(w, req)
+		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
+}
+
 func TestSearchUsers(t *testing.T) {
 	mock, err := pgxmock.NewPool()
 	if err != nil {
@@ -110,6 +162,35 @@ func TestSearchUsers(t *testing.T) {
 	}
 }
 
+func TestSearchUsers_Errors(t *testing.T) {
+	mockDB, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mockDB.Close()
+
+	handler := NewConnectionHandler(mockDB, nil)
+
+	t.Run("ShortQuery", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/api/users/search?q=ab", nil)
+		w := httptest.NewRecorder()
+		handler.SearchUsers(w, req)
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("DBError", func(t *testing.T) {
+		userUUID := uuid.New()
+		mockDB.ExpectQuery("SELECT u.id").
+			WillReturnError(assert.AnError)
+
+		req := httptest.NewRequest("GET", "/api/users/search?q=error", nil)
+		req = req.WithContext(context.WithValue(req.Context(), TestUserKey, userUUID))
+		w := httptest.NewRecorder()
+		handler.SearchUsers(w, req)
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+	})
+}
+
 func TestListConnections(t *testing.T) {
 	mock, err := pgxmock.NewPool()
 	if err != nil {
@@ -151,6 +232,25 @@ func TestListConnections(t *testing.T) {
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %s", err)
 	}
+}
+
+func TestListConnections_Error(t *testing.T) {
+	mockDB, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mockDB.Close()
+
+	handler := NewConnectionHandler(mockDB, nil)
+	userUUID := uuid.New()
+
+	mockDB.ExpectQuery("SELECT c.id").WillReturnError(assert.AnError)
+
+	req := httptest.NewRequest("GET", "/api/connections", nil)
+	req = req.WithContext(context.WithValue(req.Context(), TestUserKey, userUUID))
+	w := httptest.NewRecorder()
+	handler.ListConnections(w, req)
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
 }
 
 func TestAcceptConnectionRequest(t *testing.T) {
@@ -198,6 +298,42 @@ func TestAcceptConnectionRequest(t *testing.T) {
 	}
 }
 
+func TestAcceptConnectionRequest_Errors(t *testing.T) {
+	mockDB, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mockDB.Close()
+
+	handler := NewConnectionHandler(mockDB, nil)
+	userUUID := uuid.New()
+	connID := "conn-1"
+
+	t.Run("DBError", func(t *testing.T) {
+		mockDB.ExpectExec("UPDATE connections").WithArgs(connID, userUUID).WillReturnError(assert.AnError)
+		req := httptest.NewRequest("PUT", "/api/connections/"+connID, nil)
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", connID)
+		ctx := context.WithValue(req.Context(), chi.RouteCtxKey, rctx)
+		ctx = context.WithValue(ctx, TestUserKey, userUUID)
+		w := httptest.NewRecorder()
+		handler.AcceptConnectionRequest(w, req.WithContext(ctx))
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+	})
+
+	t.Run("NotFound", func(t *testing.T) {
+		mockDB.ExpectExec("UPDATE connections").WithArgs(connID, userUUID).WillReturnResult(pgxmock.NewResult("UPDATE", 0))
+		req := httptest.NewRequest("PUT", "/api/connections/"+connID, nil)
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", connID)
+		ctx := context.WithValue(req.Context(), chi.RouteCtxKey, rctx)
+		ctx = context.WithValue(ctx, TestUserKey, userUUID)
+		w := httptest.NewRecorder()
+		handler.AcceptConnectionRequest(w, req.WithContext(ctx))
+		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
+}
+
 func TestDeleteConnectionRequest(t *testing.T) {
 	mock, err := pgxmock.NewPool()
 	if err != nil {
@@ -241,4 +377,40 @@ func TestDeleteConnectionRequest(t *testing.T) {
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %s", err)
 	}
+}
+
+func TestDeleteConnectionRequest_Errors(t *testing.T) {
+	mockDB, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mockDB.Close()
+
+	handler := NewConnectionHandler(mockDB, nil)
+	userUUID := uuid.New()
+	connID := "conn-1"
+
+	t.Run("DBError", func(t *testing.T) {
+		mockDB.ExpectExec("DELETE FROM connections").WithArgs(connID, userUUID).WillReturnError(assert.AnError)
+		req := httptest.NewRequest("DELETE", "/api/connections/"+connID, nil)
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", connID)
+		ctx := context.WithValue(req.Context(), chi.RouteCtxKey, rctx)
+		ctx = context.WithValue(ctx, TestUserKey, userUUID)
+		w := httptest.NewRecorder()
+		handler.DeleteConnectionRequest(w, req.WithContext(ctx))
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+	})
+
+	t.Run("NotFound", func(t *testing.T) {
+		mockDB.ExpectExec("DELETE FROM connections").WithArgs(connID, userUUID).WillReturnResult(pgxmock.NewResult("DELETE", 0))
+		req := httptest.NewRequest("DELETE", "/api/connections/"+connID, nil)
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", connID)
+		ctx := context.WithValue(req.Context(), chi.RouteCtxKey, rctx)
+		ctx = context.WithValue(ctx, TestUserKey, userUUID)
+		w := httptest.NewRecorder()
+		handler.DeleteConnectionRequest(w, req.WithContext(ctx))
+		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
 }
