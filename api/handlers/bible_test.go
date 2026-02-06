@@ -82,7 +82,7 @@ func TestBibleHandler_GetBiblePassage(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, rr.Code)
 		var resp map[string]interface{}
-		json.Unmarshal(rr.Body.Bytes(), &resp)
+		_ = json.Unmarshal(rr.Body.Bytes(), &resp)
 		assert.Equal(t, "For God so loved the world...", resp["text"])
 	})
 
