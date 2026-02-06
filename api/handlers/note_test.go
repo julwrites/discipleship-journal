@@ -702,3 +702,66 @@ func TestUpdateNoteHandler_ServiceError(t *testing.T) {
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 }
+
+func TestCreateNote_Unauthorized(t *testing.T) {
+	_, noteServiceMock, handler := setupTest(t)
+	req := httptest.NewRequest("POST", "/api/notes", bytes.NewBufferString("{}"))
+	w := httptest.NewRecorder()
+	handler.CreateNote(w, req)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	noteServiceMock.AssertNotCalled(t, "CreateNote")
+}
+
+func TestUpdateNote_Unauthorized(t *testing.T) {
+	_, noteServiceMock, handler := setupTest(t)
+	req := httptest.NewRequest("PUT", "/api/notes/1", bytes.NewBufferString("{}"))
+	w := httptest.NewRecorder()
+	handler.UpdateNote(w, req)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	noteServiceMock.AssertNotCalled(t, "UpdateNote")
+}
+
+func TestDeleteNote_Unauthorized(t *testing.T) {
+	_, noteServiceMock, handler := setupTest(t)
+	req := httptest.NewRequest("DELETE", "/api/notes/1", nil)
+	w := httptest.NewRecorder()
+	handler.DeleteNote(w, req)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	noteServiceMock.AssertNotCalled(t, "DeleteNote")
+}
+
+func TestGetNote_Unauthorized(t *testing.T) {
+	_, noteServiceMock, handler := setupTest(t)
+	req := httptest.NewRequest("GET", "/api/notes/1", nil)
+	w := httptest.NewRecorder()
+	handler.GetNote(w, req)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	noteServiceMock.AssertNotCalled(t, "GetNote")
+}
+
+func TestGetTags_Unauthorized(t *testing.T) {
+	_, noteServiceMock, handler := setupTest(t)
+	req := httptest.NewRequest("GET", "/api/tags", nil)
+	w := httptest.NewRecorder()
+	handler.GetTags(w, req)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	noteServiceMock.AssertNotCalled(t, "GetUserTags")
+}
+
+func TestCreateTag_Unauthorized(t *testing.T) {
+	_, noteServiceMock, handler := setupTest(t)
+	req := httptest.NewRequest("POST", "/api/tags", bytes.NewBufferString("{}"))
+	w := httptest.NewRecorder()
+	handler.CreateTag(w, req)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	noteServiceMock.AssertNotCalled(t, "CreateTag")
+}
+
+func TestDeleteTag_Unauthorized(t *testing.T) {
+	_, noteServiceMock, handler := setupTest(t)
+	req := httptest.NewRequest("DELETE", "/api/tags/1", nil)
+	w := httptest.NewRecorder()
+	handler.DeleteTag(w, req)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	noteServiceMock.AssertNotCalled(t, "DeleteTag")
+}

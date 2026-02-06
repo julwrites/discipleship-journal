@@ -26,6 +26,7 @@ func TestGroupHandler_CreateGroup(t *testing.T) {
 		requestBody    string
 		setupMock      func(mockService *MockGroupService)
 		expectedStatus int
+		skipAuth       bool
 	}{
 		{
 			name:        "Success",
@@ -53,6 +54,13 @@ func TestGroupHandler_CreateGroup(t *testing.T) {
 			},
 			expectedStatus: http.StatusInternalServerError,
 		},
+		{
+			name:           "Unauthorized",
+			requestBody:    `{"name": "Bible Study"}`,
+			setupMock:      func(_ *MockGroupService) {},
+			expectedStatus: http.StatusUnauthorized,
+			skipAuth:       true,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -65,11 +73,13 @@ func TestGroupHandler_CreateGroup(t *testing.T) {
 			req := httptest.NewRequest("POST", "/groups", strings.NewReader(tc.requestBody))
 			req.Header.Set("Content-Type", "application/json")
 
-			testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
-			ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
-			dummyToken := &auth.Token{UID: "firebase-uid-123"}
-			ctx = context.WithValue(ctx, middleware.UserContextKey, dummyToken)
-			req = req.WithContext(ctx)
+			if !tc.skipAuth {
+				testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+				ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+				dummyToken := &auth.Token{UID: "firebase-uid-123"}
+				ctx = context.WithValue(ctx, middleware.UserContextKey, dummyToken)
+				req = req.WithContext(ctx)
+			}
 
 			w := httptest.NewRecorder()
 			h.CreateGroup(w, req)

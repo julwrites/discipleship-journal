@@ -328,3 +328,39 @@ func TestMemoryVerseHandler_RemoveVersePreference(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 }
+
+func TestMemoryVerseHandler_GetPacks_Unauthorized(t *testing.T) {
+	mockService := new(MockMemoryVerseService)
+	handler := NewMemoryVerseHandler(mockService)
+	req := httptest.NewRequest("GET", "/api/verse-packs", nil)
+	w := httptest.NewRecorder()
+	handler.GetPacks(w, req)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestMemoryVerseHandler_CreatePack_Unauthorized(t *testing.T) {
+	mockService := new(MockMemoryVerseService)
+	handler := NewMemoryVerseHandler(mockService)
+	req := httptest.NewRequest("POST", "/api/verse-packs", strings.NewReader("{}"))
+	w := httptest.NewRecorder()
+	handler.CreatePack(w, req)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestMemoryVerseHandler_ClonePack_Unauthorized(t *testing.T) {
+	mockService := new(MockMemoryVerseService)
+	handler := NewMemoryVerseHandler(mockService)
+	req := httptest.NewRequest("POST", "/api/verse-packs/1/clone", strings.NewReader("{}"))
+	w := httptest.NewRecorder()
+	handler.ClonePack(w, req)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestMemoryVerseHandler_CreateVerseInPack_Unauthorized(t *testing.T) {
+	mockService := new(MockMemoryVerseService)
+	handler := NewMemoryVerseHandler(mockService)
+	req := httptest.NewRequest("POST", "/api/verse-packs/1/verses", strings.NewReader("{}"))
+	w := httptest.NewRecorder()
+	handler.CreateVerseInPack(w, req)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
