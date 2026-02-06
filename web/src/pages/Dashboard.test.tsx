@@ -178,7 +178,7 @@ describe('Dashboard', () => {
         );
 
         const noteTitle = await screen.findByText('Note to Delete');
-        const card = noteTitle.closest('div[role="link"]');
+        const card = noteTitle.closest('div[role="link"]') as HTMLElement;
         expect(card).toBeInTheDocument();
         if (!card) throw new Error("Card not found");
 
@@ -220,7 +220,7 @@ describe('Dashboard', () => {
         );
 
         const noteTitle = await screen.findByText('Note to Share');
-        const card = noteTitle.closest('div[role="link"]');
+        const card = noteTitle.closest('div[role="link"]') as HTMLElement;
         if (!card) throw new Error("Card not found");
 
         const shareBtn = within(card).getByTitle('Share');
@@ -261,8 +261,8 @@ describe('Dashboard', () => {
         mockFetchNotes.mockResolvedValue({ data: [note], meta: { total_pages: 1 } });
         mockGetNote.mockResolvedValue(note);
 
-        mockAskAIStream.mockImplementation(async (content, prompt, history, callbacks) => {
-            if (callbacks?.onStart) callbacks.onStart();
+        mockAskAIStream.mockImplementation(async (_content, _prompt, _history, callbacks) => {
+            if (callbacks?.onStart) callbacks.onStart("note-id");
             if (callbacks?.onChunk) callbacks.onChunk('God created');
             if (callbacks?.onDone) callbacks.onDone();
             return Promise.resolve();
@@ -275,7 +275,7 @@ describe('Dashboard', () => {
         );
 
         const noteTitle = await screen.findByText('Bible Note');
-        const card = noteTitle.closest('div[role="link"]');
+        const card = noteTitle.closest('div[role="link"]') as HTMLElement;
         if (!card) throw new Error("Card not found");
 
         const aiBtn = within(card).getByTitle('Ask AI');
