@@ -167,7 +167,9 @@ func (h *GroupShareHandler) ShareItemToGroup(w http.ResponseWriter, r *http.Requ
 	// Notifications
 	go h.sendNotifications(groupID, userUUID.String(), resourceTitle, resourceType, resourceID)
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(map[string]bool{"success": true})
 }
 
 func (h *GroupShareHandler) sendNotifications(groupID, sharerID, resourceTitle, resourceType, resourceID string) {
