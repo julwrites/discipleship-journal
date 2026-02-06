@@ -424,3 +424,58 @@ func TestGetNoteHandler(t *testing.T) {
 		}
 	})
 }
+
+func TestCreateNoteHandler_InvalidBody(t *testing.T) {
+	firebaseUID := "firebase-uid-123"
+	userUUID := "user-uuid-123"
+
+	t.Run("invalid json", func(t *testing.T) {
+		dbMock, noteServiceMock, handler := setupTest(t)
+		defer dbMock.Close()
+
+		dbMock.ExpectQuery("SELECT id FROM users").
+			WithArgs(firebaseUID).
+			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+
+		req := httptest.NewRequest("POST", "/api/notes", bytes.NewBufferString("invalid-json"))
+		token := &auth.Token{UID: firebaseUID}
+		ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		handler.CreateNote(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		noteServiceMock.AssertNotCalled(t, "CreateNote")
+	})
+}
+
+func TestUpdateNoteHandler_InvalidBody(t *testing.T) {
+	firebaseUID := "firebase-uid-123"
+	userUUID := "user-uuid-123"
+	noteID := "note-123"
+
+	t.Run("invalid json", func(t *testing.T) {
+		dbMock, noteServiceMock, handler := setupTest(t)
+		defer dbMock.Close()
+
+		dbMock.ExpectQuery("SELECT id FROM users").
+			WithArgs(firebaseUID).
+			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+
+		req := httptest.NewRequest("PUT", "/api/notes/"+noteID, bytes.NewBufferString("invalid-json"))
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", noteID)
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+		token := &auth.Token{UID: firebaseUID}
+		ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		handler.UpdateNote(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		noteServiceMock.AssertNotCalled(t, "UpdateNote")
+	})
+}

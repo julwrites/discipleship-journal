@@ -291,3 +291,42 @@ func TestUpdateVerse(t *testing.T) {
 		assert.Equal(t, models.ErrNotFound, err)
 	})
 }
+
+func TestSetVersePreference(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	assert.NoError(t, err)
+	defer mock.Close()
+
+	service := NewMemoryVerseService(mock)
+	userID := uuid.New()
+	verseID := uuid.New()
+	version := "NIV"
+
+	mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO user_verse_preferences (user_id, verse_id, version_override)`)).
+		WithArgs(userID, verseID, version).
+		WillReturnResult(pgxmock.NewResult("INSERT", 1))
+
+	err = service.SetVersePreference(context.Background(), userID, verseID, version)
+	assert.NoError(t, err)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestRemoveVersePreference(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	assert.NoError(t, err)
+	defer mock.Close()
+
+	service := NewMemoryVerseService(mock)
+	userID := uuid.New()
+	verseID := uuid.New()
+
+	mock.ExpectExec(regexp.QuoteMeta(`DELETE FROM user_verse_preferences WHERE user_id = $1 AND verse_id = $2`)).
+		WithArgs(userID, verseID).
+		WillReturnResult(pgxmock.NewResult("DELETE", 1))
+
+	err = service.RemoveVersePreference(context.Background(), userID, verseID)
+	assert.NoError(t, err)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}

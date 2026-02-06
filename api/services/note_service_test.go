@@ -464,3 +464,97 @@ func TestDeleteTag(t *testing.T) {
 		assert.Equal(t, models.ErrNotFound, err)
 	})
 }
+
+func TestCreateNote_TagError(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mock.Close()
+
+	service := NewNoteService(mock)
+	ctx := context.Background()
+	userID := uuid.New().String()
+	noteID := uuid.New().String()
+	title := "Test Note"
+	content := json.RawMessage(`{"text": "hello"}`)
+	tags := []string{"tag1"}
+	now := time.Now()
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("INSERT INTO notes").
+		WithArgs(userID, title, content, "active").
+		WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at"}).
+			AddRow(noteID, userID, title, content, "active", now, now))
+
+	// Fail on tag insert
+	mock.ExpectQuery("INSERT INTO tags").
+		WithArgs(userID, "tag1").
+		WillReturnError(errors.New("tag error"))
+
+	mock.ExpectRollback()
+
+	note, err := service.CreateNote(ctx, userID, title, content, tags)
+	assert.Error(t, err)
+	assert.Nil(t, note)
+	assert.Equal(t, "tag error", err.Error())
+}
+
+func TestGetNotes_QueryError(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mock.Close()
+
+	service := NewNoteService(mock)
+	ctx := context.Background()
+	userID := uuid.New().String()
+
+	mock.ExpectQuery("SELECT COUNT").
+		WithArgs(userID).
+		WillReturnRows(pgxmock.NewRows([]string{"count"}).AddRow(1))
+
+	mock.ExpectQuery("SELECT id, user_id").
+		WithArgs(userID).
+		WillReturnError(errors.New("query error"))
+
+	notes, total, err := service.GetNotes(ctx, userID, 1, 10, NoteFilter{})
+	assert.Error(t, err)
+	assert.Nil(t, notes)
+	assert.Equal(t, 0, total)
+	assert.Equal(t, "query error", err.Error())
+}
+
+func TestGetNotes_TagsQueryError(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mock.Close()
+
+	service := NewNoteService(mock)
+	ctx := context.Background()
+	userID := uuid.New().String()
+	noteID := uuid.New().String()
+	now := time.Now()
+
+	mock.ExpectQuery("SELECT COUNT").
+		WithArgs(userID).
+		WillReturnRows(pgxmock.NewRows([]string{"count"}).AddRow(1))
+
+	mock.ExpectQuery("SELECT id, user_id").
+		WithArgs(userID).
+		WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at", "deleted_at"}).
+			AddRow(noteID, userID, "Title", json.RawMessage("{}"), "active", now, now, nil))
+
+	mock.ExpectQuery("SELECT .* FROM tags").
+		WithArgs([]string{noteID}).
+		WillReturnError(errors.New("tags error"))
+
+	notes, total, err := service.GetNotes(ctx, userID, 1, 10, NoteFilter{})
+	assert.Error(t, err)
+	assert.Nil(t, notes)
+	assert.Equal(t, 0, total)
+	assert.Equal(t, "tags error", err.Error())
+}
