@@ -52,6 +52,34 @@ func TestGetUserUUIDFromContext(t *testing.T) {
 		assert.Error(t, err)
 		assert.Equal(t, "user not found in context", err.Error())
 	})
+
+	t.Run("TestUserKey_InvalidType", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/", nil)
+		ctx := context.WithValue(req.Context(), TestUserKey, 12345) // int, not UUID or string
+
+		_, err := GetUserUUIDFromContext(ctx)
+		assert.Error(t, err)
+		assert.Equal(t, "user not found in context", err.Error())
+	})
+
+	t.Run("UserContextKey_InvalidType", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/", nil)
+		ctx := context.WithValue(req.Context(), middleware.UserContextKey, "invalid-token-type")
+
+		_, err := GetUserUUIDFromContext(ctx)
+		assert.Error(t, err)
+		assert.Equal(t, "user not found in context", err.Error())
+	})
+
+	t.Run("UserContextKey_NilToken", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/", nil)
+		var token *auth.Token = nil
+		ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
+
+		_, err := GetUserUUIDFromContext(ctx)
+		assert.Error(t, err)
+		assert.Equal(t, "user not found in context", err.Error())
+	})
 }
 
 func TestGetUserUUID(t *testing.T) {
