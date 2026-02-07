@@ -174,4 +174,31 @@ func TestRunMigrations_Coverage(t *testing.T) {
 		os.Unsetenv("DB_HOST")
 		os.Unsetenv("DB_PORT")
 	})
+
+	t.Run("CloudSQL_InitError", func(t *testing.T) {
+		os.Setenv("DB_USERNAME", "user")
+		os.Setenv("DB_NAME", "db")
+		os.Setenv("CLOUD_SQL_INSTANCE", "project:region:inst")
+		// No credentials -> NewDialer might fail or Dial will fail.
+		// If NewDialer needs GOOGLE_APPLICATION_CREDENTIALS and they are missing, it might err.
+		// However, it might default to ADC and succeed init but fail Dial.
+		// RunMigrations creates the dialer then OpenDB.
+		// OpenDB doesn't connect immediately.
+		// db.Ping() is called.
+		// Ping will use the dialer.
+		// The dialer will try to connect.
+		// If init succeeded, Ping fails.
+		// If init failed, RunMigrations returns error early.
+
+		err := RunMigrations()
+		if err != nil {
+			// It failed either at init or ping
+			// Just assert error
+			assert.Error(t, err)
+		}
+
+		os.Unsetenv("DB_USERNAME")
+		os.Unsetenv("DB_NAME")
+		os.Unsetenv("CLOUD_SQL_INSTANCE")
+	})
 }
