@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -412,5 +413,90 @@ func TestDeleteConnectionRequest_Errors(t *testing.T) {
 		w := httptest.NewRecorder()
 		handler.DeleteConnectionRequest(w, req.WithContext(ctx))
 		assert.Equal(t, http.StatusNotFound, w.Code)
+	})
+}
+
+func TestSendConnectionRequest_MoreErrors(t *testing.T) {
+	mockDB, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mockDB.Close()
+
+	mockNotif := services.NewMockNotificationService()
+	handler := NewConnectionHandler(mockDB, mockNotif)
+	requesterUUID := uuid.New()
+
+	t.Run("Unauthorized", func(t *testing.T) {
+		reqBody := ConnectionRequest{ReceiverEmail: "some@email.com"}
+		bodyBytes, _ := json.Marshal(reqBody)
+		req := httptest.NewRequest("POST", "/api/connections/request", bytes.NewBuffer(bodyBytes))
+		// No user in context
+		w := httptest.NewRecorder()
+		handler.SendConnectionRequest(w, req)
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+	})
+
+	t.Run("ReceiverLookupError", func(t *testing.T) {
+		mockDB.ExpectQuery("SELECT id FROM users WHERE email =").
+			WithArgs("some@email.com").
+			WillReturnError(errors.New("db connection error"))
+
+		reqBody := ConnectionRequest{ReceiverEmail: "some@email.com"}
+		bodyBytes, _ := json.Marshal(reqBody)
+		req := httptest.NewRequest("POST", "/api/connections/request", bytes.NewBuffer(bodyBytes))
+		req = req.WithContext(context.WithValue(req.Context(), TestUserKey, requesterUUID))
+		w := httptest.NewRecorder()
+		handler.SendConnectionRequest(w, req)
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+	})
+
+	t.Run("InsertConflict", func(t *testing.T) {
+		receiverUUID := uuid.New()
+		mockDB.ExpectQuery("SELECT id FROM users WHERE email =").
+			WithArgs("some@email.com").
+			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(receiverUUID.String()))
+
+		mockDB.ExpectQuery("INSERT INTO connections").
+			WithArgs(requesterUUID, receiverUUID.String()).
+			WillReturnError(errors.New("duplicate key value violates unique constraint"))
+
+		reqBody := ConnectionRequest{ReceiverEmail: "some@email.com"}
+		bodyBytes, _ := json.Marshal(reqBody)
+		req := httptest.NewRequest("POST", "/api/connections/request", bytes.NewBuffer(bodyBytes))
+		req = req.WithContext(context.WithValue(req.Context(), TestUserKey, requesterUUID))
+		w := httptest.NewRecorder()
+		handler.SendConnectionRequest(w, req)
+		assert.Equal(t, http.StatusConflict, w.Code)
+	})
+
+	t.Run("RequesterNameLookupFailure", func(t *testing.T) {
+		receiverUUID := uuid.New()
+		connID := "new-conn-id"
+
+		mockDB.ExpectQuery("SELECT id FROM users WHERE email =").
+			WithArgs("some@email.com").
+			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(receiverUUID.String()))
+
+		mockDB.ExpectQuery("INSERT INTO connections").
+			WithArgs(requesterUUID, receiverUUID.String()).
+			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(connID))
+
+		// Fail name lookup
+		mockDB.ExpectQuery("SELECT username FROM users WHERE id").
+			WithArgs(requesterUUID).
+			WillReturnError(errors.New("db error"))
+
+		// Notification should still be sent, but with fallback name "Someone"
+		// We can't verify the arguments to mockNotif easily because it's a manual mock in services package
+		// that just returns nil. But we can verify code execution path doesn't panic and returns 201.
+
+		reqBody := ConnectionRequest{ReceiverEmail: "some@email.com"}
+		bodyBytes, _ := json.Marshal(reqBody)
+		req := httptest.NewRequest("POST", "/api/connections/request", bytes.NewBuffer(bodyBytes))
+		req = req.WithContext(context.WithValue(req.Context(), TestUserKey, requesterUUID))
+		w := httptest.NewRecorder()
+		handler.SendConnectionRequest(w, req)
+		assert.Equal(t, http.StatusCreated, w.Code)
 	})
 }
