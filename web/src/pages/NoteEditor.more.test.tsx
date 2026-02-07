@@ -108,7 +108,7 @@ describe('NoteEditor Additional Coverage', () => {
         vi.useRealTimers();
     });
 
-    const renderEditor = (route = '/notes/123', state: any = null) => {
+    const renderEditor = (route = '/notes/123', state: Record<string, unknown> | null = null) => {
         const router = createMemoryRouter(
             [
                 { path: '/notes/:id', element: <NoteEditor /> },
