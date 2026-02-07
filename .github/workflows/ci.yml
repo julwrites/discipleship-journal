@@ -38,7 +38,7 @@ jobs:
         run: |
           if [ -f coverage.out ]; then
             go tool cover -func=coverage.out > coverage.txt
-            ../scripts/check_backend_coverage.sh coverage.txt 68.6
+            ../scripts/check_backend_coverage.sh coverage.txt 70.6
           else
             echo "coverage.out not found, skipping coverage check"
           fi
