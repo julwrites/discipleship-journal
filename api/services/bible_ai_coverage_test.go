@@ -33,7 +33,7 @@ func TestRealBibleAIClient_GetVersions_Coverage(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(`{"error": {"message": "Internal Error"}}`))
+			_, _ = w.Write([]byte(`{"error": {"message": "Internal Error"}}`))
 		}))
 		defer server.Close()
 
@@ -57,7 +57,7 @@ func TestRealBibleAIClient_PrepareQueryRequest_Coverage(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"data": {"text": "Response"}}`))
+		_, _ = w.Write([]byte(`{"data": {"text": "Response"}}`))
 	}))
 	defer server.Close()
 
@@ -114,7 +114,7 @@ func TestRealBibleAIClient_Query_Coverage(t *testing.T) {
 	t.Run("API_Error", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(`{"error": {"message": "Bad Request"}}`))
+			_, _ = w.Write([]byte(`{"error": {"message": "Bad Request"}}`))
 		}))
 		defer server.Close()
 
@@ -142,7 +142,7 @@ func TestRealBibleAIClient_GetPassage_Coverage(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte(`{"error": {"message": "Not Found"}}`))
+			_, _ = w.Write([]byte(`{"error": {"message": "Not Found"}}`))
 		}))
 		defer server.Close()
 
@@ -156,7 +156,7 @@ func TestRealBibleAIClient_GetPassage_Coverage(t *testing.T) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 			// Return 'text' instead of 'verse'
-			w.Write([]byte(`{"text": "For God so loved the world..."}`))
+			_, _ = w.Write([]byte(`{"text": "For God so loved the world..."}`))
 		}))
 		defer server.Close()
 
@@ -197,23 +197,23 @@ func TestRealBibleAIClient_Stream_Coverage(t *testing.T) {
 			flusher, _ := w.(http.Flusher)
 
 			// 1. V2 Delta format
-			w.Write([]byte("data: {\"delta\": \"Hello\"}\n\n"))
+			_, _ = w.Write([]byte("data: {\"delta\": \"Hello\"}\n\n"))
 			flusher.Flush()
 
 			// 2. Text fallback format
-			w.Write([]byte("data: {\"text\": \" World\"}\n\n"))
+			_, _ = w.Write([]byte("data: {\"text\": \" World\"}\n\n"))
 			flusher.Flush()
 
 			// 3. Choices delta format (OpenAI style)
-			w.Write([]byte("data: {\"choices\": [{\"delta\": {\"content\": \"!\"}}]}\n\n"))
+			_, _ = w.Write([]byte("data: {\"choices\": [{\"delta\": {\"content\": \"!\"}}]}\n\n"))
 			flusher.Flush()
 
 			// 4. Raw text fallback (invalid JSON)
-			w.Write([]byte("data:  RawText \n\n"))
+			_, _ = w.Write([]byte("data:  RawText \n\n"))
 			flusher.Flush()
 
 			// 5. Done
-			w.Write([]byte("data: [DONE]\n\n"))
+			_, _ = w.Write([]byte("data: [DONE]\n\n"))
 			flusher.Flush()
 		}))
 		defer server.Close()
