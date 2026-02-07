@@ -119,3 +119,19 @@ func TestNewAuthMiddlewareFromClient(t *testing.T) {
 		t.Error("AuthClient not set correctly")
 	}
 }
+
+func TestNewAuthMiddleware(t *testing.T) {
+	// This should fail because FIREBASE_CONFIG is not set or valid
+	am, err := NewAuthMiddleware(context.Background())
+	if err == nil {
+		// If it somehow succeeds (unlikely in CI without creds), we check if not nil
+		if am == nil {
+			t.Fatal("NewAuthMiddleware returned nil but no error")
+		}
+	} else {
+		// Expected error
+		if am != nil {
+			t.Error("NewAuthMiddleware returned non-nil struct on error")
+		}
+	}
+}

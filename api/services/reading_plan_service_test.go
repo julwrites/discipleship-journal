@@ -34,6 +34,123 @@ func TestGetAllPlans(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestMarkDayComplete_CheckCompletionError_GetDays(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	assert.NoError(t, err)
+	defer mock.Close()
+
+	service := NewReadingPlanService(mock)
+	userID := uuid.New()
+	planID := uuid.New()
+	userPlanID := uuid.New()
+	dayNumber := 1
+
+	// Mock find active plan
+	mock.ExpectQuery(`SELECT id FROM user_reading_plans`).
+		WithArgs(userID, planID).
+		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(userPlanID))
+
+	// Mock Insert Progress
+	mock.ExpectExec(`INSERT INTO user_reading_plan_progress`).
+		WithArgs(userPlanID, dayNumber, pgxmock.AnyArg()).
+		WillReturnResult(pgxmock.NewResult("INSERT", 1))
+
+	// Expect check completion queries
+	// 1. Get total days - Error
+	mock.ExpectQuery(`SELECT days FROM reading_plans`).
+		WithArgs(planID).
+		WillReturnError(assert.AnError)
+
+	err = service.MarkDayComplete(context.Background(), userID, planID, dayNumber)
+	assert.Error(t, err)
+	assert.Equal(t, assert.AnError, err)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestMarkDayComplete_CheckCompletionError_GetCount(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	assert.NoError(t, err)
+	defer mock.Close()
+
+	service := NewReadingPlanService(mock)
+	userID := uuid.New()
+	planID := uuid.New()
+	userPlanID := uuid.New()
+	dayNumber := 1
+
+	// Mock find active plan
+	mock.ExpectQuery(`SELECT id FROM user_reading_plans`).
+		WithArgs(userID, planID).
+		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(userPlanID))
+
+	// Mock Insert Progress
+	mock.ExpectExec(`INSERT INTO user_reading_plan_progress`).
+		WithArgs(userPlanID, dayNumber, pgxmock.AnyArg()).
+		WillReturnResult(pgxmock.NewResult("INSERT", 1))
+
+	// Expect check completion queries
+	// 1. Get total days
+	mock.ExpectQuery(`SELECT days FROM reading_plans`).
+		WithArgs(planID).
+		WillReturnRows(mock.NewRows([]string{"days"}).AddRow(30))
+
+	// 2. Get completed count - Error
+	mock.ExpectQuery(`SELECT COUNT\(\*\) FROM user_reading_plan_progress`).
+		WithArgs(userPlanID).
+		WillReturnError(assert.AnError)
+
+	err = service.MarkDayComplete(context.Background(), userID, planID, dayNumber)
+	assert.Error(t, err)
+	assert.Equal(t, assert.AnError, err)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestMarkDayComplete_CheckCompletionError_UpdateStatus(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	assert.NoError(t, err)
+	defer mock.Close()
+
+	service := NewReadingPlanService(mock)
+	userID := uuid.New()
+	planID := uuid.New()
+	userPlanID := uuid.New()
+	dayNumber := 30
+
+	// Mock find active plan
+	mock.ExpectQuery(`SELECT id FROM user_reading_plans`).
+		WithArgs(userID, planID).
+		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(userPlanID))
+
+	// Mock Insert Progress
+	mock.ExpectExec(`INSERT INTO user_reading_plan_progress`).
+		WithArgs(userPlanID, dayNumber, pgxmock.AnyArg()).
+		WillReturnResult(pgxmock.NewResult("INSERT", 1))
+
+	// Expect check completion queries
+	// 1. Get total days
+	mock.ExpectQuery(`SELECT days FROM reading_plans`).
+		WithArgs(planID).
+		WillReturnRows(mock.NewRows([]string{"days"}).AddRow(30))
+
+	// 2. Get completed count
+	mock.ExpectQuery(`SELECT COUNT\(\*\) FROM user_reading_plan_progress`).
+		WithArgs(userPlanID).
+		WillReturnRows(mock.NewRows([]string{"count"}).AddRow(30))
+
+	// 3. Update status - Error
+	mock.ExpectExec(`UPDATE user_reading_plans`).
+		WithArgs(userPlanID).
+		WillReturnError(assert.AnError)
+
+	err = service.MarkDayComplete(context.Background(), userID, planID, dayNumber)
+	assert.Error(t, err)
+	assert.Equal(t, assert.AnError, err)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestGetPlan_NotFound(t *testing.T) {
 	mock, err := pgxmock.NewPool()
 	assert.NoError(t, err)

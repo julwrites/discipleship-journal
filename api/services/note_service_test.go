@@ -716,3 +716,169 @@ func TestUpdateNote_LinkTagError(t *testing.T) {
 	assert.Error(t, err)
 	assert.Equal(t, "link error", err.Error())
 }
+
+func TestGetNotes_Filters(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mock.Close()
+
+	service := NewNoteService(mock)
+	ctx := context.Background()
+	userID := uuid.New().String()
+	start := time.Now().Add(-24 * time.Hour)
+	end := time.Now()
+
+	// Count Query - Expects StartDate and EndDate arguments
+	// Args: userID($1), start($2), end($3)
+	mock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM notes.*updated_at >= \\$2 AND updated_at <= \\$3").
+		WithArgs(userID, start, end).
+		WillReturnRows(pgxmock.NewRows([]string{"count"}).AddRow(0))
+
+	// Data Query - Expects arguments
+	mock.ExpectQuery("SELECT .* FROM notes.*updated_at >= \\$2 AND updated_at <= \\$3").
+		WithArgs(userID, start, end).
+		WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at", "deleted_at"}))
+
+	notes, total, err := service.GetNotes(ctx, userID, 1, 10, NoteFilter{StartDate: &start, EndDate: &end})
+	assert.NoError(t, err)
+	assert.Len(t, notes, 0)
+	assert.Equal(t, 0, total)
+}
+
+func TestGetNotes_Sorting(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mock.Close()
+
+	service := NewNoteService(mock)
+	ctx := context.Background()
+	userID := uuid.New().String()
+
+	// 1. Sort by title ASC
+	mock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM notes").
+		WithArgs(userID).
+		WillReturnRows(pgxmock.NewRows([]string{"count"}).AddRow(0))
+
+	mock.ExpectQuery("SELECT .* FROM notes.*ORDER BY title ASC").
+		WithArgs(userID).
+		WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at", "deleted_at"}))
+
+	_, _, err = service.GetNotes(ctx, userID, 1, 10, NoteFilter{SortBy: "title", SortOrder: "asc"})
+	assert.NoError(t, err)
+
+	// 2. Sort by created_at DESC (default order, explicit sort by)
+	mock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM notes").
+		WithArgs(userID).
+		WillReturnRows(pgxmock.NewRows([]string{"count"}).AddRow(0))
+
+	mock.ExpectQuery("SELECT .* FROM notes.*ORDER BY created_at DESC").
+		WithArgs(userID).
+		WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at", "deleted_at"}))
+
+	_, _, err = service.GetNotes(ctx, userID, 1, 10, NoteFilter{SortBy: "created_at", SortOrder: "desc"})
+	assert.NoError(t, err)
+}
+
+func TestCreateNote_NilDB(t *testing.T) {
+	service := NewNoteService(nil)
+	ctx := context.Background()
+
+	_, err := service.CreateNote(ctx, "user", "title", nil, nil)
+	assert.Error(t, err)
+	assert.Equal(t, "database connection is nil", err.Error())
+}
+
+func TestDeleteNote_NilDB(t *testing.T) {
+	service := NewNoteService(nil)
+	ctx := context.Background()
+
+	err := service.DeleteNote(ctx, "user", "note")
+	assert.Error(t, err)
+	assert.Equal(t, "database connection is nil", err.Error())
+}
+
+func TestUpdateNote_NilDB(t *testing.T) {
+	service := NewNoteService(nil)
+	ctx := context.Background()
+
+	err := service.UpdateNote(ctx, "user", "note", "title", nil, nil)
+	assert.Error(t, err)
+	assert.Equal(t, "database connection is nil", err.Error())
+}
+
+func TestGetNote_NilDB(t *testing.T) {
+	service := NewNoteService(nil)
+	ctx := context.Background()
+
+	_, err := service.GetNote(ctx, "user", "note")
+	assert.Error(t, err)
+	assert.Equal(t, "database connection is nil", err.Error())
+}
+
+func TestGetNote_TagsError(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mock.Close()
+
+	service := NewNoteService(mock)
+	ctx := context.Background()
+	userID := uuid.New().String()
+	noteID := uuid.New().String()
+	now := time.Now()
+
+	mock.ExpectQuery("SELECT id, user_id, title, content, status, created_at, updated_at, deleted_at FROM notes").
+		WithArgs(noteID, userID).
+		WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at", "deleted_at"}).
+			AddRow(noteID, userID, "Title", json.RawMessage("{}"), "active", now, now, nil))
+
+	mock.ExpectQuery("SELECT .* FROM tags .* JOIN note_tags").
+		WithArgs(noteID).
+		WillReturnError(errors.New("tags error"))
+
+	note, err := service.GetNote(ctx, userID, noteID)
+	assert.Error(t, err)
+	assert.Nil(t, note)
+	assert.Equal(t, "tags error", err.Error())
+}
+
+func TestGetNotes_NilDB(t *testing.T) {
+	service := NewNoteService(nil)
+	ctx := context.Background()
+
+	_, _, err := service.GetNotes(ctx, "user", 1, 10, NoteFilter{})
+	assert.Error(t, err)
+	assert.Equal(t, "database connection is nil", err.Error())
+}
+
+func TestCreateTag_NilDB(t *testing.T) {
+	service := NewNoteService(nil)
+	ctx := context.Background()
+
+	_, err := service.CreateTag(ctx, "user", "tag")
+	assert.Error(t, err)
+	assert.Equal(t, "database connection is nil", err.Error())
+}
+
+func TestGetUserTags_NilDB(t *testing.T) {
+	service := NewNoteService(nil)
+	ctx := context.Background()
+
+	_, err := service.GetUserTags(ctx, "user")
+	assert.Error(t, err)
+	assert.Equal(t, "database connection is nil", err.Error())
+}
+
+func TestDeleteTag_NilDB(t *testing.T) {
+	service := NewNoteService(nil)
+	ctx := context.Background()
+
+	err := service.DeleteTag(ctx, "user", "tag")
+	assert.Error(t, err)
+	assert.Equal(t, "database connection is nil", err.Error())
+}
