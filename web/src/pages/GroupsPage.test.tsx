@@ -30,8 +30,9 @@ vi.mock('@/services/api', () => ({
 }));
 
 // Mock useAuth
+const mockUser = { uid: '123', email: 'test@example.com' };
 vi.mock('@/hooks/useAuth', () => ({
-    useAuth: () => ({ user: { uid: '123', email: 'test@example.com' } }),
+    useAuth: () => ({ user: mockUser }),
 }));
 
 describe('GroupsPage', () => {
@@ -147,5 +148,48 @@ describe('GroupsPage', () => {
         });
 
         expect(await screen.findByText('friend@example.com')).toBeInTheDocument();
+    });
+
+    it('creates a new group', async () => {
+        const user = userEvent.setup();
+        const mockGetGroups = vi.mocked(api.getGroups);
+        mockGetGroups.mockResolvedValue([]);
+        const mockCreateGroup = vi.mocked(api.createGroup);
+        mockCreateGroup.mockResolvedValue({ id: 'new-group-1' });
+
+        render(
+            <MemoryRouter>
+                <GroupsPage />
+            </MemoryRouter>
+        );
+
+        await waitFor(() => {
+            expect(mockGetGroups).toHaveBeenCalled();
+        });
+
+        // Click Create Group button
+        const createBtn = screen.getByRole('button', { name: /create group/i });
+        await user.click(createBtn);
+
+        // Fill form
+        const nameInput = await screen.findByPlaceholderText(/group name/i);
+        const descInput = await screen.findByPlaceholderText(/description/i);
+
+        await user.type(nameInput, 'New Group Name');
+        await user.type(descInput, 'New Group Description');
+
+        // Submit
+        const submitBtn = screen.getByRole('button', { name: /create/i });
+        await user.click(submitBtn);
+
+        await waitFor(() => {
+            expect(mockCreateGroup).toHaveBeenCalledWith({
+                name: 'New Group Name',
+                description: 'New Group Description',
+            });
+        });
+
+        // Should refresh groups
+        expect(mockGetGroups).toHaveBeenCalledTimes(2);
     });
 });
