@@ -70,5 +70,8 @@ func GetUserUUID(ctx context.Context, firebaseUID string) (uuid.UUID, error) {
 // dbProvider is a variable to allow overriding the database source in tests.
 // It returns the global database.DB connection pool by default.
 var dbProvider = func() DBInterface {
+	if database.DB == nil {
+		return nil
+	}
 	return database.DB
 }
