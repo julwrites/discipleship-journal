@@ -498,6 +498,7 @@ export default function NoteEditor() {
                                 <Button variant="outline" onClick={() => {
                                     setShareDialogOpen(true);
                                     fetchMyGroups();
+                                    fetchConnections();
                                 }}>Share</Button>
                                 <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
                                     {deleting ? "..." : "Delete"}
