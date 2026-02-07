@@ -60,6 +60,134 @@ func TestTemplateService_CreateTemplate(t *testing.T) {
 	assert.NoError(t, mockDB.ExpectationsWereMet())
 }
 
+type GranularMockAIClient struct {
+	*MockBibleAIClient
+	PassageError error
+	ChatError    error
+}
+
+func (m *GranularMockAIClient) GetPassage(ctx context.Context, reference string, version string) (map[string]interface{}, error) {
+	if m.PassageError != nil {
+		return nil, m.PassageError
+	}
+	return m.MockBibleAIClient.GetPassage(ctx, reference, version)
+}
+
+func (m *GranularMockAIClient) ChatCompletion(ctx context.Context, payload map[string]interface{}) (map[string]interface{}, error) {
+	if m.ChatError != nil {
+		return nil, m.ChatError
+	}
+	return m.MockBibleAIClient.ChatCompletion(ctx, payload)
+}
+
+func TestTemplateService_GenerateContent_PassageError(t *testing.T) {
+	mockDB, err := pgxmock.NewPool()
+	require.NoError(t, err)
+	defer mockDB.Close()
+
+	mockAI := &GranularMockAIClient{
+		MockBibleAIClient: NewMockBibleAIClient(),
+		PassageError:      errors.New("passage fetch error"),
+	}
+	service := NewTemplateService(mockDB, mockAI)
+
+	tmplID := uuid.New()
+	userID := uuid.New()
+
+	rows := pgxmock.NewRows([]string{
+		"id", "creator_id", "title", "description", "structure", "prompts", "fields", "is_public",
+		"bible_references", "allow_user_passages", "template_body", "required_version", "created_at", "updated_at",
+	}).AddRow(
+		tmplID, userID, "My Template", "Desc", []byte("{}"), []byte(`{"system":"System Prompt"}`), []byte("[]"), false,
+		[]byte(`["John 3:16"]`), false, "", "ESV", time.Now(), time.Now(),
+	)
+
+	mockDB.ExpectQuery(regexp.QuoteMeta("SELECT id, creator_id, title, description")).
+		WithArgs(tmplID).
+		WillReturnRows(rows)
+
+	req := models.GenerateRequest{}
+
+	content, err := service.GenerateContent(context.Background(), tmplID, req)
+	assert.NoError(t, err)
+	// Should contain error message in the blockquote placeholder or skipped?
+	// Implementation: passageTexts = append(passageTexts, fmt.Sprintf("%s: (Error fetching text)", ref))
+	assert.Contains(t, content, "(Error fetching text)")
+}
+
+func TestTemplateService_GenerateContent_AIError(t *testing.T) {
+	mockDB, err := pgxmock.NewPool()
+	require.NoError(t, err)
+	defer mockDB.Close()
+
+	mockAI := &GranularMockAIClient{
+		MockBibleAIClient: NewMockBibleAIClient(),
+		ChatError:         errors.New("ai error"),
+	}
+	service := NewTemplateService(mockDB, mockAI)
+
+	tmplID := uuid.New()
+	userID := uuid.New()
+
+	rows := pgxmock.NewRows([]string{
+		"id", "creator_id", "title", "description", "structure", "prompts", "fields", "is_public",
+		"bible_references", "allow_user_passages", "template_body", "required_version", "created_at", "updated_at",
+	}).AddRow(
+		tmplID, userID, "My Template", "Desc", []byte("{}"), []byte("{}"), []byte("[]"), false,
+		[]byte("[]"), false, "", "", time.Now(), time.Now(),
+	)
+
+	mockDB.ExpectQuery(regexp.QuoteMeta("SELECT id, creator_id, title, description")).
+		WithArgs(tmplID).
+		WillReturnRows(rows)
+
+	req := models.GenerateRequest{}
+
+	_, err = service.GenerateContent(context.Background(), tmplID, req)
+	assert.Error(t, err)
+	assert.EqualError(t, err, "ai error")
+}
+
+func TestTemplateService_GenerateContent_UserPassages(t *testing.T) {
+	mockDB, err := pgxmock.NewPool()
+	require.NoError(t, err)
+	defer mockDB.Close()
+
+	mockAI := NewMockBibleAIClient()
+	service := NewTemplateService(mockDB, mockAI)
+
+	tmplID := uuid.New()
+	userID := uuid.New()
+
+	// allow_user_passages = true
+	rows := pgxmock.NewRows([]string{
+		"id", "creator_id", "title", "description", "structure", "prompts", "fields", "is_public",
+		"bible_references", "allow_user_passages", "template_body", "required_version", "created_at", "updated_at",
+	}).AddRow(
+		tmplID, userID, "User Passages Template", "Desc", []byte("{}"), []byte("{}"), []byte("[]"), false,
+		[]byte(`["Gen 1:1"]`), true, "", "KJV", time.Now(), time.Now(),
+	)
+
+	mockDB.ExpectQuery(regexp.QuoteMeta("SELECT id, creator_id, title, description")).
+		WithArgs(tmplID).
+		WillReturnRows(rows)
+
+	req := models.GenerateRequest{
+		UserPassages: []string{"Psalm 23"},
+		UserVersion:  "NIV", // Should override template default if logic allows?
+		// Logic: if tmpl.RequiredVersion != "" { version = tmpl.RequiredVersion }
+		// Here tmpl.RequiredVersion is "KJV", so it should use KJV.
+	}
+
+	content, err := service.GenerateContent(context.Background(), tmplID, req)
+	assert.NoError(t, err)
+
+	// MockAIClient returns version in the response
+	// We can check if KJV was used in the formatted passage block
+	// passageTexts = append(passageTexts, fmt.Sprintf("<blockquote><p><strong>%s (%s)</strong></p>%s</blockquote>", ref, version, text))
+	assert.Contains(t, content, "Psalm 23 (KJV)")
+}
+
 func TestTemplateService_GetTemplate(t *testing.T) {
 	mockDB, err := pgxmock.NewPool()
 	require.NoError(t, err)

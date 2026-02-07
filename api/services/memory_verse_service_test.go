@@ -3,12 +3,14 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"regexp"
 	"testing"
 	"time"
 
 	"discipleship_journal_api/models"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 )
@@ -310,6 +312,59 @@ func TestSetVersePreference(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestClonePack_SourceNotFound(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
+
+	service := NewMemoryVerseService(mock)
+	userID := uuid.New()
+	packID := uuid.New()
+
+	// 1. GetPack - Error
+	mock.ExpectQuery(`SELECT .* FROM verse_packs vp WHERE vp.id = \$1 .*`).
+		WithArgs(packID, userID).
+		WillReturnError(pgx.ErrNoRows)
+
+	newPack, err := service.ClonePack(context.Background(), packID, userID, "New Title", true)
+	assert.Error(t, err)
+	assert.Equal(t, pgx.ErrNoRows, err)
+	assert.Nil(t, newPack)
+}
+
+func TestClonePack_DBCreationError(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
+
+	service := NewMemoryVerseService(mock)
+	userID := uuid.New()
+	packID := uuid.New()
+	sourcePack := &models.VersePack{
+		ID: packID, Title: "Source Pack", Identifier: "SRC", IsPublic: true,
+	}
+
+	// 1. GetPack - Success
+	mock.ExpectQuery(`SELECT .* FROM verse_packs vp WHERE vp.id = \$1 .*`).
+		WithArgs(packID, userID).
+		WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "identifier", "description", "is_public", "created_at", "updated_at", "verse_count"}).
+			AddRow(sourcePack.ID, nil, sourcePack.Title, &sourcePack.Identifier, nil, sourcePack.IsPublic, time.Now(), time.Now(), 10))
+
+	// 2. CreatePack - Error
+	mock.ExpectExec(`INSERT INTO verse_packs`).
+		WithArgs(pgxmock.AnyArg(), pgxmock.AnyArg(), "New Title", "SRC", "", false, pgxmock.AnyArg(), pgxmock.AnyArg()).
+		WillReturnError(errors.New("db insert error"))
+
+	newPack, err := service.ClonePack(context.Background(), packID, userID, "New Title", true)
+	assert.Error(t, err)
+	assert.EqualError(t, err, "db insert error")
+	assert.Nil(t, newPack)
 }
 
 func TestRemoveVersePreference(t *testing.T) {

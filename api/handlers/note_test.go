@@ -122,6 +122,34 @@ func TestGetNotes(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w.Code)
 		noteServiceMock.AssertExpectations(t)
 	})
+
+	t.Run("invalid params", func(t *testing.T) {
+		dbMock, noteServiceMock, handler := setupTest(t)
+		defer dbMock.Close()
+
+		dbMock.ExpectQuery("SELECT id FROM users").
+			WithArgs(firebaseUID).
+			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+
+		// Should default to empty filter if parsing fails? Or ignore invalid fields?
+		// Logic in GetNotes handler:
+		// startDate, _ := time.Parse(...) // Ignores error
+		// limit, err := strconv.Atoi(...) // If error, defaults to 20 or ignores?
+
+		// Let's assume it calls service with defaults/partial filter
+		noteServiceMock.On("GetNotes", mock.Anything, userUUID, 1, 20, services.NoteFilter{}).Return([]services.Note{}, 0, nil)
+
+		req := httptest.NewRequest("GET", "/api/notes?page=invalid&limit=invalid&startDate=invalid", nil)
+		token := &auth.Token{UID: firebaseUID}
+		ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		handler.GetNotes(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		noteServiceMock.AssertExpectations(t)
+	})
 }
 
 func TestCreateNoteHandler(t *testing.T) {

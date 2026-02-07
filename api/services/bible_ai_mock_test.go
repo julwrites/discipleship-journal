@@ -62,3 +62,43 @@ func TestMockBibleAIClient(t *testing.T) {
 		assert.Equal(t, "This is a mocked AI response to: test ", content)
 	})
 }
+
+func TestMockBibleAIClient_Error(t *testing.T) {
+	client := &MockBibleAIClient{ShouldError: true}
+
+	t.Run("Query", func(t *testing.T) {
+		_, _, err := client.Query(context.Background(), "prompt", "schema")
+		assert.Error(t, err)
+		assert.Equal(t, "mock error", err.Error())
+	})
+
+	t.Run("Stream", func(t *testing.T) {
+		_, _, err := client.Stream(context.Background(), "prompt")
+		assert.Error(t, err)
+		assert.Equal(t, "mock error", err.Error())
+	})
+
+	t.Run("GetVersions", func(t *testing.T) {
+		_, err := client.GetVersions(context.Background(), nil)
+		assert.Error(t, err)
+		assert.Equal(t, "mock error", err.Error())
+	})
+
+	t.Run("StreamChatCompletion", func(t *testing.T) {
+		_, _, err := client.StreamChatCompletion(context.Background(), map[string]interface{}{"prompt": "test"})
+		assert.Error(t, err)
+		assert.Equal(t, "mock error", err.Error())
+	})
+
+	t.Run("GetPassage", func(t *testing.T) {
+		_, err := client.GetPassage(context.Background(), "John 3:16", "ESV")
+		assert.Error(t, err)
+		assert.Equal(t, "mock error", err.Error())
+	})
+
+	t.Run("ChatCompletion", func(t *testing.T) {
+		_, err := client.ChatCompletion(context.Background(), nil)
+		assert.Error(t, err)
+		assert.Equal(t, "mock error", err.Error())
+	})
+}
