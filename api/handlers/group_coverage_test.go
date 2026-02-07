@@ -1,79 +1,61 @@
 package handlers
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
-	"github.com/google/uuid"
+	"discipleship_journal_api/middleware"
+	"firebase.google.com/go/v4/auth"
+	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
-func TestGroupHandler_Coverage(t *testing.T) {
+func TestGroupHandler_CreateGroup_Auth_UserNotFound(t *testing.T) {
 	mockService := new(MockGroupService)
 	handler := NewGroupHandler(mockService)
 
-	testUUID := uuid.New()
-	testUserKey := TestUserKey
+	// Mock DB
+	mockDB, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mockDB.Close()
 
-	t.Run("CreateGroup_ServiceError", func(t *testing.T) {
-		payload := map[string]interface{}{
-			"name":        "Group",
-			"description": "Desc",
-			"type":        "group",
-		}
-		body, _ := json.Marshal(payload)
+	// Override dbProvider
+	oldProvider := dbProvider
+	dbProvider = func() DBInterface { return mockDB }
+	defer func() { dbProvider = oldProvider }()
 
-		req := httptest.NewRequest("POST", "/api/groups", bytes.NewBuffer(body))
-		ctx := context.WithValue(req.Context(), testUserKey, testUUID)
-		req = req.WithContext(ctx)
-		rr := httptest.NewRecorder()
+	req := httptest.NewRequest("POST", "/api/groups", strings.NewReader(`{"name":"Group"}`))
+	// Inject Token but NO TestUserKey
+	ctx := context.WithValue(req.Context(), middleware.UserContextKey, &auth.Token{UID: "firebase-uid"})
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
 
-		mockService.On("CreateGroup", mock.Anything, testUUID.String(), "Group", mock.Anything, "group").
-			Return(nil, errors.New("service error")).Once()
+	// Expect GetUserUUID to fail
+	mockDB.ExpectQuery("SELECT id FROM users").
+		WithArgs("firebase-uid").
+		WillReturnError(errors.New("db error"))
 
-		handler.CreateGroup(rr, req)
+	handler.CreateGroup(w, req)
 
-		assert.Equal(t, http.StatusInternalServerError, rr.Code)
-		assert.Contains(t, rr.Body.String(), "Failed to create group")
-	})
-
-	t.Run("CreateGroup_InvalidType", func(t *testing.T) {
-		// Valid body but service validation might fail if type is invalid?
-		// Handler struct validator checks `oneof=group direct`.
-		// So validation error.
-		payload := map[string]interface{}{
-			"name": "Group",
-			"type": "invalid",
-		}
-		body, _ := json.Marshal(payload)
-
-		req := httptest.NewRequest("POST", "/api/groups", bytes.NewBuffer(body))
-		ctx := context.WithValue(req.Context(), testUserKey, testUUID)
-		req = req.WithContext(ctx)
-		rr := httptest.NewRecorder()
-
-		handler.CreateGroup(rr, req)
-
-		assert.Equal(t, http.StatusBadRequest, rr.Code)
-	})
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "User not found")
 }
 
-// MockGroupShareHandler needs MockGroupService? No, GroupShareHandler uses GroupShareService logic usually?
-// Check NewGroupShareHandler.
-// It takes DBInterface. Wait, `GroupShareHandler` methods:
-// `ShareItemToGroup`.
-// It uses `h.db`.
-// It does NOT use a service interface?
-// `api/handlers/group_share.go`:
-// type GroupShareHandler struct { db DBInterface }
-// So to test it I need `pgxmock`.
+func TestGroupShareHandler_ShareItem_InvalidBody(t *testing.T) {
+	// Simple validation test
+	mockDB, _ := pgxmock.NewPool()
+	handler := NewGroupShareHandler(mockDB, nil)
 
-func TestGroupShareHandler_Coverage(t *testing.T) {
-	// ... (Requires pgxmock setup)
+	req := httptest.NewRequest("POST", "/api/groups/1/shares", strings.NewReader(`{invalid}`))
+	w := httptest.NewRecorder()
+
+	handler.ShareItemToGroup(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 }

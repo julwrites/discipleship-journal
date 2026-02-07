@@ -208,3 +208,27 @@ func TestGroupHandler_CreateGroup_ServiceError(t *testing.T) {
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 }
+
+func TestGroupHandler_CreateGroup_InvalidBody(t *testing.T) {
+	mockService := new(MockGroupService)
+	handler := NewGroupHandler(mockService)
+
+	req := httptest.NewRequest("POST", "/api/groups", strings.NewReader(`{invalid}`))
+	w := httptest.NewRecorder()
+
+	handler.CreateGroup(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestGroupHandler_CreateGroup_ValidationErr(t *testing.T) {
+	mockService := new(MockGroupService)
+	handler := NewGroupHandler(mockService)
+
+	req := httptest.NewRequest("POST", "/api/groups", strings.NewReader(`{"name":""}`)) // Empty name
+	w := httptest.NewRecorder()
+
+	handler.CreateGroup(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
