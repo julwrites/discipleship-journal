@@ -53,17 +53,22 @@ func GetUserUUID(ctx context.Context, firebaseUID string) (uuid.UUID, error) {
 		return uuid.Nil, errors.New("invalid firebase UID")
 	}
 
-	// Use database.DB global pool
-	// Note: In tests where DB is not initialized, this will panic or fail if called.
-	// Handlers using this should ideally be refactored to use dependency injection.
-	if database.DB == nil {
+	// Use database.DB global pool via provider to allow mocking
+	db := dbProvider()
+	if db == nil {
 		return uuid.Nil, errors.New("database not initialized")
 	}
 
 	var id uuid.UUID
-	err := database.DB.QueryRow(ctx, "SELECT id FROM users WHERE firebase_uid=$1", firebaseUID).Scan(&id)
+	err := db.QueryRow(ctx, "SELECT id FROM users WHERE firebase_uid=$1", firebaseUID).Scan(&id)
 	if err != nil {
 		return uuid.Nil, err
 	}
 	return id, nil
+}
+
+// dbProvider is a variable to allow overriding the database source in tests.
+// It returns the global database.DB connection pool by default.
+var dbProvider = func() DBInterface {
+	return database.DB
 }
