@@ -93,6 +93,42 @@ func TestCreateGroup(t *testing.T) {
 	}
 }
 
+func TestCreateGroup_DefaultType(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mock.Close()
+
+	mockNotif := NewMockNotificationService()
+	service := NewGroupService(mock, mockNotif)
+
+	ctx := context.Background()
+	userID := uuid.New().String()
+	groupID := uuid.New().String()
+	name := "Default Type Group"
+	desc := "A test group"
+	// Empty group type should default to "group"
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("INSERT INTO groups").
+		WithArgs(name, &desc, userID, "group"). // Expect "group" default
+		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(groupID))
+
+	mock.ExpectExec("INSERT INTO group_members").
+		WithArgs(groupID, userID).
+		WillReturnResult(pgxmock.NewResult("INSERT", 1))
+
+	mock.ExpectCommit()
+
+	group, err := service.CreateGroup(ctx, userID, name, &desc, "")
+
+	assert.NoError(t, err)
+	assert.NotNil(t, group)
+	assert.Equal(t, "group", group.Type)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestListUserGroups(t *testing.T) {
 	mock, err := pgxmock.NewPool()
 	if err != nil {
@@ -361,6 +397,46 @@ func TestAddGroupMember(t *testing.T) {
 	})
 }
 
+func TestAddGroupMember_NameQueryError(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mock.Close()
+
+	mockNotif := NewMockNotificationService()
+	service := NewGroupService(mock, mockNotif)
+
+	ctx := context.Background()
+	adminID := uuid.New().String()
+	targetID := uuid.New().String()
+	groupID := uuid.New().String()
+
+	// Admin Check
+	mock.ExpectQuery("SELECT role FROM group_members").
+		WithArgs(groupID, adminID).
+		WillReturnRows(pgxmock.NewRows([]string{"role"}).AddRow("admin"))
+
+	// Connection check
+	mock.ExpectQuery("SELECT EXISTS").
+		WithArgs(adminID, targetID).
+		WillReturnRows(pgxmock.NewRows([]string{"exists"}).AddRow(true))
+
+	// Insert
+	mock.ExpectExec("INSERT INTO group_members").
+		WithArgs(groupID, targetID).
+		WillReturnResult(pgxmock.NewResult("INSERT", 1))
+
+	// Fetch name error (should not fail function)
+	mock.ExpectQuery("SELECT name FROM groups").
+		WithArgs(groupID).
+		WillReturnError(errors.New("db error"))
+
+	err = service.AddGroupMember(ctx, adminID, groupID, targetID)
+	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestRemoveGroupMember(t *testing.T) {
 	mock, err := pgxmock.NewPool()
 	if err != nil {
@@ -437,6 +513,115 @@ func TestGetOrCreateDirectGroup(t *testing.T) {
 		assert.True(t, created)
 		assert.Equal(t, groupID, group.ID)
 	})
+}
+
+func TestGetOrCreateDirectGroup_ConnectionCheckError(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mock.Close()
+
+	mockNotif := NewMockNotificationService()
+	service := NewGroupService(mock, mockNotif)
+
+	ctx := context.Background()
+	userID := uuid.New().String()
+	partnerID := uuid.New().String()
+
+	mock.ExpectQuery("SELECT EXISTS").
+		WithArgs(userID, partnerID).
+		WillReturnError(errors.New("db error"))
+
+	_, _, err = service.GetOrCreateDirectGroup(ctx, userID, partnerID)
+	assert.Error(t, err)
+	assert.EqualError(t, err, "db error")
+}
+
+func TestGetOrCreateDirectGroup_InsertError(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mock.Close()
+
+	mockNotif := NewMockNotificationService()
+	service := NewGroupService(mock, mockNotif)
+
+	ctx := context.Background()
+	userID := uuid.New().String()
+	partnerID := uuid.New().String()
+
+	// Check connection
+	mock.ExpectQuery("SELECT EXISTS").
+		WithArgs(userID, partnerID).
+		WillReturnRows(pgxmock.NewRows([]string{"exists"}).AddRow(true))
+
+	// Check existing group
+	mock.ExpectQuery("SELECT g.id FROM groups g").
+		WithArgs(userID, partnerID).
+		WillReturnError(pgx.ErrNoRows)
+
+	// Fetch partner name
+	mock.ExpectQuery("SELECT COALESCE").WithArgs(partnerID).
+		WillReturnRows(pgxmock.NewRows([]string{"name"}).AddRow("User 2"))
+
+	// Fetch my name
+	mock.ExpectQuery("SELECT COALESCE").WithArgs(userID).
+		WillReturnRows(pgxmock.NewRows([]string{"name"}).AddRow("User 1"))
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("INSERT INTO groups").
+		WithArgs("Direct: User 1 & User 2", userID).
+		WillReturnError(errors.New("insert error"))
+	mock.ExpectRollback()
+
+	_, _, err = service.GetOrCreateDirectGroup(ctx, userID, partnerID)
+	assert.Error(t, err)
+}
+
+func TestGetOrCreateDirectGroup_MemberInsertError(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mock.Close()
+
+	mockNotif := NewMockNotificationService()
+	service := NewGroupService(mock, mockNotif)
+
+	ctx := context.Background()
+	userID := uuid.New().String()
+	partnerID := uuid.New().String()
+	groupID := uuid.New().String()
+
+	// Check connection
+	mock.ExpectQuery("SELECT EXISTS").
+		WithArgs(userID, partnerID).
+		WillReturnRows(pgxmock.NewRows([]string{"exists"}).AddRow(true))
+
+	// Check existing group
+	mock.ExpectQuery("SELECT g.id FROM groups g").
+		WithArgs(userID, partnerID).
+		WillReturnError(pgx.ErrNoRows)
+
+	// Fetch partner name
+	mock.ExpectQuery("SELECT COALESCE").WithArgs(partnerID).
+		WillReturnRows(pgxmock.NewRows([]string{"name"}).AddRow("User 2"))
+
+	// Fetch my name
+	mock.ExpectQuery("SELECT COALESCE").WithArgs(userID).
+		WillReturnRows(pgxmock.NewRows([]string{"name"}).AddRow("User 1"))
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("INSERT INTO groups").
+		WithArgs("Direct: User 1 & User 2", userID).
+		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(groupID))
+	mock.ExpectExec("INSERT INTO group_members").WithArgs(groupID, userID).WillReturnError(errors.New("member insert error"))
+	mock.ExpectRollback()
+
+	_, _, err = service.GetOrCreateDirectGroup(ctx, userID, partnerID)
+	assert.Error(t, err)
 }
 
 func TestGroupService_GetOrCreateDirectGroup_SelfError(t *testing.T) {
