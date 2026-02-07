@@ -223,6 +223,14 @@ func (c *RealBibleAIClient) Stream(ctx context.Context, prompt string) (<-chan s
 			select {
 			case msg, ok := <-outChan:
 				if !ok {
+					// Check if there was an error that caused the close
+					select {
+					case err, ok := <-errChan:
+						if ok {
+							slog.Error("Stream error from BibleAI", "error", err)
+						}
+					default:
+					}
 					return
 				}
 				safeOutChan <- msg
