@@ -38,6 +38,9 @@ func (m *MockMemoryVerseService) GetPack(ctx context.Context, packID uuid.UUID, 
 
 func (m *MockMemoryVerseService) CreatePack(ctx context.Context, pack *models.VersePack) (*models.VersePack, error) {
 	args := m.Called(ctx, pack)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
 	return args.Get(0).(*models.VersePack), args.Error(1)
 }
 
@@ -59,6 +62,9 @@ func (m *MockMemoryVerseService) GetOriginalVerses(ctx context.Context, packID u
 
 func (m *MockMemoryVerseService) CreateVerse(ctx context.Context, verse *models.MemoryVerse) (*models.MemoryVerse, error) {
 	args := m.Called(ctx, verse)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
 	return args.Get(0).(*models.MemoryVerse), args.Error(1)
 }
 
