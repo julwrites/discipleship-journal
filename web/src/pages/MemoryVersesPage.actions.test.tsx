@@ -142,7 +142,7 @@ describe('VersePackDetail Actions', () => {
         const verseText = screen.getByText('John 3:16');
         const card = verseText.closest('.border') as HTMLElement;
 
-        const trashIcon = within(card).getByText((content, element) => {
+        const trashIcon = within(card).getByText((_, element) => {
             return element?.classList.contains('lucide-trash-2') || false;
         }, { selector: 'svg' });
 
@@ -168,7 +168,7 @@ describe('VersePackDetail Actions', () => {
         const verseText = screen.getByText('John 3:16');
         const card = verseText.closest('.border') as HTMLElement;
 
-        const pencilIcon = within(card).getByText((content, element) => {
+        const pencilIcon = within(card).getByText((_, element) => {
             return element?.classList.contains('lucide-pencil') || false;
         }, { selector: 'svg' });
 
@@ -204,7 +204,7 @@ describe('VersePackDetail Actions', () => {
         const verseText = screen.getByText('John 3:16');
         const card = verseText.closest('.border') as HTMLElement;
 
-        const pencilIcon = within(card).getByText((content, element) => {
+        const pencilIcon = within(card).getByText((_, element) => {
             return element?.classList.contains('lucide-pencil') || false;
         }, { selector: 'svg' });
 
