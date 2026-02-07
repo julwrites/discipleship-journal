@@ -28,6 +28,9 @@ func TestNoteHandler_CreateNote_Errors(t *testing.T) {
 
 	t.Run("Invalid Body", func(t *testing.T) {
 		req := httptest.NewRequest("POST", "/api/notes", strings.NewReader(`{invalid}`))
+		userID := uuid.New()
+		ctx := context.WithValue(context.Background(), TestUserKey, userID.String())
+		req = req.WithContext(ctx)
 		w := httptest.NewRecorder()
 		handler.CreateNote(w, req)
 		assert.Equal(t, http.StatusBadRequest, w.Code)
