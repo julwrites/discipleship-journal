@@ -38,7 +38,7 @@ describe('BibleReferenceInput', () => {
     });
 
     it('normalizes valid reference on blur', () => {
-        (bibleRefUtils.parseBibleReference as any).mockReturnValue('John 3:16');
+        vi.mocked(bibleRefUtils.parseBibleReference).mockReturnValue('John 3:16');
 
         render(<BibleReferenceInput value="jn 3:16" onChange={mockOnChange} />);
         const input = screen.getByRole('textbox');
@@ -50,7 +50,7 @@ describe('BibleReferenceInput', () => {
     });
 
     it('does not change invalid reference on blur', () => {
-        (bibleRefUtils.parseBibleReference as any).mockReturnValue(null);
+        vi.mocked(bibleRefUtils.parseBibleReference).mockReturnValue(null);
 
         render(<BibleReferenceInput value="invalid" onChange={mockOnChange} />);
         const input = screen.getByRole('textbox');
@@ -63,7 +63,7 @@ describe('BibleReferenceInput', () => {
 
     it('handles allowMultiple with comma separation', () => {
         // Mock responses for individual parts
-        (bibleRefUtils.parseBibleReference as any).mockImplementation((ref: string) => {
+        vi.mocked(bibleRefUtils.parseBibleReference).mockImplementation((ref: string) => {
             if (ref === 'jn 3:16') return 'John 3:16';
             if (ref === 'rom 1:1') return 'Romans 1:1';
             return null;
