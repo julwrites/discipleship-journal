@@ -117,7 +117,9 @@ export default function ConnectionsPage() {
     };
 
     const handleMessage = async (connection: Connection) => {
-        const otherId = connection.requester_id === currentUserId ? connection.receiver_id : connection.requester_id;
+        // Fallback to email check if ID not yet loaded
+        const isRequester = currentUserId ? connection.requester_id === currentUserId : (user?.email === connection.requester_email);
+        const otherId = isRequester ? connection.receiver_id : connection.requester_id;
         try {
             const group = await getOrCreateDirectGroup(otherId);
             navigate(`/groups?id=${group.id}`);
@@ -172,7 +174,8 @@ export default function ConnectionsPage() {
 
                     <h2 className="text-xl font-semibold mt-8">My Network</h2>
                     {connections.filter(c => c.status === 'accepted').map(c => {
-                    const isRequester = c.requester_id === currentUserId;
+                    // Fallback to email check if ID not yet loaded
+                    const isRequester = currentUserId ? c.requester_id === currentUserId : (user?.email === c.requester_email);
                     const otherEmail = isRequester ? c.receiver_email : c.requester_email;
                     const otherUsername = isRequester ? c.receiver_username : c.requester_username;
                         return (

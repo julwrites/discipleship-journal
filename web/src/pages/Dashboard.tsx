@@ -598,7 +598,8 @@ export default function Dashboard() {
                               )}
                               {connections.filter(c => c.status === 'accepted').map(c => {
                                   // Determine other user using Database ID (currentUserId) not Firebase UID (user.uid)
-                                  const isReq = c.requester_id === currentUserId;
+                                  // Fallback to email check if ID not yet loaded to prevent race conditions
+                                  const isReq = currentUserId ? c.requester_id === currentUserId : (user?.email === c.requester_email);
                                   const otherId = isReq ? c.receiver_id : c.requester_id;
                                   const otherEmail = isReq ? c.receiver_email : c.requester_email;
                                   const otherName = isReq ? c.receiver_username : c.requester_username;
