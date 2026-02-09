@@ -78,9 +78,12 @@ export default function Dashboard() {
   const [aiResponse, setAiResponse] = useState("");
   const [aiNoteContent, setAiNoteContent] = useState("");
   const [loadingNoteContent, setLoadingNoteContent] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
 
   useEffect(() => {
-    syncUser();
+    syncUser().then(u => {
+        if (u.id) setCurrentUserId(u.id);
+    });
   }, []);
 
   useEffect(() => {
@@ -594,8 +597,8 @@ export default function Dashboard() {
                                   <div className="p-2 text-sm text-muted-foreground text-center">No connections found</div>
                               )}
                               {connections.filter(c => c.status === 'accepted').map(c => {
-                                  // Determine other user
-                          const isReq = c.requester_id === user?.uid;
+                                  // Determine other user using Database ID (currentUserId) not Firebase UID (user.uid)
+                                  const isReq = c.requester_id === currentUserId;
                                   const otherId = isReq ? c.receiver_id : c.requester_id;
                                   const otherEmail = isReq ? c.receiver_email : c.requester_email;
                                   const otherName = isReq ? c.receiver_username : c.requester_username;

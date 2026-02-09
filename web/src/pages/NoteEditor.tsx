@@ -80,6 +80,7 @@ export default function NoteEditor() {
     // Default Version from User Settings
     const [userVersion, setUserVersion] = useState("ESV");
     const [currentUserEmail, setCurrentUserEmail] = useState("");
+    const [currentUserId, setCurrentUserId] = useState("");
 
     // Bible Passage State
     const [passageRef, setPassageRef] = useState("");
@@ -121,6 +122,7 @@ export default function NoteEditor() {
     useEffect(() => {
         // Load user settings for default version
         syncUser().then(u => {
+            if (u.id) setCurrentUserId(u.id);
             if (u.email) setCurrentUserEmail(u.email);
             if (u.settings?.bible_version) {
                 setUserVersion(u.settings.bible_version);
@@ -772,28 +774,14 @@ export default function NoteEditor() {
                                     <option value="">Select a Connection...</option>
                                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                                     {myConnections.filter((c: any) => c.status === 'accepted').map((c: any) => {
-                                        // Need to identify which user is the 'other' one
-                                        // But we don't have current user email easily here unless we use auth hook or syncUser data
-                                        // Just display both emails or try to guess?
-                                        // Connections list usually returns requester_email and receiver_email.
-                                        // If I am requester, show receiver.
-                                        // I will assume simple display for now: "requester <-> receiver" or just map all?
-                                        // Better: The ConnectionsPage logic filters this.
-                                        // I'll try to find the "other" email.
-                                        // But I don't have 'user' object in this scope easily (useAuth hook is not used in top level... wait, it is NOT used in NoteEditor currently)
-                                        // NoteEditor uses `syncUser`.
-                                        // I'll just show the email that isn't null? Or maybe just render the object as string if I can't filter?
-                                        // Actually `getConnections` returns { ... requester_email, receiver_email ... }.
-                                        // I'll list both emails or just the ID.
-                                        // Wait, I need to know which one is the OTHER.
-                                        // I'll show: "Connection (ID: ...)" fallback?
-                                        // No, that's bad UX.
-                                        // I'll fetch user in useEffect or use `syncUser` result.
-                                        // `syncUser` is called in useEffect. I can store user.
-                                        // I'll add `currentUser` state.
+                                        // Use ID if available, fallback to email if ID not yet loaded (though ID is preferred)
+                                        const isRequester = currentUserId ? c.requester_id === currentUserId : c.requester_email === currentUserEmail;
+                                        const otherId = isRequester ? c.receiver_id : c.requester_id;
+                                        const otherEmail = isRequester ? c.receiver_email : c.requester_email;
+
                                         return (
-                                            <option key={c.id} value={c.requester_email === currentUserEmail ? c.receiver_id : c.requester_id}>
-                                                {c.requester_email === currentUserEmail ? c.receiver_email : c.requester_email}
+                                            <option key={c.id} value={otherId}>
+                                                {otherEmail}
                                             </option>
                                         );
                                     })}

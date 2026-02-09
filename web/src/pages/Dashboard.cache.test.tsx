@@ -17,7 +17,7 @@ Object.defineProperty(window, 'matchMedia', {
 });
 vi.mock('@/services/api', () => ({
     fetchNotes: vi.fn(),
-    syncUser: vi.fn(),
+    syncUser: vi.fn().mockResolvedValue({ id: 'test-user-id' }),
     askAIStream: vi.fn(),
     getTags: vi.fn().mockResolvedValue([]),
     getGroups: vi.fn().mockResolvedValue([]),
