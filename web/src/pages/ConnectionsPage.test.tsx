@@ -21,6 +21,7 @@ vi.mock('@/services/api', () => ({
     sendConnectionRequest: vi.fn(),
     respondToConnectionRequest: vi.fn(),
     getOrCreateDirectGroup: vi.fn(),
+    syncUser: vi.fn().mockResolvedValue({ id: '123' }),
 }));
 
 // Mock Firebase
