@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate, useBlocker, useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -59,6 +60,7 @@ export default function NoteEditor() {
     const { id } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
+    const { user } = useAuth();
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [tags, setTags] = useState<string[]>([]);
@@ -775,7 +777,7 @@ export default function NoteEditor() {
                                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                                     {myConnections.filter((c: any) => c.status === 'accepted').map((c: any) => {
                                         // Use ID if available, fallback to email if ID not yet loaded (though ID is preferred)
-                                        const isRequester = currentUserId ? c.requester_id === currentUserId : c.requester_email === currentUserEmail;
+                                        const isRequester = currentUserId ? c.requester_id === currentUserId : (c.requester_email === currentUserEmail || (user?.email === c.requester_email));
                                         const otherId = isRequester ? c.receiver_id : c.requester_id;
                                         const otherEmail = isRequester ? c.receiver_email : c.requester_email;
 

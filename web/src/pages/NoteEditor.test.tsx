@@ -98,6 +98,14 @@ vi.mock('@/services/api', () => ({
 // Mock scrollIntoView
 window.HTMLElement.prototype.scrollIntoView = vi.fn();
 
+// Mock useAuth
+vi.mock('@/hooks/useAuth', () => ({
+    useAuth: vi.fn().mockReturnValue({
+        user: { email: 'test@example.com' },
+        loading: false
+    })
+}));
+
 describe('NoteEditor', () => {
     beforeEach(() => {
         vi.clearAllMocks();
