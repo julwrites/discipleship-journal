@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { useDebounce } from "@/hooks/useDebounce";
-import { ChevronDown, ChevronUp, UserPlus, Trash2, Copy, BookOpen } from "lucide-react";
+import { ChevronDown, ChevronUp, UserPlus, Trash2, Copy, BookOpen, ArrowLeft } from "lucide-react";
 import {
     getGroups,
     searchGroups,
@@ -322,7 +322,12 @@ export default function GroupsPage() {
              )}
 
             <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold">Groups</h1>
+                <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" onClick={() => navigate("/")} aria-label="Go back">
+                        <ArrowLeft className="h-6 w-6" />
+                    </Button>
+                    <h1 className="text-3xl font-bold">Groups</h1>
+                </div>
                 <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                     <DialogTrigger asChild>
                         <Button>Create Group</Button>
