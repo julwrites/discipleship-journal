@@ -1,7 +1,7 @@
 -- Reseed all data
 -- 1. Clear User Data
 -- Truncate user-generated content tables. Using CASCADE to handle dependencies.
-TRUNCATE TABLE group_shares, group_members, groups, connection_requests, connections, note_tags, tags, notes, user_reading_plans, user_verse_preferences, user_devices CASCADE;
+TRUNCATE TABLE group_shares, group_members, groups, connections, note_tags, tags, notes, user_reading_plans, user_reading_plan_progress, user_verse_preferences, user_devices CASCADE;
 
 -- 2. Clear System Data (Verse Packs, Memory Verses, Reading Plans)
 -- Delete from system tables to avoid duplicates when re-seeding.
