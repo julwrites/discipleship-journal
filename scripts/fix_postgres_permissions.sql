@@ -12,5 +12,12 @@ GRANT USAGE ON SCHEMA public TO "YOUR_DB_USER";
 -- Grant create permission on the public schema (allows creating tables/migrations)
 GRANT CREATE ON SCHEMA public TO "YOUR_DB_USER";
 
--- (Optional) If you want the user to have full control over all future tables in public:
+-- Grant permissions on ALL EXISTING tables and sequences in public (in case schema_migrations was created by root)
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO "YOUR_DB_USER";
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO "YOUR_DB_USER";
+
+-- Ensure future tables created by ANY user are accessible to the app user
+-- (Note: This only affects tables created by the user running this script. If migrations run as app user, they own them.)
+-- But if someone else (like root) creates tables later, we want the app user to access them.
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO "YOUR_DB_USER";
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO "YOUR_DB_USER";
