@@ -40,6 +40,15 @@ repos:
       - id: gitleaks
         args: ['--verbose', '--redact']
 
+  - repo: https://github.com/golangci/golangci-lint
+    rev: v1.64.5
+    hooks:
+      - id: golangci-lint
+        entry: golangci-lint run --fix
+        files: ^api/
+        types: [go]
+        args: ["--path-prefix=./api"]
+
   - repo: local
     hooks:
       - id: check-for-secrets

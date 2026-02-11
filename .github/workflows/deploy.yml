@@ -47,10 +47,13 @@ jobs:
             echo "SERVICE_NAME=${{ secrets.GCP_SERVICE_NAME }}" >> $GITHUB_OUTPUT
             echo "FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}" >> $GITHUB_OUTPUT
             echo "CLOUD_SQL_INSTANCE=${{ secrets.CLOUD_SQL_INSTANCE }}" >> $GITHUB_OUTPUT
+            echo "APP_ENV=production" >> $GITHUB_OUTPUT
           else
             echo "SERVICE_NAME=${{ secrets.STG_GCP_SERVICE_NAME }}" >> $GITHUB_OUTPUT
             echo "FIREBASE_PROJECT_ID=${{ secrets.STG_FIREBASE_PROJECT_ID }}" >> $GITHUB_OUTPUT
-            echo "CLOUD_SQL_INSTANCE=${{ secrets.STG_CLOUD_SQL_INSTANCE }}" >> $GITHUB_OUTPUT
+            # Use production Cloud SQL instance for staging (shared instance), but app will use STG_ secrets to select DB
+            echo "CLOUD_SQL_INSTANCE=${{ secrets.CLOUD_SQL_INSTANCE }}" >> $GITHUB_OUTPUT
+            echo "APP_ENV=staging" >> $GITHUB_OUTPUT
           fi
 
       - name: Validate Configuration
@@ -96,7 +99,7 @@ jobs:
           region: ${{ env.GCP_REGION }}
           flags: '--service-account=${{ secrets.GCP_SERVICE_ACCOUNT }} --allow-unauthenticated --set-cloudsql-instances=${{ steps.vars.outputs.CLOUD_SQL_INSTANCE }}'
           env_vars: |
-            APP_ENV=production
+            APP_ENV=${{ steps.vars.outputs.APP_ENV }}
             GOOGLE_CLOUD_PROJECT=${{ env.GCP_PROJECT_ID }}
             FIREBASE_PROJECT_ID=${{ steps.vars.outputs.FIREBASE_PROJECT_ID }}
             CLOUD_SQL_INSTANCE=${{ steps.vars.outputs.CLOUD_SQL_INSTANCE }}
