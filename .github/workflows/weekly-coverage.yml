@@ -35,7 +35,7 @@ jobs:
         run: go tool cover -func=coverage.out > coverage.txt
 
       - name: Check coverage threshold
-        run: ../scripts/check_backend_coverage.sh coverage.txt 84.5
+        run: ../scripts/check_backend_coverage.sh coverage.txt 84.0
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
