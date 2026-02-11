@@ -65,3 +65,21 @@ To set up a new Staging environment:
     - Add `STG_` prefixed secrets for environment-specific values (see tables above)
     - Shared secrets (`GCP_REGION`, `GCP_ARTIFACT_REPOSITORY`, `GCP_SA_KEY`, `GCP_SERVICE_ACCOUNT`) use the same values as Production
 4.  **Deploy**: Push code to the `staging` branch to trigger the initial deployment.
+
+## Troubleshooting
+
+### Database Migrations Failing (Permission Denied for Schema Public)
+When deploying a new Cloud SQL instance running PostgreSQL 15+, you may encounter this error during startup migrations:
+`failed to create migrate driver: ERROR: permission denied for schema public (SQLSTATE 42501)`
+
+This occurs because PostgreSQL 15 removed the default `CREATE` privilege on the `public` schema for all users. To fix this, you must explicitly grant permissions to the application's database user.
+
+1.  **Connect to Cloud SQL**: Use the `postgres` user (or another superuser) to connect to your instance.
+    ```bash
+    gcloud sql connect <INSTANCE_NAME> --user=postgres
+    ```
+
+2.  **Grant Permissions**: Run the commands in `scripts/fix_postgres_permissions.sql`. You will need to replace `YOUR_DB_USER` with the actual database username (the value of `DB_USERNAME` secret).
+    ```sql
+    GRANT USAGE, CREATE ON SCHEMA public TO "YOUR_DB_USER";
+    ```
