@@ -5,7 +5,7 @@ title: Add unmark functionality to Bible reading plans: allow users to undo acci
 priority: medium
 created: 2026-01-31 16:33:51
 category: features
-dependencies: 
+dependencies:
 type: task
 ---
 

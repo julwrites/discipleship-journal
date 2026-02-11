@@ -5,7 +5,7 @@ title: Add Bible passage retrieval to reading plans: allow users to read passage
 priority: medium
 created: 2026-01-31 16:33:57
 category: features
-dependencies: 
+dependencies:
 type: task
 ---
 

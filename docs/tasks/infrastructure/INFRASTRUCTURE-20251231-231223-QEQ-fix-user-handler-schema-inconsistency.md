@@ -5,7 +5,7 @@ title: Fix User handler schema inconsistency
 priority: medium
 created: 2025-12-31 23:12:23
 category: infrastructure
-dependencies: 
+dependencies:
 type: bug
 ---
 

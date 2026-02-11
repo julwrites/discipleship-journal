@@ -5,7 +5,7 @@ title: Fix Bible AI API integration: incorrect request handling for get passage 
 priority: medium
 created: 2026-01-01 10:00:10
 category: domain
-dependencies: 
+dependencies:
 type: bug
 ---
 

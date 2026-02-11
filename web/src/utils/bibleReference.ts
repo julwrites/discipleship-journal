@@ -163,7 +163,7 @@ export function parseBibleReference(input: string): string | null {
     }
 
     if (hasDigit(syntax)) {
-        // Standardize syntax: remove spaces around separators? 
+        // Standardize syntax: remove spaces around separators?
         // The user example "Philippians 2:3-4" implies preserving user's numbers but fixing book name.
         // We can just append the syntax as is (trimmed).
         return `${bookName} ${syntax.trim()}`;

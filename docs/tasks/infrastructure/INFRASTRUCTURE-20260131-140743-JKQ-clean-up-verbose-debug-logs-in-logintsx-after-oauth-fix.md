@@ -5,7 +5,7 @@ title: Clean up verbose debug logs in Login.tsx after OAuth fix
 priority: medium
 created: 2026-01-31 14:07:43
 category: infrastructure
-dependencies: 
+dependencies:
 type: task
 ---
 

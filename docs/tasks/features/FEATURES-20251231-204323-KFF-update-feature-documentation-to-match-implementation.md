@@ -5,7 +5,7 @@ title: Update feature documentation to match implementation
 priority: medium
 created: 2025-12-31 20:43:23
 category: features
-dependencies: 
+dependencies:
 type: task
 ---
 

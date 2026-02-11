@@ -5,7 +5,7 @@ title: Fix CORS errors after Google OAuth login on staging
 priority: medium
 created: 2026-01-31 13:31:23
 category: infrastructure
-dependencies: 
+dependencies:
 type: task
 ---
 

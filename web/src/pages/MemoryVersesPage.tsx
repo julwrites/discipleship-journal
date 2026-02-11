@@ -618,8 +618,8 @@ export function VersePackDetail() {
 
             <div className="grid gap-4">
                 {verses.map(verse => (
-                    <Card 
-                        key={verse.id} 
+                    <Card
+                        key={verse.id}
                         className="cursor-pointer hover:bg-muted/50 transition-colors"
                         onClick={() => handleViewVerse(verse)}
                     >
@@ -661,13 +661,13 @@ export function VersePackDetail() {
                                     <Pencil className="h-4 w-4" />
                                 </Button>
                                 {isMyPack && (
-                                    <Button 
-                                        variant="ghost" 
-                                        size="icon" 
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             if(verse.id) handleDeleteVerse(verse.id);
-                                        }} 
+                                        }}
                                         className="text-destructive"
                                     >
                                         <Trash2 className="h-4 w-4" />

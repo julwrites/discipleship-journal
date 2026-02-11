@@ -5,7 +5,7 @@ title: Fix note saving panic: nil pointer dereference in note creation
 priority: medium
 created: 2026-01-01 09:59:54
 category: domain
-dependencies: 
+dependencies:
 type: bug
 ---
 
