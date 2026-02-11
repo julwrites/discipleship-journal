@@ -83,3 +83,18 @@ This occurs because PostgreSQL 15 removed the default `CREATE` privilege on the 
     ```sql
     GRANT USAGE, CREATE ON SCHEMA public TO "YOUR_DB_USER";
     ```
+
+### Database Migrations Failing (Dirty Database Version)
+If a migration fails mid-execution (e.g., due to the permission error above), the database will be left in a "dirty" state, preventing future migrations. You will see an error like:
+`failed to apply migrations: Dirty database version 1. Fix and force version.`
+
+To fix this:
+1.  **Connect to Cloud SQL**:
+    ```bash
+    gcloud sql connect <INSTANCE_NAME> --user=postgres
+    ```
+2.  **Clear Dirty Flag**: Run the SQL command to reset the dirty status.
+    ```sql
+    UPDATE schema_migrations SET dirty = false;
+    ```
+    *Note: For a failed initial migration (version 1), it is often safer to drop all created tables and restart from scratch.*
