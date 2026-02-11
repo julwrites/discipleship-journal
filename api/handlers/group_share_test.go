@@ -403,9 +403,10 @@ func TestListGroupShares(t *testing.T) {
 		noteIDStr := noteID.String()
 		var versePackIDStr *string = nil
 		var subtitle *string = nil
+		comment := "Comment"
 
 		rows := mockDB.NewRows([]string{"id", "group_id", "note_id", "verse_pack_id", "title", "subtitle", "display_name", "shared_at", "comment", "type"}).
-			AddRow(shareID.String(), groupID.String(), &noteIDStr, versePackIDStr, "My Note", subtitle, "User Name", time.Now(), "Comment", "note")
+			AddRow(shareID.String(), groupID.String(), &noteIDStr, versePackIDStr, "My Note", subtitle, "User Name", time.Now(), &comment, "note")
 
 		mockDB.ExpectQuery(`SELECT gs.id, gs.group_id`).
 			WithArgs(groupID.String()).
@@ -549,11 +550,12 @@ func TestGetSharedItemDetails(t *testing.T) {
 		var versePackIDStr *string = nil
 		content := map[string]interface{}{"text": "hello"}
 		var subtitle *string = nil
+		comment := "Comment"
 
 		mockDB.ExpectQuery(`SELECT gs.id, gs.group_id`).
 			WithArgs(shareID.String(), groupID.String()).
 			WillReturnRows(mockDB.NewRows([]string{"id", "group_id", "note_id", "verse_pack_id", "title", "subtitle", "content", "display_name", "shared_at", "comment", "type"}).
-				AddRow(shareID.String(), groupID.String(), &noteIDStr, versePackIDStr, "Title", subtitle, content, "User", time.Now(), "Comment", "note"))
+				AddRow(shareID.String(), groupID.String(), &noteIDStr, versePackIDStr, "Title", subtitle, content, "User", time.Now(), &comment, "note"))
 
 		handler.GetSharedItemDetails(w, req)
 
