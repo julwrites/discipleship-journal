@@ -5,7 +5,7 @@ title: Fix CI test failures for group contract and image pull
 priority: medium
 created: 2026-02-01 15:18:54
 category: testing
-dependencies: 
+dependencies:
 type: task
 ---
 

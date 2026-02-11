@@ -5,7 +5,7 @@ title: Analyze notes loading performance: measure API response times and identif
 priority: medium
 created: 2026-01-31 16:11:14
 category: foundation
-dependencies: 
+dependencies:
 type: task
 ---
 

@@ -5,7 +5,7 @@ title: Optimize database queries for notes loading: add missing indexes and impr
 priority: medium
 created: 2026-01-31 16:11:27
 category: foundation
-dependencies: 
+dependencies:
 type: task
 ---
 

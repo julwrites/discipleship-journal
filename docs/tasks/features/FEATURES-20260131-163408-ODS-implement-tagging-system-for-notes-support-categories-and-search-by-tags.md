@@ -5,7 +5,7 @@ title: Implement tagging system for notes: support categories and search by tags
 priority: medium
 created: 2026-01-31 16:34:08
 category: features
-dependencies: 
+dependencies:
 type: task
 ---
 

@@ -5,7 +5,7 @@ title: Investigate backend lint and e2e test failures
 priority: medium
 created: 2026-01-22 23:26:25
 category: testing
-dependencies: 
+dependencies:
 type: task
 ---
 

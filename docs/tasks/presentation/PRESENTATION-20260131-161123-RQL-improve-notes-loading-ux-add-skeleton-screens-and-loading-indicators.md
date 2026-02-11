@@ -5,7 +5,7 @@ title: Improve notes loading UX: add skeleton screens and loading indicators
 priority: medium
 created: 2026-01-31 16:11:23
 category: presentation
-dependencies: 
+dependencies:
 type: task
 ---
 

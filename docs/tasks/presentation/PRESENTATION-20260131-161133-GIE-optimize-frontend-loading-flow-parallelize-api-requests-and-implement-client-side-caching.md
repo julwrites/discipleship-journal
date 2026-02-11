@@ -5,7 +5,7 @@ title: Optimize frontend loading flow: parallelize API requests and implement cl
 priority: medium
 created: 2026-01-31 16:11:33
 category: presentation
-dependencies: 
+dependencies:
 type: task
 ---
 

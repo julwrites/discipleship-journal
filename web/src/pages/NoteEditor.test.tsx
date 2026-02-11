@@ -23,11 +23,11 @@ vi.mock('@/components/RichTextEditor', async () => {
         run: () => void;
     };
 
-    const MockRichTextEditor = ({ initialContent, onChange, editable, onEditorReady }: { 
-        initialContent: string, 
-        onChange: (v: string) => void, 
-        editable: boolean, 
-        onEditorReady?: (e: { chain: () => MockChain }) => void 
+    const MockRichTextEditor = ({ initialContent, onChange, editable, onEditorReady }: {
+        initialContent: string,
+        onChange: (v: string) => void,
+        editable: boolean,
+        onEditorReady?: (e: { chain: () => MockChain }) => void
     }) => {
         const [content, setContent] = useState(initialContent);
         const contentRef = useRef(content);

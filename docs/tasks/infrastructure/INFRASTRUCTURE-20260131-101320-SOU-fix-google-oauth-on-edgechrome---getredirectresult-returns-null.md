@@ -5,7 +5,7 @@ title: Fix Google OAuth on Edge/Chrome - getRedirectResult returns null
 priority: medium
 created: 2026-01-31 10:13:20
 category: infrastructure
-dependencies: 
+dependencies:
 type: task
 ---
 

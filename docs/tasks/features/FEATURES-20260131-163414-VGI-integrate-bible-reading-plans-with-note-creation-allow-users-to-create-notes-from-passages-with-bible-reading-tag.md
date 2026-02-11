@@ -5,7 +5,7 @@ title: Integrate Bible reading plans with note creation: allow users to create n
 priority: medium
 created: 2026-01-31 16:34:14
 category: features
-dependencies: FEATURES-20260131-163408-ODS 
+dependencies: FEATURES-20260131-163408-ODS
 type: task
 ---
 

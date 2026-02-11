@@ -5,7 +5,7 @@ title: Implement user-specific Bible version preferences with default fallback f
 priority: medium
 created: 2026-01-31 16:26:01
 category: features
-dependencies: 
+dependencies:
 type: task
 ---
 

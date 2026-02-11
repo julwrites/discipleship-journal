@@ -5,7 +5,7 @@ title: Complete Security Documentation
 priority: medium
 created: 2025-12-31 20:42:49
 category: security
-dependencies: 
+dependencies:
 type: task
 ---
 

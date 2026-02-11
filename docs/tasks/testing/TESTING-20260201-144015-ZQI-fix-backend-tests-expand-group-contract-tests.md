@@ -5,7 +5,7 @@ title: Fix backend tests: expand group contract tests
 priority: medium
 created: 2026-02-01 14:40:15
 category: testing
-dependencies: 
+dependencies:
 type: task
 ---
 

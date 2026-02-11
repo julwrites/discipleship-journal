@@ -5,7 +5,7 @@ title: Improve memory verse version selection: allow per-verse version changes f
 priority: medium
 created: 2026-01-31 16:23:36
 category: features
-dependencies: 
+dependencies:
 type: task
 ---
 
