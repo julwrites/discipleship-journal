@@ -4,6 +4,45 @@ import (
 	"testing"
 )
 
+func TestNewRealBibleAIClient_SystemPrompts(t *testing.T) {
+	tests := []struct {
+		name      string
+		jsonInput string
+		wantKey   string
+		wantVal   string
+	}{
+		{
+			name:      "Valid JSON",
+			jsonInput: `{"ask": "test"}`,
+			wantKey:   "ask",
+			wantVal:   "test",
+		},
+		{
+			name: "Invalid JSON with newline in string (Fixable)",
+			jsonInput: `{"ask": "line 1
+line 2"}`,
+			wantKey: "ask",
+			wantVal: "line 1\nline 2",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			client := NewRealBibleAIClient("http://localhost", "key", tt.jsonInput)
+			if client == nil {
+				t.Fatal("NewRealBibleAIClient returned nil")
+			}
+
+			val, ok := client.SystemPrompts[tt.wantKey]
+			if !ok {
+				t.Errorf("SystemPrompts[%q] not found", tt.wantKey)
+			} else if val != tt.wantVal {
+				t.Errorf("SystemPrompts[%q] = %q, want %q", tt.wantKey, val, tt.wantVal)
+			}
+		})
+	}
+}
+
 func TestCleanHTML(t *testing.T) {
 	tests := []struct {
 		name     string

@@ -36,7 +36,16 @@ func NewRealBibleAIClient(apiURL, apiKey, systemPromptsJSON string) *RealBibleAI
 	prompts := make(map[string]string)
 	if systemPromptsJSON != "" {
 		if err := json.Unmarshal([]byte(systemPromptsJSON), &prompts); err != nil {
-			slog.Warn("Failed to parse system prompts JSON", "error", err)
+			// If parsing failed, it might be due to unescaped newlines in the string values.
+			// Try to sanitize by replacing literal newlines with escaped newlines.
+			// This is a common issue when secrets are pastes with actual newlines.
+			sanitized := strings.ReplaceAll(systemPromptsJSON, "\n", "\\n")
+			if err2 := json.Unmarshal([]byte(sanitized), &prompts); err2 == nil {
+				slog.Info("Successfully parsed system prompts JSON after sanitizing newlines")
+			} else {
+				// Log original error if sanitization didn't help, but also log that we tried
+				slog.Warn("Failed to parse system prompts JSON", "error", err, "sanitized_error", err2)
+			}
 		}
 	}
 
