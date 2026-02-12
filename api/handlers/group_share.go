@@ -28,17 +28,17 @@ type ShareItemRequest struct {
 }
 
 type SharedItemResponse struct {
-	ID          string                 `json:"id"`
-	GroupID     string                 `json:"group_id"`
-	NoteID      *string                `json:"note_id,omitempty"`
-	VersePackID *string                `json:"verse_pack_id,omitempty"`
-	Title       string                 `json:"title"`
-	Subtitle    string                 `json:"subtitle,omitempty"` // For Identifier or similar
-	Content     map[string]interface{} `json:"content,omitempty"`  // For Notes
-	Type        string                 `json:"type"`               // "note" or "verse_pack"
-	SharedBy    string                 `json:"shared_by"`          // User display name
-	SharedAt    string                 `json:"shared_at"`
-	Comment     string                 `json:"comment"`
+	ID          string      `json:"id"`
+	GroupID     string      `json:"group_id"`
+	NoteID      *string     `json:"note_id,omitempty"`
+	VersePackID *string     `json:"verse_pack_id,omitempty"`
+	Title       string      `json:"title"`
+	Subtitle    string      `json:"subtitle,omitempty"` // For Identifier or similar
+	Content     interface{} `json:"content,omitempty"`  // For Notes
+	Type        string      `json:"type"`               // "note" or "verse_pack"
+	SharedBy    string      `json:"shared_by"`          // User display name
+	SharedAt    string      `json:"shared_at"`
+	Comment     string      `json:"comment"`
 }
 
 // ShareItemToGroup shares a note OR verse pack to a group
@@ -167,7 +167,9 @@ func (h *GroupShareHandler) ShareItemToGroup(w http.ResponseWriter, r *http.Requ
 	// Notifications
 	go h.sendNotifications(groupID, userUUID.String(), resourceTitle, resourceType, resourceID)
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(map[string]bool{"success": true})
 }
 
 func (h *GroupShareHandler) sendNotifications(groupID, sharerID, resourceTitle, resourceType, resourceID string) {
@@ -258,11 +260,15 @@ func (h *GroupShareHandler) ListGroupShares(w http.ResponseWriter, r *http.Reque
 		var s SharedItemResponse
 		var sharedAt time.Time
 		var subtitle *string
-		if err := rows.Scan(&s.ID, &s.GroupID, &s.NoteID, &s.VersePackID, &s.Title, &subtitle, &s.SharedBy, &sharedAt, &s.Comment, &s.Type); err != nil {
+		var comment *string
+		if err := rows.Scan(&s.ID, &s.GroupID, &s.NoteID, &s.VersePackID, &s.Title, &subtitle, &s.SharedBy, &sharedAt, &comment, &s.Type); err != nil {
 			continue
 		}
 		if subtitle != nil {
 			s.Subtitle = *subtitle
+		}
+		if comment != nil {
+			s.Comment = *comment
 		}
 		s.SharedAt = sharedAt.Format(time.RFC3339)
 		shares = append(shares, s)
@@ -302,7 +308,8 @@ func (h *GroupShareHandler) GetSharedItemDetails(w http.ResponseWriter, r *http.
 	var s SharedItemResponse
 	var sharedAt time.Time
 	var subtitle *string
-	var content map[string]interface{}
+	var content interface{}
+	var comment *string
 
 	// Query to fetch generic details
 	err = h.db.QueryRow(r.Context(),
@@ -315,7 +322,7 @@ func (h *GroupShareHandler) GetSharedItemDetails(w http.ResponseWriter, r *http.
 		 LEFT JOIN verse_packs vp ON gs.verse_pack_id = vp.id
 		 JOIN users u ON gs.shared_by = u.id
 		 WHERE gs.id = $1 AND gs.group_id = $2`, shareID, groupID).Scan(
-		&s.ID, &s.GroupID, &s.NoteID, &s.VersePackID, &s.Title, &subtitle, &content, &s.SharedBy, &sharedAt, &s.Comment, &s.Type)
+		&s.ID, &s.GroupID, &s.NoteID, &s.VersePackID, &s.Title, &subtitle, &content, &s.SharedBy, &sharedAt, &comment, &s.Type)
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -328,6 +335,9 @@ func (h *GroupShareHandler) GetSharedItemDetails(w http.ResponseWriter, r *http.
 
 	if subtitle != nil {
 		s.Subtitle = *subtitle
+	}
+	if comment != nil {
+		s.Comment = *comment
 	}
 	s.Content = content
 	s.SharedAt = sharedAt.Format(time.RFC3339)

@@ -5,7 +5,7 @@ title: Fix database connection error handling
 priority: medium
 created: 2025-12-31 23:12:04
 category: infrastructure
-dependencies: 
+dependencies:
 type: task
 ---
 

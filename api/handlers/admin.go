@@ -9,11 +9,11 @@ import (
 
 // AdminHandler handles admin operations.
 type AdminHandler struct {
-	bibleVersionService *services.BibleVersionService
+	bibleVersionService services.BibleVersionService
 }
 
 // NewAdminHandler creates a new AdminHandler.
-func NewAdminHandler(bibleVersionService *services.BibleVersionService) *AdminHandler {
+func NewAdminHandler(bibleVersionService services.BibleVersionService) *AdminHandler {
 	return &AdminHandler{bibleVersionService: bibleVersionService}
 }
 

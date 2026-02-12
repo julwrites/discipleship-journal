@@ -12,19 +12,41 @@ import (
 	"golang.org/x/net/html"
 )
 
+// HTTPClient interface for mocking
+type HTTPClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
 // BibleVersionService handles bible version operations.
-type BibleVersionService struct {
-	db database.DBInterface
+type BibleVersionService interface {
+	GetVersions(ctx context.Context) ([]BibleVersion, error)
+	SyncVersions(ctx context.Context) error
+	ScrapeVersions(ctx context.Context) (map[string]string, error)
+}
+
+type bibleVersionService struct {
+	db         database.DBInterface
+	httpClient HTTPClient
+	scrapeURL  string
 }
 
 // NewBibleVersionService creates a new BibleVersionService.
-func NewBibleVersionService(db database.DBInterface) *BibleVersionService {
-	return &BibleVersionService{db: db}
+func NewBibleVersionService(db database.DBInterface) BibleVersionService {
+	return &bibleVersionService{
+		db:         db,
+		httpClient: &http.Client{Timeout: 30 * time.Second},
+		scrapeURL:  "https://classic.biblegateway.com/versions/",
+	}
 }
 
 // ScrapeVersions scrapes bible versions from BibleGateway.
-func (s *BibleVersionService) ScrapeVersions(ctx context.Context) (map[string]string, error) {
-	resp, err := http.Get("https://classic.biblegateway.com/versions/")
+func (s *bibleVersionService) ScrapeVersions(ctx context.Context) (map[string]string, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, s.scrapeURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := s.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch versions page: %w", err)
 	}
@@ -84,7 +106,7 @@ func (s *BibleVersionService) ScrapeVersions(ctx context.Context) (map[string]st
 }
 
 // SyncVersions syncs scraped versions to the database.
-func (s *BibleVersionService) SyncVersions(ctx context.Context) error {
+func (s *bibleVersionService) SyncVersions(ctx context.Context) error {
 	versions, err := s.ScrapeVersions(ctx)
 	if err != nil {
 		return err
@@ -132,7 +154,7 @@ type BibleVersion struct {
 }
 
 // GetVersions returns all bible versions sorted by name.
-func (s *BibleVersionService) GetVersions(ctx context.Context) ([]BibleVersion, error) {
+func (s *bibleVersionService) GetVersions(ctx context.Context) ([]BibleVersion, error) {
 	query := `SELECT id, name, abbreviation, created_at, updated_at FROM bible_versions ORDER BY name ASC`
 	rows, err := s.db.Query(ctx, query)
 	if err != nil {

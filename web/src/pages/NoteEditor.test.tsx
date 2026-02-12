@@ -23,11 +23,11 @@ vi.mock('@/components/RichTextEditor', async () => {
         run: () => void;
     };
 
-    const MockRichTextEditor = ({ initialContent, onChange, editable, onEditorReady }: { 
-        initialContent: string, 
-        onChange: (v: string) => void, 
-        editable: boolean, 
-        onEditorReady?: (e: { chain: () => MockChain }) => void 
+    const MockRichTextEditor = ({ initialContent, onChange, editable, onEditorReady }: {
+        initialContent: string,
+        onChange: (v: string) => void,
+        editable: boolean,
+        onEditorReady?: (e: { chain: () => MockChain }) => void
     }) => {
         const [content, setContent] = useState(initialContent);
         const contentRef = useRef(content);
@@ -98,6 +98,14 @@ vi.mock('@/services/api', () => ({
 // Mock scrollIntoView
 window.HTMLElement.prototype.scrollIntoView = vi.fn();
 
+// Mock useAuth
+vi.mock('@/hooks/useAuth', () => ({
+    useAuth: vi.fn().mockReturnValue({
+        user: { email: 'test@example.com' },
+        loading: false
+    })
+}));
+
 describe('NoteEditor', () => {
     beforeEach(() => {
         vi.clearAllMocks();
@@ -123,7 +131,7 @@ describe('NoteEditor', () => {
         return render(<RouterProvider router={router} />);
     };
 
-    it('does NOT auto-save changes', async () => {
+    it('auto-saves changes', async () => {
         const mockGetNote = vi.mocked(api.getNote).mockResolvedValue({
             id: '123',
             title: 'Test Note',
@@ -147,7 +155,7 @@ describe('NoteEditor', () => {
 
         vi.useRealTimers();
 
-        expect(mockUpdateNote).not.toHaveBeenCalled();
+        expect(mockUpdateNote).toHaveBeenCalledWith('123', 'Test Note', 'Updated content', []);
     });
 
     it('saves manually when save button clicked', async () => {

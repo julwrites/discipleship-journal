@@ -1,67 +1,148 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
-	"discipleship_journal_api/services"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
-func TestGetBiblePassage(t *testing.T) {
-	// Decide whether to use real or mock client based on env var
-	useReal := os.Getenv("TEST_REAL_BIBLE_API") == "true"
-	var client services.BibleAIClient
-	if useReal {
-		client = services.NewRealBibleAIClient(os.Getenv("BIBLE_API_URL"), os.Getenv("BIBLE_API_KEY"), os.Getenv("LLM_SYSTEM_PROMPTS"))
-	} else {
-		client = services.NewMockBibleAIClient()
+// MockBibleAIClient is a mock implementation of services.BibleAIClient
+type MockBibleAIClient struct {
+	mock.Mock
+}
+
+func (m *MockBibleAIClient) Query(ctx context.Context, prompt string, schema string) (string, string, error) {
+	args := m.Called(ctx, prompt, schema)
+	return args.String(0), args.String(1), args.Error(2)
+}
+
+func (m *MockBibleAIClient) Stream(ctx context.Context, prompt string) (<-chan string, string, error) {
+	args := m.Called(ctx, prompt)
+	return args.Get(0).(<-chan string), args.String(1), args.Error(2)
+}
+
+func (m *MockBibleAIClient) Name() string {
+	args := m.Called()
+	return args.String(0)
+}
+
+func (m *MockBibleAIClient) GetPassage(ctx context.Context, reference string, version string) (map[string]interface{}, error) {
+	args := m.Called(ctx, reference, version)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
 	}
+	return args.Get(0).(map[string]interface{}), args.Error(1)
+}
 
-	handler := NewBibleHandler(client)
+func (m *MockBibleAIClient) ChatCompletion(ctx context.Context, payload map[string]interface{}) (map[string]interface{}, error) {
+	args := m.Called(ctx, payload)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(map[string]interface{}), args.Error(1)
+}
 
-	t.Run("Missing Reference", func(t *testing.T) {
+func (m *MockBibleAIClient) StreamChatCompletion(ctx context.Context, payload map[string]interface{}) (<-chan string, <-chan error, error) {
+	args := m.Called(ctx, payload)
+	return args.Get(0).(<-chan string), args.Get(1).(<-chan error), args.Error(2)
+}
+
+func (m *MockBibleAIClient) GetVersions(ctx context.Context, params map[string]string) (map[string]interface{}, error) {
+	args := m.Called(ctx, params)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(map[string]interface{}), args.Error(1)
+}
+
+func (m *MockBibleAIClient) GetSystemPrompt(key string) string {
+	args := m.Called(key)
+	return args.String(0)
+}
+
+func TestBibleHandler_GetBiblePassage(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		mockClient := new(MockBibleAIClient)
+		handler := NewBibleHandler(mockClient)
+
+		mockClient.On("GetPassage", mock.Anything, "John 3:16", "ESV").Return(map[string]interface{}{
+			"text": "For God so loved the world...",
+		}, nil)
+
+		req, _ := http.NewRequest("GET", "/api/bible/passage?ref=John%203:16&version=ESV", nil)
+		rr := httptest.NewRecorder()
+
+		handler.GetBiblePassage(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		var resp map[string]interface{}
+		_ = json.Unmarshal(rr.Body.Bytes(), &resp)
+		assert.Equal(t, "For God so loved the world...", resp["text"])
+	})
+
+	t.Run("MissingRef", func(t *testing.T) {
+		mockClient := new(MockBibleAIClient)
+		handler := NewBibleHandler(mockClient)
+
 		req, _ := http.NewRequest("GET", "/api/bible/passage", nil)
 		rr := httptest.NewRecorder()
 
 		handler.GetBiblePassage(rr, req)
 
-		if status := rr.Code; status != http.StatusBadRequest {
-			t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusBadRequest)
-		}
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
 	})
 
-	t.Run("Valid Reference", func(t *testing.T) {
-		req, _ := http.NewRequest("GET", "/api/bible/passage?ref=John+3:16", nil)
+	t.Run("ClientError", func(t *testing.T) {
+		mockClient := new(MockBibleAIClient)
+		handler := NewBibleHandler(mockClient)
+
+		mockClient.On("GetPassage", mock.Anything, "John 3:16", "").Return(nil, errors.New("api error"))
+
+		req, _ := http.NewRequest("GET", "/api/bible/passage?ref=John%203:16", nil)
 		rr := httptest.NewRecorder()
 
 		handler.GetBiblePassage(rr, req)
 
-		if status := rr.Code; status != http.StatusOK {
-			t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
-		}
+		assert.Equal(t, http.StatusInternalServerError, rr.Code)
+	})
+}
 
-		var resp map[string]interface{}
-		if err := json.Unmarshal(rr.Body.Bytes(), &resp); err != nil {
-			t.Fatalf("Failed to parse response: %v", err)
-		}
+func TestBibleHandler_GetBibleVersions(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		mockClient := new(MockBibleAIClient)
+		handler := NewBibleHandler(mockClient)
 
-		if useReal {
-			// Real API checks (might be flaky if API changes)
-			// API returns {"verse": "John 3:16 (ESV) For God so loved the world..."}
-			if _, ok := resp["verse"]; !ok {
-				t.Error("Real API response missing 'verse'")
-			}
-		} else {
-			// Mock checks
-			if resp["reference"] != "John 3:16" {
-				t.Errorf("Expected reference John 3:16, got %v", resp["reference"])
-			}
-			if resp["text"] != "For God so loved the world... (Mocked)" {
-				t.Errorf("Got unexpected mock text: %v", resp["text"])
-			}
-		}
+		mockClient.On("GetVersions", mock.Anything, mock.MatchedBy(func(params map[string]string) bool {
+			return params["language"] == "en"
+		})).Return(map[string]interface{}{
+			"data": []interface{}{"ESV", "KJV"},
+		}, nil)
+
+		req, _ := http.NewRequest("GET", "/api/bible/versions?language=en", nil)
+		rr := httptest.NewRecorder()
+
+		handler.GetBibleVersions(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+	})
+
+	t.Run("ClientError", func(t *testing.T) {
+		mockClient := new(MockBibleAIClient)
+		handler := NewBibleHandler(mockClient)
+
+		mockClient.On("GetVersions", mock.Anything, mock.Anything).Return(nil, errors.New("failed"))
+
+		req, _ := http.NewRequest("GET", "/api/bible/versions", nil)
+		rr := httptest.NewRecorder()
+
+		handler.GetBibleVersions(rr, req)
+
+		assert.Equal(t, http.StatusInternalServerError, rr.Code)
 	})
 }

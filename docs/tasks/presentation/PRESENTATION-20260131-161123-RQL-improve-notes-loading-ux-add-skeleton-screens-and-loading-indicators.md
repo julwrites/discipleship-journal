@@ -1,11 +1,11 @@
 ---
 id: PRESENTATION-20260131-161123-RQL
-status: pending
+status: completed
 title: Improve notes loading UX: add skeleton screens and loading indicators
 priority: medium
 created: 2026-01-31 16:11:23
 category: presentation
-dependencies: 
+dependencies:
 type: task
 ---
 

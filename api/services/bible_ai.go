@@ -232,6 +232,14 @@ func (c *RealBibleAIClient) Stream(ctx context.Context, prompt string) (<-chan s
 			select {
 			case msg, ok := <-outChan:
 				if !ok {
+					// Check if there was an error that caused the close
+					select {
+					case err, ok := <-errChan:
+						if ok {
+							slog.Error("Stream error from BibleAI", "error", err)
+						}
+					default:
+					}
 					return
 				}
 				safeOutChan <- msg
@@ -299,7 +307,9 @@ func (c *RealBibleAIClient) GetPassage(
 		slog.Warn("Bible API response missing verse field", "status", resp.Status(), "body_length", len(resp.Body()))
 		// Fallback manual check
 		var raw map[string]interface{}
-		_ = json.Unmarshal(resp.Body(), &raw)
+		if err := json.Unmarshal(resp.Body(), &raw); err != nil {
+			slog.Warn("Failed to unmarshal fallback response", "error", err)
+		}
 		if v, ok := raw["verse"].(string); ok {
 			result.Verse = v
 		} else if t, ok := raw["text"].(string); ok {

@@ -157,11 +157,11 @@ export async function syncUser() {
 
 export async function updateUser(data: { username?: string; bible_version?: string }) {
     const headers = await getHeaders();
-    
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const payload: any = {};
     if (data.username !== undefined) payload.username = data.username;
-    
+
     // Nest bible_version under settings to match backend UpdateUserRequest structure
     if (data.bible_version !== undefined) {
         payload.settings = { bible_version: data.bible_version };
@@ -477,6 +477,17 @@ export async function sendConnectionRequest(receiverEmailOrId: string, isId: boo
         throw new Error(err || "Failed to send connection request");
     }
     return res.json();
+}
+
+export async function unsubscribeFromPlan(id: string) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/reading-plans/${id}/subscribe`, {
+        method: "DELETE",
+        headers,
+    });
+    if (!res.ok) {
+        throw new Error("Failed to unsubscribe from plan");
+    }
 }
 
 export async function getOrCreateDirectGroup(partnerId: string) {

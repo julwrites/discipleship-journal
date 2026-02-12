@@ -35,7 +35,7 @@ export function BibleReferenceInput({ value, onChange, multiline, allowMultiple,
         if (normalized !== val) {
             onChange(normalized);
         }
-        
+
         onBlur?.(e);
     };
 

@@ -5,7 +5,7 @@ title: Implement Google Secret Manager integration
 priority: medium
 created: 2025-12-31 23:11:39
 category: infrastructure
-dependencies: 
+dependencies:
 type: task
 ---
 

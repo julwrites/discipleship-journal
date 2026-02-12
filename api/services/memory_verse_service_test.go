@@ -2,13 +2,16 @@ package services
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"regexp"
 	"testing"
 	"time"
 
 	"discipleship_journal_api/models"
 	"github.com/google/uuid"
-	"github.com/pashagolub/pgxmock/v3"
+	"github.com/jackc/pgx/v5"
+	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -188,4 +191,197 @@ func TestSearchVerses(t *testing.T) {
 	assert.Len(t, verses, 1)
 	assert.Equal(t, "John 3:16", verses[0].Reference)
 	assert.Equal(t, packTitle, verses[0].PackTitle)
+}
+
+func TestDeletePack(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
+
+	service := NewMemoryVerseService(mock)
+	userID := uuid.New()
+	packID := uuid.New()
+
+	t.Run("success", func(t *testing.T) {
+		mock.ExpectExec("DELETE FROM verse_packs").
+			WithArgs(packID, userID).
+			WillReturnResult(pgxmock.NewResult("DELETE", 1))
+
+		err := service.DeletePack(context.Background(), packID, userID)
+		assert.NoError(t, err)
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		mock.ExpectExec("DELETE FROM verse_packs").
+			WithArgs(packID, userID).
+			WillReturnResult(pgxmock.NewResult("DELETE", 0))
+
+		err := service.DeletePack(context.Background(), packID, userID)
+		assert.Error(t, err)
+		assert.Equal(t, models.ErrNotFound, err)
+	})
+}
+
+func TestDeleteVerse(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
+
+	service := NewMemoryVerseService(mock)
+	userID := uuid.New()
+	verseID := uuid.New()
+
+	t.Run("success", func(t *testing.T) {
+		mock.ExpectExec("DELETE FROM memory_verses mv USING verse_packs vp").
+			WithArgs(verseID, userID).
+			WillReturnResult(pgxmock.NewResult("DELETE", 1))
+
+		err := service.DeleteVerse(context.Background(), verseID, userID)
+		assert.NoError(t, err)
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		mock.ExpectExec("DELETE FROM memory_verses mv USING verse_packs vp").
+			WithArgs(verseID, userID).
+			WillReturnResult(pgxmock.NewResult("DELETE", 0))
+
+		err := service.DeleteVerse(context.Background(), verseID, userID)
+		assert.Error(t, err)
+		assert.Equal(t, models.ErrNotFound, err)
+	})
+}
+
+func TestUpdateVerse(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
+
+	service := NewMemoryVerseService(mock)
+	userID := uuid.New()
+	verseID := uuid.New()
+	verse := &models.MemoryVerse{
+		ID:        verseID,
+		Reference: "John 3:16",
+		Title:     "The Gospel",
+		Version:   "ESV",
+		Tags:      []string{"Love"},
+	}
+	tagsJSON, _ := json.Marshal(verse.Tags)
+
+	t.Run("success", func(t *testing.T) {
+		mock.ExpectExec("UPDATE memory_verses mv SET").
+			WithArgs(verseID, verse.Reference, verse.Title, verse.Version, tagsJSON, userID).
+			WillReturnResult(pgxmock.NewResult("UPDATE", 1))
+
+		err := service.UpdateVerse(context.Background(), verse, userID)
+		assert.NoError(t, err)
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		mock.ExpectExec("UPDATE memory_verses mv SET").
+			WithArgs(verseID, verse.Reference, verse.Title, verse.Version, tagsJSON, userID).
+			WillReturnResult(pgxmock.NewResult("UPDATE", 0))
+
+		err := service.UpdateVerse(context.Background(), verse, userID)
+		assert.Error(t, err)
+		assert.Equal(t, models.ErrNotFound, err)
+	})
+}
+
+func TestSetVersePreference(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	assert.NoError(t, err)
+	defer mock.Close()
+
+	service := NewMemoryVerseService(mock)
+	userID := uuid.New()
+	verseID := uuid.New()
+	version := "NIV"
+
+	mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO user_verse_preferences (user_id, verse_id, version_override)`)).
+		WithArgs(userID, verseID, version).
+		WillReturnResult(pgxmock.NewResult("INSERT", 1))
+
+	err = service.SetVersePreference(context.Background(), userID, verseID, version)
+	assert.NoError(t, err)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestClonePack_SourceNotFound(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
+
+	service := NewMemoryVerseService(mock)
+	userID := uuid.New()
+	packID := uuid.New()
+
+	// 1. GetPack - Error
+	mock.ExpectQuery(`SELECT .* FROM verse_packs vp WHERE vp.id = \$1 .*`).
+		WithArgs(packID, userID).
+		WillReturnError(pgx.ErrNoRows)
+
+	newPack, err := service.ClonePack(context.Background(), packID, userID, "New Title", true)
+	assert.Error(t, err)
+	assert.Equal(t, pgx.ErrNoRows, err)
+	assert.Nil(t, newPack)
+}
+
+func TestClonePack_DBCreationError(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer mock.Close()
+
+	service := NewMemoryVerseService(mock)
+	userID := uuid.New()
+	packID := uuid.New()
+	sourcePack := &models.VersePack{
+		ID: packID, Title: "Source Pack", Identifier: "SRC", IsPublic: true,
+	}
+
+	// 1. GetPack - Success
+	mock.ExpectQuery(`SELECT .* FROM verse_packs vp WHERE vp.id = \$1 .*`).
+		WithArgs(packID, userID).
+		WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "identifier", "description", "is_public", "created_at", "updated_at", "verse_count"}).
+			AddRow(sourcePack.ID, nil, sourcePack.Title, &sourcePack.Identifier, nil, sourcePack.IsPublic, time.Now(), time.Now(), 10))
+
+	// 2. CreatePack - Error
+	mock.ExpectExec(`INSERT INTO verse_packs`).
+		WithArgs(pgxmock.AnyArg(), pgxmock.AnyArg(), "New Title", "SRC", "", false, pgxmock.AnyArg(), pgxmock.AnyArg()).
+		WillReturnError(errors.New("db insert error"))
+
+	newPack, err := service.ClonePack(context.Background(), packID, userID, "New Title", true)
+	assert.Error(t, err)
+	assert.EqualError(t, err, "db insert error")
+	assert.Nil(t, newPack)
+}
+
+func TestRemoveVersePreference(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	assert.NoError(t, err)
+	defer mock.Close()
+
+	service := NewMemoryVerseService(mock)
+	userID := uuid.New()
+	verseID := uuid.New()
+
+	mock.ExpectExec(regexp.QuoteMeta(`DELETE FROM user_verse_preferences WHERE user_id = $1 AND verse_id = $2`)).
+		WithArgs(userID, verseID).
+		WillReturnResult(pgxmock.NewResult("DELETE", 1))
+
+	err = service.RemoveVersePreference(context.Background(), userID, verseID)
+	assert.NoError(t, err)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
 }

@@ -211,7 +211,21 @@ func fetchPassage(client *http.Client, url string) (string, error) {
 }
 
 func cleanPassage(p string) string {
-	return strings.TrimSpace(p)
+	p = strings.TrimSpace(p)
+	// Normalize separators
+	p = strings.ReplaceAll(p, "\n", "; ")
+	p = strings.ReplaceAll(p, " + ", "; ")
+	p = strings.ReplaceAll(p, " & ", "; ")
+
+	// Enforce semicolon rule: if we see ", " followed by a Book Name (heuristic: capital letter),
+	// and NOT a digit (chapter/verse), we warn or replace.
+	// But automating this is risky without a book list.
+	// For now, we trust the source mostly but ensure standard delimiters are semi-colons.
+
+	// If the source uses commas to separate books (e.g. "Gen 1, Ex 1"), we might need to fix it manually or improve this.
+	// But BibleGateway usually formats clearly.
+
+	return p
 }
 
 func escapeSQL(s string) string {

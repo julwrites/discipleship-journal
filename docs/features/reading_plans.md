@@ -4,9 +4,17 @@
 The Bible Reading Plans feature allows users to follow structured reading schedules to engage with Scripture systematically. Users can browse available plans, subscribe to them, and track their daily progress.
 
 ### Available Plans
-- **Calendar-based**: Standard 365-day plans (e.g., M'Cheyne, Chronological).
-- **Discipleship Journal**: A 4-stream approach to reading through the Bible in a year (25 days/month).
-- **Custom/Algorithmic**: Plans generated algorithmically (e.g., Bible in 90 Days).
+The system provides a variety of reading plans, including traditional calendar-based schedules and algorithmically generated plans:
+
+1.  **M'Cheyne**: A classic daily reading plan that covers the Old Testament once and the New Testament and Psalms twice in a year.
+2.  **Chronological**: Read the Bible in the chronological order in which its stories and events occurred.
+3.  **Discipleship Journal**: A 4-stream approach to reading through the Bible in a year (25 days/month), allowing for catch-up days.
+4.  **Professor Grant Horner's System**: A system consisting of 10 lists of books. You read one chapter from each list every day.
+5.  **Bible in 90 Days**: An intensive Bible reading plan that walks through the entire Bible in 90 days.
+6.  **New Testament in a Year**: Read through the entire New Testament in one year.
+7.  **Whole Bible (3 Years)**: Read through the entire Bible at a pace of one chapter per day. Takes about 3 years and 3 months.
+8.  **Old Testament in a Year**: Read through the Old Testament in one year.
+9.  **Psalms & Proverbs**: Read through Psalms and Proverbs twice in a year.
 
 ## User Stories
 - As a user, I want to browse available reading plans so I can choose one that fits my goals.

@@ -1,9 +1,11 @@
 import { useEffect, useState, useRef } from "react";
 import { auth } from "@/lib/firebase";
+import { useAuth } from "@/hooks/useAuth";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchNotes, syncUser, NoteFilter, deleteNote, getGroups, shareNote, getNote, askAIStream, getConnections, getOrCreateDirectGroup, Connection, getTags, Tag } from "@/services/api";
+import { getCachedNotes, setCachedNotes } from "@/services/cache";
 import { Link } from "react-router-dom";
 import { Settings, Users, BookOpen, Filter, CalendarIcon, User as UserIcon, Book, LogOut, Tag as TagIcon } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -24,14 +26,17 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Dashboard() {
+  const { user } = useAuth();
   const [notes, setNotes] = useState<Note[]>([]);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const isInitialLoad = useRef(true);
   const prevSearchRef = useRef(debouncedSearch);
 
   // Filter state
@@ -73,9 +78,12 @@ export default function Dashboard() {
   const [aiResponse, setAiResponse] = useState("");
   const [aiNoteContent, setAiNoteContent] = useState("");
   const [loadingNoteContent, setLoadingNoteContent] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
 
   useEffect(() => {
-    syncUser();
+    syncUser().then(u => {
+        if (u.id) setCurrentUserId(u.id);
+    });
   }, []);
 
   useEffect(() => {
@@ -106,7 +114,21 @@ export default function Dashboard() {
       }
 
       const load = async () => {
-          setLoading(true);
+          const isDefaultView = page === 1 && !debouncedSearch && !startDate && !endDate && sortBy === "updated_at" && (!tagFilter || tagFilter === "_all");
+
+          if (isInitialLoad.current && isDefaultView && user?.uid) {
+              const cached = getCachedNotes(user.uid);
+              if (cached) {
+                  setNotes(cached.notes);
+                  setHasMore(cached.hasMore);
+                  setLoading(false); // Show cached content immediately
+              } else {
+                  setLoading(true);
+              }
+          } else {
+              setLoading(true);
+          }
+
           try {
               const filter: NoteFilter = {
                   search: debouncedSearch,
@@ -119,32 +141,37 @@ export default function Dashboard() {
               const response = await fetchNotes(page, 20, filter);
               if (!ignore) {
                   const newNotes = response.data || response;
+                  let newHasMore = false;
+
+                  if (response.meta) {
+                      newHasMore = page < response.meta.total_pages;
+                  } else {
+                      newHasMore = newNotes.length >= 20;
+                  }
 
                   if (page === 1) {
                       setNotes(newNotes);
+                      if (isDefaultView && user?.uid) {
+                          setCachedNotes(user.uid, newNotes, newHasMore);
+                      }
                   } else {
                       setNotes(prev => [...prev, ...newNotes]);
                   }
 
-                  if (response.meta) {
-                      setHasMore(page < response.meta.total_pages);
-                  } else {
-                      if (newNotes.length < 20) {
-                          setHasMore(false);
-                      } else {
-                          setHasMore(true);
-                      }
-                  }
+                  setHasMore(newHasMore);
               }
           } catch (error) {
               if (!ignore) console.error(error);
           } finally {
-              if (!ignore) setLoading(false);
+              if (!ignore) {
+                  setLoading(false);
+                  isInitialLoad.current = false;
+              }
           }
       };
       load();
       return () => { ignore = true; };
-  }, [page, debouncedSearch, startDate, endDate, sortBy, sortOrder, tagFilter]);
+  }, [page, debouncedSearch, startDate, endDate, sortBy, sortOrder, tagFilter, user?.uid]);
 
   const handleSearch = (val: string) => {
       setSearch(val);
@@ -462,6 +489,23 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {loading && notes.length === 0 && Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex flex-col space-y-3 p-6 border rounded-xl shadow-sm bg-card text-card-foreground">
+                <div className="space-y-2">
+                    <Skeleton className="h-5 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                </div>
+                <div className="space-y-2 pt-4">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-2/3" />
+                </div>
+                <div className="flex gap-2 pt-4 mt-auto">
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                </div>
+            </div>
+        ))}
         {notes.length === 0 && !loading && <p className="text-muted-foreground col-span-full">No notes found.</p>}
         {notes.map((note) => (
           <NoteCard
@@ -553,9 +597,9 @@ export default function Dashboard() {
                                   <div className="p-2 text-sm text-muted-foreground text-center">No connections found</div>
                               )}
                               {connections.filter(c => c.status === 'accepted').map(c => {
-                                  // Determine other user
-                                  const myEmail = auth.currentUser?.email;
-                                  const isReq = c.requester_email === myEmail;
+                                  // Determine other user using Database ID (currentUserId) not Firebase UID (user.uid)
+                                  // Fallback to email check if ID not yet loaded to prevent race conditions
+                                  const isReq = currentUserId ? c.requester_id === currentUserId : (user?.email === c.requester_email);
                                   const otherId = isReq ? c.receiver_id : c.requester_id;
                                   const otherEmail = isReq ? c.receiver_email : c.requester_email;
                                   const otherName = isReq ? c.receiver_username : c.requester_username;

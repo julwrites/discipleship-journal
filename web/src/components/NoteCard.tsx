@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Trash2, Share2, Sparkles } from "lucide-react";
 
@@ -17,8 +17,21 @@ interface NoteCardProps {
 }
 
 export function NoteCard({ note, onDelete, onShare, onAskAI }: NoteCardProps) {
+  const navigate = useNavigate();
+
   return (
-    <Link to={`/notes/${note.id}`} className="block group h-full">
+    <div
+        onClick={() => navigate(`/notes/${note.id}`)}
+        className="block group h-full cursor-pointer"
+        role="link"
+        tabIndex={0}
+        onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                navigate(`/notes/${note.id}`);
+            }
+        }}
+    >
       <div className="p-4 bg-card hover:bg-accent/50 text-card-foreground transition rounded-lg shadow border h-44 flex flex-col">
          {/* Main Content */}
          <div className="flex-1">
@@ -78,6 +91,6 @@ export function NoteCard({ note, onDelete, onShare, onAskAI }: NoteCardProps) {
             </Button>
          </div>
       </div>
-    </Link>
+    </div>
   );
 }
