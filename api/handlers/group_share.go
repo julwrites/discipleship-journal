@@ -192,20 +192,27 @@ func (h *GroupShareHandler) sendNotifications(groupID, sharerID, resourceTitle, 
 	}
 	defer rows.Close()
 
-	msgBody := sharerName + " shared \"" + resourceTitle + "\" in " + groupName
-
+	var memberIDs []string
 	for rows.Next() {
 		var memberID string
 		if err := rows.Scan(&memberID); err == nil {
-			err := h.notificationService.SendNotification(ctx, memberID, "New Shared Item", msgBody, map[string]string{
-				"type":        resourceType + "_share",
-				"group_id":    groupID,
-				"resource_id": resourceID,
-			})
-			if err != nil {
-				slog.Error("Failed to send notification", "user_id", memberID, "error", err)
-			}
+			memberIDs = append(memberIDs, memberID)
 		}
+	}
+
+	if len(memberIDs) == 0 {
+		return
+	}
+
+	msgBody := sharerName + " shared \"" + resourceTitle + "\" in " + groupName
+
+	err = h.notificationService.SendMulticastNotification(ctx, memberIDs, "New Shared Item", msgBody, map[string]string{
+		"type":        resourceType + "_share",
+		"group_id":    groupID,
+		"resource_id": resourceID,
+	})
+	if err != nil {
+		slog.Error("Failed to send multicast notifications", "group_id", groupID, "error", err)
 	}
 }
 

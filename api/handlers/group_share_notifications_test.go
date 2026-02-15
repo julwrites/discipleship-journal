@@ -145,8 +145,8 @@ func TestShareItemToGroup_NotificationErrors(t *testing.T) {
 			WithArgs(groupID.String(), userID.String()).
 			WillReturnRows(mockDB.NewRows([]string{"user_id"}).AddRow(memberID.String()))
 
-		// Expect SendNotification to fail
-		mockNotify.On("SendNotification", mock.Anything, memberID.String(), mock.Anything, mock.Anything, mock.Anything).
+		// Expect SendMulticastNotification to fail
+		mockNotify.On("SendMulticastNotification", mock.Anything, []string{memberID.String()}, mock.Anything, mock.Anything, mock.Anything).
 			Return(errors.New("notification service error"))
 
 		handler.ShareItemToGroup(w, req)

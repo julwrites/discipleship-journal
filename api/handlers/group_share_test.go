@@ -79,7 +79,7 @@ func TestShareItemToGroup(t *testing.T) {
 			WithArgs(groupID.String(), userID.String()).
 			WillReturnRows(mockDB.NewRows([]string{"user_id"}).AddRow(memberID.String()))
 
-		mockNotify.On("SendNotification", mock.Anything, memberID.String(), "New Shared Item", "Test User shared \"My Note\" in Test Group", map[string]string{
+		mockNotify.On("SendMulticastNotification", mock.Anything, []string{memberID.String()}, "New Shared Item", "Test User shared \"My Note\" in Test Group", map[string]string{
 			"type":        "note_share",
 			"group_id":    groupID.String(),
 			"resource_id": noteID.String(),

@@ -19,3 +19,8 @@ func (m *MockNotificationService) SendNotification(ctx context.Context, userID, 
 	args := m.Called(ctx, userID, title, body, data)
 	return args.Error(0)
 }
+
+func (m *MockNotificationService) SendMulticastNotification(ctx context.Context, userIDs []string, title, body string, data map[string]string) error {
+	args := m.Called(ctx, userIDs, title, body, data)
+	return args.Error(0)
+}
