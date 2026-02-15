@@ -226,3 +226,78 @@ func TestNotificationService_SendNotification_CleanupError(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NoError(t, mockDB.ExpectationsWereMet())
 }
+
+func TestNotificationService_SendMulticastNotification(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		mockDB, err := pgxmock.NewConn()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer func() { _ = mockDB.Close(context.Background()) }()
+
+		mockMsgClient := new(MockMessagingClient)
+		service := NewNotificationService(mockDB, mockMsgClient)
+
+		userIDs := []string{"user-1", "user-2"}
+
+		// 1. Get tokens
+		mockDB.ExpectQuery("SELECT fcm_token FROM user_devices").
+			WithArgs(userIDs).
+			WillReturnRows(pgxmock.NewRows([]string{"fcm_token"}).AddRow("token-1").AddRow("token-2"))
+
+		// 2. Send message
+		mockMsgClient.On("SendEachForMulticast", mock.Anything, mock.MatchedBy(func(msg *messaging.MulticastMessage) bool {
+			return len(msg.Tokens) == 2 && msg.Tokens[0] == "token-1" && msg.Tokens[1] == "token-2"
+		})).Return(&messaging.BatchResponse{SuccessCount: 2, FailureCount: 0}, nil)
+
+		err = service.SendMulticastNotification(context.Background(), userIDs, "Title", "Body", nil)
+		assert.NoError(t, err)
+		mockMsgClient.AssertExpectations(t)
+		assert.NoError(t, mockDB.ExpectationsWereMet())
+	})
+
+	t.Run("No Users", func(t *testing.T) {
+		mockDB, _ := pgxmock.NewConn()
+		service := NewNotificationService(mockDB, nil)
+		err := service.SendMulticastNotification(context.Background(), []string{}, "Title", "Body", nil)
+		assert.NoError(t, err)
+	})
+
+	t.Run("Cleanup Failed Tokens", func(t *testing.T) {
+		mockDB, err := pgxmock.NewConn()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		}
+		defer func() { _ = mockDB.Close(context.Background()) }()
+
+		mockMsgClient := new(MockMessagingClient)
+		service := NewNotificationService(mockDB, mockMsgClient)
+
+		userIDs := []string{"user-1"}
+
+		// 1. Get tokens
+		mockDB.ExpectQuery("SELECT fcm_token FROM user_devices").
+			WithArgs(userIDs).
+			WillReturnRows(pgxmock.NewRows([]string{"fcm_token"}).AddRow("token-fail"))
+
+		// 2. Send message
+		mockMsgClient.On("SendEachForMulticast", mock.Anything, mock.Anything).
+			Return(&messaging.BatchResponse{
+				SuccessCount: 0,
+				FailureCount: 1,
+				Responses: []*messaging.SendResponse{
+					{Success: false, Error: errors.New("invalid")},
+				},
+			}, nil)
+
+		// 3. Remove tokens
+		mockDB.ExpectExec("DELETE FROM user_devices").
+			WithArgs(pgxmock.AnyArg()).
+			WillReturnResult(pgxmock.NewResult("DELETE", 1))
+
+		err = service.SendMulticastNotification(context.Background(), userIDs, "Title", "Body", nil)
+		assert.NoError(t, err)
+		mockMsgClient.AssertExpectations(t)
+		assert.NoError(t, mockDB.ExpectationsWereMet())
+	})
+}
