@@ -314,6 +314,28 @@ func TestSetVersePreference(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestSetVersePreferencesBatch(t *testing.T) {
+	mock, err := pgxmock.NewPool()
+	assert.NoError(t, err)
+	defer mock.Close()
+
+	service := NewMemoryVerseService(mock)
+	userID := uuid.New()
+	verseID1 := uuid.New()
+	verseID2 := uuid.New()
+	verseIDs := []uuid.UUID{verseID1, verseID2}
+	version := "ESV"
+
+	mock.ExpectExec(`INSERT INTO user_verse_preferences .*`).
+		WithArgs(userID, verseIDs, version).
+		WillReturnResult(pgxmock.NewResult("INSERT", 2))
+
+	err = service.SetVersePreferencesBatch(context.Background(), userID, verseIDs, version)
+	assert.NoError(t, err)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestClonePack_SourceNotFound(t *testing.T) {
 	mock, err := pgxmock.NewPool()
 	if err != nil {

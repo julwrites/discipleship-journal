@@ -410,6 +410,46 @@ func (h *MemoryVerseHandler) SetVersePreference(w http.ResponseWriter, r *http.R
 	_ = json.NewEncoder(w).Encode(map[string]bool{"success": true})
 }
 
+// SetVersePreferencesBatch sets a user-specific version for multiple verses
+func (h *MemoryVerseHandler) SetVersePreferencesBatch(w http.ResponseWriter, r *http.Request) {
+	firebaseUID := ""
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
+		firebaseUID = token.UID
+	}
+
+	userID, err := GetUserUUID(r.Context(), firebaseUID)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req struct {
+		VerseIDs []uuid.UUID `json:"verse_ids"`
+		Version  string      `json:"version"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid body", http.StatusBadRequest)
+		return
+	}
+	if req.Version == "" {
+		http.Error(w, "Version is required", http.StatusBadRequest)
+		return
+	}
+	if len(req.VerseIDs) == 0 {
+		http.Error(w, "Verse IDs required", http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.SetVersePreferencesBatch(r.Context(), userID, req.VerseIDs, req.Version)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(map[string]bool{"success": true})
+}
+
 // RemoveVersePreference removes a user-specific version preference
 func (h *MemoryVerseHandler) RemoveVersePreference(w http.ResponseWriter, r *http.Request) {
 	firebaseUID := ""

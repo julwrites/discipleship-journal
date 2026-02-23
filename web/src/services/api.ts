@@ -701,6 +701,17 @@ export async function setVersePreference(verseId: string, version: string) {
     return res.json();
 }
 
+export async function setVersePreferencesBatch(verseIds: string[], version: string) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/memory-verses/preferences/batch`, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify({ verse_ids: verseIds, version }),
+    });
+    if (!res.ok) throw new Error("Failed to set verse preferences batch");
+    return res.json();
+}
+
 export async function removeVersePreference(verseId: string) {
     const headers = await getHeaders();
     const res = await fetch(`${API_URL}/memory-verses/${verseId}/preference`, {

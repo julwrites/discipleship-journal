@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { getVersePacks, createVersePack, VersePack, getPackDetails, deletePack, createVerseInPack, MemoryVerse, clonePack, syncUser, updateMemoryVerse, deleteMemoryVerse, getBiblePassage, setVersePreference, removeVersePreference } from "@/services/api";
+import { getVersePacks, createVersePack, VersePack, getPackDetails, deletePack, createVerseInPack, MemoryVerse, clonePack, syncUser, updateMemoryVerse, deleteMemoryVerse, getBiblePassage, setVersePreference, removeVersePreference, setVersePreferencesBatch } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -223,10 +223,13 @@ export function VersePackDetail() {
         if (!confirm(`This will set your preference for all verses in this pack to ${userDefaultVersion}. Continue?`)) return;
 
         try {
-            const promises = verses.map(v =>
-                v.id ? setVersePreference(v.id, userDefaultVersion) : Promise.resolve()
-            );
-            await Promise.all(promises);
+            const verseIds = verses
+                .map(v => v.id)
+                .filter((id): id is string => !!id);
+
+            if (verseIds.length > 0) {
+                await setVersePreferencesBatch(verseIds, userDefaultVersion);
+            }
             toast.success(`Applied ${userDefaultVersion} to all verses`);
             loadDetails();
         } catch {

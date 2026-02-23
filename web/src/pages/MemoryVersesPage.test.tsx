@@ -17,6 +17,7 @@ vi.mock('@/services/api', () => ({
     getPackDetails: vi.fn(),
     syncUser: vi.fn(),
     setVersePreference: vi.fn(),
+    setVersePreferencesBatch: vi.fn(),
     updateMemoryVerse: vi.fn(),
     deleteMemoryVerse: vi.fn(),
     createVerseInPack: vi.fn(),
@@ -112,7 +113,7 @@ describe('VersePackDetail', () => {
     it('handles bulk apply default version', async () => {
         const mockGetPackDetails = vi.mocked(api.getPackDetails);
         const mockSyncUser = vi.mocked(api.syncUser);
-        const mockSetVersePreference = vi.mocked(api.setVersePreference);
+        const mockSetVersePreferencesBatch = vi.mocked(api.setVersePreferencesBatch);
 
         // User default is KJV
         mockSyncUser.mockResolvedValue({ id: 'user-1', settings: { bible_version: 'KJV' } });
@@ -149,9 +150,8 @@ describe('VersePackDetail', () => {
         fireEvent.click(bulkButton);
 
         await waitFor(() => {
-            expect(mockSetVersePreference).toHaveBeenCalledTimes(2);
-            expect(mockSetVersePreference).toHaveBeenCalledWith('v1', 'KJV');
-            expect(mockSetVersePreference).toHaveBeenCalledWith('v2', 'KJV');
+            expect(mockSetVersePreferencesBatch).toHaveBeenCalledTimes(1);
+            expect(mockSetVersePreferencesBatch).toHaveBeenCalledWith(['v1', 'v2'], 'KJV');
         });
     });
 });

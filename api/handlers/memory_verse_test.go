@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -101,6 +102,11 @@ func (m *MockMemoryVerseService) DeleteVerse(ctx context.Context, verseID uuid.U
 
 func (m *MockMemoryVerseService) SetVersePreference(ctx context.Context, userID, verseID uuid.UUID, version string) error {
 	args := m.Called(ctx, userID, verseID, version)
+	return args.Error(0)
+}
+
+func (m *MockMemoryVerseService) SetVersePreferencesBatch(ctx context.Context, userID uuid.UUID, verseIDs []uuid.UUID, version string) error {
+	args := m.Called(ctx, userID, verseIDs, version)
 	return args.Error(0)
 }
 
@@ -230,6 +236,28 @@ func TestMemoryVerseHandler_UpdateVerse(t *testing.T) {
 	}), userID).Return(nil)
 
 	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestMemoryVerseHandler_SetVersePreferencesBatch(t *testing.T) {
+	mockService := new(MockMemoryVerseService)
+	handler := NewMemoryVerseHandler(mockService)
+
+	userID := uuid.New()
+	verseID1 := uuid.New()
+	verseID2 := uuid.New()
+	verseIDs := []uuid.UUID{verseID1, verseID2}
+	ctx := context.WithValue(context.Background(), TestUserKey, userID.String())
+
+	payload := fmt.Sprintf(`{"verse_ids": ["%s", "%s"], "version": "ESV"}`, verseID1, verseID2)
+	req := httptest.NewRequest("PUT", "/api/memory-verses/preferences/batch", strings.NewReader(payload))
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	mockService.On("SetVersePreferencesBatch", mock.Anything, userID, verseIDs, "ESV").Return(nil)
+
+	handler.SetVersePreferencesBatch(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 }
