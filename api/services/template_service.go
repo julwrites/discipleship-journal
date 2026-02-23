@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"discipleship_journal_api/models"
@@ -219,25 +220,32 @@ func (s *templateService) GenerateContent(ctx context.Context, templateID uuid.U
 	}
 
 	// 3. Fetch Passages Text (for output) and format references (for prompt)
-	var passageTexts []string
-	for _, ref := range references {
-		res, err := s.aiClient.GetPassage(ctx, ref, version)
-		if err != nil {
-			// Log error but continue
-			passageTexts = append(passageTexts, fmt.Sprintf("%s: (Error fetching text)", ref))
-			continue
-		}
+	passageTexts := make([]string, len(references))
+	var wg sync.WaitGroup
 
-		// Extract text
-		text := ""
-		if t, ok := res["text"].(string); ok {
-			text = t
-		} else if t, ok := res["verse"].(string); ok {
-			text = t
-		}
+	for i, ref := range references {
+		wg.Add(1)
+		go func(i int, ref string) {
+			defer wg.Done()
+			res, err := s.aiClient.GetPassage(ctx, ref, version)
+			if err != nil {
+				// Log error but continue
+				passageTexts[i] = fmt.Sprintf("%s: (Error fetching text)", ref)
+				return
+			}
 
-		passageTexts = append(passageTexts, fmt.Sprintf("<blockquote><p><strong>%s (%s)</strong></p>%s</blockquote>", ref, version, text))
+			// Extract text
+			text := ""
+			if t, ok := res["text"].(string); ok {
+				text = t
+			} else if t, ok := res["verse"].(string); ok {
+				text = t
+			}
+
+			passageTexts[i] = fmt.Sprintf("<blockquote><p><strong>%s (%s)</strong></p>%s</blockquote>", ref, version, text)
+		}(i, ref)
 	}
+	wg.Wait()
 	passagesBlock := strings.Join(passageTexts, "\n\n")
 	referencesBlock := strings.Join(references, ", ")
 
