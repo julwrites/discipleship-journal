@@ -24,6 +24,7 @@ type MemoryVerseService interface {
 	// SearchVerses searches for verses across all accessible packs (user's or system's)
 	SearchVerses(ctx context.Context, userID uuid.UUID, query string) ([]*models.MemoryVerse, error)
 	SetVersePreference(ctx context.Context, userID, verseID uuid.UUID, version string) error
+	SetVersePreferencesBatch(ctx context.Context, userID uuid.UUID, verseIDs []uuid.UUID, version string) error
 	RemoveVersePreference(ctx context.Context, userID, verseID uuid.UUID) error
 }
 
@@ -403,6 +404,20 @@ func (s *memoryVerseService) SetVersePreference(ctx context.Context, userID, ver
 		ON CONFLICT (user_id, verse_id) DO UPDATE SET version_override = EXCLUDED.version_override, updated_at = NOW()
 	`
 	_, err := s.db.Exec(ctx, query, userID, verseID, version)
+	return err
+}
+
+func (s *memoryVerseService) SetVersePreferencesBatch(ctx context.Context, userID uuid.UUID, verseIDs []uuid.UUID, version string) error {
+	if len(verseIDs) == 0 {
+		return nil
+	}
+
+	query := `
+		INSERT INTO user_verse_preferences (user_id, verse_id, version_override)
+		SELECT $1, unnest($2::uuid[]), $3
+		ON CONFLICT (user_id, verse_id) DO UPDATE SET version_override = EXCLUDED.version_override, updated_at = NOW()
+	`
+	_, err := s.db.Exec(ctx, query, userID, verseIDs, version)
 	return err
 }
 
