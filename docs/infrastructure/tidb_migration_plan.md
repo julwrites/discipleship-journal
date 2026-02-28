@@ -17,9 +17,14 @@
 
 To deploy TiDB Serverless, you'll need to use Pulumi and the TiDB Cloud provider (`@tidbcloud/pulumi-tidbcloud`). Since the project doesn't have an existing Pulumi setup, we'll guide you through setting it up from scratch.
 
+### Environment Strategy
+We will provision **separate** TiDB Serverless clusters for Staging and Production. TiDB Serverless allows up to 5 free clusters per organization (each with 5 GiB storage and 50M RUs/month). Two separate clusters fit well within these free tier limits and provide better isolation than our current shared Cloud SQL instance.
+
 ### Actions Required From You:
 1.  **Install Pulumi:** Download and install the Pulumi CLI from [pulumi.com](https://www.pulumi.com/docs/install/).
-2.  **Create a Pulumi Account:** Sign up or log in via the CLI (`pulumi login`).
+2.  **Configure Pulumi State Management (GCS):** We will use a Google Cloud Storage (GCS) bucket to manage Pulumi state. This keeps state within our GCP environment securely and incurs negligible costs (pennies per month).
+    *   Create a GCS bucket: `gcloud storage buckets create gs://dj-pulumi-state --location=us-east1`
+    *   Log in to Pulumi using the bucket: `pulumi login gs://dj-pulumi-state`
 3.  **Set Up a TiDB Cloud Account:** Create an account at [tidbcloud.com](https://tidbcloud.com) if you don't have one.
 4.  **Get TiDB Cloud API Keys:** Generate a Public Key and a Private Key in the TiDB Cloud Console (Project Settings > API Access).
 5.  **Initialize Pulumi:** Create a new directory for infrastructure management (e.g., `infra/` at the root of the project).
@@ -43,37 +48,45 @@ import * as tidbcloud from "@tidbcloud/pulumi-tidbcloud";
 const config = new pulumi.Config("tidbcloud");
 const projectId = config.require("projectId");
 
-// Provision a TiDB Cloud Serverless Cluster
-const serverlessCluster = new tidbcloud.Cluster("discipleship-journal-tidb", {
-    projectId: projectId,
-    name: "dj-serverless-db",
-    clusterType: "DEVELOPER", // Represents the Serverless tier
-    cloudProvider: "AWS", // Or GCP if preferred and available in your region
-    region: "us-east-1",  // Adjust to your desired region
-    serverless: {
-        spendLimit: {
-            monthly: 0, // 0 for free tier if applicable, adjust as needed
+// Helper function to provision a cluster
+function createCluster(env: string) {
+    const cluster = new tidbcloud.Cluster(`discipleship-journal-tidb-${env}`, {
+        projectId: projectId,
+        name: `dj-serverless-db-${env}`,
+        clusterType: "DEVELOPER", // Represents the Serverless tier
+        cloudProvider: "AWS", // Or GCP if preferred and available in your region
+        region: "us-east-1",  // Adjust to your desired region
+        serverless: {
+            spendLimit: {
+                monthly: 0, // 0 for free tier if applicable, adjust as needed
+            },
         },
-    },
-});
+    });
 
-// Create a database password (store this securely, Pulumi will manage it as a secret)
-const dbPassword = new pulumi.random.RandomPassword("dbPassword", {
-    length: 16,
-    special: true,
-    overrideSpecial: "_%@",
-});
+    const dbPassword = new pulumi.random.RandomPassword(`${env}-dbPassword`, {
+        length: 16,
+        special: true,
+        overrideSpecial: "_%@",
+    });
 
-// Since the DB user creation and permission granting is not natively supported
-// by the standard Pulumi TiDB provider at this moment, you will typically use
-// the default 'root' user provided by the serverless cluster or manually create one.
-// For production, you should create a dedicated user via a custom resource or a script.
+    return {
+        clusterId: cluster.id,
+        endpoint: cluster.endpoints.apply(e => e.standard.host),
+        port: cluster.endpoints.apply(e => e.standard.port),
+        password: dbPassword.result,
+    };
+}
+
+// Provision separate clusters for staging and production
+// Note: This fits within the free tier limits (up to 5 clusters per org)
+const stagingCluster = createCluster("staging");
+const productionCluster = createCluster("production");
 
 // Export the connection details
-export const clusterId = serverlessCluster.id;
-export const databaseEndpoint = serverlessCluster.endpoints.apply(e => e.standard.host);
-export const databasePort = serverlessCluster.endpoints.apply(e => e.standard.port);
-export const rootPassword = dbPassword.result;
+export const stagingEndpoint = stagingCluster.endpoint;
+export const stagingPassword = stagingCluster.password;
+export const productionEndpoint = productionCluster.endpoint;
+export const productionPassword = productionCluster.password;
 
 // Note: The connection string typically looks like:
 // mysql://root:<password>@<endpoint>:<port>/<dbname>?tls=true
@@ -108,26 +121,28 @@ The `golang-migrate` CLI can still be used, but all existing `.sql` files must b
     *   `TIMESTAMP WITH TIME ZONE` -> `DATETIME` or `TIMESTAMP` (TiDB handles time zones differently; you may need to ensure your app always sends UTC).
     *   `TEXT` -> `VARCHAR(...)` or `TEXT` (MySQL's `TEXT` is similar but lacks some implicit casting).
 *   **Defaults:**
-    *   `uuid_generate_v4()` -> `UUID()`.
+    *   `uuid_generate_v4()` -> Remove database-side UUID generation defaults. UUIDs must be generated in the Go application before insertion (see 3.4).
     *   `NOW()` -> `CURRENT_TIMESTAMP`.
 *   **Indexes:**
-    *   GIN indexes on JSON paths (like `notes.content`) are not natively supported in TiDB the same way. You may need to create generated columns on specific JSON fields and index those instead.
+    *   GIN indexes on JSON paths (like `idx_notes_content` on `notes.content` or `idx_memory_verses_tags` on `memory_verses.tags`) are not natively supported in TiDB.
+    *   **Strategy:** Create generated virtual columns for the specific JSON fields that need indexing, and then create standard B-Tree indexes on those virtual columns. Alternatively, if full-text search is required, evaluate TiDB's full-text search capabilities on the extracted fields.
 
 ### **3.4 Query Translation (`api/services/`)**
 *   **Placeholders:** Replace all `$1`, `$2`, etc., in SQL queries with `?`.
-*   **Returning:** `INSERT ... RETURNING id` is a PostgreSQL extension. In MySQL, use `LastInsertId()` on the `sql.Result` object. *Wait, this only works for auto-increment IDs. For UUIDs, you must generate the UUID in Go before inserting it, as MySQL's `UUID()` function cannot be retrieved via `LastInsertId()`.*
-    *   **Action Required (Developer):** All `Create*` methods in the services will need to generate a `uuid.New().String()` in Go and insert it directly, instead of relying on the database default.
-*   **Functions:**
-    *   `UNNEST($1::TEXT[], $2::TEXT[])` (found in `BibleVersionService.SyncVersions` according to memories) must be completely rewritten. Since TiDB doesn't support array types or unnesting them, you will likely need to use multiple individual `INSERT` statements or a single `INSERT ... VALUES (?, ?), (?, ?)` built dynamically, or use `INSERT ... ON DUPLICATE KEY UPDATE` instead of `ON CONFLICT DO UPDATE`.
-*   **Casting:** Remove all `::uuid`, `::jsonb`, `::text[]` casts.
+*   **UUID Generation & Returning:** `INSERT ... RETURNING id` is a PostgreSQL extension. In MySQL, `LastInsertId()` only works for auto-increment IDs.
+    *   **Action Required (Developer):** Since we cannot easily retrieve database-generated UUIDs after insertion in MySQL, all `Create*` methods across all services (e.g., `NoteService`, `GroupService`, `MemoryVerseService`) must be updated to generate a UUID in Go using `uuid.New().String()` and pass it directly in the `INSERT` statement. The `RETURNING` clauses must be removed.
+*   **Functions & Bulk Upserts:**
+    *   `unnest()` with array casting (e.g., `unnest($2::uuid[])` found in `memory_verse_service.go` and `bible_version_service.go` for bulk upserts) is a PostgreSQL-specific feature.
+    *   **Strategy:** Replace `UNNEST` with dynamic `INSERT ... ON DUPLICATE KEY UPDATE` queries. Construct a single batch query by iterating over the slice and appending `(?, ?, ...)` to the `VALUES` clause, passing the arguments dynamically to maintain performance.
+*   **Casting:** Remove all PostgreSQL-specific casts like `::uuid[]`, `::jsonb`, `::text`. For JSON parsing, let the database driver and standard `json.Marshal` handle it, or use standard MySQL `CAST(x AS JSON)`.
 
 ## 4. Data Migration Strategy
 
 Migrating data from PostgreSQL to a MySQL-compatible system like TiDB is not as simple as `pg_dump` and `mysql < dump.sql` because the schemas, data types, and dump formats are fundamentally different.
 
-### Proposed Strategy: Logical Replication via pgloader
+### Proposed Strategy: TiDB Data Migration (DM) / Lightning
 
-The most reliable approach is to use a tool that translates data on the fly. We recommend `pgloader`, an open-source data migration tool designed exactly for this purpose.
+To ensure a reliable and performant migration within an acceptable 24-hour downtime window, we recommend using TiDB-native tools, specifically **TiDB Data Migration (DM)** or exporting to CSV/SQL via `pg_dump`/custom scripts and importing with **TiDB Lightning**.
 
 **Steps:**
 
@@ -136,24 +151,28 @@ The most reliable approach is to use a tool that translates data on the fly. We 
     *   Apply the newly rewritten MySQL schema to the TiDB cluster (using the updated `golang-migrate` files). The target database structure must exist before migrating data.
     *   Create a temporary user in the Cloud SQL (PostgreSQL) instance with read-only access to all tables.
 
-2.  **Execution (Using pgloader):**
-    *   You can run `pgloader` locally (if you have network access to both databases) or from a VM within GCP that has access to both the Cloud SQL instance and the public internet (for TiDB Serverless).
-    *   **Action Required (You):** Run a command similar to the following:
-        ```bash
-        pgloader postgresql://<pg_user>:<pg_pass>@<pg_host>:5432/discipleship_journal \
-                 mysql://<tidb_user>:<tidb_pass>@<tidb_endpoint>:4000/discipleship_journal
-        ```
-    *   *Note:* You may need to write a custom `.load` file for `pgloader` to handle specific type conversions (like PostgreSQL `UUID` to MySQL `CHAR(36)` or `JSONB` to `JSON`).
+2.  **Export & Translation:**
+    *   Since TiDB DM natively supports MySQL/MariaDB sources (not PostgreSQL), we cannot stream directly. Instead, we must export the PostgreSQL data into a format TiDB Lightning can consume (CSV or SQL).
+    *   Use `pg_dump` or a custom extraction script to export the data to CSV files.
+    *   During export or via a preprocessing script, translate PostgreSQL-specific data types:
+        *   Format `JSONB` output to standard `JSON` strings.
+        *   Ensure `UUID`s are output as 36-character strings.
 
-3.  **Verification:**
+3.  **Execution (Using TiDB Lightning):**
+    *   Install TiDB Lightning on a GCP VM that has high-bandwidth access to the TiDB Serverless cluster.
+    *   Configure TiDB Lightning to read the exported CSV/SQL files.
+    *   Run TiDB Lightning to perform a high-speed bulk import into the TiDB cluster.
+
+4.  **Verification:**
     *   Write a simple script to verify row counts for each table in both databases.
     *   Perform spot checks on `JSON` columns to ensure they parsed correctly.
 
-4.  **Cutover:**
-    *   Put the application into a maintenance mode (read-only or completely offline) to stop writes to PostgreSQL.
-    *   Run `pgloader` one final time to sync any last-minute changes (if you didn't set up continuous replication).
+5.  **Cutover (Downtime Window: 24h):**
+    *   Put the application into maintenance mode (read-only or completely offline) to stop writes to PostgreSQL. We have an acceptable downtime window of 24 hours to complete the final export/import and cutover.
+    *   Perform the final data export from PostgreSQL and import via TiDB Lightning.
     *   Update the Google Secret Manager with the new TiDB connection string.
     *   Deploy the updated Go backend (which uses the MySQL driver).
+    *   Verify the application is functional against the new TiDB database.
     *   Disable maintenance mode.
 
 ## 5. Deployment Pipeline Updates
