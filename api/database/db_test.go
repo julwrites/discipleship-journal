@@ -28,15 +28,15 @@ func TestBuildConnectionString(t *testing.T) {
 		// No cloud sql instance, no password
 		_, err := BuildConnectionString()
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "DB_PASSWORD is required for local development")
+		assert.Contains(t, err.Error(), "DB_PASSWORD is required")
 	})
 
 	t.Run("Local_Success", func(t *testing.T) {
 		os.Setenv("DB_PASSWORD", "pass")
 		str, err := BuildConnectionString()
 		assert.NoError(t, err)
-		assert.Contains(t, str, "postgres://user:pass@localhost:5432/db")
-		assert.Contains(t, str, "sslmode=disable")
+		assert.Contains(t, str, "user:pass@tcp(127.0.0.1:4000)/db")
+		assert.Contains(t, str, "tls=true")
 	})
 
 	t.Run("Local_Custom_Host", func(t *testing.T) {
@@ -45,19 +45,7 @@ func TestBuildConnectionString(t *testing.T) {
 		os.Setenv("DB_PORT", "5433")
 		str, err := BuildConnectionString()
 		assert.NoError(t, err)
-		assert.Contains(t, str, "postgres://user:pass@db-host:5433/db")
-	})
-
-	t.Run("CloudSQL_Success", func(t *testing.T) {
-		os.Setenv("CLOUD_SQL_INSTANCE", "project:region:inst")
-		// Password not required for IAM (but if set, it's used in string? Check logic)
-		os.Unsetenv("DB_PASSWORD")
-
-		str, err := BuildConnectionString()
-		assert.NoError(t, err)
-		// Should use "user" (no password) and placeholder host
-		assert.Contains(t, str, "postgres://user@127.0.0.1/db")
-		assert.Contains(t, str, "sslmode=disable")
+		assert.Contains(t, str, "user:pass@tcp(db-host:5433)/db")
 	})
 
 	// Cleanup
@@ -123,32 +111,6 @@ func TestClose_Nil(t *testing.T) {
 	Close()
 }
 
-func TestConnect_CloudSQL_InitError(t *testing.T) {
-	os.Setenv("DB_USERNAME", "user")
-	os.Setenv("DB_NAME", "db")
-	os.Setenv("CLOUD_SQL_INSTANCE", "project:region:inst")
-	// No creds -> dialer init error expected (or dial error later)
-	// NewDialer might check for default credentials and fail if none found
-	// or it might succeed and fail at Dial.
-	// Most CI environments don't have default creds.
-
-	err := Connect()
-	if err == nil {
-		// If it somehow succeeds (e.g. ADC present), we can't assert error.
-		// But checking coverage path is enough.
-		// Close dialer? Connect doesn't return it.
-		// It's acceptable for coverage.
-	} else {
-		// If it fails, check message
-		// Either "failed to initialize Cloud SQL dialer" or "unable to ping"
-		assert.Error(t, err)
-	}
-
-	os.Unsetenv("DB_USERNAME")
-	os.Unsetenv("DB_NAME")
-	os.Unsetenv("CLOUD_SQL_INSTANCE")
-}
-
 func TestRunMigrations_Coverage(t *testing.T) {
 	t.Run("ConfigError", func(t *testing.T) {
 		os.Unsetenv("DB_USERNAME")
@@ -173,32 +135,5 @@ func TestRunMigrations_Coverage(t *testing.T) {
 		os.Unsetenv("DB_PASSWORD")
 		os.Unsetenv("DB_HOST")
 		os.Unsetenv("DB_PORT")
-	})
-
-	t.Run("CloudSQL_InitError", func(t *testing.T) {
-		os.Setenv("DB_USERNAME", "user")
-		os.Setenv("DB_NAME", "db")
-		os.Setenv("CLOUD_SQL_INSTANCE", "project:region:inst")
-		// No credentials -> NewDialer might fail or Dial will fail.
-		// If NewDialer needs GOOGLE_APPLICATION_CREDENTIALS and they are missing, it might err.
-		// However, it might default to ADC and succeed init but fail Dial.
-		// RunMigrations creates the dialer then OpenDB.
-		// OpenDB doesn't connect immediately.
-		// db.Ping() is called.
-		// Ping will use the dialer.
-		// The dialer will try to connect.
-		// If init succeeded, Ping fails.
-		// If init failed, RunMigrations returns error early.
-
-		err := RunMigrations()
-		if err != nil {
-			// It failed either at init or ping
-			// Just assert error
-			assert.Error(t, err)
-		}
-
-		os.Unsetenv("DB_USERNAME")
-		os.Unsetenv("DB_NAME")
-		os.Unsetenv("CLOUD_SQL_INSTANCE")
 	})
 }

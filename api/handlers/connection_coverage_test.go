@@ -8,17 +8,20 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/uuid"
-	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestConnectionHandler_Unauthorized(t *testing.T) {
-	dbMock, err := pgxmock.NewPool()
-	assert.NoError(t, err)
-	defer dbMock.Close()
+	db, dbMock, err := sqlmock.New()
+	_ = db
 
-	handler := NewConnectionHandler(dbMock, nil)
+	_ = dbMock
+	assert.NoError(t, err)
+	defer db.Close()
+
+	handler := NewConnectionHandler(db, nil)
 
 	t.Run("SearchUsers", func(t *testing.T) {
 		req := httptest.NewRequest("GET", "/api/users/search?q=query", nil)
@@ -50,11 +53,14 @@ func TestConnectionHandler_Unauthorized(t *testing.T) {
 }
 
 func TestSendConnectionRequest_InvalidBody(t *testing.T) {
-	dbMock, err := pgxmock.NewPool()
-	assert.NoError(t, err)
-	defer dbMock.Close()
+	db, dbMock, err := sqlmock.New()
+	_ = db
 
-	handler := NewConnectionHandler(dbMock, nil)
+	_ = dbMock
+	assert.NoError(t, err)
+	defer db.Close()
+
+	handler := NewConnectionHandler(db, nil)
 	userUUID := uuid.New()
 
 	req := httptest.NewRequest("POST", "/api/connections/request", bytes.NewBufferString("invalid json"))
@@ -65,11 +71,14 @@ func TestSendConnectionRequest_InvalidBody(t *testing.T) {
 }
 
 func TestSearchUsers_ScanError(t *testing.T) {
-	dbMock, err := pgxmock.NewPool()
-	assert.NoError(t, err)
-	defer dbMock.Close()
+	db, dbMock, err := sqlmock.New()
+	_ = db
 
-	handler := NewConnectionHandler(dbMock, nil)
+	_ = dbMock
+	assert.NoError(t, err)
+	defer db.Close()
+
+	handler := NewConnectionHandler(db, nil)
 	userUUID := uuid.New()
 
 	// Mock query returning fewer columns than expected to force scan error
@@ -77,7 +86,7 @@ func TestSearchUsers_ScanError(t *testing.T) {
 	// Scan: &id, &email, &username, &isConnected
 	dbMock.ExpectQuery("SELECT u.id, u.email").
 		WithArgs("query", userUUID).
-		WillReturnRows(pgxmock.NewRows([]string{"id", "email"}).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "email"}).
 			AddRow("id-1", "test@test.com"))
 
 	req := httptest.NewRequest("GET", "/api/users/search?q=query", nil)
@@ -94,18 +103,21 @@ func TestSearchUsers_ScanError(t *testing.T) {
 }
 
 func TestListConnections_ScanError(t *testing.T) {
-	dbMock, err := pgxmock.NewPool()
-	assert.NoError(t, err)
-	defer dbMock.Close()
+	db, dbMock, err := sqlmock.New()
+	_ = db
 
-	handler := NewConnectionHandler(dbMock, nil)
+	_ = dbMock
+	assert.NoError(t, err)
+	defer db.Close()
+
+	handler := NewConnectionHandler(db, nil)
 	userUUID := uuid.New()
 
 	// Query: SELECT c.id, c.requester_id, c.receiver_id, c.status, u1.email, u2.email, u1.username, u2.username
 	// Return fewer columns
 	dbMock.ExpectQuery("SELECT c.id, c.requester_id").
 		WithArgs(userUUID).
-		WillReturnRows(pgxmock.NewRows([]string{"id", "requester_id"}).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "requester_id"}).
 			AddRow("conn-1", "req-1"))
 
 	req := httptest.NewRequest("GET", "/api/connections", nil)

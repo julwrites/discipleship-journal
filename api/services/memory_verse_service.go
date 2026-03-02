@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"time"
 
+	"database/sql"
 	"discipleship_journal_api/models"
+
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 )
 
 type MemoryVerseService interface {
@@ -32,7 +33,7 @@ type memoryVerseService struct {
 	db DBInterfaceWithQuery
 }
 
-type pgxRows = pgx.Rows
+type pgxRows = *sql.Rows
 
 func NewMemoryVerseService(db DBInterfaceWithQuery) MemoryVerseService {
 	return &memoryVerseService{db: db}
@@ -51,11 +52,11 @@ func (s *memoryVerseService) GetPacks(ctx context.Context, userID uuid.UUID, typ
 
 	if typeFilter == "system" {
 		baseQuery += " WHERE vp.user_id IS NULL ORDER BY vp.title"
-		rowsRows, err = s.db.Query(ctx, baseQuery)
+		rowsRows, err = s.db.QueryContext(ctx, baseQuery)
 	} else {
 		// User packs
-		baseQuery += " WHERE vp.user_id = $1 ORDER BY vp.created_at DESC"
-		rowsRows, err = s.db.Query(ctx, baseQuery, userID)
+		baseQuery += " WHERE vp.user_id = ? ORDER BY vp.created_at DESC"
+		rowsRows, err = s.db.QueryContext(ctx, baseQuery, userID)
 	}
 
 	if err != nil {
@@ -86,9 +87,9 @@ func (s *memoryVerseService) GetPack(ctx context.Context, packID uuid.UUID, user
 		SELECT vp.id, vp.user_id, vp.title, vp.identifier, vp.description, vp.is_public, vp.created_at, vp.updated_at,
 		       (SELECT count(*) FROM memory_verses mv WHERE mv.verse_pack_id = vp.id) as verse_count
 		FROM verse_packs vp
-		WHERE vp.id = $1 AND (vp.user_id = $2 OR vp.is_public = true)
+		WHERE vp.id = ? AND (vp.user_id = ? OR vp.is_public = true)
 	`
-	row := s.db.QueryRow(ctx, query, packID, userID)
+	row := s.db.QueryRowContext(ctx, query, packID, userID)
 
 	var p models.VersePack
 	var identifier, description *string
@@ -111,9 +112,9 @@ func (s *memoryVerseService) CreatePack(ctx context.Context, pack *models.VerseP
 
 	query := `
 		INSERT INTO verse_packs (id, user_id, title, identifier, description, is_public, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`
-	_, err := s.db.Exec(ctx, query,
+	_, err := s.db.ExecContext(ctx, query,
 		pack.ID, pack.UserID, pack.Title, pack.Identifier, pack.Description, pack.IsPublic, pack.CreatedAt, pack.UpdatedAt,
 	)
 	if err != nil {
@@ -143,12 +144,12 @@ func (s *memoryVerseService) GetVerses(ctx context.Context, packID uuid.UUID, us
 			mv.created_at,
 			mv.updated_at
 		FROM memory_verses mv
-		LEFT JOIN user_verse_preferences uvp ON mv.id = uvp.verse_id AND uvp.user_id = $2
-		LEFT JOIN users u ON u.id = $2
-		WHERE mv.verse_pack_id = $1
+		LEFT JOIN user_verse_preferences uvp ON mv.id = uvp.verse_id AND uvp.user_id = ?
+		LEFT JOIN users u ON u.id = ?
+		WHERE mv.verse_pack_id = ?
 		ORDER BY mv.created_at ASC
 	`
-	rows, err := s.db.Query(ctx, query, packID, userID)
+	rows, err := s.db.QueryContext(ctx, query, packID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -187,10 +188,10 @@ func (s *memoryVerseService) GetOriginalVerses(ctx context.Context, packID uuid.
 			mv.created_at,
 			mv.updated_at
 		FROM memory_verses mv
-		WHERE mv.verse_pack_id = $1
+		WHERE mv.verse_pack_id = ?
 		ORDER BY mv.created_at ASC
 	`
-	rows, err := s.db.Query(ctx, query, packID)
+	rows, err := s.db.QueryContext(ctx, query, packID)
 	if err != nil {
 		return nil, err
 	}
@@ -224,9 +225,9 @@ func (s *memoryVerseService) CreateVerse(ctx context.Context, verse *models.Memo
 
 	query := `
 		INSERT INTO memory_verses (id, verse_pack_id, reference, title, version, tags, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`
-	_, err := s.db.Exec(ctx, query,
+	_, err := s.db.ExecContext(ctx, query,
 		verse.ID, verse.VersePackID, verse.Reference, verse.Title, verse.Version, tagsJSON, verse.CreatedAt, verse.UpdatedAt,
 	)
 	if err != nil {
@@ -292,12 +293,13 @@ func (s *memoryVerseService) ClonePack(ctx context.Context, packID uuid.UUID, us
 
 func (s *memoryVerseService) DeletePack(ctx context.Context, packID uuid.UUID, userID uuid.UUID) error {
 	// Check ownership
-	query := `DELETE FROM verse_packs WHERE id = $1 AND user_id = $2`
-	res, err := s.db.Exec(ctx, query, packID, userID)
+	query := `DELETE FROM verse_packs WHERE id = ? AND user_id = ?`
+	res, err := s.db.ExecContext(ctx, query, packID, userID)
 	if err != nil {
 		return err
 	}
-	if res.RowsAffected() == 0 {
+	rowsAffected, _ := res.RowsAffected()
+	if rowsAffected == 0 {
 		return models.ErrNotFound
 	}
 	return nil
@@ -308,19 +310,20 @@ func (s *memoryVerseService) UpdateVerse(ctx context.Context, verse *models.Memo
 
 	query := `
 		UPDATE memory_verses mv
-		SET reference = $2, title = $3, version = $4, tags = $5, updated_at = NOW()
+		SET reference = ?, title = ?, version = ?, tags = ?, updated_at = NOW()
 		FROM verse_packs vp
 		WHERE mv.verse_pack_id = vp.id
-		AND mv.id = $1
-		AND vp.user_id = $6
+		AND mv.id = ?
+		AND vp.user_id = ?
 	`
-	res, err := s.db.Exec(ctx, query,
+	res, err := s.db.ExecContext(ctx, query,
 		verse.ID, verse.Reference, verse.Title, verse.Version, tagsJSON, userID,
 	)
 	if err != nil {
 		return err
 	}
-	if res.RowsAffected() == 0 {
+	rowsAffected, _ := res.RowsAffected()
+	if rowsAffected == 0 {
 		return models.ErrNotFound
 	}
 	return nil
@@ -331,14 +334,15 @@ func (s *memoryVerseService) DeleteVerse(ctx context.Context, verseID uuid.UUID,
 		DELETE FROM memory_verses mv
 		USING verse_packs vp
 		WHERE mv.verse_pack_id = vp.id
-		AND mv.id = $1
-		AND vp.user_id = $2
+		AND mv.id = ?
+		AND vp.user_id = ?
 	`
-	res, err := s.db.Exec(ctx, query, verseID, userID)
+	res, err := s.db.ExecContext(ctx, query, verseID, userID)
 	if err != nil {
 		return err
 	}
-	if res.RowsAffected() == 0 {
+	rowsAffected, _ := res.RowsAffected()
+	if rowsAffected == 0 {
 		return models.ErrNotFound
 	}
 	return nil
@@ -365,14 +369,14 @@ func (s *memoryVerseService) SearchVerses(ctx context.Context, userID uuid.UUID,
 			mv.updated_at
 		FROM memory_verses mv
 		JOIN verse_packs vp ON mv.verse_pack_id = vp.id
-		LEFT JOIN user_verse_preferences uvp ON mv.id = uvp.verse_id AND uvp.user_id = $1
-		LEFT JOIN users u ON u.id = $1
-		WHERE (vp.user_id = $1 OR vp.is_public = true)
-		AND (mv.reference ILIKE $2 OR vp.title ILIKE $2 OR mv.title ILIKE $2)
+		LEFT JOIN user_verse_preferences uvp ON mv.id = uvp.verse_id AND uvp.user_id = ?
+		LEFT JOIN users u ON u.id = ?
+		WHERE (vp.user_id = ? OR vp.is_public = true)
+		AND (mv.reference LIKE ? OR vp.title LIKE ? OR mv.title LIKE ?)
 		ORDER BY mv.reference ASC
 		LIMIT 20
 	`
-	rows, err := s.db.Query(ctx, query, userID, "%"+queryStr+"%")
+	rows, err := s.db.QueryContext(ctx, query, userID, "%"+queryStr+"%")
 	if err != nil {
 		return nil, err
 	}
@@ -400,10 +404,10 @@ func (s *memoryVerseService) SearchVerses(ctx context.Context, userID uuid.UUID,
 func (s *memoryVerseService) SetVersePreference(ctx context.Context, userID, verseID uuid.UUID, version string) error {
 	query := `
 		INSERT INTO user_verse_preferences (user_id, verse_id, version_override)
-		VALUES ($1, $2, $3)
-		ON CONFLICT (user_id, verse_id) DO UPDATE SET version_override = EXCLUDED.version_override, updated_at = NOW()
+		VALUES (?, ?, ?)
+		ON DUPLICATE KEY UPDATE version_override = VALUES(version_override), updated_at = NOW()
 	`
-	_, err := s.db.Exec(ctx, query, userID, verseID, version)
+	_, err := s.db.ExecContext(ctx, query, userID, verseID, version)
 	return err
 }
 
@@ -412,17 +416,25 @@ func (s *memoryVerseService) SetVersePreferencesBatch(ctx context.Context, userI
 		return nil
 	}
 
-	query := `
-		INSERT INTO user_verse_preferences (user_id, verse_id, version_override)
-		SELECT $1, unnest($2::uuid[]), $3
-		ON CONFLICT (user_id, verse_id) DO UPDATE SET version_override = EXCLUDED.version_override, updated_at = NOW()
-	`
-	_, err := s.db.Exec(ctx, query, userID, verseIDs, version)
+	query := "INSERT INTO user_verse_preferences (user_id, verse_id, version_override) VALUES "
+	var args []interface{}
+
+	for i, verseID := range verseIDs {
+		if i > 0 {
+			query += ", "
+		}
+		query += "(?, ?, ?)"
+		args = append(args, userID, verseID, version)
+	}
+
+	query += " ON DUPLICATE KEY UPDATE version_override = VALUES(version_override), updated_at = NOW()"
+
+	_, err := s.db.ExecContext(ctx, query, args...)
 	return err
 }
 
 func (s *memoryVerseService) RemoveVersePreference(ctx context.Context, userID, verseID uuid.UUID) error {
-	query := `DELETE FROM user_verse_preferences WHERE user_id = $1 AND verse_id = $2`
-	_, err := s.db.Exec(ctx, query, userID, verseID)
+	query := `DELETE FROM user_verse_preferences WHERE user_id = ? AND verse_id = ?`
+	_, err := s.db.ExecContext(ctx, query, userID, verseID)
 	return err
 }

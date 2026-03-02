@@ -8,6 +8,7 @@ import (
 	"discipleship_journal_api/models"
 	"discipleship_journal_api/services"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -22,11 +23,11 @@ func TestGroupService_Integration(t *testing.T) {
 
 	// Helper to seed user
 	createUser := func(firebaseUID string) string {
-		var id string
+		id := uuid.New().String()
 		// Ensure firebase_uid is unique
 		// Explicitly cast parameter or use explicit string formatting to avoid type inference issues
 		email := firebaseUID + "@test.com"
-		err := pool.QueryRow(ctx, "INSERT INTO users (id, firebase_uid, email, created_at, updated_at) VALUES (gen_random_uuid(), $1, $2, NOW(), NOW()) RETURNING id", firebaseUID, email).Scan(&id)
+		_, err := pool.ExecContext(ctx, "INSERT INTO users (id, firebase_uid, email, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())", id, firebaseUID, email)
 		require.NoError(t, err)
 		return id
 	}
@@ -81,7 +82,7 @@ func TestGroupService_Integration(t *testing.T) {
 		// We need to simulate direct group creation via SQL or Service if possible
 		// Service GetOrCreateDirectGroup requires connection, which might be tedious to set up just for this check
 		// So we insert directly into DB to ensure it exists and has name containing "Alpha"
-		_, err = pool.Exec(ctx, "INSERT INTO groups (name, type, created_by) VALUES ($1, $2, $3)", "Direct Alpha", "direct", user3ID)
+		_, err = pool.ExecContext(ctx, "INSERT INTO `groups` (name, type, created_by) VALUES (?, ?, ?)", "Direct Alpha", "direct", user3ID)
 		require.NoError(t, err)
 
 		// Search
@@ -144,7 +145,7 @@ func TestGroupService_Integration(t *testing.T) {
 		assert.Contains(t, err.Error(), "user is not in your connections")
 
 		// 2. Connect user1 and user2
-		_, err = pool.Exec(ctx, "INSERT INTO connections (requester_id, receiver_id, status) VALUES ($1, $2, 'accepted')", user1ID, user2ID)
+		_, err = pool.ExecContext(ctx, "INSERT INTO connections (requester_id, receiver_id, status) VALUES (?, ?, 'accepted')", user1ID, user2ID)
 		require.NoError(t, err)
 
 		// Setup Notification Mock
@@ -193,7 +194,7 @@ func TestGroupService_Integration(t *testing.T) {
 		assert.Contains(t, err.Error(), "user is not in your connections")
 
 		// Connect user2 and user3
-		_, err = pool.Exec(ctx, "INSERT INTO connections (requester_id, receiver_id, status) VALUES ($1, $2, 'accepted')", user2ID, user3ID)
+		_, err = pool.ExecContext(ctx, "INSERT INTO connections (requester_id, receiver_id, status) VALUES (?, ?, 'accepted')", user2ID, user3ID)
 		require.NoError(t, err)
 
 		// 1. Create first time

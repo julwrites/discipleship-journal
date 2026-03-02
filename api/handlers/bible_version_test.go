@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"discipleship_journal_api/services"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

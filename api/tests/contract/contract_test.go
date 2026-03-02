@@ -50,8 +50,8 @@ func SetupRouter(t *testing.T) (*chi.Mux, func(), string) {
 	var testUserID string
 
 	// Manual insert since we have the pool
-	row := pool.QueryRow(context.Background(),
-		"INSERT INTO users (username, email, firebase_uid, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW()) RETURNING id",
+	row := pool.QueryRowContext(context.Background(),
+		"INSERT INTO users (username, email, firebase_uid, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW()) RETURNING id",
 		"testuser", "test@example.com", testUserUID)
 	err := row.Scan(&testUserID)
 	if err != nil {

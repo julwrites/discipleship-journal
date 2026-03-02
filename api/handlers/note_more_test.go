@@ -12,8 +12,9 @@ import (
 
 	"discipleship_journal_api/models"
 	"discipleship_journal_api/services"
+
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-chi/chi/v5"
-	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -23,7 +24,8 @@ func TestGetNotes_TestUserKey(t *testing.T) {
 	now := time.Now()
 
 	t.Run("success", func(t *testing.T) {
-		_, noteServiceMock, handler := setupTest(t)
+		db, _, noteServiceMock, handler := setupTest(t)
+		_ = db
 
 		serviceNotes := []services.Note{
 			{
@@ -52,14 +54,17 @@ func TestGetNotes_TestUserKey(t *testing.T) {
 }
 
 func TestGetNotes_NilService(t *testing.T) {
-	dbMock, err := pgxmock.NewPool()
+	db, dbMock, err := sqlmock.New()
+	_ = db
+
+	_ = dbMock
 	if err != nil {
 		t.Fatalf("unexpected error opening stub database connection: %v", err)
 	}
-	defer dbMock.Close()
+	defer db.Close()
 
 	// Handler with nil service
-	handler := NewNoteHandler(dbMock, nil)
+	handler := NewNoteHandler(db, nil)
 
 	req := httptest.NewRequest("GET", "/api/notes", nil)
 	w := httptest.NewRecorder()
@@ -69,12 +74,15 @@ func TestGetNotes_NilService(t *testing.T) {
 }
 
 func TestDeleteNote_NilService(t *testing.T) {
-	dbMock, err := pgxmock.NewPool()
+	db, dbMock, err := sqlmock.New()
+	_ = db
+
+	_ = dbMock
 	if err != nil {
 		t.Fatalf("unexpected error opening stub database connection: %v", err)
 	}
-	defer dbMock.Close()
-	handler := NewNoteHandler(dbMock, nil)
+	defer db.Close()
+	handler := NewNoteHandler(db, nil)
 
 	req := httptest.NewRequest("DELETE", "/api/notes/1", nil)
 	w := httptest.NewRecorder()
@@ -84,12 +92,15 @@ func TestDeleteNote_NilService(t *testing.T) {
 }
 
 func TestCreateNote_NilService(t *testing.T) {
-	dbMock, err := pgxmock.NewPool()
+	db, dbMock, err := sqlmock.New()
+	_ = db
+
+	_ = dbMock
 	if err != nil {
 		t.Fatalf("unexpected error opening stub database connection: %v", err)
 	}
-	defer dbMock.Close()
-	handler := NewNoteHandler(dbMock, nil)
+	defer db.Close()
+	handler := NewNoteHandler(db, nil)
 
 	req := httptest.NewRequest("POST", "/api/notes", nil)
 	w := httptest.NewRecorder()
@@ -99,12 +110,15 @@ func TestCreateNote_NilService(t *testing.T) {
 }
 
 func TestUpdateNote_NilService(t *testing.T) {
-	dbMock, err := pgxmock.NewPool()
+	db, dbMock, err := sqlmock.New()
+	_ = db
+
+	_ = dbMock
 	if err != nil {
 		t.Fatalf("unexpected error opening stub database connection: %v", err)
 	}
-	defer dbMock.Close()
-	handler := NewNoteHandler(dbMock, nil)
+	defer db.Close()
+	handler := NewNoteHandler(db, nil)
 
 	req := httptest.NewRequest("PUT", "/api/notes/1", nil)
 	w := httptest.NewRecorder()
@@ -114,12 +128,15 @@ func TestUpdateNote_NilService(t *testing.T) {
 }
 
 func TestGetNote_NilService(t *testing.T) {
-	dbMock, err := pgxmock.NewPool()
+	db, dbMock, err := sqlmock.New()
+	_ = db
+
+	_ = dbMock
 	if err != nil {
 		t.Fatalf("unexpected error opening stub database connection: %v", err)
 	}
-	defer dbMock.Close()
-	handler := NewNoteHandler(dbMock, nil)
+	defer db.Close()
+	handler := NewNoteHandler(db, nil)
 
 	req := httptest.NewRequest("GET", "/api/notes/1", nil)
 	w := httptest.NewRecorder()
@@ -129,12 +146,15 @@ func TestGetNote_NilService(t *testing.T) {
 }
 
 func TestGetTags_NilService(t *testing.T) {
-	dbMock, err := pgxmock.NewPool()
+	db, dbMock, err := sqlmock.New()
+	_ = db
+
+	_ = dbMock
 	if err != nil {
 		t.Fatalf("unexpected error opening stub database connection: %v", err)
 	}
-	defer dbMock.Close()
-	handler := NewNoteHandler(dbMock, nil)
+	defer db.Close()
+	handler := NewNoteHandler(db, nil)
 
 	req := httptest.NewRequest("GET", "/api/tags", nil)
 	w := httptest.NewRecorder()
@@ -144,12 +164,15 @@ func TestGetTags_NilService(t *testing.T) {
 }
 
 func TestCreateTag_NilService(t *testing.T) {
-	dbMock, err := pgxmock.NewPool()
+	db, dbMock, err := sqlmock.New()
+	_ = db
+
+	_ = dbMock
 	if err != nil {
 		t.Fatalf("unexpected error opening stub database connection: %v", err)
 	}
-	defer dbMock.Close()
-	handler := NewNoteHandler(dbMock, nil)
+	defer db.Close()
+	handler := NewNoteHandler(db, nil)
 
 	req := httptest.NewRequest("POST", "/api/tags", nil)
 	w := httptest.NewRecorder()
@@ -159,12 +182,15 @@ func TestCreateTag_NilService(t *testing.T) {
 }
 
 func TestDeleteTag_NilService(t *testing.T) {
-	dbMock, err := pgxmock.NewPool()
+	db, dbMock, err := sqlmock.New()
+	_ = db
+
+	_ = dbMock
 	if err != nil {
 		t.Fatalf("unexpected error opening stub database connection: %v", err)
 	}
-	defer dbMock.Close()
-	handler := NewNoteHandler(dbMock, nil)
+	defer db.Close()
+	handler := NewNoteHandler(db, nil)
 
 	req := httptest.NewRequest("DELETE", "/api/tags/1", nil)
 	w := httptest.NewRecorder()
@@ -175,7 +201,8 @@ func TestDeleteTag_NilService(t *testing.T) {
 
 func TestGetTags_Success(t *testing.T) {
 	testUserID := "test-user-id"
-	_, noteServiceMock, handler := setupTest(t)
+	db, _, noteServiceMock, handler := setupTest(t)
+	_ = db
 
 	tags := []services.Tag{
 		{ID: "tag-1", Name: "Tag 1", UserID: testUserID},
@@ -200,7 +227,8 @@ func TestGetTags_Success(t *testing.T) {
 
 func TestGetTags_Error(t *testing.T) {
 	testUserID := "test-user-id"
-	_, noteServiceMock, handler := setupTest(t)
+	db, _, noteServiceMock, handler := setupTest(t)
+	_ = db
 
 	noteServiceMock.On("GetUserTags", mock.Anything, testUserID).Return(nil, errors.New("service error"))
 
@@ -216,7 +244,8 @@ func TestGetTags_Error(t *testing.T) {
 
 func TestCreateTag_Success(t *testing.T) {
 	testUserID := "test-user-id"
-	_, noteServiceMock, handler := setupTest(t)
+	db, _, noteServiceMock, handler := setupTest(t)
+	_ = db
 
 	tagName := "New Tag"
 	tag := &services.Tag{ID: "tag-1", Name: tagName, UserID: testUserID}
@@ -241,7 +270,8 @@ func TestCreateTag_Success(t *testing.T) {
 
 func TestCreateTag_ValidationFail(t *testing.T) {
 	testUserID := "test-user-id"
-	_, _, handler := setupTest(t)
+	db, _, _, handler := setupTest(t)
+	_ = db
 
 	// Empty name should fail required validation
 	body := `{"name": ""}`
@@ -258,7 +288,8 @@ func TestCreateTag_ValidationFail(t *testing.T) {
 
 func TestCreateTag_ServiceError(t *testing.T) {
 	testUserID := "test-user-id"
-	_, noteServiceMock, handler := setupTest(t)
+	db, _, noteServiceMock, handler := setupTest(t)
+	_ = db
 
 	tagName := "New Tag"
 	noteServiceMock.On("CreateTag", mock.Anything, testUserID, tagName).Return(nil, errors.New("service error"))
@@ -278,7 +309,8 @@ func TestCreateTag_ServiceError(t *testing.T) {
 func TestDeleteTag_Success(t *testing.T) {
 	testUserID := "test-user-id"
 	tagID := "tag-1"
-	_, noteServiceMock, handler := setupTest(t)
+	db, _, noteServiceMock, handler := setupTest(t)
+	_ = db
 
 	noteServiceMock.On("DeleteTag", mock.Anything, testUserID, tagID).Return(nil)
 
@@ -299,7 +331,8 @@ func TestDeleteTag_Success(t *testing.T) {
 func TestDeleteTag_NotFound(t *testing.T) {
 	testUserID := "test-user-id"
 	tagID := "tag-1"
-	_, noteServiceMock, handler := setupTest(t)
+	db, _, noteServiceMock, handler := setupTest(t)
+	_ = db
 
 	noteServiceMock.On("DeleteTag", mock.Anything, testUserID, tagID).Return(models.ErrNotFound)
 
@@ -320,7 +353,8 @@ func TestDeleteTag_NotFound(t *testing.T) {
 func TestDeleteTag_ServiceError(t *testing.T) {
 	testUserID := "test-user-id"
 	tagID := "tag-1"
-	_, noteServiceMock, handler := setupTest(t)
+	db, _, noteServiceMock, handler := setupTest(t)
+	_ = db
 
 	noteServiceMock.On("DeleteTag", mock.Anything, testUserID, tagID).Return(errors.New("service error"))
 
@@ -341,7 +375,8 @@ func TestDeleteTag_ServiceError(t *testing.T) {
 func TestDeleteNote_TestUserKey(t *testing.T) {
 	testUserID := "test-user-id"
 	noteID := "note-1"
-	_, noteServiceMock, handler := setupTest(t)
+	db, _, noteServiceMock, handler := setupTest(t)
+	_ = db
 
 	noteServiceMock.On("DeleteNote", mock.Anything, testUserID, noteID).Return(nil)
 
@@ -361,7 +396,8 @@ func TestDeleteNote_TestUserKey(t *testing.T) {
 
 func TestCreateNote_TestUserKey(t *testing.T) {
 	testUserID := "test-user-id"
-	_, noteServiceMock, handler := setupTest(t)
+	db, _, noteServiceMock, handler := setupTest(t)
+	_ = db
 
 	noteServiceMock.On("CreateNote", mock.Anything, testUserID, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&services.Note{ID: "new"}, nil)
 
@@ -381,7 +417,8 @@ func TestCreateNote_TestUserKey(t *testing.T) {
 func TestUpdateNote_TestUserKey(t *testing.T) {
 	testUserID := "test-user-id"
 	noteID := "note-1"
-	_, noteServiceMock, handler := setupTest(t)
+	db, _, noteServiceMock, handler := setupTest(t)
+	_ = db
 
 	noteServiceMock.On("UpdateNote", mock.Anything, testUserID, noteID, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
@@ -404,7 +441,8 @@ func TestUpdateNote_TestUserKey(t *testing.T) {
 func TestGetNote_TestUserKey(t *testing.T) {
 	testUserID := "test-user-id"
 	noteID := "note-1"
-	_, noteServiceMock, handler := setupTest(t)
+	db, _, noteServiceMock, handler := setupTest(t)
+	_ = db
 
 	noteServiceMock.On("GetNote", mock.Anything, testUserID, noteID).Return(&services.Note{ID: noteID}, nil)
 
@@ -431,7 +469,8 @@ func TestGetUserUUIDFromContext_NilDB(t *testing.T) {
 
 func TestGetNotes_ServiceError(t *testing.T) {
 	testUserID := "test-user-id"
-	_, noteServiceMock, handler := setupTest(t)
+	db, _, noteServiceMock, handler := setupTest(t)
+	_ = db
 
 	noteServiceMock.On("GetNotes", mock.Anything, testUserID, mock.Anything, mock.Anything, mock.Anything).Return(nil, 0, errors.New("service error"))
 

@@ -6,6 +6,7 @@ import (
 
 	"discipleship_journal_api/database"
 	"discipleship_journal_api/middleware"
+
 	"firebase.google.com/go/v4/auth"
 	"github.com/google/uuid"
 )
@@ -60,7 +61,7 @@ func GetUserUUID(ctx context.Context, firebaseUID string) (uuid.UUID, error) {
 	}
 
 	var id uuid.UUID
-	err := db.QueryRow(ctx, "SELECT id FROM users WHERE firebase_uid=$1", firebaseUID).Scan(&id)
+	err := db.QueryRowContext(ctx, "SELECT id FROM users WHERE firebase_uid=?", firebaseUID).Scan(&id)
 	if err != nil {
 		return uuid.Nil, err
 	}

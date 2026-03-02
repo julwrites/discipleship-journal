@@ -10,22 +10,28 @@ import (
 	"time"
 
 	"discipleship_journal_api/middleware"
+
 	"firebase.google.com/go/v4/auth"
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 func TestShareItemToGroup_NotificationErrors(t *testing.T) {
 	t.Run("DB_Member_Query_Error", func(t *testing.T) {
-		mockDB, err := pgxmock.NewPool()
+		db, mockDB, err := sqlmock.New()
+		_ = mockDB
+
+		_ = db
+
+		_ = mockDB
 		assert.NoError(t, err)
-		defer mockDB.Close()
+		defer db.Close()
 
 		mockNotify := new(MockNotificationService)
-		handler := NewGroupShareHandler(mockDB, mockNotify)
+		handler := NewGroupShareHandler(db, mockNotify)
 
 		userID := uuid.New()
 		groupID := uuid.New()
@@ -61,7 +67,7 @@ func TestShareItemToGroup_NotificationErrors(t *testing.T) {
 		// 3. Create share
 		mockDB.ExpectExec(`INSERT INTO group_shares`).
 			WithArgs(groupID.String(), noteID.String(), userID, "Check this out").
-			WillReturnResult(pgxmock.NewResult("INSERT", 1))
+			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		// 4. Notification Logic - DB Error on group name
 		// Implementation tries to fetch group name. If fails, defaults.
@@ -92,12 +98,17 @@ func TestShareItemToGroup_NotificationErrors(t *testing.T) {
 	})
 
 	t.Run("SendNotification_Error", func(t *testing.T) {
-		mockDB, err := pgxmock.NewPool()
+		db, mockDB, err := sqlmock.New()
+		_ = mockDB
+
+		_ = db
+
+		_ = mockDB
 		assert.NoError(t, err)
-		defer mockDB.Close()
+		defer db.Close()
 
 		mockNotify := new(MockNotificationService)
-		handler := NewGroupShareHandler(mockDB, mockNotify)
+		handler := NewGroupShareHandler(db, mockNotify)
 
 		userID := uuid.New()
 		groupID := uuid.New()
@@ -130,7 +141,7 @@ func TestShareItemToGroup_NotificationErrors(t *testing.T) {
 		// 3. Create share
 		mockDB.ExpectExec(`INSERT INTO group_shares`).
 			WithArgs(groupID.String(), noteID.String(), userID, "Check this out").
-			WillReturnResult(pgxmock.NewResult("INSERT", 1))
+			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		// 4. Notification Logic
 		mockDB.ExpectQuery(`SELECT name FROM groups`).

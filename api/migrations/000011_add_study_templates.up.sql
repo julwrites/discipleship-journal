@@ -1,14 +1,14 @@
 CREATE TABLE study_templates (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    creator_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    creator_id VARCHAR(36) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     description TEXT,
-    structure JSONB DEFAULT '{}', -- Sections like Passage, Reflection, etc.
-    prompts JSONB DEFAULT '{}', -- AI System Prompts
-    fields JSONB DEFAULT '[]', -- User input fields definition
-    is_public BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    structure JSON, -- Sections like Passage, Reflection, etc.
+    prompts JSON, -- AI System Prompts
+    fields JSON, -- User input fields definition
+    is_public BOOLEAN DEFAULT false,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_study_templates_creator_id ON study_templates(creator_id);

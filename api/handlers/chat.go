@@ -11,6 +11,7 @@ import (
 
 	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/services"
+
 	"firebase.google.com/go/v4/auth"
 	"github.com/google/uuid"
 )
@@ -99,7 +100,7 @@ func (h *ChatHandler) handleRequest(w http.ResponseWriter, r *http.Request, reqT
 	var userUUID uuid.UUID
 	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		uid := token.UID
-		if err := h.DB.QueryRow(r.Context(), "SELECT id FROM users WHERE firebase_uid=$1", uid).Scan(&userUUID); err != nil {
+		if err := h.DB.QueryRowContext(r.Context(), "SELECT id FROM users WHERE firebase_uid=?", uid).Scan(&userUUID); err != nil {
 			http.Error(w, "User not found", http.StatusNotFound)
 			return
 		}

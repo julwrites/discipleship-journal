@@ -139,7 +139,7 @@ func TestSecretLoader_LoadSecret_WithClientButNoProjectID(t *testing.T) {
 	mockClient := &MockSecretManagerClient{}
 
 	loader := &SecretLoader{
-		projectID: "",  // Empty project ID
+		projectID: "", // Empty project ID
 		client:    mockClient,
 	}
 
@@ -196,20 +196,20 @@ func TestSecretLoader_Close_WithoutClient(t *testing.T) {
 }
 
 func TestSecretLoader_Close_WithClient(t *testing.T) {
-    called := false
-    mockClient := &MockSecretManagerClient{
-        closeFunc: func() error {
-            called = true
-            return nil
-        },
-    }
+	called := false
+	mockClient := &MockSecretManagerClient{
+		closeFunc: func() error {
+			called = true
+			return nil
+		},
+	}
 
-    loader := &SecretLoader{
-        projectID: "test",
-        client:    mockClient,
-    }
+	loader := &SecretLoader{
+		projectID: "test",
+		client:    mockClient,
+	}
 
-    err := loader.Close()
-    assert.NoError(t, err)
-    assert.True(t, called)
+	err := loader.Close()
+	assert.NoError(t, err)
+	assert.True(t, called)
 }

@@ -7,19 +7,20 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pashagolub/pgxmock/v4"
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 func TestBibleVersionService_GetVersions_Coverage(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer mockDB.Close()
+	defer db.Close()
 
-	service := NewBibleVersionService(mockDB)
+	service := NewBibleVersionService(db)
 	ctx := context.Background()
 
 	t.Run("Query_Error", func(t *testing.T) {
@@ -33,7 +34,7 @@ func TestBibleVersionService_GetVersions_Coverage(t *testing.T) {
 
 	t.Run("Scan_Error", func(t *testing.T) {
 		mockDB.ExpectQuery("SELECT .* FROM bible_versions").
-			WillReturnRows(pgxmock.NewRows([]string{"id", "name", "abbreviation", "created_at", "updated_at"}).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "abbreviation", "created_at", "updated_at"}).
 				AddRow("id", "Name", "Abbr", "invalid-date", time.Now()))
 
 		_, err := service.GetVersions(ctx)
@@ -56,16 +57,17 @@ func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 }
 
 func TestBibleVersionService_ScrapeVersions_Coverage(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer mockDB.Close()
+	defer db.Close()
 
 	// Use struct directly to inject mock http client
 	mockHTTP := new(MockHTTPClient)
 	service := &bibleVersionService{
-		db:         mockDB,
+		db:         db,
 		httpClient: mockHTTP,
 		scrapeURL:  "http://test.com",
 	}

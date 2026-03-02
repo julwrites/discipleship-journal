@@ -25,7 +25,7 @@ func TestAdminHandler_SyncBibleVersions(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, rr.Code)
 
-        var response map[string]interface{}
+		var response map[string]interface{}
 		err := json.Unmarshal(rr.Body.Bytes(), &response)
 		assert.NoError(t, err)
 		assert.Equal(t, true, response["success"])

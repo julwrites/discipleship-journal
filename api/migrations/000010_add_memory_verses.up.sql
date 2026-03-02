@@ -1,18 +1,18 @@
 CREATE TABLE memory_verses (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE, -- Nullable for system packs
+    id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    user_id VARCHAR(36) REFERENCES users(id) ON DELETE CASCADE, -- Nullable for system packs
     pack_name VARCHAR(100), -- E.g., "TMS: Living the New Life" or "My Verses"
     reference VARCHAR(100) NOT NULL,
     text TEXT NOT NULL,
     version VARCHAR(20) NOT NULL DEFAULT 'ESV',
-    tags JSONB DEFAULT '[]',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    tags JSON,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_memory_verses_user_id ON memory_verses(user_id);
 CREATE INDEX idx_memory_verses_pack_name ON memory_verses(pack_name);
-CREATE INDEX idx_memory_verses_tags ON memory_verses USING GIN (tags);
+
 
 -- Seed TMS Data (Topical Memory System) - A - Live the New Life
 INSERT INTO memory_verses (pack_name, reference, text, version, tags) VALUES

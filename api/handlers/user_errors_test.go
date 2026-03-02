@@ -10,22 +10,28 @@ import (
 	"testing"
 	"time"
 
+	"database/sql"
 	"discipleship_journal_api/middleware"
+
 	"firebase.google.com/go/v4/auth"
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
-	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestUserHandler_CreateOrUpdateUser_Errors(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
+
+	_ = db
+
+	_ = mockDB
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer mockDB.Close()
+	defer db.Close()
 
-	handler := NewUserHandler(mockDB)
+	handler := NewUserHandler(db)
 	firebaseUID := "test-firebase-uid"
 	email := "test@example.com"
 	reqBody := `{"username": "TestUser"}`
@@ -58,11 +64,11 @@ func TestUserHandler_CreateOrUpdateUser_Errors(t *testing.T) {
 		// Select returns no rows (trigger insert)
 		mockDB.ExpectQuery(regexp.QuoteMeta("SELECT id, firebase_uid, email, username, settings, created_at, updated_at FROM users")).
 			WithArgs(firebaseUID).
-			WillReturnError(pgx.ErrNoRows)
+			WillReturnError(sql.ErrNoRows)
 
 		// Insert fails
-		mockDB.ExpectQuery(regexp.QuoteMeta("INSERT INTO users")).
-			WithArgs(firebaseUID, email, pgxmock.AnyArg(), pgxmock.AnyArg()).
+		mockDB.ExpectExec(regexp.QuoteMeta("INSERT INTO users")).
+			WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg()).
 			WillReturnError(errors.New("insert failed"))
 
 		handler.CreateOrUpdateUser(w, req)
@@ -81,7 +87,7 @@ func TestUserHandler_CreateOrUpdateUser_Errors(t *testing.T) {
 		// Select returns existing user
 		userUUID := uuid.New()
 		user := "OldUser"
-		rows := pgxmock.NewRows([]string{"id", "firebase_uid", "email", "username", "settings", "created_at", "updated_at"}).
+		rows := sqlmock.NewRows([]string{"id", "firebase_uid", "email", "username", "settings", "created_at", "updated_at"}).
 			AddRow(userUUID.String(), firebaseUID, email, &user, []byte("{}"), time.Now(), time.Now())
 
 		mockDB.ExpectQuery(regexp.QuoteMeta("SELECT id, firebase_uid, email, username, settings, created_at, updated_at FROM users")).
@@ -89,8 +95,8 @@ func TestUserHandler_CreateOrUpdateUser_Errors(t *testing.T) {
 			WillReturnRows(rows)
 
 		// Update fails
-		mockDB.ExpectQuery(regexp.QuoteMeta("UPDATE users SET")).
-			WithArgs(pgxmock.AnyArg(), firebaseUID).
+		mockDB.ExpectExec(regexp.QuoteMeta("UPDATE users SET")).
+			WithArgs(sqlmock.AnyArg()).
 			WillReturnError(errors.New("update failed"))
 
 		handler.CreateOrUpdateUser(w, req)
@@ -129,13 +135,18 @@ func TestUserHandler_CreateOrUpdateUser_Errors(t *testing.T) {
 }
 
 func TestUserHandler_GetMe_Errors(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
+
+	_ = db
+
+	_ = mockDB
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer mockDB.Close()
+	defer db.Close()
 
-	handler := NewUserHandler(mockDB)
+	handler := NewUserHandler(db)
 
 	t.Run("Unauthorized", func(t *testing.T) {
 		req, _ := http.NewRequest("GET", "/users/me", nil)
@@ -182,9 +193,9 @@ func TestUserHandler_GetMe_Errors(t *testing.T) {
 
 		testUser := "TestUser"
 		settingsJSON := []byte("{}")
-		mockDB.ExpectQuery(regexp.QuoteMeta("SELECT id, firebase_uid, email, username, settings, created_at, updated_at FROM users WHERE id=$1")).
+		mockDB.ExpectQuery(regexp.QuoteMeta("SELECT id, firebase_uid, email, username, settings, created_at, updated_at FROM users WHERE id=?")).
 			WithArgs(userUUID.String()).
-			WillReturnRows(pgxmock.NewRows([]string{"id", "firebase_uid", "email", "username", "settings", "created_at", "updated_at"}).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "firebase_uid", "email", "username", "settings", "created_at", "updated_at"}).
 				AddRow(userUUID.String(), "firebase-uid", "test@example.com", &testUser, settingsJSON, time.Now(), time.Now()))
 
 		handler.GetMe(w, req)

@@ -693,7 +693,7 @@ func cleanHTML(input string) string {
 	// Remove whitespace between list tags
 	// Loop to handle consecutive matches (e.g., </li> <li> <li>)
 	for {
-		cleaned := listWhitespaceRegex.ReplaceAllString(s, "$1$2")
+		cleaned := listWhitespaceRegex.ReplaceAllString(s, "${1}${2}")
 		if cleaned == s {
 			break
 		}

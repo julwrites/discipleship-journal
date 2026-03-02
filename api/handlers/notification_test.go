@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"discipleship_journal_api/middleware"
+
 	"firebase.google.com/go/v4/auth"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -60,10 +61,10 @@ func TestNotificationHandler_RegisterDevice(t *testing.T) {
 			expectedStatus: http.StatusUnauthorized,
 		},
 		{
-			name:           "Service Error",
-			requestBody:    `{"token": "fcm-token-123"}`,
-			token:          &auth.Token{UID: "firebase-uid-123"},
-			setupMock:      func(mockNotif *MockNotificationServiceWithMock) {
+			name:        "Service Error",
+			requestBody: `{"token": "fcm-token-123"}`,
+			token:       &auth.Token{UID: "firebase-uid-123"},
+			setupMock: func(mockNotif *MockNotificationServiceWithMock) {
 				mockNotif.On("RegisterDevice", mock.Anything, testUUID.String(), "fcm-token-123", "").
 					Return(errors.New("service error"))
 			},

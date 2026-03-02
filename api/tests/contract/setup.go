@@ -9,13 +9,13 @@ import (
 	"discipleship_journal_api/services"
 	"discipleship_journal_api/tests/integration"
 
+	"database/sql"
 	"github.com/go-chi/chi/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // SetupContractTest spins up the integration DB, sets up the router with real services,
 // and returns the router, the pool, and a cleanup function.
-func SetupContractTest(t *testing.T) (*chi.Mux, *pgxpool.Pool, func()) {
+func SetupContractTest(t *testing.T) (*chi.Mux, *sql.DB, func()) {
 	pool, cleanup := integration.SetupIntegrationDB(t)
 
 	// Initialize Services
@@ -79,7 +79,6 @@ func SetupContractTest(t *testing.T) (*chi.Mux, *pgxpool.Pool, func()) {
 	r.Post("/api/groups/{id}/shares", groupShareHandler.ShareItemToGroup)
 	r.Get("/api/groups/{id}/shares", groupShareHandler.ListGroupShares)
 	r.Get("/api/groups/{id}/shares/{shareId}", groupShareHandler.GetSharedItemDetails)
-
 
 	// Connections
 	r.Get("/api/users/search", connectionHandler.SearchUsers)

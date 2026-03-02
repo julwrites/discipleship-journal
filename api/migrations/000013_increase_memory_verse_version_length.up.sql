@@ -1,1 +1,1 @@
-ALTER TABLE memory_verses ALTER COLUMN version TYPE VARCHAR(50);
+ALTER TABLE memory_verses MODIFY COLUMN version VARCHAR(50);

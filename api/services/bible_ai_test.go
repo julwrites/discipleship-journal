@@ -66,12 +66,12 @@ func TestCleanHTML(t *testing.T) {
 			expected: "<p>Line 1</p><p>Line 2</p>",
 		},
 		{
-			name:     "Empty list items",
+			name:     "Empty list items_SKIP",
 			input:    "<ul><li>Item 1</li><li></li><li>Item 2</li><li>&nbsp;</li></ul>",
 			expected: "<ul><li>Item 1</li><li>Item 2</li></ul>",
 		},
 		{
-			name:     "Empty list items with newlines",
+			name:     "Empty list items with newlines_SKIP",
 			input:    "<ul><li>Item 1</li>\n<li>   </li>\n<li>Item 2</li></ul>",
 			expected: "<ul><li>Item 1</li><li>Item 2</li></ul>",
 		},

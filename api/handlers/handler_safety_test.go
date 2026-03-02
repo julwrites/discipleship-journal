@@ -13,7 +13,7 @@ import (
 	"discipleship_journal_api/services"
 
 	"firebase.google.com/go/v4/auth"
-	"github.com/pashagolub/pgxmock/v4"
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -26,11 +26,14 @@ func TestHandlerSafety(t *testing.T) {
 
 	// Scenario 1: NoteService is nil
 	t.Run("nil_service", func(t *testing.T) {
-		dbMock, err := pgxmock.NewPool()
-		require.NoError(t, err)
-		defer dbMock.Close()
+		db, dbMock, err := sqlmock.New()
+		_ = db
 
-		handler := NewNoteHandler(dbMock, nil) // Explicitly nil service
+		_ = dbMock
+		require.NoError(t, err)
+		defer db.Close()
+
+		handler := NewNoteHandler(db, nil) // Explicitly nil service
 
 		req := httptest.NewRequest("GET", "/api/notes", nil)
 		token := &auth.Token{UID: firebaseUID}
@@ -69,16 +72,19 @@ func TestHandlerSafety(t *testing.T) {
 
 	// Scenario 3: NoteService returns nil slice (should be fine, but verification)
 	t.Run("nil_notes_slice_from_service", func(t *testing.T) {
-		dbMock, err := pgxmock.NewPool()
+		db, dbMock, err := sqlmock.New()
+		_ = db
+
+		_ = dbMock
 		require.NoError(t, err)
-		defer dbMock.Close()
+		defer db.Close()
 
 		serviceMock := new(MockNoteService)
-		handler := NewNoteHandler(dbMock, serviceMock)
+		handler := NewNoteHandler(db, serviceMock)
 
 		dbMock.ExpectQuery("SELECT id FROM users").
 			WithArgs(firebaseUID).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userUUID))
 
 		// Return nil slice
 		serviceMock.On("GetNotes", mock.Anything, userUUID, mock.Anything, mock.Anything, mock.Anything).
@@ -103,75 +109,84 @@ func TestHandlerSafety(t *testing.T) {
 		assert.Len(t, resp.Data, 0)
 	})
 
-    // Scenario 4: User not in context (should return 401, not panic)
-    t.Run("missing_user_context", func(t *testing.T) {
-        dbMock, err := pgxmock.NewPool()
-        require.NoError(t, err)
-        defer dbMock.Close()
+	// Scenario 4: User not in context (should return 401, not panic)
+	t.Run("missing_user_context", func(t *testing.T) {
+		db, dbMock, err := sqlmock.New()
+		_ = db
 
-        serviceMock := new(MockNoteService)
-        handler := NewNoteHandler(dbMock, serviceMock)
+		_ = dbMock
+		require.NoError(t, err)
+		defer db.Close()
 
-        req := httptest.NewRequest("GET", "/api/notes", nil)
-        // No user context
+		serviceMock := new(MockNoteService)
+		handler := NewNoteHandler(db, serviceMock)
 
-        w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/api/notes", nil)
+		// No user context
 
-        assert.NotPanics(t, func() {
-            handler.GetNotes(w, req)
-        })
+		w := httptest.NewRecorder()
 
-        assert.Equal(t, http.StatusUnauthorized, w.Code)
-    })
+		assert.NotPanics(t, func() {
+			handler.GetNotes(w, req)
+		})
 
-    // Scenario 5: Note content is nil (Service returns note with nil Content)
-    t.Run("nil_content_in_note", func(t *testing.T) {
-        dbMock, err := pgxmock.NewPool()
-        require.NoError(t, err)
-        defer dbMock.Close()
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+	})
 
-        serviceMock := new(MockNoteService)
-        handler := NewNoteHandler(dbMock, serviceMock)
+	// Scenario 5: Note content is nil (Service returns note with nil Content)
+	t.Run("nil_content_in_note", func(t *testing.T) {
+		db, dbMock, err := sqlmock.New()
+		_ = db
 
-        dbMock.ExpectQuery("SELECT id FROM users").
-            WithArgs(firebaseUID).
-            WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+		_ = dbMock
+		require.NoError(t, err)
+		defer db.Close()
 
-        serviceNotes := []services.Note{
-            {
-                ID:        "note-1",
-                UserID:    userUUID,
-                Title:     "Title 1",
-                Content:   nil, // Nil content
-                CreatedAt: time.Now(),
-                UpdatedAt: time.Now(),
-            },
-        }
+		serviceMock := new(MockNoteService)
+		handler := NewNoteHandler(db, serviceMock)
 
-        serviceMock.On("GetNotes", mock.Anything, userUUID, mock.Anything, mock.Anything, mock.Anything).
-            Return(serviceNotes, 1, nil)
+		dbMock.ExpectQuery("SELECT id FROM users").
+			WithArgs(firebaseUID).
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userUUID))
 
-        req := httptest.NewRequest("GET", "/api/notes", nil)
-        token := &auth.Token{UID: firebaseUID}
-        ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
-        req = req.WithContext(ctx)
+		serviceNotes := []services.Note{
+			{
+				ID:        "note-1",
+				UserID:    userUUID,
+				Title:     "Title 1",
+				Content:   nil, // Nil content
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			},
+		}
 
-        w := httptest.NewRecorder()
+		serviceMock.On("GetNotes", mock.Anything, userUUID, mock.Anything, mock.Anything, mock.Anything).
+			Return(serviceNotes, 1, nil)
 
-        assert.NotPanics(t, func() {
-            handler.GetNotes(w, req)
-        })
+		req := httptest.NewRequest("GET", "/api/notes", nil)
+		token := &auth.Token{UID: firebaseUID}
+		ctx := context.WithValue(req.Context(), middleware.UserContextKey, token)
+		req = req.WithContext(ctx)
 
-        assert.Equal(t, http.StatusOK, w.Code)
-    })
+		w := httptest.NewRecorder()
+
+		assert.NotPanics(t, func() {
+			handler.GetNotes(w, req)
+		})
+
+		assert.Equal(t, http.StatusOK, w.Code)
+	})
 
 	// Scenario 6: Nil *auth.Token in context
 	t.Run("nil_token_in_context", func(t *testing.T) {
-		dbMock, err := pgxmock.NewPool()
-		require.NoError(t, err)
-		defer dbMock.Close()
+		db, dbMock, err := sqlmock.New()
+		_ = db
 
-		handler := NewNoteHandler(dbMock, new(MockNoteService))
+		_ = dbMock
+		require.NoError(t, err)
+		defer db.Close()
+
+		handler := NewNoteHandler(db, new(MockNoteService))
 
 		req := httptest.NewRequest("GET", "/api/notes", nil)
 		// Inject nil *auth.Token
@@ -191,11 +206,14 @@ func TestHandlerSafety(t *testing.T) {
 
 	// Scenario 7: CreateNote with nil token
 	t.Run("create_note_nil_token", func(t *testing.T) {
-		dbMock, err := pgxmock.NewPool()
-		require.NoError(t, err)
-		defer dbMock.Close()
+		db, dbMock, err := sqlmock.New()
+		_ = db
 
-		handler := NewNoteHandler(dbMock, new(MockNoteService))
+		_ = dbMock
+		require.NoError(t, err)
+		defer db.Close()
+
+		handler := NewNoteHandler(db, new(MockNoteService))
 
 		reqBody := `{"title": "Test", "content": {"text": "foo"}}`
 		req := httptest.NewRequest("POST", "/api/notes", bytes.NewBufferString(reqBody))

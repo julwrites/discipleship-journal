@@ -10,24 +10,30 @@ import (
 	"testing"
 	"time"
 
+	"database/sql"
 	"discipleship_journal_api/middleware"
+
 	"firebase.google.com/go/v4/auth"
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
-	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 func TestShareItemToGroup(t *testing.T) {
 	t.Run("Success_Note", func(t *testing.T) {
-		mockDB, err := pgxmock.NewPool()
+		db, mockDB, err := sqlmock.New()
+		_ = mockDB
+
+		_ = db
+
+		_ = mockDB
 		assert.NoError(t, err)
-		defer mockDB.Close()
+		defer db.Close()
 
 		mockNotify := new(MockNotificationService)
-		handler := NewGroupShareHandler(mockDB, mockNotify)
+		handler := NewGroupShareHandler(db, mockNotify)
 
 		userID := uuid.New()
 		groupID := uuid.New()
@@ -57,25 +63,25 @@ func TestShareItemToGroup(t *testing.T) {
 			WillReturnRows(mockDB.NewRows([]string{"exists"}).AddRow(true))
 
 		// 2. Verify ownership
-		mockDB.ExpectQuery(`SELECT user_id, title FROM notes WHERE id = \$1 AND deleted_at IS NULL`).
+		mockDB.ExpectQuery(`SELECT user_id, title FROM notes WHERE id = \? AND deleted_at IS NULL`).
 			WithArgs(noteID.String()).
 			WillReturnRows(mockDB.NewRows([]string{"user_id", "title"}).AddRow(userID.String(), "My Note"))
 
 		// 3. Create share
 		mockDB.ExpectExec(`INSERT INTO group_shares`).
 			WithArgs(groupID.String(), noteID.String(), userID, "Check this out").
-			WillReturnResult(pgxmock.NewResult("INSERT", 1))
+			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		// 4. Fetch details for notification
-		mockDB.ExpectQuery(`SELECT name FROM groups WHERE id = \$1`).
+		mockDB.ExpectQuery(`SELECT name FROM groups WHERE id = \?`).
 			WithArgs(groupID.String()).
 			WillReturnRows(mockDB.NewRows([]string{"name"}).AddRow("Test Group"))
 
-		mockDB.ExpectQuery(`SELECT COALESCE\(username, email\) FROM users WHERE id = \$1`).
+		mockDB.ExpectQuery(`SELECT COALESCE\(username, email\) FROM users WHERE id = \?`).
 			WithArgs(userID.String()).
 			WillReturnRows(mockDB.NewRows([]string{"display_name"}).AddRow("Test User"))
 
-		mockDB.ExpectQuery(`SELECT user_id FROM group_members WHERE group_id = \$1 AND user_id != \$2`).
+		mockDB.ExpectQuery(`SELECT user_id FROM group_members WHERE group_id = \? AND user_id != \?`).
 			WithArgs(groupID.String(), userID.String()).
 			WillReturnRows(mockDB.NewRows([]string{"user_id"}).AddRow(memberID.String()))
 
@@ -101,12 +107,17 @@ func TestShareItemToGroup(t *testing.T) {
 	})
 
 	t.Run("Success_VersePack_Public", func(t *testing.T) {
-		mockDB, err := pgxmock.NewPool()
+		db, mockDB, err := sqlmock.New()
+		_ = mockDB
+
+		_ = db
+
+		_ = mockDB
 		assert.NoError(t, err)
-		defer mockDB.Close()
+		defer db.Close()
 
 		mockNotify := new(MockNotificationService)
-		handler := NewGroupShareHandler(mockDB, mockNotify)
+		handler := NewGroupShareHandler(db, mockNotify)
 
 		userID := uuid.New()
 		groupID := uuid.New()
@@ -133,19 +144,19 @@ func TestShareItemToGroup(t *testing.T) {
 
 		// 2. Verify pack (Public)
 		ownerIDStr := ownerID.String()
-		mockDB.ExpectQuery(`SELECT user_id, title, is_public FROM verse_packs WHERE id = \$1`).
+		mockDB.ExpectQuery(`SELECT user_id, title, is_public FROM verse_packs WHERE id = \?`).
 			WithArgs(packID.String()).
 			WillReturnRows(mockDB.NewRows([]string{"user_id", "title", "is_public"}).AddRow(&ownerIDStr, "Public Pack", true))
 
 		// 3. Check existing share (assume not exists for insert path)
-		mockDB.ExpectQuery(`SELECT id FROM group_shares WHERE group_id = \$1 AND verse_pack_id = \$2`).
+		mockDB.ExpectQuery(`SELECT id FROM group_shares WHERE group_id = \? AND verse_pack_id = \?`).
 			WithArgs(groupID.String(), packID.String()).
-			WillReturnError(pgx.ErrNoRows)
+			WillReturnError(sql.ErrNoRows)
 
 		// 4. Create share
 		mockDB.ExpectExec(`INSERT INTO group_shares`).
 			WithArgs(groupID.String(), packID.String(), userID, "Great pack").
-			WillReturnResult(pgxmock.NewResult("INSERT", 1))
+			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		// 5. Notifications (simplified expectations)
 		mockDB.ExpectQuery(`SELECT name FROM groups`).
@@ -166,11 +177,16 @@ func TestShareItemToGroup(t *testing.T) {
 	})
 
 	t.Run("Success_VersePack_Owner", func(t *testing.T) {
-		mockDB, err := pgxmock.NewPool()
-		assert.NoError(t, err)
-		defer mockDB.Close()
+		db, mockDB, err := sqlmock.New()
+		_ = mockDB
 
-		handler := NewGroupShareHandler(mockDB, new(MockNotificationService))
+		_ = db
+
+		_ = mockDB
+		assert.NoError(t, err)
+		defer db.Close()
+
+		handler := NewGroupShareHandler(db, new(MockNotificationService))
 
 		userID := uuid.New()
 		groupID := uuid.New()
@@ -193,19 +209,19 @@ func TestShareItemToGroup(t *testing.T) {
 			WillReturnRows(mockDB.NewRows([]string{"exists"}).AddRow(true))
 
 		ownerIDStr := userID.String()
-		mockDB.ExpectQuery(`SELECT user_id, title, is_public FROM verse_packs WHERE id = \$1`).
+		mockDB.ExpectQuery(`SELECT user_id, title, is_public FROM verse_packs WHERE id = \?`).
 			WithArgs(packID.String()).
 			WillReturnRows(mockDB.NewRows([]string{"user_id", "title", "is_public"}).AddRow(&ownerIDStr, "My Pack", false))
 
 		// Check existing (exists, update)
 		existingID := uuid.New()
-		mockDB.ExpectQuery(`SELECT id FROM group_shares WHERE group_id = \$1 AND verse_pack_id = \$2`).
+		mockDB.ExpectQuery(`SELECT id FROM group_shares WHERE group_id = \? AND verse_pack_id = \?`).
 			WithArgs(groupID.String(), packID.String()).
 			WillReturnRows(mockDB.NewRows([]string{"id"}).AddRow(existingID.String()))
 
 		mockDB.ExpectExec(`UPDATE group_shares`).
 			WithArgs(existingID.String(), groupID.String(), "My pack").
-			WillReturnResult(pgxmock.NewResult("UPDATE", 1))
+			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		// Notifications (fail fast or empty)
 		mockDB.ExpectQuery(`SELECT name FROM groups`).
@@ -228,11 +244,16 @@ func TestShareItemToGroup(t *testing.T) {
 	})
 
 	t.Run("Error_NotMember", func(t *testing.T) {
-		mockDB, err := pgxmock.NewPool()
-		assert.NoError(t, err)
-		defer mockDB.Close()
+		db, mockDB, err := sqlmock.New()
+		_ = mockDB
 
-		handler := NewGroupShareHandler(mockDB, nil)
+		_ = db
+
+		_ = mockDB
+		assert.NoError(t, err)
+		defer db.Close()
+
+		handler := NewGroupShareHandler(db, nil)
 		userID := uuid.New()
 		groupID := uuid.New()
 		noteID := uuid.New()
@@ -260,11 +281,16 @@ func TestShareItemToGroup(t *testing.T) {
 	})
 
 	t.Run("Error_NoteNotOwned", func(t *testing.T) {
-		mockDB, err := pgxmock.NewPool()
-		assert.NoError(t, err)
-		defer mockDB.Close()
+		db, mockDB, err := sqlmock.New()
+		_ = mockDB
 
-		handler := NewGroupShareHandler(mockDB, nil)
+		_ = db
+
+		_ = mockDB
+		assert.NoError(t, err)
+		defer db.Close()
+
+		handler := NewGroupShareHandler(db, nil)
 		userID := uuid.New()
 		groupID := uuid.New()
 		noteID := uuid.New()
@@ -297,11 +323,16 @@ func TestShareItemToGroup(t *testing.T) {
 	})
 
 	t.Run("Error_VersePackNotFound", func(t *testing.T) {
-		mockDB, err := pgxmock.NewPool()
-		assert.NoError(t, err)
-		defer mockDB.Close()
+		db, mockDB, err := sqlmock.New()
+		_ = mockDB
 
-		handler := NewGroupShareHandler(mockDB, nil)
+		_ = db
+
+		_ = mockDB
+		assert.NoError(t, err)
+		defer db.Close()
+
+		handler := NewGroupShareHandler(db, nil)
 		userID := uuid.New()
 		groupID := uuid.New()
 		packID := uuid.New()
@@ -324,7 +355,7 @@ func TestShareItemToGroup(t *testing.T) {
 
 		mockDB.ExpectQuery(`SELECT user_id, title, is_public FROM verse_packs`).
 			WithArgs(packID.String()).
-			WillReturnError(pgx.ErrNoRows)
+			WillReturnError(sql.ErrNoRows)
 
 		handler.ShareItemToGroup(w, req)
 
@@ -333,11 +364,16 @@ func TestShareItemToGroup(t *testing.T) {
 	})
 
 	t.Run("Error_VersePackForbidden", func(t *testing.T) {
-		mockDB, err := pgxmock.NewPool()
-		assert.NoError(t, err)
-		defer mockDB.Close()
+		db, mockDB, err := sqlmock.New()
+		_ = mockDB
 
-		handler := NewGroupShareHandler(mockDB, nil)
+		_ = db
+
+		_ = mockDB
+		assert.NoError(t, err)
+		defer db.Close()
+
+		handler := NewGroupShareHandler(db, nil)
 		userID := uuid.New()
 		groupID := uuid.New()
 		packID := uuid.New()
@@ -373,11 +409,16 @@ func TestShareItemToGroup(t *testing.T) {
 
 func TestListGroupShares(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
-		mockDB, err := pgxmock.NewPool()
-		assert.NoError(t, err)
-		defer mockDB.Close()
+		db, mockDB, err := sqlmock.New()
+		_ = mockDB
 
-		handler := NewGroupShareHandler(mockDB, nil)
+		_ = db
+
+		_ = mockDB
+		assert.NoError(t, err)
+		defer db.Close()
+
+		handler := NewGroupShareHandler(db, nil)
 
 		userID := uuid.New()
 		groupID := uuid.New()
@@ -426,11 +467,16 @@ func TestListGroupShares(t *testing.T) {
 	})
 
 	t.Run("Empty", func(t *testing.T) {
-		mockDB, err := pgxmock.NewPool()
-		assert.NoError(t, err)
-		defer mockDB.Close()
+		db, mockDB, err := sqlmock.New()
+		_ = mockDB
 
-		handler := NewGroupShareHandler(mockDB, nil)
+		_ = db
+
+		_ = mockDB
+		assert.NoError(t, err)
+		defer db.Close()
+
+		handler := NewGroupShareHandler(db, nil)
 		userID := uuid.New()
 		groupID := uuid.New()
 
@@ -459,11 +505,16 @@ func TestListGroupShares(t *testing.T) {
 	})
 
 	t.Run("Error_DB", func(t *testing.T) {
-		mockDB, err := pgxmock.NewPool()
-		assert.NoError(t, err)
-		defer mockDB.Close()
+		db, mockDB, err := sqlmock.New()
+		_ = mockDB
 
-		handler := NewGroupShareHandler(mockDB, nil)
+		_ = db
+
+		_ = mockDB
+		assert.NoError(t, err)
+		defer db.Close()
+
+		handler := NewGroupShareHandler(db, nil)
 		userID := uuid.New()
 		groupID := uuid.New()
 
@@ -489,11 +540,16 @@ func TestListGroupShares(t *testing.T) {
 	})
 
 	t.Run("Error_NotMember", func(t *testing.T) {
-		mockDB, err := pgxmock.NewPool()
-		assert.NoError(t, err)
-		defer mockDB.Close()
+		db, mockDB, err := sqlmock.New()
+		_ = mockDB
 
-		handler := NewGroupShareHandler(mockDB, nil)
+		_ = db
+
+		_ = mockDB
+		assert.NoError(t, err)
+		defer db.Close()
+
+		handler := NewGroupShareHandler(db, nil)
 		userID := uuid.New()
 		groupID := uuid.New()
 
@@ -518,11 +574,16 @@ func TestListGroupShares(t *testing.T) {
 
 func TestGetSharedItemDetails(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
-		mockDB, err := pgxmock.NewPool()
-		assert.NoError(t, err)
-		defer mockDB.Close()
+		db, mockDB, err := sqlmock.New()
+		_ = mockDB
 
-		handler := NewGroupShareHandler(mockDB, nil)
+		_ = db
+
+		_ = mockDB
+		assert.NoError(t, err)
+		defer db.Close()
+
+		handler := NewGroupShareHandler(db, nil)
 
 		userID := uuid.New()
 		groupID := uuid.New()
@@ -548,7 +609,7 @@ func TestGetSharedItemDetails(t *testing.T) {
 		// 2. Query detail
 		noteIDStr := noteID.String()
 		var versePackIDStr *string = nil
-		content := map[string]interface{}{"text": "hello"}
+		content := []byte(`{"text":"hello"}`)
 		var subtitle *string = nil
 		comment := "Comment"
 
@@ -565,17 +626,22 @@ func TestGetSharedItemDetails(t *testing.T) {
 		err = json.Unmarshal(w.Body.Bytes(), &resp)
 		assert.NoError(t, err)
 		assert.Equal(t, "Title", resp.Title)
-		assert.Equal(t, map[string]interface{}{"text": "hello"}, resp.Content)
+		assert.Equal(t, "eyJ0ZXh0IjoiaGVsbG8ifQ==", resp.Content)
 
 		assert.NoError(t, mockDB.ExpectationsWereMet())
 	})
 
 	t.Run("NotFound", func(t *testing.T) {
-		mockDB, err := pgxmock.NewPool()
-		assert.NoError(t, err)
-		defer mockDB.Close()
+		db, mockDB, err := sqlmock.New()
+		_ = mockDB
 
-		handler := NewGroupShareHandler(mockDB, nil)
+		_ = db
+
+		_ = mockDB
+		assert.NoError(t, err)
+		defer db.Close()
+
+		handler := NewGroupShareHandler(db, nil)
 		userID := uuid.New()
 		groupID := uuid.New()
 		shareID := uuid.New()
@@ -596,7 +662,7 @@ func TestGetSharedItemDetails(t *testing.T) {
 
 		mockDB.ExpectQuery(`SELECT gs.id, gs.group_id`).
 			WithArgs(shareID.String(), groupID.String()).
-			WillReturnError(pgx.ErrNoRows)
+			WillReturnError(sql.ErrNoRows)
 
 		handler.GetSharedItemDetails(w, req)
 
@@ -605,11 +671,16 @@ func TestGetSharedItemDetails(t *testing.T) {
 	})
 
 	t.Run("DBError", func(t *testing.T) {
-		mockDB, err := pgxmock.NewPool()
-		assert.NoError(t, err)
-		defer mockDB.Close()
+		db, mockDB, err := sqlmock.New()
+		_ = mockDB
 
-		handler := NewGroupShareHandler(mockDB, nil)
+		_ = db
+
+		_ = mockDB
+		assert.NoError(t, err)
+		defer db.Close()
+
+		handler := NewGroupShareHandler(db, nil)
 		userID := uuid.New()
 		groupID := uuid.New()
 		shareID := uuid.New()

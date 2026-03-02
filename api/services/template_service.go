@@ -8,9 +8,10 @@ import (
 	"sync"
 	"time"
 
+	"database/sql"
 	"discipleship_journal_api/models"
+
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 )
 
 type TemplateService interface {
@@ -45,10 +46,9 @@ func (s *templateService) CreateTemplate(ctx context.Context, tmpl *models.Study
 
 	query := `
 		INSERT INTO study_templates (id, creator_id, title, description, structure, prompts, fields, is_public, bible_references, allow_user_passages, template_body, required_version, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-		RETURNING id
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
-	_, err := s.db.Exec(ctx, query,
+	_, err := s.db.ExecContext(ctx, query,
 		tmpl.ID, tmpl.CreatorID, tmpl.Title, tmpl.Description, structureJSON, promptsJSON, fieldsJSON, tmpl.IsPublic,
 		bibleRefsJSON, tmpl.AllowUserPassages, tmpl.TemplateBody, tmpl.RequiredVersion,
 		tmpl.CreatedAt, tmpl.UpdatedAt,
@@ -63,18 +63,18 @@ func (s *templateService) GetTemplate(ctx context.Context, id uuid.UUID) (*model
 	query := `
 		SELECT id, creator_id, title, description, structure, prompts, fields, is_public, bible_references, allow_user_passages, template_body, required_version, created_at, updated_at
 		FROM study_templates
-		WHERE id = $1
+		WHERE id = ?
 	`
 	var t models.StudyTemplate
 	var structureBytes, promptsBytes, fieldsBytes, bibleRefsBytes []byte
 
-	err := s.db.QueryRow(ctx, query, id).Scan(
+	err := s.db.QueryRowContext(ctx, query, id).Scan(
 		&t.ID, &t.CreatorID, &t.Title, &t.Description, &structureBytes, &promptsBytes, &fieldsBytes, &t.IsPublic,
 		&bibleRefsBytes, &t.AllowUserPassages, &t.TemplateBody, &t.RequiredVersion,
 		&t.CreatedAt, &t.UpdatedAt,
 	)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if err == sql.ErrNoRows {
 			return nil, models.ErrNotFound
 		}
 		return nil, err
@@ -92,7 +92,7 @@ func (s *templateService) ListTemplates(ctx context.Context, userID uuid.UUID) (
 	query := `
 		SELECT id, creator_id, title, description, structure, prompts, fields, is_public, bible_references, allow_user_passages, template_body, required_version, created_at, updated_at
 		FROM study_templates
-		WHERE creator_id = $1
+		WHERE creator_id = ?
 		ORDER BY updated_at DESC
 	`
 	return s.scanTemplates(ctx, query, userID)
@@ -109,7 +109,7 @@ func (s *templateService) ListPublicTemplates(ctx context.Context) ([]*models.St
 }
 
 func (s *templateService) scanTemplates(ctx context.Context, query string, args ...any) ([]*models.StudyTemplate, error) {
-	rows, err := s.db.Query(ctx, query, args...)
+	rows, err := s.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -143,12 +143,12 @@ func (s *templateService) UpdateTemplate(ctx context.Context, tmpl *models.Study
 
 	query := `
 		UPDATE study_templates
-		SET title=$1, description=$2, structure=$3, prompts=$4, fields=$5, is_public=$6,
-		bible_references=$7, allow_user_passages=$8, template_body=$9, required_version=$10,
+		SET title=?, description=?, structure=?, prompts=?, fields=?, is_public=?,
+		bible_references=?, allow_user_passages=?, template_body=?, required_version=?,
 		updated_at=NOW()
-		WHERE id=$11 AND creator_id=$12
+		WHERE id=? AND creator_id=?
 	`
-	cmd, err := s.db.Exec(ctx, query,
+	cmd, err := s.db.ExecContext(ctx, query,
 		tmpl.Title, tmpl.Description, structureJSON, promptsJSON, fieldsJSON, tmpl.IsPublic,
 		bibleRefsJSON, tmpl.AllowUserPassages, tmpl.TemplateBody, tmpl.RequiredVersion,
 		tmpl.ID, tmpl.CreatorID,
@@ -156,19 +156,21 @@ func (s *templateService) UpdateTemplate(ctx context.Context, tmpl *models.Study
 	if err != nil {
 		return err
 	}
-	if cmd.RowsAffected() == 0 {
+	rowsAffected, _ := cmd.RowsAffected()
+	if rowsAffected == 0 {
 		return models.ErrNotFound
 	}
 	return nil
 }
 
 func (s *templateService) DeleteTemplate(ctx context.Context, id, userID uuid.UUID) error {
-	query := `DELETE FROM study_templates WHERE id=$1 AND creator_id=$2`
-	cmd, err := s.db.Exec(ctx, query, id, userID)
+	query := `DELETE FROM study_templates WHERE id=? AND creator_id=?`
+	cmd, err := s.db.ExecContext(ctx, query, id, userID)
 	if err != nil {
 		return err
 	}
-	if cmd.RowsAffected() == 0 {
+	rowsAffected, _ := cmd.RowsAffected()
+	if rowsAffected == 0 {
 		return models.ErrNotFound
 	}
 	return nil

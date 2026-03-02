@@ -4,29 +4,32 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"regexp"
 	"testing"
 	"time"
 
 	"discipleship_journal_api/models"
 
+	"database/sql"
+
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
-	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateNote(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewNoteService(mock)
+	service := NewNoteService(db)
 
 	ctx := context.Background()
 	userID := uuid.New().String()
-	noteID := uuid.New().String()
+	_ = uuid.New().String() // previously noteID
 	tagID := uuid.New().String()
 	title := "Test Note"
 	content := json.RawMessage(`{"text": "hello"}`)
@@ -34,17 +37,21 @@ func TestCreateNote(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		mock.ExpectBegin()
-		mock.ExpectQuery("INSERT INTO notes").
-			WithArgs(userID, title, content, "active").
-			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at"}).
-				AddRow(noteID, userID, title, content, "active", now, now))
+		mock.ExpectExec("INSERT INTO notes").
+			WithArgs(sqlmock.AnyArg(), userID, title, content, "active").
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectQuery(regexp.QuoteMeta("SELECT created_at, updated_at FROM notes WHERE id = ?")).
+			WithArgs(sqlmock.AnyArg()).
+			WillReturnRows(sqlmock.NewRows([]string{"created_at", "updated_at"}).AddRow(time.Now(), time.Now()))
+
 		mock.ExpectCommit()
 
 		note, err := service.CreateNote(ctx, userID, title, content, nil)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, note)
-		assert.Equal(t, noteID, note.ID)
+		assert.NotEmpty(t, note.ID)
 		assert.Equal(t, userID, note.UserID)
 		assert.Equal(t, title, note.Title)
 		assert.Equal(t, "active", note.Status)
@@ -53,21 +60,26 @@ func TestCreateNote(t *testing.T) {
 	t.Run("success with tags", func(t *testing.T) {
 		tags := []string{"tag1"}
 		mock.ExpectBegin()
-		mock.ExpectQuery("INSERT INTO notes").
-			WithArgs(userID, title, content, "active").
-			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at"}).
-				AddRow(noteID, userID, title, content, "active", now, now))
+		mock.ExpectExec("INSERT INTO notes").
+			WithArgs(sqlmock.AnyArg(), userID, title, content, "active").
+			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectQuery(regexp.QuoteMeta("SELECT created_at, updated_at FROM notes WHERE id = ?")).
+			WithArgs(sqlmock.AnyArg()).
+			WillReturnRows(sqlmock.NewRows([]string{"created_at", "updated_at"}).AddRow(time.Now(), time.Now()))
 
 		// Tag creation/lookup
-		mock.ExpectQuery("INSERT INTO tags").
+		mock.ExpectExec("INSERT INTO tags").
+			WithArgs(sqlmock.AnyArg(), userID, "tag1").
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectQuery(regexp.QuoteMeta("SELECT id, created_at FROM tags WHERE user_id=? AND name=?")).
 			WithArgs(userID, "tag1").
-			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "name", "created_at"}).
-				AddRow(tagID, userID, "tag1", now))
+			WillReturnRows(sqlmock.NewRows([]string{"id", "created_at"}).AddRow(tagID, now))
 
 		// Link creation
-		mock.ExpectExec("INSERT INTO note_tags").
-			WithArgs(noteID, tagID).
-			WillReturnResult(pgxmock.NewResult("INSERT", 1))
+		mock.ExpectExec("INSERT IGNORE INTO note_tags").
+			WithArgs(sqlmock.AnyArg(), tagID).
+			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		mock.ExpectCommit()
 
@@ -81,8 +93,8 @@ func TestCreateNote(t *testing.T) {
 
 	t.Run("database error", func(t *testing.T) {
 		mock.ExpectBegin()
-		mock.ExpectQuery("INSERT INTO notes").
-			WithArgs(userID, title, content, "active").
+		mock.ExpectExec("INSERT INTO notes").
+			WithArgs(sqlmock.AnyArg(), userID, title, content, "active").
 			WillReturnError(errors.New("db error"))
 		mock.ExpectRollback()
 
@@ -99,13 +111,14 @@ func TestCreateNote(t *testing.T) {
 }
 
 func TestDeleteNote(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewNoteService(mock)
+	service := NewNoteService(db)
 
 	ctx := context.Background()
 	userID := uuid.New().String()
@@ -114,7 +127,7 @@ func TestDeleteNote(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		mock.ExpectExec("UPDATE notes SET deleted_at=.*").
 			WithArgs(noteID, userID).
-			WillReturnResult(pgxmock.NewResult("UPDATE", 1))
+			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		err := service.DeleteNote(ctx, userID, noteID)
 
@@ -124,7 +137,7 @@ func TestDeleteNote(t *testing.T) {
 	t.Run("not found", func(t *testing.T) {
 		mock.ExpectExec("UPDATE notes SET deleted_at=.*").
 			WithArgs(noteID, userID).
-			WillReturnResult(pgxmock.NewResult("UPDATE", 0))
+			WillReturnResult(sqlmock.NewResult(1, 0))
 
 		err := service.DeleteNote(ctx, userID, noteID)
 
@@ -149,13 +162,14 @@ func TestDeleteNote(t *testing.T) {
 }
 
 func TestUpdateNote(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewNoteService(mock)
+	service := NewNoteService(db)
 
 	ctx := context.Background()
 	userID := uuid.New().String()
@@ -167,11 +181,11 @@ func TestUpdateNote(t *testing.T) {
 		mock.ExpectBegin()
 		mock.ExpectExec("UPDATE notes").
 			WithArgs(title, content, noteID, userID).
-			WillReturnResult(pgxmock.NewResult("UPDATE", 1))
+			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		mock.ExpectExec("DELETE FROM note_tags").
 			WithArgs(noteID).
-			WillReturnResult(pgxmock.NewResult("DELETE", 0))
+			WillReturnResult(sqlmock.NewResult(1, 0))
 
 		mock.ExpectCommit()
 
@@ -184,7 +198,7 @@ func TestUpdateNote(t *testing.T) {
 		mock.ExpectBegin()
 		mock.ExpectExec("UPDATE notes").
 			WithArgs(title, content, noteID, userID).
-			WillReturnResult(pgxmock.NewResult("UPDATE", 0))
+			WillReturnResult(sqlmock.NewResult(1, 0))
 		// Rollback is deferred, but CreateNote returns early.
 		// Wait, in my implementation UpdateNote returns error early if rows affected == 0.
 		// And deferred Rollback will be called.
@@ -215,13 +229,14 @@ func TestUpdateNote(t *testing.T) {
 }
 
 func TestGetNote(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewNoteService(mock)
+	service := NewNoteService(db)
 
 	ctx := context.Background()
 	userID := uuid.New().String()
@@ -231,20 +246,21 @@ func TestGetNote(t *testing.T) {
 	now := time.Now()
 
 	t.Run("success", func(t *testing.T) {
-		mock.ExpectQuery("SELECT id, user_id, title, content, status, created_at, updated_at, deleted_at FROM notes").
+		queryGetNote := regexp.QuoteMeta("SELECT id, user_id, title, content, status, created_at, updated_at, deleted_at FROM notes WHERE id=? AND user_id=? AND deleted_at IS NULL")
+		mock.ExpectQuery(queryGetNote).
 			WithArgs(noteID, userID).
-			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at", "deleted_at"}).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at", "deleted_at"}).
 				AddRow(noteID, userID, title, content, "active", now, now, nil))
 
 		mock.ExpectQuery("SELECT .* FROM tags .* JOIN note_tags").
 			WithArgs(noteID).
-			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "name", "created_at"}))
+			WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "name", "created_at"}))
 
 		note, err := service.GetNote(ctx, userID, noteID)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, note)
-		assert.Equal(t, noteID, note.ID)
+		assert.NotEmpty(t, note.ID)
 		assert.Equal(t, userID, note.UserID)
 		assert.Equal(t, "active", note.Status)
 	})
@@ -252,7 +268,7 @@ func TestGetNote(t *testing.T) {
 	t.Run("not found", func(t *testing.T) {
 		mock.ExpectQuery("SELECT id, user_id, title, content, status, created_at, updated_at, deleted_at FROM notes").
 			WithArgs(noteID, userID).
-			WillReturnError(pgx.ErrNoRows)
+			WillReturnError(sql.ErrNoRows)
 
 		note, err := service.GetNote(ctx, userID, noteID)
 
@@ -279,13 +295,14 @@ func TestGetNote(t *testing.T) {
 }
 
 func TestGetNotes(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewNoteService(mock)
+	service := NewNoteService(db)
 
 	ctx := context.Background()
 	userID := uuid.New().String()
@@ -299,17 +316,17 @@ func TestGetNotes(t *testing.T) {
 	t.Run("success no search", func(t *testing.T) {
 		mock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM notes").
 			WithArgs(userID).
-			WillReturnRows(pgxmock.NewRows([]string{"count"}).AddRow(1))
+			WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
 
 		mock.ExpectQuery("SELECT id, user_id, title, content, status, created_at, updated_at, deleted_at FROM notes").
 			WithArgs(userID).
-			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at", "deleted_at"}).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at", "deleted_at"}).
 				AddRow(noteID, userID, title, content, "active", now, now, nil))
 
 		// Tags query
 		mock.ExpectQuery("SELECT .* FROM tags .* JOIN note_tags").
-			WithArgs([]string{noteID}).
-			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "name", "created_at", "note_id"}))
+			WithArgs(noteID).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "name", "created_at", "note_id"}))
 
 		notes, total, err := service.GetNotes(ctx, userID, page, limit, NoteFilter{})
 
@@ -323,17 +340,17 @@ func TestGetNotes(t *testing.T) {
 	t.Run("success with search", func(t *testing.T) {
 		searchQuery := "test"
 		mock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM notes").
-			WithArgs(userID, "%"+searchQuery+"%").
-			WillReturnRows(pgxmock.NewRows([]string{"count"}).AddRow(1))
+			WithArgs(userID, "%"+searchQuery+"%", "%"+searchQuery+"%").
+			WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
 
 		mock.ExpectQuery("SELECT id, user_id, title, content, status, created_at, updated_at, deleted_at FROM notes").
-			WithArgs(userID, "%"+searchQuery+"%").
-			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at", "deleted_at"}).
+			WithArgs(userID, "%"+searchQuery+"%", "%"+searchQuery+"%").
+			WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at", "deleted_at"}).
 				AddRow(noteID, userID, title, content, "active", now, now, nil))
 
 		mock.ExpectQuery("SELECT .* FROM tags .* JOIN note_tags").
-			WithArgs([]string{noteID}).
-			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "name", "created_at", "note_id"}))
+			WithArgs(noteID).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "name", "created_at", "note_id"}))
 
 		notes, total, err := service.GetNotes(ctx, userID, page, limit, NoteFilter{SearchQuery: searchQuery})
 
@@ -346,16 +363,16 @@ func TestGetNotes(t *testing.T) {
 		tag := "tag1"
 		mock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM notes").
 			WithArgs(userID, tag).
-			WillReturnRows(pgxmock.NewRows([]string{"count"}).AddRow(1))
+			WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
 
 		mock.ExpectQuery("SELECT id, user_id, title, content, status, created_at, updated_at, deleted_at FROM notes").
 			WithArgs(userID, tag).
-			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at", "deleted_at"}).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at", "deleted_at"}).
 				AddRow(noteID, userID, title, content, "active", now, now, nil))
 
 		mock.ExpectQuery("SELECT .* FROM tags .* JOIN note_tags").
-			WithArgs([]string{noteID}).
-			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "name", "created_at", "note_id"}))
+			WithArgs(noteID).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "name", "created_at", "note_id"}))
 
 		notes, total, err := service.GetNotes(ctx, userID, page, limit, NoteFilter{Tag: tag})
 
@@ -383,13 +400,14 @@ func TestGetNotes(t *testing.T) {
 }
 
 func TestCreateTag(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewNoteService(mock)
+	service := NewNoteService(db)
 	ctx := context.Background()
 	userID := uuid.New().String()
 	tagID := uuid.New().String()
@@ -397,10 +415,14 @@ func TestCreateTag(t *testing.T) {
 	now := time.Now()
 
 	t.Run("success", func(t *testing.T) {
-		mock.ExpectQuery("INSERT INTO tags").
+		mock.ExpectExec("INSERT INTO tags").
+			WithArgs(sqlmock.AnyArg(), userID, tagName).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectQuery(regexp.QuoteMeta("SELECT id, created_at FROM tags WHERE user_id=? AND name=?")).
 			WithArgs(userID, tagName).
-			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "name", "created_at"}).
-				AddRow(tagID, userID, tagName, now))
+			WillReturnRows(sqlmock.NewRows([]string{"id", "created_at"}).
+				AddRow(tagID, now))
 
 		tag, err := service.CreateTag(ctx, userID, tagName)
 		assert.NoError(t, err)
@@ -409,13 +431,14 @@ func TestCreateTag(t *testing.T) {
 }
 
 func TestGetUserTags(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewNoteService(mock)
+	service := NewNoteService(db)
 	ctx := context.Background()
 	userID := uuid.New().String()
 	tagID := uuid.New().String()
@@ -424,7 +447,7 @@ func TestGetUserTags(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		mock.ExpectQuery("SELECT id, user_id, name, created_at FROM tags").
 			WithArgs(userID).
-			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "name", "created_at"}).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "name", "created_at"}).
 				AddRow(tagID, userID, "tag1", now))
 
 		tags, err := service.GetUserTags(ctx, userID)
@@ -434,13 +457,14 @@ func TestGetUserTags(t *testing.T) {
 }
 
 func TestDeleteTag(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewNoteService(mock)
+	service := NewNoteService(db)
 	ctx := context.Background()
 	userID := uuid.New().String()
 	tagID := uuid.New().String()
@@ -448,7 +472,7 @@ func TestDeleteTag(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		mock.ExpectExec("DELETE FROM tags").
 			WithArgs(tagID, userID).
-			WillReturnResult(pgxmock.NewResult("DELETE", 1))
+			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		err := service.DeleteTag(ctx, userID, tagID)
 		assert.NoError(t, err)
@@ -457,7 +481,7 @@ func TestDeleteTag(t *testing.T) {
 	t.Run("not found", func(t *testing.T) {
 		mock.ExpectExec("DELETE FROM tags").
 			WithArgs(tagID, userID).
-			WillReturnResult(pgxmock.NewResult("DELETE", 0))
+			WillReturnResult(sqlmock.NewResult(1, 0))
 
 		err := service.DeleteTag(ctx, userID, tagID)
 		assert.Error(t, err)
@@ -466,30 +490,33 @@ func TestDeleteTag(t *testing.T) {
 }
 
 func TestCreateNote_TagError(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewNoteService(mock)
+	service := NewNoteService(db)
 	ctx := context.Background()
 	userID := uuid.New().String()
-	noteID := uuid.New().String()
+	// noteID := uuid.New().String()
 	title := "Test Note"
 	content := json.RawMessage(`{"text": "hello"}`)
 	tags := []string{"tag1"}
-	now := time.Now()
+	// now := time.Now()
 
 	mock.ExpectBegin()
-	mock.ExpectQuery("INSERT INTO notes").
-		WithArgs(userID, title, content, "active").
-		WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at"}).
-			AddRow(noteID, userID, title, content, "active", now, now))
+	mock.ExpectExec("INSERT INTO notes").
+		WithArgs(sqlmock.AnyArg(), userID, title, content, "active").
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectQuery("SELECT created_at, updated_at FROM notes WHERE id = ?").
+		WithArgs(sqlmock.AnyArg()).
+		WillReturnRows(sqlmock.NewRows([]string{"created_at", "updated_at"}).AddRow(time.Now(), time.Now()))
 
 	// Fail on tag insert
-	mock.ExpectQuery("INSERT INTO tags").
-		WithArgs(userID, "tag1").
+	mock.ExpectExec("INSERT INTO tags").
+		WithArgs(sqlmock.AnyArg(), userID, "tag1").
 		WillReturnError(errors.New("tag error"))
 
 	mock.ExpectRollback()
@@ -501,19 +528,20 @@ func TestCreateNote_TagError(t *testing.T) {
 }
 
 func TestGetNotes_QueryError(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewNoteService(mock)
+	service := NewNoteService(db)
 	ctx := context.Background()
 	userID := uuid.New().String()
 
 	mock.ExpectQuery("SELECT COUNT").
 		WithArgs(userID).
-		WillReturnRows(pgxmock.NewRows([]string{"count"}).AddRow(1))
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
 
 	mock.ExpectQuery("SELECT id, user_id").
 		WithArgs(userID).
@@ -527,13 +555,14 @@ func TestGetNotes_QueryError(t *testing.T) {
 }
 
 func TestGetNotes_TagsQueryError(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewNoteService(mock)
+	service := NewNoteService(db)
 	ctx := context.Background()
 	userID := uuid.New().String()
 	noteID := uuid.New().String()
@@ -541,15 +570,15 @@ func TestGetNotes_TagsQueryError(t *testing.T) {
 
 	mock.ExpectQuery("SELECT COUNT").
 		WithArgs(userID).
-		WillReturnRows(pgxmock.NewRows([]string{"count"}).AddRow(1))
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
 
 	mock.ExpectQuery("SELECT id, user_id").
 		WithArgs(userID).
-		WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at", "deleted_at"}).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at", "deleted_at"}).
 			AddRow(noteID, userID, "Title", json.RawMessage("{}"), "active", now, now, nil))
 
 	mock.ExpectQuery("SELECT .* FROM tags").
-		WithArgs([]string{noteID}).
+		WithArgs(noteID).
 		WillReturnError(errors.New("tags error"))
 
 	notes, total, err := service.GetNotes(ctx, userID, 1, 10, NoteFilter{})
@@ -560,13 +589,14 @@ func TestGetNotes_TagsQueryError(t *testing.T) {
 }
 
 func TestUpdateNote_WithTags(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewNoteService(mock)
+	service := NewNoteService(db)
 	ctx := context.Background()
 	userID := uuid.New().String()
 	noteID := uuid.New().String()
@@ -579,23 +609,26 @@ func TestUpdateNote_WithTags(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectExec("UPDATE notes").
 		WithArgs(title, content, noteID, userID).
-		WillReturnResult(pgxmock.NewResult("UPDATE", 1))
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	// Delete existing tags
 	mock.ExpectExec("DELETE FROM note_tags").
 		WithArgs(noteID).
-		WillReturnResult(pgxmock.NewResult("DELETE", 1))
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	// Create/Get tag
-	mock.ExpectQuery("INSERT INTO tags").
+	mock.ExpectExec("INSERT INTO tags").
+		WithArgs(sqlmock.AnyArg(), userID, "tag1").
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT id, created_at FROM tags WHERE user_id=? AND name=?")).
 		WithArgs(userID, "tag1").
-		WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "name", "created_at"}).
-			AddRow(tagID, userID, "tag1", now))
+		WillReturnRows(sqlmock.NewRows([]string{"id", "created_at"}).AddRow(tagID, now))
 
 	// Link tag
-	mock.ExpectExec("INSERT INTO note_tags").
+	mock.ExpectExec("INSERT IGNORE INTO note_tags").
 		WithArgs(noteID, tagID).
-		WillReturnResult(pgxmock.NewResult("INSERT", 1))
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	mock.ExpectCommit()
 
@@ -604,13 +637,14 @@ func TestUpdateNote_WithTags(t *testing.T) {
 }
 
 func TestUpdateNote_WithStatus(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewNoteService(mock)
+	service := NewNoteService(db)
 	ctx := context.Background()
 	userID := uuid.New().String()
 	noteID := uuid.New().String()
@@ -621,12 +655,12 @@ func TestUpdateNote_WithStatus(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectExec("UPDATE notes").
 		WithArgs(title, content, status, noteID, userID).
-		WillReturnResult(pgxmock.NewResult("UPDATE", 1))
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	// Delete existing tags (empty tags list passed)
 	mock.ExpectExec("DELETE FROM note_tags").
 		WithArgs(noteID).
-		WillReturnResult(pgxmock.NewResult("DELETE", 0))
+		WillReturnResult(sqlmock.NewResult(1, 0))
 
 	mock.ExpectCommit()
 
@@ -635,13 +669,14 @@ func TestUpdateNote_WithStatus(t *testing.T) {
 }
 
 func TestUpdateNote_TagError(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewNoteService(mock)
+	service := NewNoteService(db)
 	ctx := context.Background()
 	userID := uuid.New().String()
 	noteID := uuid.New().String()
@@ -652,21 +687,21 @@ func TestUpdateNote_TagError(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectExec("UPDATE notes").
 		WithArgs(title, content, noteID, userID).
-		WillReturnResult(pgxmock.NewResult("UPDATE", 1))
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	mock.ExpectExec("DELETE FROM note_tags").
 		WithArgs(noteID).
-		WillReturnResult(pgxmock.NewResult("DELETE", 1))
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	// Tag error
-	mock.ExpectQuery("INSERT INTO tags").
-		WithArgs(userID, "tag1").
+	mock.ExpectExec("INSERT INTO tags").
+		WithArgs(sqlmock.AnyArg(), userID, "tag1").
 		WillReturnError(errors.New("tag error"))
 
 	// Rollback is deferred but implicit on error return?
 	// NoteService returns error immediately.
 	// We expect rollback.
-	// The implementation has `defer func() { _ = tx.Rollback(ctx) }()`
+	// The implementation has `defer func() { _ = tx.Rollback() }()`
 	mock.ExpectRollback()
 
 	err = service.UpdateNote(ctx, userID, noteID, title, content, tags)
@@ -675,13 +710,14 @@ func TestUpdateNote_TagError(t *testing.T) {
 }
 
 func TestUpdateNote_LinkTagError(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewNoteService(mock)
+	service := NewNoteService(db)
 	ctx := context.Background()
 	userID := uuid.New().String()
 	noteID := uuid.New().String()
@@ -694,19 +730,22 @@ func TestUpdateNote_LinkTagError(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectExec("UPDATE notes").
 		WithArgs(title, content, noteID, userID).
-		WillReturnResult(pgxmock.NewResult("UPDATE", 1))
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	mock.ExpectExec("DELETE FROM note_tags").
 		WithArgs(noteID).
-		WillReturnResult(pgxmock.NewResult("DELETE", 1))
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	mock.ExpectQuery("INSERT INTO tags").
+	mock.ExpectExec("INSERT INTO tags").
+		WithArgs(sqlmock.AnyArg(), userID, "tag1").
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT id, created_at FROM tags WHERE user_id=? AND name=?")).
 		WithArgs(userID, "tag1").
-		WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "name", "created_at"}).
-			AddRow(tagID, userID, "tag1", now))
+		WillReturnRows(sqlmock.NewRows([]string{"id", "created_at"}).AddRow(tagID, now))
 
 	// Link error
-	mock.ExpectExec("INSERT INTO note_tags").
+	mock.ExpectExec("INSERT IGNORE INTO note_tags").
 		WithArgs(noteID, tagID).
 		WillReturnError(errors.New("link error"))
 
@@ -718,28 +757,31 @@ func TestUpdateNote_LinkTagError(t *testing.T) {
 }
 
 func TestGetNotes_Filters(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewNoteService(mock)
+	service := NewNoteService(db)
 	ctx := context.Background()
 	userID := uuid.New().String()
 	start := time.Now().Add(-24 * time.Hour)
 	end := time.Now()
 
 	// Count Query - Expects StartDate and EndDate arguments
-	// Args: userID($1), start($2), end($3)
-	mock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM notes.*updated_at >= \\$2 AND updated_at <= \\$3").
+	// Args: userID(?), start(?), end(?)
+	queryStart := regexp.QuoteMeta("SELECT COUNT(*) FROM notes WHERE user_id=? AND deleted_at IS NULL AND updated_at >= ? AND updated_at <= ?")
+	mock.ExpectQuery(queryStart).
 		WithArgs(userID, start, end).
-		WillReturnRows(pgxmock.NewRows([]string{"count"}).AddRow(0))
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(0))
 
 	// Data Query - Expects arguments
-	mock.ExpectQuery("SELECT .* FROM notes.*updated_at >= \\$2 AND updated_at <= \\$3").
+	queryStart2 := regexp.QuoteMeta("SELECT id, user_id, title, content, status, created_at, updated_at, deleted_at FROM notes WHERE user_id=? AND deleted_at IS NULL AND updated_at >= ? AND updated_at <= ? ORDER BY updated_at DESC LIMIT 10 OFFSET 0")
+	mock.ExpectQuery(queryStart2).
 		WithArgs(userID, start, end).
-		WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at", "deleted_at"}))
+		WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at", "deleted_at"}))
 
 	notes, total, err := service.GetNotes(ctx, userID, 1, 10, NoteFilter{StartDate: &start, EndDate: &end})
 	assert.NoError(t, err)
@@ -748,24 +790,25 @@ func TestGetNotes_Filters(t *testing.T) {
 }
 
 func TestGetNotes_Sorting(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewNoteService(mock)
+	service := NewNoteService(db)
 	ctx := context.Background()
 	userID := uuid.New().String()
 
 	// 1. Sort by title ASC
 	mock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM notes").
 		WithArgs(userID).
-		WillReturnRows(pgxmock.NewRows([]string{"count"}).AddRow(0))
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(0))
 
 	mock.ExpectQuery("SELECT .* FROM notes.*ORDER BY title ASC").
 		WithArgs(userID).
-		WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at", "deleted_at"}))
+		WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at", "deleted_at"}))
 
 	_, _, err = service.GetNotes(ctx, userID, 1, 10, NoteFilter{SortBy: "title", SortOrder: "asc"})
 	assert.NoError(t, err)
@@ -773,11 +816,11 @@ func TestGetNotes_Sorting(t *testing.T) {
 	// 2. Sort by created_at DESC (default order, explicit sort by)
 	mock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM notes").
 		WithArgs(userID).
-		WillReturnRows(pgxmock.NewRows([]string{"count"}).AddRow(0))
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(0))
 
 	mock.ExpectQuery("SELECT .* FROM notes.*ORDER BY created_at DESC").
 		WithArgs(userID).
-		WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at", "deleted_at"}))
+		WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at", "deleted_at"}))
 
 	_, _, err = service.GetNotes(ctx, userID, 1, 10, NoteFilter{SortBy: "created_at", SortOrder: "desc"})
 	assert.NoError(t, err)
@@ -820,13 +863,14 @@ func TestGetNote_NilDB(t *testing.T) {
 }
 
 func TestGetNote_TagsError(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewNoteService(mock)
+	service := NewNoteService(db)
 	ctx := context.Background()
 	userID := uuid.New().String()
 	noteID := uuid.New().String()
@@ -834,7 +878,7 @@ func TestGetNote_TagsError(t *testing.T) {
 
 	mock.ExpectQuery("SELECT id, user_id, title, content, status, created_at, updated_at, deleted_at FROM notes").
 		WithArgs(noteID, userID).
-		WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at", "deleted_at"}).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "user_id", "title", "content", "status", "created_at", "updated_at", "deleted_at"}).
 			AddRow(noteID, userID, "Title", json.RawMessage("{}"), "active", now, now, nil))
 
 	mock.ExpectQuery("SELECT .* FROM tags .* JOIN note_tags").

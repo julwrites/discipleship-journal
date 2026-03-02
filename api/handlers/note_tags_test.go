@@ -14,8 +14,8 @@ import (
 	"discipleship_journal_api/services"
 
 	"firebase.google.com/go/v4/auth"
+	"github.com/DATA-DOG/go-sqlmock"
 	chi "github.com/go-chi/chi/v5"
-	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -25,12 +25,15 @@ func TestGetTagsHandler(t *testing.T) {
 	userUUID := "user-uuid-123"
 
 	t.Run("success", func(t *testing.T) {
-		dbMock, noteServiceMock, handler := setupTest(t)
-		defer dbMock.Close()
+		db, dbMock, noteServiceMock, handler := setupTest(t)
+		_ = db
+		_ = db
+		_ = dbMock
+		defer db.Close()
 
 		dbMock.ExpectQuery("SELECT id FROM users").
 			WithArgs(firebaseUID).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userUUID))
 
 		tags := []services.Tag{
 			{ID: "tag-1", Name: "Bible"},
@@ -61,12 +64,15 @@ func TestGetTagsHandler(t *testing.T) {
 	})
 
 	t.Run("service error", func(t *testing.T) {
-		dbMock, noteServiceMock, handler := setupTest(t)
-		defer dbMock.Close()
+		db, dbMock, noteServiceMock, handler := setupTest(t)
+		_ = db
+		_ = db
+		_ = dbMock
+		defer db.Close()
 
 		dbMock.ExpectQuery("SELECT id FROM users").
 			WithArgs(firebaseUID).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userUUID))
 
 		noteServiceMock.On("GetUserTags", mock.Anything, userUUID).Return(nil, assert.AnError)
 
@@ -92,12 +98,16 @@ func TestCreateTagHandler_ServiceError(t *testing.T) {
 		Name: tagName,
 	}
 
-	dbMock, noteServiceMock, handler := setupTest(t)
-	defer dbMock.Close()
+	db, dbMock, noteServiceMock, handler := setupTest(t)
+
+	_ = db
+	_ = db
+	_ = dbMock
+	defer db.Close()
 
 	dbMock.ExpectQuery("SELECT id FROM users").
 		WithArgs(firebaseUID).
-		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userUUID))
 
 	noteServiceMock.On("CreateTag", mock.Anything, userUUID, tagName).Return(nil, errors.New("service error"))
 
@@ -118,12 +128,16 @@ func TestDeleteTagHandler_ServiceError(t *testing.T) {
 	userUUID := "user-uuid-123"
 	tagID := "tag-123"
 
-	dbMock, noteServiceMock, handler := setupTest(t)
-	defer dbMock.Close()
+	db, dbMock, noteServiceMock, handler := setupTest(t)
+
+	_ = db
+	_ = db
+	_ = dbMock
+	defer db.Close()
 
 	dbMock.ExpectQuery("SELECT id FROM users").
 		WithArgs(firebaseUID).
-		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userUUID))
 
 	noteServiceMock.On("DeleteTag", mock.Anything, userUUID, tagID).Return(errors.New("service error"))
 
@@ -144,8 +158,11 @@ func TestDeleteTagHandler_ServiceError(t *testing.T) {
 
 func TestGetTags_UserNotFound(t *testing.T) {
 	firebaseUID := "firebase-uid-123"
-	dbMock, noteServiceMock, handler := setupTest(t)
-	defer dbMock.Close()
+	db, dbMock, noteServiceMock, handler := setupTest(t)
+	_ = db
+	_ = db
+	_ = dbMock
+	defer db.Close()
 
 	dbMock.ExpectQuery("SELECT id FROM users").
 		WithArgs(firebaseUID).
@@ -165,8 +182,11 @@ func TestGetTags_UserNotFound(t *testing.T) {
 
 func TestCreateTag_UserNotFound(t *testing.T) {
 	firebaseUID := "firebase-uid-123"
-	dbMock, noteServiceMock, handler := setupTest(t)
-	defer dbMock.Close()
+	db, dbMock, noteServiceMock, handler := setupTest(t)
+	_ = db
+	_ = db
+	_ = dbMock
+	defer db.Close()
 
 	dbMock.ExpectQuery("SELECT id FROM users").
 		WithArgs(firebaseUID).
@@ -186,8 +206,11 @@ func TestCreateTag_UserNotFound(t *testing.T) {
 
 func TestDeleteTag_UserNotFound(t *testing.T) {
 	firebaseUID := "firebase-uid-123"
-	dbMock, noteServiceMock, handler := setupTest(t)
-	defer dbMock.Close()
+	db, dbMock, noteServiceMock, handler := setupTest(t)
+	_ = db
+	_ = db
+	_ = dbMock
+	defer db.Close()
 
 	dbMock.ExpectQuery("SELECT id FROM users").
 		WithArgs(firebaseUID).
@@ -215,12 +238,15 @@ func TestCreateTagHandler(t *testing.T) {
 	}
 
 	t.Run("success", func(t *testing.T) {
-		dbMock, noteServiceMock, handler := setupTest(t)
-		defer dbMock.Close()
+		db, dbMock, noteServiceMock, handler := setupTest(t)
+		_ = db
+		_ = db
+		_ = dbMock
+		defer db.Close()
 
 		dbMock.ExpectQuery("SELECT id FROM users").
 			WithArgs(firebaseUID).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userUUID))
 
 		createdTag := &services.Tag{
 			ID:   "tag-new",
@@ -252,8 +278,11 @@ func TestCreateTagHandler(t *testing.T) {
 	})
 
 	t.Run("validation error", func(t *testing.T) {
-		dbMock, _, handler := setupTest(t)
-		defer dbMock.Close()
+		db, dbMock, _, handler := setupTest(t)
+		_ = db
+		_ = db
+		_ = dbMock
+		defer db.Close()
 
 		// Missing name
 		invalidReq := CreateTagRequest{}
@@ -266,7 +295,7 @@ func TestCreateTagHandler(t *testing.T) {
 		// Mock user lookup is still called before validation in the handler
 		dbMock.ExpectQuery("SELECT id FROM users").
 			WithArgs(firebaseUID).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userUUID))
 
 		w := httptest.NewRecorder()
 		handler.CreateTag(w, req)
@@ -281,12 +310,15 @@ func TestDeleteTagHandler(t *testing.T) {
 	tagID := "tag-123"
 
 	t.Run("success", func(t *testing.T) {
-		dbMock, noteServiceMock, handler := setupTest(t)
-		defer dbMock.Close()
+		db, dbMock, noteServiceMock, handler := setupTest(t)
+		_ = db
+		_ = db
+		_ = dbMock
+		defer db.Close()
 
 		dbMock.ExpectQuery("SELECT id FROM users").
 			WithArgs(firebaseUID).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userUUID))
 
 		noteServiceMock.On("DeleteTag", mock.Anything, userUUID, tagID).Return(nil)
 
@@ -308,12 +340,15 @@ func TestDeleteTagHandler(t *testing.T) {
 	})
 
 	t.Run("not found", func(t *testing.T) {
-		dbMock, noteServiceMock, handler := setupTest(t)
-		defer dbMock.Close()
+		db, dbMock, noteServiceMock, handler := setupTest(t)
+		_ = db
+		_ = db
+		_ = dbMock
+		defer db.Close()
 
 		dbMock.ExpectQuery("SELECT id FROM users").
 			WithArgs(firebaseUID).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userUUID))
 
 		noteServiceMock.On("DeleteTag", mock.Anything, userUUID, tagID).Return(models.ErrNotFound)
 

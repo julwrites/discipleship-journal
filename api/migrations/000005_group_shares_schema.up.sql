@@ -1,9 +1,9 @@
 CREATE TABLE IF NOT EXISTS group_shares (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    group_id UUID REFERENCES groups(id) ON DELETE CASCADE,
-    note_id UUID REFERENCES notes(id) ON DELETE CASCADE,
-    shared_by UUID REFERENCES users(id) ON DELETE CASCADE,
-    shared_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
+    group_id VARCHAR(36) REFERENCES `groups`(id) ON DELETE CASCADE,
+    note_id VARCHAR(36) REFERENCES notes(id) ON DELETE CASCADE,
+    shared_by VARCHAR(36) REFERENCES users(id) ON DELETE CASCADE,
+    shared_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     comment TEXT,
     UNIQUE(group_id, note_id)
 );

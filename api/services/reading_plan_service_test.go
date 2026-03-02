@@ -5,19 +5,21 @@ import (
 	"testing"
 	"time"
 
+	"database/sql"
 	"discipleship_journal_api/models"
+
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
-	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGetAllPlans(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	assert.NoError(t, err)
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewReadingPlanService(mock)
+	service := NewReadingPlanService(db)
 
 	rows := mock.NewRows([]string{"id", "title", "description", "days", "created_at", "updated_at"}).
 		AddRow(uuid.New(), "Plan 1", "Desc 1", 30, time.Now(), time.Now()).
@@ -35,11 +37,12 @@ func TestGetAllPlans(t *testing.T) {
 }
 
 func TestMarkDayComplete_CheckCompletionError_GetDays(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	assert.NoError(t, err)
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewReadingPlanService(mock)
+	service := NewReadingPlanService(db)
 	userID := uuid.New()
 	planID := uuid.New()
 	userPlanID := uuid.New()
@@ -51,9 +54,9 @@ func TestMarkDayComplete_CheckCompletionError_GetDays(t *testing.T) {
 		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(userPlanID))
 
 	// Mock Insert Progress
-	mock.ExpectExec(`INSERT INTO user_reading_plan_progress`).
-		WithArgs(userPlanID, dayNumber, pgxmock.AnyArg()).
-		WillReturnResult(pgxmock.NewResult("INSERT", 1))
+	mock.ExpectExec(`INSERT IGNORE INTO user_reading_plan_progress`).
+		WithArgs(userPlanID, dayNumber, sqlmock.AnyArg()).
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	// Expect check completion queries
 	// 1. Get total days - Error
@@ -69,11 +72,12 @@ func TestMarkDayComplete_CheckCompletionError_GetDays(t *testing.T) {
 }
 
 func TestMarkDayComplete_CheckCompletionError_GetCount(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	assert.NoError(t, err)
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewReadingPlanService(mock)
+	service := NewReadingPlanService(db)
 	userID := uuid.New()
 	planID := uuid.New()
 	userPlanID := uuid.New()
@@ -85,9 +89,9 @@ func TestMarkDayComplete_CheckCompletionError_GetCount(t *testing.T) {
 		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(userPlanID))
 
 	// Mock Insert Progress
-	mock.ExpectExec(`INSERT INTO user_reading_plan_progress`).
-		WithArgs(userPlanID, dayNumber, pgxmock.AnyArg()).
-		WillReturnResult(pgxmock.NewResult("INSERT", 1))
+	mock.ExpectExec(`INSERT IGNORE INTO user_reading_plan_progress`).
+		WithArgs(userPlanID, dayNumber, sqlmock.AnyArg()).
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	// Expect check completion queries
 	// 1. Get total days
@@ -108,11 +112,12 @@ func TestMarkDayComplete_CheckCompletionError_GetCount(t *testing.T) {
 }
 
 func TestMarkDayComplete_CheckCompletionError_UpdateStatus(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	assert.NoError(t, err)
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewReadingPlanService(mock)
+	service := NewReadingPlanService(db)
 	userID := uuid.New()
 	planID := uuid.New()
 	userPlanID := uuid.New()
@@ -124,9 +129,9 @@ func TestMarkDayComplete_CheckCompletionError_UpdateStatus(t *testing.T) {
 		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(userPlanID))
 
 	// Mock Insert Progress
-	mock.ExpectExec(`INSERT INTO user_reading_plan_progress`).
-		WithArgs(userPlanID, dayNumber, pgxmock.AnyArg()).
-		WillReturnResult(pgxmock.NewResult("INSERT", 1))
+	mock.ExpectExec(`INSERT IGNORE INTO user_reading_plan_progress`).
+		WithArgs(userPlanID, dayNumber, sqlmock.AnyArg()).
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	// Expect check completion queries
 	// 1. Get total days
@@ -152,16 +157,17 @@ func TestMarkDayComplete_CheckCompletionError_UpdateStatus(t *testing.T) {
 }
 
 func TestGetPlan_NotFound(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	assert.NoError(t, err)
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewReadingPlanService(mock)
+	service := NewReadingPlanService(db)
 	id := uuid.New()
 
-	mock.ExpectQuery(`SELECT id, title, description, days, created_at, updated_at\s+FROM reading_plans\s+WHERE id = \$1`).
+	mock.ExpectQuery(`SELECT id, title, description, days, created_at, updated_at\s+FROM reading_plans\s+WHERE id = \?`).
 		WithArgs(id).
-		WillReturnError(pgx.ErrNoRows)
+		WillReturnError(sql.ErrNoRows)
 
 	plan, err := service.GetPlan(context.Background(), id)
 	assert.Error(t, err)
@@ -172,14 +178,15 @@ func TestGetPlan_NotFound(t *testing.T) {
 }
 
 func TestGetPlan_DBError(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	assert.NoError(t, err)
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewReadingPlanService(mock)
+	service := NewReadingPlanService(db)
 	id := uuid.New()
 
-	mock.ExpectQuery(`SELECT id, title, description, days, created_at, updated_at\s+FROM reading_plans\s+WHERE id = \$1`).
+	mock.ExpectQuery(`SELECT id, title, description, days, created_at, updated_at\s+FROM reading_plans\s+WHERE id = \?`).
 		WithArgs(id).
 		WillReturnError(assert.AnError)
 
@@ -192,14 +199,15 @@ func TestGetPlan_DBError(t *testing.T) {
 }
 
 func TestGetPlanDays_DBError(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	assert.NoError(t, err)
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewReadingPlanService(mock)
+	service := NewReadingPlanService(db)
 	planID := uuid.New()
 
-	mock.ExpectQuery(`SELECT id, reading_plan_id, day_number, passage, created_at\s+FROM reading_plan_days\s+WHERE reading_plan_id = \$1`).
+	mock.ExpectQuery(`SELECT id, reading_plan_id, day_number, passage, created_at\s+FROM reading_plan_days\s+WHERE reading_plan_id = \?`).
 		WithArgs(planID).
 		WillReturnError(assert.AnError)
 
@@ -212,22 +220,23 @@ func TestGetPlanDays_DBError(t *testing.T) {
 }
 
 func TestSubscribe_InsertError(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	assert.NoError(t, err)
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewReadingPlanService(mock)
+	service := NewReadingPlanService(db)
 	userID := uuid.New()
 	planID := uuid.New()
 
 	// Mock check if exists - Returns no rows (so proceed)
 	mock.ExpectQuery(`SELECT id FROM user_reading_plans`).
 		WithArgs(userID, planID).
-		WillReturnError(pgx.ErrNoRows)
+		WillReturnError(sql.ErrNoRows)
 
 	// Mock Insert - Returns error
-	mock.ExpectQuery(`INSERT INTO user_reading_plans`).
-		WithArgs(userID, planID, pgxmock.AnyArg()).
+	mock.ExpectExec(`INSERT INTO user_reading_plans`).
+		WithArgs(sqlmock.AnyArg(), userID, planID, sqlmock.AnyArg(), "active").
 		WillReturnError(assert.AnError)
 
 	userPlan, err := service.Subscribe(context.Background(), userID, planID)
@@ -239,14 +248,15 @@ func TestSubscribe_InsertError(t *testing.T) {
 }
 
 func TestGetUserPlans_DBError(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	assert.NoError(t, err)
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewReadingPlanService(mock)
+	service := NewReadingPlanService(db)
 	userID := uuid.New()
 
-	mock.ExpectQuery(`SELECT u.id, u.user_id, u.reading_plan_id, u.start_date, u.status, u.created_at, u.updated_at,\s+p.id, p.title, p.description, p.days, p.created_at, p.updated_at\s+FROM user_reading_plans u\s+JOIN reading_plans p ON u.reading_plan_id = p.id\s+WHERE u.user_id = \$1`).
+	mock.ExpectQuery(`SELECT u.id, u.user_id, u.reading_plan_id, u.start_date, u.status, u.created_at, u.updated_at,\s+p.id, p.title, p.description, p.days, p.created_at, p.updated_at\s+FROM user_reading_plans u\s+JOIN reading_plans p ON u.reading_plan_id = p.id\s+WHERE u.user_id = \?`).
 		WithArgs(userID).
 		WillReturnError(assert.AnError)
 
@@ -259,11 +269,12 @@ func TestGetUserPlans_DBError(t *testing.T) {
 }
 
 func TestMarkDayComplete_Completed(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	assert.NoError(t, err)
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewReadingPlanService(mock)
+	service := NewReadingPlanService(db)
 	userID := uuid.New()
 	planID := uuid.New()
 	userPlanID := uuid.New()
@@ -275,9 +286,9 @@ func TestMarkDayComplete_Completed(t *testing.T) {
 		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(userPlanID))
 
 	// Mock Insert Progress
-	mock.ExpectExec(`INSERT INTO user_reading_plan_progress`).
-		WithArgs(userPlanID, dayNumber, pgxmock.AnyArg()).
-		WillReturnResult(pgxmock.NewResult("INSERT", 1))
+	mock.ExpectExec(`INSERT IGNORE INTO user_reading_plan_progress`).
+		WithArgs(userPlanID, dayNumber, sqlmock.AnyArg()).
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	// Expect check completion queries
 	// 1. Get total days
@@ -293,7 +304,7 @@ func TestMarkDayComplete_Completed(t *testing.T) {
 	// 3. Update status to completed
 	mock.ExpectExec(`UPDATE user_reading_plans`).
 		WithArgs(userPlanID).
-		WillReturnResult(pgxmock.NewResult("UPDATE", 1))
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	err = service.MarkDayComplete(context.Background(), userID, planID, dayNumber)
 	assert.NoError(t, err)
@@ -302,11 +313,12 @@ func TestMarkDayComplete_Completed(t *testing.T) {
 }
 
 func TestGetPlanProgress(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	assert.NoError(t, err)
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewReadingPlanService(mock)
+	service := NewReadingPlanService(db)
 	userID := uuid.New()
 	planID := uuid.New()
 	userPlanID := uuid.New()
@@ -330,18 +342,19 @@ func TestGetPlanProgress(t *testing.T) {
 }
 
 func TestGetPlanProgress_PlanNotFound(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	assert.NoError(t, err)
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewReadingPlanService(mock)
+	service := NewReadingPlanService(db)
 	userID := uuid.New()
 	planID := uuid.New()
 
 	// Mock find active plan - Not found
 	mock.ExpectQuery(`SELECT id FROM user_reading_plans`).
 		WithArgs(userID, planID).
-		WillReturnError(pgx.ErrNoRows)
+		WillReturnError(sql.ErrNoRows)
 
 	_, err = service.GetPlanProgress(context.Background(), userID, planID)
 	assert.Error(t, err)
@@ -351,11 +364,12 @@ func TestGetPlanProgress_PlanNotFound(t *testing.T) {
 }
 
 func TestMarkDayComplete_NotFound(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	assert.NoError(t, err)
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewReadingPlanService(mock)
+	service := NewReadingPlanService(db)
 	userID := uuid.New()
 	planID := uuid.New()
 	dayNumber := 1
@@ -363,7 +377,7 @@ func TestMarkDayComplete_NotFound(t *testing.T) {
 	// Mock find active plan - Not Found
 	mock.ExpectQuery(`SELECT id FROM user_reading_plans`).
 		WithArgs(userID, planID).
-		WillReturnError(pgx.ErrNoRows)
+		WillReturnError(sql.ErrNoRows)
 
 	err = service.MarkDayComplete(context.Background(), userID, planID, dayNumber)
 	assert.Error(t, err)
@@ -373,17 +387,18 @@ func TestMarkDayComplete_NotFound(t *testing.T) {
 }
 
 func TestGetPlan(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	assert.NoError(t, err)
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewReadingPlanService(mock)
+	service := NewReadingPlanService(db)
 	id := uuid.New()
 
 	rows := mock.NewRows([]string{"id", "title", "description", "days", "created_at", "updated_at"}).
 		AddRow(id, "Plan 1", "Desc 1", 30, time.Now(), time.Now())
 
-	mock.ExpectQuery(`SELECT id, title, description, days, created_at, updated_at\s+FROM reading_plans\s+WHERE id = \$1`).
+	mock.ExpectQuery(`SELECT id, title, description, days, created_at, updated_at\s+FROM reading_plans\s+WHERE id = \?`).
 		WithArgs(id).
 		WillReturnRows(rows)
 
@@ -396,18 +411,19 @@ func TestGetPlan(t *testing.T) {
 }
 
 func TestGetPlanDays(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	assert.NoError(t, err)
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewReadingPlanService(mock)
+	service := NewReadingPlanService(db)
 	planID := uuid.New()
 
 	rows := mock.NewRows([]string{"id", "reading_plan_id", "day_number", "passage", "created_at"}).
 		AddRow(uuid.New(), planID, 1, "Gen 1", time.Now()).
 		AddRow(uuid.New(), planID, 2, "Gen 2", time.Now())
 
-	mock.ExpectQuery(`SELECT id, reading_plan_id, day_number, passage, created_at\s+FROM reading_plan_days\s+WHERE reading_plan_id = \$1`).
+	mock.ExpectQuery(`SELECT id, reading_plan_id, day_number, passage, created_at\s+FROM reading_plan_days\s+WHERE reading_plan_id = \?`).
 		WithArgs(planID).
 		WillReturnRows(rows)
 
@@ -420,26 +436,28 @@ func TestGetPlanDays(t *testing.T) {
 }
 
 func TestSubscribe(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	assert.NoError(t, err)
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewReadingPlanService(mock)
+	service := NewReadingPlanService(db)
 	userID := uuid.New()
 	planID := uuid.New()
 
 	// Mock check if exists
 	mock.ExpectQuery(`SELECT id FROM user_reading_plans`).
 		WithArgs(userID, planID).
-		WillReturnError(pgx.ErrNoRows) // Not found, so proceed
+		WillReturnError(sql.ErrNoRows) // Not found, so proceed
 
 	// Mock Insert
-	rows := mock.NewRows([]string{"id", "user_id", "reading_plan_id", "start_date", "status", "created_at", "updated_at"}).
-		AddRow(uuid.New(), userID, planID, time.Now(), "active", time.Now(), time.Now())
+	mock.ExpectExec(`INSERT INTO user_reading_plans`).
+		WithArgs(sqlmock.AnyArg(), userID, planID, sqlmock.AnyArg(), "active").
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	mock.ExpectQuery(`INSERT INTO user_reading_plans`).
-		WithArgs(userID, planID, pgxmock.AnyArg()).
-		WillReturnRows(rows)
+	mock.ExpectQuery(`SELECT created_at, updated_at FROM user_reading_plans WHERE id = \?`).
+		WithArgs(sqlmock.AnyArg()).
+		WillReturnRows(sqlmock.NewRows([]string{"created_at", "updated_at"}).AddRow(time.Now(), time.Now()))
 
 	userPlan, err := service.Subscribe(context.Background(), userID, planID)
 	assert.NoError(t, err)
@@ -450,11 +468,12 @@ func TestSubscribe(t *testing.T) {
 }
 
 func TestSubscribe_AlreadyExists(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	assert.NoError(t, err)
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewReadingPlanService(mock)
+	service := NewReadingPlanService(db)
 	userID := uuid.New()
 	planID := uuid.New()
 
@@ -471,11 +490,12 @@ func TestSubscribe_AlreadyExists(t *testing.T) {
 }
 
 func TestMarkDayComplete(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	assert.NoError(t, err)
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewReadingPlanService(mock)
+	service := NewReadingPlanService(db)
 	userID := uuid.New()
 	planID := uuid.New()
 	userPlanID := uuid.New()
@@ -487,9 +507,9 @@ func TestMarkDayComplete(t *testing.T) {
 		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(userPlanID))
 
 	// Mock Insert Progress
-	mock.ExpectExec(`INSERT INTO user_reading_plan_progress`).
-		WithArgs(userPlanID, dayNumber, pgxmock.AnyArg()).
-		WillReturnResult(pgxmock.NewResult("INSERT", 1))
+	mock.ExpectExec(`INSERT IGNORE INTO user_reading_plan_progress`).
+		WithArgs(userPlanID, dayNumber, sqlmock.AnyArg()).
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	// Expect check completion queries
 	// 1. Get total days
@@ -509,18 +529,19 @@ func TestMarkDayComplete(t *testing.T) {
 }
 
 func TestUnsubscribe(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	assert.NoError(t, err)
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewReadingPlanService(mock)
+	service := NewReadingPlanService(db)
 	userID := uuid.New()
 	planID := uuid.New()
 
 	// Mock Delete
 	mock.ExpectExec(`DELETE FROM user_reading_plans`).
 		WithArgs(userID, planID).
-		WillReturnResult(pgxmock.NewResult("DELETE", 1))
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	err = service.Unsubscribe(context.Background(), userID, planID)
 	assert.NoError(t, err)
@@ -529,18 +550,19 @@ func TestUnsubscribe(t *testing.T) {
 }
 
 func TestUnsubscribe_NotFound(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	assert.NoError(t, err)
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewReadingPlanService(mock)
+	service := NewReadingPlanService(db)
 	userID := uuid.New()
 	planID := uuid.New()
 
 	// Mock Delete - No rows affected
 	mock.ExpectExec(`DELETE FROM user_reading_plans`).
 		WithArgs(userID, planID).
-		WillReturnResult(pgxmock.NewResult("DELETE", 0))
+		WillReturnResult(sqlmock.NewResult(1, 0))
 
 	err = service.Unsubscribe(context.Background(), userID, planID)
 	assert.Error(t, err)
@@ -550,11 +572,12 @@ func TestUnsubscribe_NotFound(t *testing.T) {
 }
 
 func TestGetUserPlans(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	assert.NoError(t, err)
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewReadingPlanService(mock)
+	service := NewReadingPlanService(db)
 	userID := uuid.New()
 	planID := uuid.New()
 
@@ -567,7 +590,7 @@ func TestGetUserPlans(t *testing.T) {
 			planID, "Plan Title", "Plan Desc", 30, time.Now(), time.Now(),
 		)
 
-	mock.ExpectQuery(`SELECT u.id, u.user_id, u.reading_plan_id, u.start_date, u.status, u.created_at, u.updated_at,\s+p.id, p.title, p.description, p.days, p.created_at, p.updated_at\s+FROM user_reading_plans u\s+JOIN reading_plans p ON u.reading_plan_id = p.id\s+WHERE u.user_id = \$1`).
+	mock.ExpectQuery(`SELECT u.id, u.user_id, u.reading_plan_id, u.start_date, u.status, u.created_at, u.updated_at,\s+p.id, p.title, p.description, p.days, p.created_at, p.updated_at\s+FROM user_reading_plans u\s+JOIN reading_plans p ON u.reading_plan_id = p.id\s+WHERE u.user_id = \?`).
 		WithArgs(userID).
 		WillReturnRows(rows)
 
@@ -580,11 +603,12 @@ func TestGetUserPlans(t *testing.T) {
 }
 
 func TestUnmarkDayComplete(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	assert.NoError(t, err)
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewReadingPlanService(mock)
+	service := NewReadingPlanService(db)
 	userID := uuid.New()
 	planID := uuid.New()
 	userPlanID := uuid.New()
@@ -598,7 +622,7 @@ func TestUnmarkDayComplete(t *testing.T) {
 	// Mock Delete Progress
 	mock.ExpectExec(`DELETE FROM user_reading_plan_progress`).
 		WithArgs(userPlanID, dayNumber).
-		WillReturnResult(pgxmock.NewResult("DELETE", 1))
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	err = service.UnmarkDayComplete(context.Background(), userID, planID, dayNumber)
 	assert.NoError(t, err)
@@ -607,11 +631,12 @@ func TestUnmarkDayComplete(t *testing.T) {
 }
 
 func TestUnmarkDayComplete_NotFound(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = mock
 	assert.NoError(t, err)
-	defer mock.Close()
+	defer db.Close()
 
-	service := NewReadingPlanService(mock)
+	service := NewReadingPlanService(db)
 	userID := uuid.New()
 	planID := uuid.New()
 	dayNumber := 1
@@ -619,7 +644,7 @@ func TestUnmarkDayComplete_NotFound(t *testing.T) {
 	// Mock find active plan - Not Found
 	mock.ExpectQuery(`SELECT id FROM user_reading_plans`).
 		WithArgs(userID, planID).
-		WillReturnError(pgx.ErrNoRows)
+		WillReturnError(sql.ErrNoRows)
 
 	err = service.UnmarkDayComplete(context.Background(), userID, planID, dayNumber)
 	assert.Error(t, err)

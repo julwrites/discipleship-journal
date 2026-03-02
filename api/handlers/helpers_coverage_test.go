@@ -6,9 +6,10 @@ import (
 	"testing"
 
 	"discipleship_journal_api/middleware"
+
 	"firebase.google.com/go/v4/auth"
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/uuid"
-	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -38,14 +39,17 @@ func TestGetUserUUIDFromContext_Coverage(t *testing.T) {
 
 	t.Run("Production_Token_With_DB", func(t *testing.T) {
 		// Mock DB via provider
-		mock, err := pgxmock.NewPool()
+		db, mock, err := sqlmock.New()
+		_ = db
+
+		_ = mock
 		if err != nil {
 			t.Fatal(err)
 		}
-		defer mock.Close()
+		defer db.Close()
 
 		oldProvider := dbProvider
-		dbProvider = func() DBInterface { return mock }
+		dbProvider = func() DBInterface { return db }
 		defer func() { dbProvider = oldProvider }()
 
 		uid := "firebase-uid"
@@ -53,7 +57,7 @@ func TestGetUserUUIDFromContext_Coverage(t *testing.T) {
 
 		mock.ExpectQuery("SELECT id FROM users").
 			WithArgs(uid).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(dbUUID))
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(dbUUID))
 
 		ctx := context.WithValue(context.Background(), middleware.UserContextKey, &auth.Token{UID: uid})
 		got, err := GetUserUUIDFromContext(ctx)
@@ -87,14 +91,17 @@ func TestGetUserUUID_Coverage(t *testing.T) {
 	})
 
 	t.Run("DB_Error", func(t *testing.T) {
-		mock, err := pgxmock.NewPool()
+		db, mock, err := sqlmock.New()
+		_ = db
+
+		_ = mock
 		if err != nil {
 			t.Fatal(err)
 		}
-		defer mock.Close()
+		defer db.Close()
 
 		oldProvider := dbProvider
-		dbProvider = func() DBInterface { return mock }
+		dbProvider = func() DBInterface { return db }
 		defer func() { dbProvider = oldProvider }()
 
 		mock.ExpectQuery("SELECT id FROM users").

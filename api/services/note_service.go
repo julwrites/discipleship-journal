@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"discipleship_journal_api/models"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
+	"database/sql"
+
+	"github.com/google/uuid"
 )
 
 // NoteFilter defines the criteria for filtering notes.
@@ -39,10 +41,10 @@ type NoteService struct {
 }
 
 type DBInterface interface {
-	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
-	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
-	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
-	Begin(ctx context.Context) (pgx.Tx, error)
+	QueryContext(ctx context.Context, sql string, args ...any) (*sql.Rows, error)
+	QueryRowContext(ctx context.Context, sql string, args ...any) *sql.Row
+	ExecContext(ctx context.Context, sql string, arguments ...any) (sql.Result, error)
+	BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error)
 }
 
 func NewNoteService(db DBInterface) *NoteService {
@@ -79,50 +81,64 @@ func (s *NoteService) CreateNote(ctx context.Context, userID, title string, cont
 		statusVal = status[0]
 	}
 
-	tx, err := s.db.Begin(ctx)
+	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 	defer func() {
-		_ = tx.Rollback(ctx)
+		_ = tx.Rollback()
 	}()
 
+	note.ID = uuid.New().String()
+	note.UserID = userID
+	note.Title = title
+	note.Content = content
+	note.Status = statusVal
+
 	query := `
-		INSERT INTO notes (user_id, title, content, status)
-		VALUES ($1, $2, $3, $4)
-		RETURNING id, user_id, title, content, status, created_at, updated_at
+		INSERT INTO notes (id, user_id, title, content, status)
+		VALUES (?, ?, ?, ?, ?)
 	`
-	err = tx.QueryRow(ctx, query, userID, title, content, statusVal).Scan(
-		&note.ID, &note.UserID, &note.Title, &note.Content, &note.Status, &note.CreatedAt, &note.UpdatedAt,
-	)
+	_, err = tx.ExecContext(ctx, query, note.ID, userID, title, content, statusVal)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.QueryRowContext(ctx, "SELECT created_at, updated_at FROM notes WHERE id = ?", note.ID).Scan(&note.CreatedAt, &note.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
 
 	note.Tags = []Tag{}
 	for _, tagName := range tags {
-		// Ensure tag exists
 		var tag Tag
+		tag.ID = uuid.New().String()
+		tag.UserID = userID
+		tag.Name = tagName
+
 		tagQuery := `
-			INSERT INTO tags (user_id, name) VALUES ($1, $2)
-			ON CONFLICT (user_id, name) DO UPDATE SET name=EXCLUDED.name
-			RETURNING id, user_id, name, created_at
+			INSERT INTO tags (id, user_id, name) VALUES (?, ?, ?)
+			ON DUPLICATE KEY UPDATE name=VALUES(name)
 		`
-		err := tx.QueryRow(ctx, tagQuery, userID, tagName).Scan(&tag.ID, &tag.UserID, &tag.Name, &tag.CreatedAt)
+		_, err := tx.ExecContext(ctx, tagQuery, tag.ID, userID, tagName)
 		if err != nil {
 			return nil, err
 		}
 
-		// Link tag to note
-		linkQuery := `INSERT INTO note_tags (note_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`
-		_, err = tx.Exec(ctx, linkQuery, note.ID, tag.ID)
+		err = tx.QueryRowContext(ctx, "SELECT id, created_at FROM tags WHERE user_id=? AND name=?", userID, tagName).Scan(&tag.ID, &tag.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+
+		linkQuery := `INSERT IGNORE INTO note_tags (note_id, tag_id) VALUES (?, ?)`
+		_, err = tx.ExecContext(ctx, linkQuery, note.ID, tag.ID)
 		if err != nil {
 			return nil, err
 		}
 		note.Tags = append(note.Tags, tag)
 	}
 
-	if err := tx.Commit(ctx); err != nil {
+	if err := tx.Commit(); err != nil {
 		return nil, err
 	}
 
@@ -133,12 +149,13 @@ func (s *NoteService) DeleteNote(ctx context.Context, userID, noteID string) err
 	if s.db == nil {
 		return fmt.Errorf("database connection is nil")
 	}
-	query := `UPDATE notes SET deleted_at=NOW() WHERE id=$1 AND user_id=$2 AND deleted_at IS NULL`
-	commandTag, err := s.db.Exec(ctx, query, noteID, userID)
+	query := `UPDATE notes SET deleted_at=NOW() WHERE id=? AND user_id=? AND deleted_at IS NULL`
+	commandTag, err := s.db.ExecContext(ctx, query, noteID, userID)
 	if err != nil {
 		return err
 	}
-	if commandTag.RowsAffected() == 0 {
+	rowsAffected, _ := commandTag.RowsAffected()
+	if rowsAffected == 0 {
 		return models.ErrNotFound
 	}
 	return nil
@@ -148,12 +165,12 @@ func (s *NoteService) UpdateNote(ctx context.Context, userID, noteID, title stri
 	if s.db == nil {
 		return fmt.Errorf("database connection is nil")
 	}
-	tx, err := s.db.Begin(ctx)
+	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		_ = tx.Rollback(ctx)
+		_ = tx.Rollback()
 	}()
 
 	var query string
@@ -162,24 +179,25 @@ func (s *NoteService) UpdateNote(ctx context.Context, userID, noteID, title stri
 	if len(status) > 0 {
 		query = `
 			UPDATE notes
-			SET title=$1, content=$2, status=$3, updated_at=NOW()
-			WHERE id=$4 AND user_id=$5 AND deleted_at IS NULL
+			SET title=?, content=?, status=?, updated_at=NOW()
+			WHERE id=? AND user_id=? AND deleted_at IS NULL
 		`
 		args = []interface{}{title, content, status[0], noteID, userID}
 	} else {
 		query = `
 			UPDATE notes
-			SET title=$1, content=$2, updated_at=NOW()
-			WHERE id=$3 AND user_id=$4 AND deleted_at IS NULL
+			SET title=?, content=?, updated_at=NOW()
+			WHERE id=? AND user_id=? AND deleted_at IS NULL
 		`
 		args = []interface{}{title, content, noteID, userID}
 	}
 
-	commandTag, err := tx.Exec(ctx, query, args...)
+	commandTag, err := tx.ExecContext(ctx, query, args...)
 	if err != nil {
 		return err
 	}
-	if commandTag.RowsAffected() == 0 {
+	rowsAffected, _ := commandTag.RowsAffected()
+	if rowsAffected == 0 {
 		return models.ErrNotFound
 	}
 
@@ -188,32 +206,37 @@ func (s *NoteService) UpdateNote(ctx context.Context, userID, noteID, title stri
 	// Or just wipe and recreate?
 	// Wipe and recreate is easiest for now, but preserve IDs?
 	// note_tags table only has (note_id, tag_id).
-	// So deleting all from note_tags where note_id=$1 is fine.
-	_, err = tx.Exec(ctx, "DELETE FROM note_tags WHERE note_id=$1", noteID)
+	// So deleting all from note_tags where note_id=? is fine.
+	_, err = tx.ExecContext(ctx, "DELETE FROM note_tags WHERE note_id=?", noteID)
 	if err != nil {
 		return err
 	}
 
 	for _, tagName := range tags {
 		var tag Tag
+		tag.ID = uuid.New().String()
 		tagQuery := `
-			INSERT INTO tags (user_id, name) VALUES ($1, $2)
-			ON CONFLICT (user_id, name) DO UPDATE SET name=EXCLUDED.name
-			RETURNING id, user_id, name, created_at
+			INSERT INTO tags (id, user_id, name) VALUES (?, ?, ?)
+			ON DUPLICATE KEY UPDATE name=VALUES(name)
 		`
-		err := tx.QueryRow(ctx, tagQuery, userID, tagName).Scan(&tag.ID, &tag.UserID, &tag.Name, &tag.CreatedAt)
+		_, err := tx.ExecContext(ctx, tagQuery, tag.ID, userID, tagName)
 		if err != nil {
 			return err
 		}
 
-		linkQuery := `INSERT INTO note_tags (note_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`
-		_, err = tx.Exec(ctx, linkQuery, noteID, tag.ID)
+		err = tx.QueryRowContext(ctx, "SELECT id, created_at FROM tags WHERE user_id=? AND name=?", userID, tagName).Scan(&tag.ID, &tag.CreatedAt)
+		if err != nil {
+			return err
+		}
+
+		linkQuery := `INSERT IGNORE INTO note_tags (note_id, tag_id) VALUES (?, ?)`
+		_, err = tx.ExecContext(ctx, linkQuery, noteID, tag.ID)
 		if err != nil {
 			return err
 		}
 	}
 
-	return tx.Commit(ctx)
+	return tx.Commit()
 }
 
 func (s *NoteService) GetNote(ctx context.Context, userID, noteID string) (*Note, error) {
@@ -221,12 +244,12 @@ func (s *NoteService) GetNote(ctx context.Context, userID, noteID string) (*Note
 		return nil, fmt.Errorf("database connection is nil")
 	}
 	var note Note
-	query := "SELECT id, user_id, title, content, status, created_at, updated_at, deleted_at FROM notes WHERE id=$1 AND user_id=$2 AND deleted_at IS NULL"
-	err := s.db.QueryRow(ctx, query, noteID, userID).Scan(
+	query := "SELECT id, user_id, title, content, status, created_at, updated_at, deleted_at FROM notes WHERE id=? AND user_id=? AND deleted_at IS NULL"
+	err := s.db.QueryRowContext(ctx, query, noteID, userID).Scan(
 		&note.ID, &note.UserID, &note.Title, &note.Content, &note.Status, &note.CreatedAt, &note.UpdatedAt, &note.DeletedAt,
 	)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if err == sql.ErrNoRows {
 			return nil, models.ErrNotFound
 		}
 		return nil, err
@@ -237,10 +260,10 @@ func (s *NoteService) GetNote(ctx context.Context, userID, noteID string) (*Note
 		SELECT t.id, t.user_id, t.name, t.created_at
 		FROM tags t
 		JOIN note_tags nt ON t.id = nt.tag_id
-		WHERE nt.note_id = $1
+		WHERE nt.note_id = ?
 		ORDER BY t.name
 	`
-	rows, err := s.db.Query(ctx, tagsQuery, note.ID)
+	rows, err := s.db.QueryContext(ctx, tagsQuery, note.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -275,36 +298,32 @@ func (s *NoteService) GetNotes(ctx context.Context, userID string, page, limit i
 
 	// Base logic for building the WHERE clause
 	// We'll use a slice of args and string building
-	whereClause := " WHERE user_id=$1 AND deleted_at IS NULL"
+	whereClause := " WHERE user_id=? AND deleted_at IS NULL"
 	args := []interface{}{userID}
-	argIdx := 2
 
 	if filter.SearchQuery != "" {
-		whereClause += fmt.Sprintf(" AND (title ILIKE $%d OR content::text ILIKE $%d)", argIdx, argIdx)
-		args = append(args, "%"+filter.SearchQuery+"%")
-		argIdx++
+		whereClause += " AND (title LIKE ? OR content LIKE ?)"
+		args = append(args, "%"+filter.SearchQuery+"%", "%"+filter.SearchQuery+"%")
 	}
 
 	if filter.Tag != "" {
-		whereClause += fmt.Sprintf(" AND EXISTS (SELECT 1 FROM note_tags nt JOIN tags t ON nt.tag_id = t.id WHERE nt.note_id = notes.id AND t.name = $%d)", argIdx)
+		whereClause += " AND EXISTS (SELECT 1 FROM note_tags nt JOIN tags t ON nt.tag_id = t.id WHERE nt.note_id = notes.id AND t.name = ?)"
 		args = append(args, filter.Tag)
-		argIdx++
 	}
 
 	if filter.StartDate != nil {
-		whereClause += fmt.Sprintf(" AND updated_at >= $%d", argIdx)
+		whereClause += " AND updated_at >= ?"
 		args = append(args, *filter.StartDate)
-		argIdx++
 	}
 
 	if filter.EndDate != nil {
-		whereClause += fmt.Sprintf(" AND updated_at <= $%d", argIdx)
+		whereClause += " AND updated_at <= ?"
 		args = append(args, *filter.EndDate)
 	}
 
 	// Count total notes
 	countQuery := "SELECT COUNT(*) FROM notes" + whereClause
-	err = s.db.QueryRow(ctx, countQuery, args...).Scan(&total)
+	err = s.db.QueryRowContext(ctx, countQuery, args...).Scan(&total)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -330,7 +349,7 @@ func (s *NoteService) GetNotes(ctx context.Context, userID string, page, limit i
 	baseQuery := "SELECT id, user_id, title, content, status, created_at, updated_at, deleted_at FROM notes" + whereClause
 	baseQuery += fmt.Sprintf(" ORDER BY %s %s LIMIT %d OFFSET %d", orderBy, orderDir, limit, offset)
 
-	rows, err := s.db.Query(ctx, baseQuery, args...)
+	rows, err := s.db.QueryContext(ctx, baseQuery, args...)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -352,20 +371,22 @@ func (s *NoteService) GetNotes(ctx context.Context, userID string, page, limit i
 
 	// Fetch tags for all notes (optimize to avoid N+1)
 	if len(notes) > 0 {
-		tagsQuery := `
+		placeholders := make([]string, len(notes))
+		args := make([]interface{}, len(notes))
+		for i, n := range notes {
+			placeholders[i] = "?"
+			args[i] = n.ID
+		}
+
+		tagsQuery := fmt.Sprintf(`
 			SELECT t.id, t.user_id, t.name, t.created_at, nt.note_id
 			FROM tags t
 			JOIN note_tags nt ON t.id = nt.tag_id
-			WHERE nt.note_id = ANY($1)
+			WHERE nt.note_id IN (%s)
 			ORDER BY t.name
-		`
-		// Extract IDs as string array
-		ids := make([]string, len(notes))
-		for i, n := range notes {
-			ids[i] = n.ID
-		}
+		`, strings.Join(placeholders, ","))
 
-		rowsTags, err := s.db.Query(ctx, tagsQuery, ids)
+		rowsTags, err := s.db.QueryContext(ctx, tagsQuery, args...)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -398,13 +419,21 @@ func (s *NoteService) CreateTag(ctx context.Context, userID, name string) (*Tag,
 		return nil, fmt.Errorf("database connection is nil")
 	}
 	var tag Tag
+	tag.ID = uuid.New().String()
+	tag.UserID = userID
+	tag.Name = name
+
 	query := `
-		INSERT INTO tags (user_id, name)
-		VALUES ($1, $2)
-		ON CONFLICT (user_id, name) DO UPDATE SET name=EXCLUDED.name
-		RETURNING id, user_id, name, created_at
+		INSERT INTO tags (id, user_id, name)
+		VALUES (?, ?, ?)
+		ON DUPLICATE KEY UPDATE name=VALUES(name)
 	`
-	err := s.db.QueryRow(ctx, query, userID, name).Scan(&tag.ID, &tag.UserID, &tag.Name, &tag.CreatedAt)
+	_, err := s.db.ExecContext(ctx, query, tag.ID, userID, name)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.db.QueryRowContext(ctx, "SELECT id, created_at FROM tags WHERE user_id=? AND name=?", userID, name).Scan(&tag.ID, &tag.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -415,8 +444,8 @@ func (s *NoteService) GetUserTags(ctx context.Context, userID string) ([]Tag, er
 	if s.db == nil {
 		return nil, fmt.Errorf("database connection is nil")
 	}
-	query := "SELECT id, user_id, name, created_at FROM tags WHERE user_id=$1 ORDER BY name"
-	rows, err := s.db.Query(ctx, query, userID)
+	query := "SELECT id, user_id, name, created_at FROM tags WHERE user_id=? ORDER BY name"
+	rows, err := s.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -440,12 +469,13 @@ func (s *NoteService) DeleteTag(ctx context.Context, userID, tagID string) error
 	if s.db == nil {
 		return fmt.Errorf("database connection is nil")
 	}
-	query := "DELETE FROM tags WHERE id=$1 AND user_id=$2"
-	commandTag, err := s.db.Exec(ctx, query, tagID, userID)
+	query := "DELETE FROM tags WHERE id=? AND user_id=?"
+	commandTag, err := s.db.ExecContext(ctx, query, tagID, userID)
 	if err != nil {
 		return err
 	}
-	if commandTag.RowsAffected() == 0 {
+	rowsAffected, _ := commandTag.RowsAffected()
+	if rowsAffected == 0 {
 		return models.ErrNotFound
 	}
 	return nil

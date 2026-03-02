@@ -25,8 +25,8 @@ func TestNoteAPI_Contract(t *testing.T) {
 	// We only need to seed if we are NOT skipping.
 	if !testing.Short() {
 		// Insert user to satisfy FK
-		// We use ON CONFLICT DO NOTHING in case it runs multiple times or in parallel (though parallel integration tests usually get their own DB/Container)
-		_, err := pool.Exec(ctx, "INSERT INTO users (id, firebase_uid, email, created_at, updated_at) VALUES ($1, 'test-uid', 'test@example.com', NOW(), NOW()) ON CONFLICT (id) DO NOTHING", testUUID)
+		// We use ON DUPLICATE KEY UPDATE group_id=group_id in case it runs multiple times or in parallel (though parallel integration tests usually get their own DB/Container)
+		_, err := pool.ExecContext(ctx, "INSERT INTO users (id, firebase_uid, email, created_at, updated_at) VALUES (?, 'test-uid', 'test@example.com', NOW(), NOW()) ON CONFLICT (id) DO NOTHING", testUUID)
 		require.NoError(t, err)
 	}
 

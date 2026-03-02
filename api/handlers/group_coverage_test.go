@@ -9,8 +9,9 @@ import (
 	"testing"
 
 	"discipleship_journal_api/middleware"
+
 	"firebase.google.com/go/v4/auth"
-	"github.com/pashagolub/pgxmock/v4"
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,16 +19,20 @@ func TestGroupHandler_CreateGroup_Auth_UserNotFound(t *testing.T) {
 	mockService := new(MockGroupService)
 	handler := NewGroupHandler(mockService)
 
-	// Mock DB
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
+
+	_ = db
+
+	_ = mockDB
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer mockDB.Close()
+	defer db.Close()
 
 	// Override dbProvider
 	oldProvider := dbProvider
-	dbProvider = func() DBInterface { return mockDB }
+	dbProvider = func() DBInterface { return db }
 	defer func() { dbProvider = oldProvider }()
 
 	req := httptest.NewRequest("POST", "/api/groups", strings.NewReader(`{"name":"Group"}`))
@@ -48,9 +53,12 @@ func TestGroupHandler_CreateGroup_Auth_UserNotFound(t *testing.T) {
 }
 
 func TestGroupShareHandler_ShareItem_InvalidBody(t *testing.T) {
-	// Simple validation test
-	mockDB, _ := pgxmock.NewPool()
-	handler := NewGroupShareHandler(mockDB, nil)
+	db, mockDB, _ := sqlmock.New()
+	_ = mockDB
+
+	_ = db
+
+	handler := NewGroupShareHandler(db, nil)
 
 	req := httptest.NewRequest("POST", "/api/groups/1/shares", strings.NewReader(`{invalid}`))
 	w := httptest.NewRecorder()

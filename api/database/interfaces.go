@@ -3,15 +3,14 @@ package database
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
+	"database/sql"
 )
 
 // DBInterface defines the interface for database operations,
 // allowing for mocking in tests.
 type DBInterface interface {
-	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
-	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
-	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
-	Begin(ctx context.Context) (pgx.Tx, error)
+	QueryContext(ctx context.Context, sql string, args ...any) (*sql.Rows, error)
+	QueryRowContext(ctx context.Context, sql string, args ...any) *sql.Row
+	ExecContext(ctx context.Context, sql string, arguments ...any) (sql.Result, error)
+	BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error)
 }

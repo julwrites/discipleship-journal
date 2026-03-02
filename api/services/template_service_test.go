@@ -7,21 +7,23 @@ import (
 	"testing"
 	"time"
 
+	"database/sql"
 	"discipleship_journal_api/models"
+
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
-	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestTemplateService_CreateTemplate(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
 	require.NoError(t, err)
-	defer mockDB.Close()
+	defer db.Close()
 
 	mockAI := NewMockBibleAIClient()
-	service := NewTemplateService(mockDB, mockAI)
+	service := NewTemplateService(db, mockAI)
 
 	userID := uuid.New()
 	tmpl := &models.StudyTemplate{
@@ -35,22 +37,22 @@ func TestTemplateService_CreateTemplate(t *testing.T) {
 	// Expect Exec. Using regexp to match the query partially
 	mockDB.ExpectExec("INSERT INTO study_templates").
 		WithArgs(
-			pgxmock.AnyArg(), // ID
+			sqlmock.AnyArg(), // ID
 			userID,
 			"Test Template",
 			"Desc",
-			pgxmock.AnyArg(), // structure
-			pgxmock.AnyArg(), // prompts
-			pgxmock.AnyArg(), // fields
+			sqlmock.AnyArg(), // structure
+			sqlmock.AnyArg(), // prompts
+			sqlmock.AnyArg(), // fields
 			false,            // is_public
-			pgxmock.AnyArg(), // bible_references
+			sqlmock.AnyArg(), // bible_references
 			false,            // allow_user_passages
 			"",               // template_body
 			"",               // required_version
-			pgxmock.AnyArg(), // created_at
-			pgxmock.AnyArg(), // updated_at
+			sqlmock.AnyArg(), // created_at
+			sqlmock.AnyArg(), // updated_at
 		).
-		WillReturnResult(pgxmock.NewResult("INSERT", 1))
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	created, err := service.CreateTemplate(context.Background(), tmpl)
 	assert.NoError(t, err)
@@ -81,20 +83,21 @@ func (m *GranularMockAIClient) ChatCompletion(ctx context.Context, payload map[s
 }
 
 func TestTemplateService_GenerateContent_PassageError(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
 	require.NoError(t, err)
-	defer mockDB.Close()
+	defer db.Close()
 
 	mockAI := &GranularMockAIClient{
 		MockBibleAIClient: NewMockBibleAIClient(),
 		PassageError:      errors.New("passage fetch error"),
 	}
-	service := NewTemplateService(mockDB, mockAI)
+	service := NewTemplateService(db, mockAI)
 
 	tmplID := uuid.New()
 	userID := uuid.New()
 
-	rows := pgxmock.NewRows([]string{
+	rows := sqlmock.NewRows([]string{
 		"id", "creator_id", "title", "description", "structure", "prompts", "fields", "is_public",
 		"bible_references", "allow_user_passages", "template_body", "required_version", "created_at", "updated_at",
 	}).AddRow(
@@ -116,20 +119,21 @@ func TestTemplateService_GenerateContent_PassageError(t *testing.T) {
 }
 
 func TestTemplateService_GenerateContent_AIError(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
 	require.NoError(t, err)
-	defer mockDB.Close()
+	defer db.Close()
 
 	mockAI := &GranularMockAIClient{
 		MockBibleAIClient: NewMockBibleAIClient(),
 		ChatError:         errors.New("ai error"),
 	}
-	service := NewTemplateService(mockDB, mockAI)
+	service := NewTemplateService(db, mockAI)
 
 	tmplID := uuid.New()
 	userID := uuid.New()
 
-	rows := pgxmock.NewRows([]string{
+	rows := sqlmock.NewRows([]string{
 		"id", "creator_id", "title", "description", "structure", "prompts", "fields", "is_public",
 		"bible_references", "allow_user_passages", "template_body", "required_version", "created_at", "updated_at",
 	}).AddRow(
@@ -149,18 +153,19 @@ func TestTemplateService_GenerateContent_AIError(t *testing.T) {
 }
 
 func TestTemplateService_GenerateContent_UserPassages(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
 	require.NoError(t, err)
-	defer mockDB.Close()
+	defer db.Close()
 
 	mockAI := NewMockBibleAIClient()
-	service := NewTemplateService(mockDB, mockAI)
+	service := NewTemplateService(db, mockAI)
 
 	tmplID := uuid.New()
 	userID := uuid.New()
 
 	// allow_user_passages = true
-	rows := pgxmock.NewRows([]string{
+	rows := sqlmock.NewRows([]string{
 		"id", "creator_id", "title", "description", "structure", "prompts", "fields", "is_public",
 		"bible_references", "allow_user_passages", "template_body", "required_version", "created_at", "updated_at",
 	}).AddRow(
@@ -189,17 +194,18 @@ func TestTemplateService_GenerateContent_UserPassages(t *testing.T) {
 }
 
 func TestTemplateService_GetTemplate(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
 	require.NoError(t, err)
-	defer mockDB.Close()
+	defer db.Close()
 
 	mockAI := NewMockBibleAIClient()
-	service := NewTemplateService(mockDB, mockAI)
+	service := NewTemplateService(db, mockAI)
 
 	tmplID := uuid.New()
 	userID := uuid.New()
 
-	rows := pgxmock.NewRows([]string{
+	rows := sqlmock.NewRows([]string{
 		"id", "creator_id", "title", "description", "structure", "prompts", "fields", "is_public",
 		"bible_references", "allow_user_passages", "template_body", "required_version", "created_at", "updated_at",
 	}).AddRow(
@@ -219,16 +225,17 @@ func TestTemplateService_GetTemplate(t *testing.T) {
 }
 
 func TestTemplateService_ListTemplates(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
 	require.NoError(t, err)
-	defer mockDB.Close()
+	defer db.Close()
 
 	mockAI := NewMockBibleAIClient()
-	service := NewTemplateService(mockDB, mockAI)
+	service := NewTemplateService(db, mockAI)
 
 	userID := uuid.New()
 
-	rows := pgxmock.NewRows([]string{
+	rows := sqlmock.NewRows([]string{
 		"id", "creator_id", "title", "description", "structure", "prompts", "fields", "is_public",
 		"bible_references", "allow_user_passages", "template_body", "required_version", "created_at", "updated_at",
 	}).AddRow(
@@ -248,12 +255,13 @@ func TestTemplateService_ListTemplates(t *testing.T) {
 }
 
 func TestTemplateService_UpdateTemplate(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
 	require.NoError(t, err)
-	defer mockDB.Close()
+	defer db.Close()
 
 	mockAI := NewMockBibleAIClient()
-	service := NewTemplateService(mockDB, mockAI)
+	service := NewTemplateService(db, mockAI)
 
 	tmplID := uuid.New()
 	userID := uuid.New()
@@ -269,18 +277,18 @@ func TestTemplateService_UpdateTemplate(t *testing.T) {
 		WithArgs(
 			"Updated Title",
 			"Updated Desc",
-			pgxmock.AnyArg(), // structure
-			pgxmock.AnyArg(), // prompts
-			pgxmock.AnyArg(), // fields
+			sqlmock.AnyArg(), // structure
+			sqlmock.AnyArg(), // prompts
+			sqlmock.AnyArg(), // fields
 			false,            // is_public
-			pgxmock.AnyArg(), // bible_references
+			sqlmock.AnyArg(), // bible_references
 			false,            // allow_user_passages
 			"",               // template_body
 			"",               // required_version
 			tmplID,
 			userID,
 		).
-		WillReturnResult(pgxmock.NewResult("UPDATE", 1))
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	err = service.UpdateTemplate(context.Background(), tmpl)
 	assert.NoError(t, err)
@@ -289,19 +297,20 @@ func TestTemplateService_UpdateTemplate(t *testing.T) {
 }
 
 func TestTemplateService_DeleteTemplate(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
 	require.NoError(t, err)
-	defer mockDB.Close()
+	defer db.Close()
 
 	mockAI := NewMockBibleAIClient()
-	service := NewTemplateService(mockDB, mockAI)
+	service := NewTemplateService(db, mockAI)
 
 	tmplID := uuid.New()
 	userID := uuid.New()
 
 	mockDB.ExpectExec("DELETE FROM study_templates").
 		WithArgs(tmplID, userID).
-		WillReturnResult(pgxmock.NewResult("DELETE", 1))
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	err = service.DeleteTemplate(context.Background(), tmplID, userID)
 	assert.NoError(t, err)
@@ -310,18 +319,19 @@ func TestTemplateService_DeleteTemplate(t *testing.T) {
 }
 
 func TestTemplateService_CloneTemplate(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
 	require.NoError(t, err)
-	defer mockDB.Close()
+	defer db.Close()
 
 	mockAI := NewMockBibleAIClient()
-	service := NewTemplateService(mockDB, mockAI)
+	service := NewTemplateService(db, mockAI)
 
 	originalID := uuid.New()
 	userID := uuid.New()
 
 	// 1. Expect GetTemplate
-	rows := pgxmock.NewRows([]string{
+	rows := sqlmock.NewRows([]string{
 		"id", "creator_id", "title", "description", "structure", "prompts", "fields", "is_public",
 		"bible_references", "allow_user_passages", "template_body", "required_version", "created_at", "updated_at",
 	}).AddRow(
@@ -336,22 +346,22 @@ func TestTemplateService_CloneTemplate(t *testing.T) {
 	// 2. Expect CreateTemplate (Insert)
 	mockDB.ExpectExec("INSERT INTO study_templates").
 		WithArgs(
-			pgxmock.AnyArg(), // New ID
+			sqlmock.AnyArg(), // New ID
 			userID,
 			"Original (Copy)", // Title
 			"Desc",
-			pgxmock.AnyArg(), // structure
-			pgxmock.AnyArg(), // prompts
-			pgxmock.AnyArg(), // fields
+			sqlmock.AnyArg(), // structure
+			sqlmock.AnyArg(), // prompts
+			sqlmock.AnyArg(), // fields
 			false,            // is_public
-			pgxmock.AnyArg(), // bible_references
+			sqlmock.AnyArg(), // bible_references
 			false,            // allow_user_passages
 			"",               // template_body
 			"",               // required_version
-			pgxmock.AnyArg(), // created_at
-			pgxmock.AnyArg(), // updated_at
+			sqlmock.AnyArg(), // created_at
+			sqlmock.AnyArg(), // updated_at
 		).
-		WillReturnResult(pgxmock.NewResult("INSERT", 1))
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	cloned, err := service.CloneTemplate(context.Background(), originalID, userID)
 	assert.NoError(t, err)
@@ -361,18 +371,19 @@ func TestTemplateService_CloneTemplate(t *testing.T) {
 }
 
 func TestTemplateService_GenerateContent(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
 	require.NoError(t, err)
-	defer mockDB.Close()
+	defer db.Close()
 
 	mockAI := NewMockBibleAIClient()
-	service := NewTemplateService(mockDB, mockAI)
+	service := NewTemplateService(db, mockAI)
 
 	tmplID := uuid.New()
 	userID := uuid.New()
 
 	// 1. Expect GetTemplate
-	rows := pgxmock.NewRows([]string{
+	rows := sqlmock.NewRows([]string{
 		"id", "creator_id", "title", "description", "structure", "prompts", "fields", "is_public",
 		"bible_references", "allow_user_passages", "template_body", "required_version", "created_at", "updated_at",
 	}).AddRow(
@@ -390,21 +401,22 @@ func TestTemplateService_GenerateContent(t *testing.T) {
 
 	content, err := service.GenerateContent(context.Background(), tmplID, req)
 	assert.NoError(t, err)
-	assert.Contains(t, content, "For God so loved the world") // From MockBibleAIClient
+	assert.Contains(t, content, "For God so loved the world")   // From MockBibleAIClient
 	assert.Contains(t, content, "This is a mocked AI response") // From MockBibleAIClient
 
 	assert.NoError(t, mockDB.ExpectationsWereMet())
 }
 
 func TestTemplateService_ListPublicTemplates(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
 	require.NoError(t, err)
-	defer mockDB.Close()
+	defer db.Close()
 
 	mockAI := NewMockBibleAIClient()
-	service := NewTemplateService(mockDB, mockAI)
+	service := NewTemplateService(db, mockAI)
 
-	rows := pgxmock.NewRows([]string{
+	rows := sqlmock.NewRows([]string{
 		"id", "creator_id", "title", "description", "structure", "prompts", "fields", "is_public",
 		"bible_references", "allow_user_passages", "template_body", "required_version", "created_at", "updated_at",
 	}).AddRow(
@@ -425,12 +437,13 @@ func TestTemplateService_ListPublicTemplates(t *testing.T) {
 }
 
 func TestTemplateService_CreateTemplate_Error(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
 	require.NoError(t, err)
-	defer mockDB.Close()
+	defer db.Close()
 
 	mockAI := NewMockBibleAIClient()
-	service := NewTemplateService(mockDB, mockAI)
+	service := NewTemplateService(db, mockAI)
 
 	userID := uuid.New()
 	tmpl := &models.StudyTemplate{
@@ -442,7 +455,7 @@ func TestTemplateService_CreateTemplate_Error(t *testing.T) {
 	}
 
 	mockDB.ExpectExec("INSERT INTO study_templates").
-		WithArgs(pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg()).
+		WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg()).
 		WillReturnError(errors.New("db error"))
 
 	created, err := service.CreateTemplate(context.Background(), tmpl)
@@ -454,12 +467,13 @@ func TestTemplateService_CreateTemplate_Error(t *testing.T) {
 }
 
 func TestTemplateService_UpdateTemplate_Error(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
 	require.NoError(t, err)
-	defer mockDB.Close()
+	defer db.Close()
 
 	mockAI := NewMockBibleAIClient()
-	service := NewTemplateService(mockDB, mockAI)
+	service := NewTemplateService(db, mockAI)
 
 	tmplID := uuid.New()
 	userID := uuid.New()
@@ -473,8 +487,8 @@ func TestTemplateService_UpdateTemplate_Error(t *testing.T) {
 
 	mockDB.ExpectExec(regexp.QuoteMeta("UPDATE study_templates SET")).
 		WithArgs(
-			"Updated Title", "Updated Desc", pgxmock.AnyArg(), pgxmock.AnyArg(), pgxmock.AnyArg(), false,
-			pgxmock.AnyArg(), false, "", "", tmplID, userID,
+			"Updated Title", "Updated Desc", sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), false,
+			sqlmock.AnyArg(), false, "", "", tmplID, userID,
 		).
 		WillReturnError(errors.New("db error"))
 
@@ -486,12 +500,13 @@ func TestTemplateService_UpdateTemplate_Error(t *testing.T) {
 }
 
 func TestTemplateService_DeleteTemplate_Error(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
 	require.NoError(t, err)
-	defer mockDB.Close()
+	defer db.Close()
 
 	mockAI := NewMockBibleAIClient()
-	service := NewTemplateService(mockDB, mockAI)
+	service := NewTemplateService(db, mockAI)
 
 	tmplID := uuid.New()
 	userID := uuid.New()
@@ -508,18 +523,19 @@ func TestTemplateService_DeleteTemplate_Error(t *testing.T) {
 }
 
 func TestTemplateService_GetTemplate_NotFound(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
 	require.NoError(t, err)
-	defer mockDB.Close()
+	defer db.Close()
 
 	mockAI := NewMockBibleAIClient()
-	service := NewTemplateService(mockDB, mockAI)
+	service := NewTemplateService(db, mockAI)
 
 	tmplID := uuid.New()
 
 	mockDB.ExpectQuery(regexp.QuoteMeta("SELECT id, creator_id, title, description")).
 		WithArgs(tmplID).
-		WillReturnError(pgx.ErrNoRows)
+		WillReturnError(sql.ErrNoRows)
 
 	result, err := service.GetTemplate(context.Background(), tmplID)
 	assert.Error(t, err)

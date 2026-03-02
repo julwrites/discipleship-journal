@@ -9,23 +9,27 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"database/sql"
 	"discipleship_journal_api/services"
+
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
-	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSendConnectionRequest(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = db
+
+	_ = mock
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer mock.Close()
+	defer db.Close()
 
 	mockNotification := services.NewMockNotificationService()
-	handler := NewConnectionHandler(mock, mockNotification)
+	handler := NewConnectionHandler(db, mockNotification)
 
 	requesterUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 	receiverEmail := "user2@example.com"
@@ -35,17 +39,17 @@ func TestSendConnectionRequest(t *testing.T) {
 	// Mock receiver UUID lookup by email
 	mock.ExpectQuery("SELECT id FROM users WHERE email =").
 		WithArgs(receiverEmail).
-		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(receiverUUID.String()))
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(receiverUUID.String()))
 
 	// Mock insert connection
 	mock.ExpectQuery("INSERT INTO connections").
 		WithArgs(requesterUUID, receiverUUID.String()).
-		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(connID))
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(connID))
 
 	// Expect synchronous requester name lookup
 	mock.ExpectQuery("SELECT username FROM users WHERE id").
 		WithArgs(requesterUUID).
-		WillReturnRows(pgxmock.NewRows([]string{"username"}).AddRow("RequesterUser"))
+		WillReturnRows(sqlmock.NewRows([]string{"username"}).AddRow("RequesterUser"))
 
 	reqBody := ConnectionRequest{ReceiverEmail: receiverEmail}
 	bodyBytes, _ := json.Marshal(reqBody)
@@ -69,13 +73,18 @@ func TestSendConnectionRequest(t *testing.T) {
 }
 
 func TestSendConnectionRequest_Errors(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
+
+	_ = db
+
+	_ = mockDB
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer mockDB.Close()
+	defer db.Close()
 
-	handler := NewConnectionHandler(mockDB, nil)
+	handler := NewConnectionHandler(db, nil)
 
 	t.Run("MissingReceiver", func(t *testing.T) {
 		reqBody := ConnectionRequest{}
@@ -93,7 +102,7 @@ func TestSendConnectionRequest_Errors(t *testing.T) {
 		// Mock receiver lookup to return same ID
 		mockDB.ExpectQuery("SELECT id FROM users WHERE email =").
 			WithArgs("me@example.com").
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userID.String()))
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userID.String()))
 
 		reqBody := ConnectionRequest{ReceiverEmail: "me@example.com"}
 		bodyBytes, _ := json.Marshal(reqBody)
@@ -107,7 +116,7 @@ func TestSendConnectionRequest_Errors(t *testing.T) {
 	t.Run("ReceiverNotFound", func(t *testing.T) {
 		mockDB.ExpectQuery("SELECT id FROM users WHERE email =").
 			WithArgs("missing@example.com").
-			WillReturnError(pgx.ErrNoRows)
+			WillReturnError(sql.ErrNoRows)
 
 		reqBody := ConnectionRequest{ReceiverEmail: "missing@example.com"}
 		bodyBytes, _ := json.Marshal(reqBody)
@@ -120,14 +129,17 @@ func TestSendConnectionRequest_Errors(t *testing.T) {
 }
 
 func TestSearchUsers(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = db
+
+	_ = mock
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer mock.Close()
+	defer db.Close()
 
 	mockNotification := services.NewMockNotificationService()
-	handler := NewConnectionHandler(mock, mockNotification)
+	handler := NewConnectionHandler(db, mockNotification)
 
 	userUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 
@@ -135,7 +147,7 @@ func TestSearchUsers(t *testing.T) {
 	username := "johndoe"
 	mock.ExpectQuery(`SELECT u.id, u.email, u.username.*`).
 		WithArgs("johndoe", userUUID).
-		WillReturnRows(pgxmock.NewRows([]string{"id", "email", "username", "is_connected"}).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "email", "username", "is_connected"}).
 			AddRow("00000000-0000-0000-0000-000000000002", "john@example.com", &username, false))
 
 	req := httptest.NewRequest("GET", "/api/users/search?q=johndoe", nil)
@@ -164,13 +176,18 @@ func TestSearchUsers(t *testing.T) {
 }
 
 func TestSearchUsers_Errors(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
+
+	_ = db
+
+	_ = mockDB
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer mockDB.Close()
+	defer db.Close()
 
-	handler := NewConnectionHandler(mockDB, nil)
+	handler := NewConnectionHandler(db, nil)
 
 	t.Run("ShortQuery", func(t *testing.T) {
 		req := httptest.NewRequest("GET", "/api/users/search?q=ab", nil)
@@ -193,14 +210,17 @@ func TestSearchUsers_Errors(t *testing.T) {
 }
 
 func TestListConnections(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = db
+
+	_ = mock
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer mock.Close()
+	defer db.Close()
 
 	mockNotification := services.NewMockNotificationService()
-	handler := NewConnectionHandler(mock, mockNotification)
+	handler := NewConnectionHandler(db, mockNotification)
 
 	userUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 	connID := uuid.MustParse("00000000-0000-0000-0000-000000000003")
@@ -211,7 +231,7 @@ func TestListConnections(t *testing.T) {
 	receiverUsername := "user1"
 	mock.ExpectQuery("SELECT c.id, c.requester_id, c.receiver_id, c.status").
 		WithArgs(userUUID).
-		WillReturnRows(pgxmock.NewRows([]string{"id", "requester_id", "receiver_id", "status", "requester_email", "receiver_email", "requester_username", "receiver_username"}).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "requester_id", "receiver_id", "status", "requester_email", "receiver_email", "requester_username", "receiver_username"}).
 			AddRow(connID.String(), requesterUUID.String(), userUUID.String(), "pending", "user2@example.com", "user1@example.com", &requesterUsername, &receiverUsername))
 
 	req := httptest.NewRequest("GET", "/api/connections", nil)
@@ -236,13 +256,18 @@ func TestListConnections(t *testing.T) {
 }
 
 func TestListConnections_Error(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
+
+	_ = db
+
+	_ = mockDB
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer mockDB.Close()
+	defer db.Close()
 
-	handler := NewConnectionHandler(mockDB, nil)
+	handler := NewConnectionHandler(db, nil)
 	userUUID := uuid.New()
 
 	mockDB.ExpectQuery("SELECT c.id").WillReturnError(assert.AnError)
@@ -255,14 +280,17 @@ func TestListConnections_Error(t *testing.T) {
 }
 
 func TestAcceptConnectionRequest(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = db
+
+	_ = mock
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer mock.Close()
+	defer db.Close()
 
 	mockNotification := services.NewMockNotificationService()
-	handler := NewConnectionHandler(mock, mockNotification)
+	handler := NewConnectionHandler(db, mockNotification)
 
 	userUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 	connID := "00000000-0000-0000-0000-000000000003"
@@ -270,7 +298,7 @@ func TestAcceptConnectionRequest(t *testing.T) {
 	// Mock update connection
 	mock.ExpectExec("UPDATE connections SET status = 'accepted'").
 		WithArgs(connID, userUUID).
-		WillReturnResult(pgxmock.NewResult("UPDATE", 1))
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	req := httptest.NewRequest("PUT", "/api/connections/"+connID, nil)
 
@@ -300,13 +328,18 @@ func TestAcceptConnectionRequest(t *testing.T) {
 }
 
 func TestAcceptConnectionRequest_Errors(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
+
+	_ = db
+
+	_ = mockDB
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer mockDB.Close()
+	defer db.Close()
 
-	handler := NewConnectionHandler(mockDB, nil)
+	handler := NewConnectionHandler(db, nil)
 	userUUID := uuid.New()
 	connID := "conn-1"
 
@@ -323,7 +356,7 @@ func TestAcceptConnectionRequest_Errors(t *testing.T) {
 	})
 
 	t.Run("NotFound", func(t *testing.T) {
-		mockDB.ExpectExec("UPDATE connections").WithArgs(connID, userUUID).WillReturnResult(pgxmock.NewResult("UPDATE", 0))
+		mockDB.ExpectExec("UPDATE connections").WithArgs(connID, userUUID).WillReturnResult(sqlmock.NewResult(1, 0))
 		req := httptest.NewRequest("PUT", "/api/connections/"+connID, nil)
 		rctx := chi.NewRouteContext()
 		rctx.URLParams.Add("id", connID)
@@ -336,14 +369,17 @@ func TestAcceptConnectionRequest_Errors(t *testing.T) {
 }
 
 func TestDeleteConnectionRequest(t *testing.T) {
-	mock, err := pgxmock.NewPool()
+	db, mock, err := sqlmock.New()
+	_ = db
+
+	_ = mock
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer mock.Close()
+	defer db.Close()
 
 	mockNotification := services.NewMockNotificationService()
-	handler := NewConnectionHandler(mock, mockNotification)
+	handler := NewConnectionHandler(db, mockNotification)
 
 	userUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 	connID := "00000000-0000-0000-0000-000000000003"
@@ -351,7 +387,7 @@ func TestDeleteConnectionRequest(t *testing.T) {
 	// Mock delete connection
 	mock.ExpectExec("DELETE FROM connections").
 		WithArgs(connID, userUUID).
-		WillReturnResult(pgxmock.NewResult("DELETE", 1))
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	req := httptest.NewRequest("DELETE", "/api/connections/"+connID, nil)
 
@@ -381,13 +417,18 @@ func TestDeleteConnectionRequest(t *testing.T) {
 }
 
 func TestDeleteConnectionRequest_Errors(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
+
+	_ = db
+
+	_ = mockDB
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer mockDB.Close()
+	defer db.Close()
 
-	handler := NewConnectionHandler(mockDB, nil)
+	handler := NewConnectionHandler(db, nil)
 	userUUID := uuid.New()
 	connID := "conn-1"
 
@@ -404,7 +445,7 @@ func TestDeleteConnectionRequest_Errors(t *testing.T) {
 	})
 
 	t.Run("NotFound", func(t *testing.T) {
-		mockDB.ExpectExec("DELETE FROM connections").WithArgs(connID, userUUID).WillReturnResult(pgxmock.NewResult("DELETE", 0))
+		mockDB.ExpectExec("DELETE FROM connections").WithArgs(connID, userUUID).WillReturnResult(sqlmock.NewResult(1, 0))
 		req := httptest.NewRequest("DELETE", "/api/connections/"+connID, nil)
 		rctx := chi.NewRouteContext()
 		rctx.URLParams.Add("id", connID)
@@ -417,14 +458,19 @@ func TestDeleteConnectionRequest_Errors(t *testing.T) {
 }
 
 func TestSendConnectionRequest_MoreErrors(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
+
+	_ = db
+
+	_ = mockDB
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer mockDB.Close()
+	defer db.Close()
 
 	mockNotif := services.NewMockNotificationService()
-	handler := NewConnectionHandler(mockDB, mockNotif)
+	handler := NewConnectionHandler(db, mockNotif)
 	requesterUUID := uuid.New()
 
 	t.Run("Unauthorized", func(t *testing.T) {
@@ -455,7 +501,7 @@ func TestSendConnectionRequest_MoreErrors(t *testing.T) {
 		receiverUUID := uuid.New()
 		mockDB.ExpectQuery("SELECT id FROM users WHERE email =").
 			WithArgs("some@email.com").
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(receiverUUID.String()))
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(receiverUUID.String()))
 
 		mockDB.ExpectQuery("INSERT INTO connections").
 			WithArgs(requesterUUID, receiverUUID.String()).
@@ -476,11 +522,11 @@ func TestSendConnectionRequest_MoreErrors(t *testing.T) {
 
 		mockDB.ExpectQuery("SELECT id FROM users WHERE email =").
 			WithArgs("some@email.com").
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(receiverUUID.String()))
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(receiverUUID.String()))
 
 		mockDB.ExpectQuery("INSERT INTO connections").
 			WithArgs(requesterUUID, receiverUUID.String()).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(connID))
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(connID))
 
 		// Fail name lookup
 		mockDB.ExpectQuery("SELECT username FROM users WHERE id").

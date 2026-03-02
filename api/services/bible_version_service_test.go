@@ -8,19 +8,20 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pashagolub/pgxmock/v4"
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestBibleVersionService_GetVersions(t *testing.T) {
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
 	require.NoError(t, err)
-	defer mockDB.Close()
+	defer db.Close()
 
-	service := NewBibleVersionService(mockDB)
+	service := NewBibleVersionService(db)
 
-	rows := pgxmock.NewRows([]string{
+	rows := sqlmock.NewRows([]string{
 		"id", "name", "abbreviation", "created_at", "updated_at",
 	}).AddRow(
 		"uuid-1", "English Standard Version", "ESV", time.Now(), time.Now(),
@@ -83,12 +84,13 @@ func TestBibleVersionService_SyncVersions(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
 	require.NoError(t, err)
-	defer mockDB.Close()
+	defer db.Close()
 
 	service := &bibleVersionService{
-		db:         mockDB,
+		db:         db,
 		httpClient: ts.Client(),
 		scrapeURL:  ts.URL,
 	}
@@ -98,7 +100,7 @@ func TestBibleVersionService_SyncVersions(t *testing.T) {
 	// Expect insert
 	mockDB.ExpectExec("INSERT INTO bible_versions").
 		WithArgs("English Standard Version", "ESV").
-		WillReturnResult(pgxmock.NewResult("INSERT", 1))
+		WillReturnResult(sqlmock.NewResult(1, 1))
 	// Expect commit
 	mockDB.ExpectCommit()
 
@@ -133,12 +135,13 @@ func TestBibleVersionService_SyncVersions_ScrapeError(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
 	require.NoError(t, err)
-	defer mockDB.Close()
+	defer db.Close()
 
 	service := &bibleVersionService{
-		db:         mockDB,
+		db:         db,
 		httpClient: ts.Client(),
 		scrapeURL:  ts.URL,
 	}
@@ -160,12 +163,13 @@ func TestBibleVersionService_SyncVersions_DBError(t *testing.T) {
 	defer ts.Close()
 
 	t.Run("begin_error", func(t *testing.T) {
-		mockDB, err := pgxmock.NewPool()
+		db, mockDB, err := sqlmock.New()
+		_ = mockDB
 		require.NoError(t, err)
-		defer mockDB.Close()
+		defer db.Close()
 
 		service := &bibleVersionService{
-			db:         mockDB,
+			db:         db,
 			httpClient: ts.Client(),
 			scrapeURL:  ts.URL,
 		}
@@ -178,12 +182,13 @@ func TestBibleVersionService_SyncVersions_DBError(t *testing.T) {
 	})
 
 	t.Run("exec_error", func(t *testing.T) {
-		mockDB, err := pgxmock.NewPool()
+		db, mockDB, err := sqlmock.New()
+		_ = mockDB
 		require.NoError(t, err)
-		defer mockDB.Close()
+		defer db.Close()
 
 		service := &bibleVersionService{
-			db:         mockDB,
+			db:         db,
 			httpClient: ts.Client(),
 			scrapeURL:  ts.URL,
 		}
@@ -200,12 +205,13 @@ func TestBibleVersionService_SyncVersions_DBError(t *testing.T) {
 	})
 
 	t.Run("commit_error", func(t *testing.T) {
-		mockDB, err := pgxmock.NewPool()
+		db, mockDB, err := sqlmock.New()
+		_ = mockDB
 		require.NoError(t, err)
-		defer mockDB.Close()
+		defer db.Close()
 
 		service := &bibleVersionService{
-			db:         mockDB,
+			db:         db,
 			httpClient: ts.Client(),
 			scrapeURL:  ts.URL,
 		}
@@ -213,7 +219,7 @@ func TestBibleVersionService_SyncVersions_DBError(t *testing.T) {
 		mockDB.ExpectBegin()
 		mockDB.ExpectExec("INSERT INTO bible_versions").
 			WithArgs("English Standard Version", "ESV").
-			WillReturnResult(pgxmock.NewResult("INSERT", 1))
+			WillReturnResult(sqlmock.NewResult(1, 1))
 		mockDB.ExpectCommit().WillReturnError(fmt.Errorf("commit error"))
 
 		err = service.SyncVersions(context.Background())

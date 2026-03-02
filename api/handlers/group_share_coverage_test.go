@@ -9,20 +9,24 @@ import (
 	"testing"
 
 	"discipleship_journal_api/middleware"
+
 	"firebase.google.com/go/v4/auth"
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestShareItemToGroup_Coverage(t *testing.T) {
 	t.Run("Missing_IDs", func(t *testing.T) {
-		dbMock, err := pgxmock.NewPool()
-		assert.NoError(t, err)
-		defer dbMock.Close()
+		db, dbMock, err := sqlmock.New()
+		_ = db
 
-		handler := NewGroupShareHandler(dbMock, nil)
+		_ = dbMock
+		assert.NoError(t, err)
+		defer db.Close()
+
+		handler := NewGroupShareHandler(db, nil)
 		userID := uuid.New().String()
 		groupID := uuid.New().String()
 
@@ -42,11 +46,14 @@ func TestShareItemToGroup_Coverage(t *testing.T) {
 	})
 
 	t.Run("Membership_Check_DB_Error", func(t *testing.T) {
-		dbMock, err := pgxmock.NewPool()
-		assert.NoError(t, err)
-		defer dbMock.Close()
+		db, dbMock, err := sqlmock.New()
+		_ = db
 
-		handler := NewGroupShareHandler(dbMock, nil)
+		_ = dbMock
+		assert.NoError(t, err)
+		defer db.Close()
+
+		handler := NewGroupShareHandler(db, nil)
 		userID := uuid.New().String()
 		groupID := uuid.New().String()
 		noteID := uuid.New().String()
@@ -72,18 +79,21 @@ func TestShareItemToGroup_Coverage(t *testing.T) {
 	})
 
 	t.Run("VersePack_Info_DB_Error", func(t *testing.T) {
-		dbMock, err := pgxmock.NewPool()
-		assert.NoError(t, err)
-		defer dbMock.Close()
+		db, dbMock, err := sqlmock.New()
+		_ = db
 
-		handler := NewGroupShareHandler(dbMock, nil)
+		_ = dbMock
+		assert.NoError(t, err)
+		defer db.Close()
+
+		handler := NewGroupShareHandler(db, nil)
 		userID := uuid.New().String()
 		groupID := uuid.New().String()
 		packID := uuid.New().String()
 
 		dbMock.ExpectQuery("SELECT EXISTS").
 			WithArgs(groupID, userID).
-			WillReturnRows(pgxmock.NewRows([]string{"exists"}).AddRow(true))
+			WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(true))
 
 		dbMock.ExpectQuery("SELECT user_id, title, is_public FROM verse_packs").
 			WithArgs(packID).
@@ -106,22 +116,25 @@ func TestShareItemToGroup_Coverage(t *testing.T) {
 	})
 
 	t.Run("Existing_Share_Check_DB_Error", func(t *testing.T) {
-		dbMock, err := pgxmock.NewPool()
-		assert.NoError(t, err)
-		defer dbMock.Close()
+		db, dbMock, err := sqlmock.New()
+		_ = db
 
-		handler := NewGroupShareHandler(dbMock, nil)
+		_ = dbMock
+		assert.NoError(t, err)
+		defer db.Close()
+
+		handler := NewGroupShareHandler(db, nil)
 		userID := uuid.New().String()
 		groupID := uuid.New().String()
 		packID := uuid.New().String()
 
 		dbMock.ExpectQuery("SELECT EXISTS").
 			WithArgs(groupID, userID).
-			WillReturnRows(pgxmock.NewRows([]string{"exists"}).AddRow(true))
+			WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(true))
 
 		dbMock.ExpectQuery("SELECT user_id, title, is_public FROM verse_packs").
 			WithArgs(packID).
-			WillReturnRows(pgxmock.NewRows([]string{"user_id", "title", "is_public"}).AddRow(userID, "Title", false))
+			WillReturnRows(sqlmock.NewRows([]string{"user_id", "title", "is_public"}).AddRow(userID, "Title", false))
 
 		dbMock.ExpectQuery("SELECT id FROM group_shares").
 			WithArgs(groupID, packID).
@@ -154,11 +167,14 @@ func TestShareItemToGroup_Coverage(t *testing.T) {
 	})
 
 	t.Run("Update_Share_DB_Error", func(t *testing.T) {
-		dbMock, err := pgxmock.NewPool()
-		assert.NoError(t, err)
-		defer dbMock.Close()
+		db, dbMock, err := sqlmock.New()
+		_ = db
 
-		handler := NewGroupShareHandler(dbMock, nil)
+		_ = dbMock
+		assert.NoError(t, err)
+		defer db.Close()
+
+		handler := NewGroupShareHandler(db, nil)
 		userID := uuid.New().String()
 		groupID := uuid.New().String()
 		packID := uuid.New().String()
@@ -166,15 +182,15 @@ func TestShareItemToGroup_Coverage(t *testing.T) {
 
 		dbMock.ExpectQuery("SELECT EXISTS").
 			WithArgs(groupID, userID).
-			WillReturnRows(pgxmock.NewRows([]string{"exists"}).AddRow(true))
+			WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(true))
 
 		dbMock.ExpectQuery("SELECT user_id, title, is_public FROM verse_packs").
 			WithArgs(packID).
-			WillReturnRows(pgxmock.NewRows([]string{"user_id", "title", "is_public"}).AddRow(userID, "Title", false))
+			WillReturnRows(sqlmock.NewRows([]string{"user_id", "title", "is_public"}).AddRow(userID, "Title", false))
 
 		dbMock.ExpectQuery("SELECT id FROM group_shares").
 			WithArgs(groupID, packID).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(shareID))
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(shareID))
 
 		dbMock.ExpectExec("UPDATE group_shares").
 			WithArgs(shareID, groupID, "comment").
@@ -199,11 +215,14 @@ func TestShareItemToGroup_Coverage(t *testing.T) {
 
 func TestListGroupShares_Coverage(t *testing.T) {
 	t.Run("Membership_Check_DB_Error", func(t *testing.T) {
-		dbMock, err := pgxmock.NewPool()
-		assert.NoError(t, err)
-		defer dbMock.Close()
+		db, dbMock, err := sqlmock.New()
+		_ = db
 
-		handler := NewGroupShareHandler(dbMock, nil)
+		_ = dbMock
+		assert.NoError(t, err)
+		defer db.Close()
+
+		handler := NewGroupShareHandler(db, nil)
 		userID := uuid.New().String()
 		groupID := uuid.New().String()
 
@@ -227,11 +246,14 @@ func TestListGroupShares_Coverage(t *testing.T) {
 
 func TestGetSharedItemDetails_Coverage(t *testing.T) {
 	t.Run("Membership_Check_DB_Error", func(t *testing.T) {
-		dbMock, err := pgxmock.NewPool()
-		assert.NoError(t, err)
-		defer dbMock.Close()
+		db, dbMock, err := sqlmock.New()
+		_ = db
 
-		handler := NewGroupShareHandler(dbMock, nil)
+		_ = dbMock
+		assert.NoError(t, err)
+		defer db.Close()
+
+		handler := NewGroupShareHandler(db, nil)
 		userID := uuid.New().String()
 		groupID := uuid.New().String()
 		shareID := uuid.New().String()

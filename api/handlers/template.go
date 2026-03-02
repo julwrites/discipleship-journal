@@ -7,6 +7,7 @@ import (
 	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/models"
 	"discipleship_journal_api/services"
+
 	"firebase.google.com/go/v4/auth"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"

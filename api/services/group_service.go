@@ -2,12 +2,13 @@ package services
 
 import (
 	"context"
+	"database/sql"
+	"discipleship_journal_api/models"
 	"fmt"
 	"log/slog"
 	"time"
 
-	"discipleship_journal_api/models"
-	"github.com/jackc/pgx/v5"
+	"github.com/google/uuid"
 )
 
 type Group struct {
@@ -56,32 +57,32 @@ func (s *groupService) CreateGroup(ctx context.Context, userID, name string, des
 		groupType = "group"
 	}
 
-	tx, err := s.db.Begin(ctx)
+	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = tx.Rollback(ctx) }()
+	defer func() { _ = tx.Rollback() }()
 
 	slog.Info("Creating group", "name", name, "description", description, "user", userID, "type", groupType)
-	var groupID string
-	err = tx.QueryRow(ctx,
-		"INSERT INTO groups (name, description, created_by, type) VALUES ($1, $2, $3, $4) RETURNING id",
-		name, description, userID, groupType).Scan(&groupID)
+	groupID := uuid.New().String()
+	_, err = tx.ExecContext(ctx,
+		"INSERT INTO `groups` (id, name, description, created_by, type) VALUES (?, ?, ?, ?, ?)",
+		groupID, name, description, userID, groupType)
 	if err != nil {
 		slog.Error("Failed to create group", "error", err)
 		return nil, err
 	}
 
 	// Add creator as admin
-	_, err = tx.Exec(ctx,
-		"INSERT INTO group_members (group_id, user_id, role) VALUES ($1, $2, 'admin')",
+	_, err = tx.ExecContext(ctx,
+		"INSERT INTO group_members (group_id, user_id, role) VALUES (?, ?, 'admin')",
 		groupID, userID)
 	if err != nil {
 		slog.Error("Failed to add member", "error", err)
 		return nil, err
 	}
 
-	if err := tx.Commit(ctx); err != nil {
+	if err := tx.Commit(); err != nil {
 		return nil, err
 	}
 
@@ -96,11 +97,11 @@ func (s *groupService) CreateGroup(ctx context.Context, userID, name string, des
 }
 
 func (s *groupService) ListUserGroups(ctx context.Context, userID string) ([]Group, error) {
-	rows, err := s.db.Query(ctx,
+	rows, err := s.db.QueryContext(ctx,
 		`SELECT g.id, g.name, g.description, g.created_by, g.type, gm.role
-		 FROM groups g
+		 FROM `+"`groups`"+` g
 		 JOIN group_members gm ON g.id = gm.group_id
-		 WHERE gm.user_id = $1`, userID)
+		 WHERE gm.user_id = ?`, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -131,11 +132,11 @@ func (s *groupService) ListUserGroups(ctx context.Context, userID string) ([]Gro
 }
 
 func (s *groupService) SearchGroups(ctx context.Context, query, userID string) ([]Group, error) {
-	rows, err := s.db.Query(ctx,
+	rows, err := s.db.QueryContext(ctx,
 		`SELECT g.id, g.name, g.description, g.created_by, g.type,
-		 COALESCE((SELECT role FROM group_members WHERE group_id = g.id AND user_id = $2), '') as role
-		 FROM groups g
-		 WHERE g.name ILIKE $1 AND (g.type = 'group' OR g.type IS NULL) LIMIT 20`, "%"+query+"%", userID)
+		 COALESCE((SELECT role FROM group_members WHERE group_id = g.id AND user_id = ?), '') as role
+		 FROM `+"`groups`"+` g
+		 WHERE g.name LIKE ? AND (g.type = 'group' OR g.type IS NULL) LIMIT 20`, "%"+query+"%", userID)
 	if err != nil {
 		return nil, err
 	}
@@ -167,8 +168,8 @@ func (s *groupService) SearchGroups(ctx context.Context, query, userID string) (
 
 func (s *groupService) JoinGroup(ctx context.Context, groupID, userID string) error {
 	var exists bool
-	err := s.db.QueryRow(ctx,
-		"SELECT EXISTS(SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2)",
+	err := s.db.QueryRowContext(ctx,
+		"SELECT EXISTS(SELECT 1 FROM group_members WHERE group_id = ? AND user_id = ?)",
 		groupID, userID).Scan(&exists)
 	if err != nil {
 		return err
@@ -177,21 +178,22 @@ func (s *groupService) JoinGroup(ctx context.Context, groupID, userID string) er
 		return models.ErrAlreadyExists
 	}
 
-	_, err = s.db.Exec(ctx,
-		"INSERT INTO group_members (group_id, user_id, role) VALUES ($1, $2, 'member')",
+	_, err = s.db.ExecContext(ctx,
+		"INSERT INTO group_members (group_id, user_id, role) VALUES (?, ?, 'member')",
 		groupID, userID)
 	return err
 }
 
 func (s *groupService) LeaveGroup(ctx context.Context, groupID, userID string) error {
-	result, err := s.db.Exec(ctx,
-		"DELETE FROM group_members WHERE group_id = $1 AND user_id = $2",
+	result, err := s.db.ExecContext(ctx,
+		"DELETE FROM group_members WHERE group_id = ? AND user_id = ?",
 		groupID, userID)
 	if err != nil {
 		return err
 	}
 
-	if result.RowsAffected() == 0 {
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
 		return models.ErrNotFound
 	}
 	return nil
@@ -199,8 +201,8 @@ func (s *groupService) LeaveGroup(ctx context.Context, groupID, userID string) e
 
 func (s *groupService) GetGroupMembers(ctx context.Context, groupID, userID string) ([]GroupMember, error) {
 	var isMember bool
-	err := s.db.QueryRow(ctx,
-		"SELECT EXISTS(SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2)",
+	err := s.db.QueryRowContext(ctx,
+		"SELECT EXISTS(SELECT 1 FROM group_members WHERE group_id = ? AND user_id = ?)",
 		groupID, userID).Scan(&isMember)
 	if err != nil {
 		return nil, err
@@ -212,11 +214,11 @@ func (s *groupService) GetGroupMembers(ctx context.Context, groupID, userID stri
 		return nil, fmt.Errorf("access denied")
 	}
 
-	rows, err := s.db.Query(ctx,
+	rows, err := s.db.QueryContext(ctx,
 		`SELECT gm.user_id, COALESCE(u.username, u.email), u.email, gm.role, gm.joined_at
 		 FROM group_members gm
 		 JOIN users u ON gm.user_id = u.id
-		 WHERE gm.group_id = $1`, groupID)
+		 WHERE gm.group_id = ?`, groupID)
 	if err != nil {
 		return nil, err
 	}
@@ -242,11 +244,11 @@ func (s *groupService) GetGroupMembers(ctx context.Context, groupID, userID stri
 func (s *groupService) AddGroupMember(ctx context.Context, adminID, groupID, targetUserID string) error {
 	// Verify admin role
 	var role string
-	err := s.db.QueryRow(ctx,
-		"SELECT role FROM group_members WHERE group_id = $1 AND user_id = $2",
+	err := s.db.QueryRowContext(ctx,
+		"SELECT role FROM group_members WHERE group_id = ? AND user_id = ?",
 		groupID, adminID).Scan(&role)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if err == sql.ErrNoRows {
 			return fmt.Errorf("access denied")
 		}
 		return err
@@ -258,12 +260,12 @@ func (s *groupService) AddGroupMember(ctx context.Context, adminID, groupID, tar
 
 	// Verify connection exists between requester and target user
 	var isConnected bool
-	err = s.db.QueryRow(ctx,
+	err = s.db.QueryRowContext(ctx,
 		`SELECT EXISTS(
 			SELECT 1 FROM connections
-			WHERE ((requester_id = $1 AND receiver_id = $2) OR (requester_id = $2 AND receiver_id = $1))
+			WHERE ((requester_id = ? AND receiver_id = ?) OR (requester_id = ? AND receiver_id = ?))
 			AND status = 'accepted'
-		)`, adminID, targetUserID).Scan(&isConnected)
+		)`, adminID, targetUserID, targetUserID, adminID).Scan(&isConnected)
 
 	if err != nil {
 		return err
@@ -273,8 +275,8 @@ func (s *groupService) AddGroupMember(ctx context.Context, adminID, groupID, tar
 		return fmt.Errorf("user is not in your connections")
 	}
 
-	_, err = s.db.Exec(ctx,
-		"INSERT INTO group_members (group_id, user_id, role) VALUES ($1, $2, 'member') ON CONFLICT DO NOTHING",
+	_, err = s.db.ExecContext(ctx,
+		"INSERT INTO group_members (group_id, user_id, role) VALUES (?, ?, 'member') ON DUPLICATE KEY UPDATE group_id=group_id",
 		groupID, targetUserID)
 	if err != nil {
 		return err
@@ -282,7 +284,7 @@ func (s *groupService) AddGroupMember(ctx context.Context, adminID, groupID, tar
 
 	// Get group name synchronously
 	var groupName string
-	if err := s.db.QueryRow(ctx, "SELECT name FROM groups WHERE id = $1", groupID).Scan(&groupName); err != nil {
+	if err := s.db.QueryRowContext(ctx, "SELECT name FROM `groups` WHERE id = ?", groupID).Scan(&groupName); err != nil {
 		groupName = "a group"
 	}
 
@@ -313,12 +315,12 @@ func (s *groupService) GetOrCreateDirectGroup(ctx context.Context, userID, partn
 
 	// 1. Check if connected
 	var isConnected bool
-	err := s.db.QueryRow(ctx,
+	err := s.db.QueryRowContext(ctx,
 		`SELECT EXISTS(
 			SELECT 1 FROM connections
-			WHERE ((requester_id = $1 AND receiver_id = $2) OR (requester_id = $2 AND receiver_id = $1))
+			WHERE ((requester_id = ? AND receiver_id = ?) OR (requester_id = ? AND receiver_id = ?))
 			AND status = 'accepted'
-		)`, userID, partnerID).Scan(&isConnected)
+		)`, userID, partnerID, partnerID, userID).Scan(&isConnected)
 	if err != nil {
 		return nil, false, err
 	}
@@ -328,10 +330,10 @@ func (s *groupService) GetOrCreateDirectGroup(ctx context.Context, userID, partn
 
 	// 2. Check if Direct group exists
 	var groupID string
-	err = s.db.QueryRow(ctx, `
-		SELECT g.id FROM groups g
-		JOIN group_members gm1 ON g.id = gm1.group_id AND gm1.user_id = $1
-		JOIN group_members gm2 ON g.id = gm2.group_id AND gm2.user_id = $2
+	err = s.db.QueryRowContext(ctx, `
+		SELECT g.id FROM `+"`groups`"+` g
+		JOIN group_members gm1 ON g.id = gm1.group_id AND gm1.user_id = ?
+		JOIN group_members gm2 ON g.id = gm2.group_id AND gm2.user_id = ?
 		WHERE g.type = 'direct' LIMIT 1
 	`, userID, partnerID).Scan(&groupID)
 
@@ -339,46 +341,47 @@ func (s *groupService) GetOrCreateDirectGroup(ctx context.Context, userID, partn
 		return &Group{ID: groupID}, false, nil
 	}
 
-	if err != pgx.ErrNoRows {
+	if err != sql.ErrNoRows {
 		return nil, false, err
 	}
 
 	// 3. Create Group
 	var partnerName string
-	err = s.db.QueryRow(ctx, "SELECT COALESCE(username, email) FROM users WHERE id=$1", partnerID).Scan(&partnerName)
+	err = s.db.QueryRowContext(ctx, "SELECT COALESCE(username, email) FROM users WHERE id=?", partnerID).Scan(&partnerName)
 	if err != nil {
 		return nil, false, models.ErrNotFound // Partner not found
 	}
 
 	var myName string
-	err = s.db.QueryRow(ctx, "SELECT COALESCE(username, email) FROM users WHERE id=$1", userID).Scan(&myName)
+	err = s.db.QueryRowContext(ctx, "SELECT COALESCE(username, email) FROM users WHERE id=?", userID).Scan(&myName)
 	if err != nil {
 		return nil, false, err
 	}
 
 	groupName := "Direct: " + myName + " & " + partnerName
 
-	tx, err := s.db.Begin(ctx)
+	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, false, err
 	}
-	defer func() { _ = tx.Rollback(ctx) }()
+	defer func() { _ = tx.Rollback() }()
 
-	if err := tx.QueryRow(ctx,
-		"INSERT INTO groups (name, type, created_by) VALUES ($1, 'direct', $2) RETURNING id",
-		groupName, userID).Scan(&groupID); err != nil {
+	groupID = uuid.New().String()
+	if _, err := tx.ExecContext(ctx,
+		"INSERT INTO `groups` (id, name, type, created_by) VALUES (?, ?, 'direct', ?)",
+		groupID, groupName, userID); err != nil {
 		return nil, false, err
 	}
 
 	// Add members
-	if _, err := tx.Exec(ctx, "INSERT INTO group_members (group_id, user_id, role) VALUES ($1, $2, 'admin')", groupID, userID); err != nil {
+	if _, err := tx.ExecContext(ctx, "INSERT INTO group_members (group_id, user_id, role) VALUES (?, ?, 'admin')", groupID, userID); err != nil {
 		return nil, false, err
 	}
-	if _, err := tx.Exec(ctx, "INSERT INTO group_members (group_id, user_id, role) VALUES ($1, $2, 'admin')", groupID, partnerID); err != nil {
+	if _, err := tx.ExecContext(ctx, "INSERT INTO group_members (group_id, user_id, role) VALUES (?, ?, 'admin')", groupID, partnerID); err != nil {
 		return nil, false, err
 	}
 
-	if err := tx.Commit(ctx); err != nil {
+	if err := tx.Commit(); err != nil {
 		return nil, false, err
 	}
 
@@ -388,11 +391,11 @@ func (s *groupService) GetOrCreateDirectGroup(ctx context.Context, userID, partn
 func (s *groupService) RemoveGroupMember(ctx context.Context, adminID, groupID, targetUserID string) error {
 	// Verify admin role
 	var role string
-	err := s.db.QueryRow(ctx,
-		"SELECT role FROM group_members WHERE group_id = $1 AND user_id = $2",
+	err := s.db.QueryRowContext(ctx,
+		"SELECT role FROM group_members WHERE group_id = ? AND user_id = ?",
 		groupID, adminID).Scan(&role)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if err == sql.ErrNoRows {
 			return fmt.Errorf("access denied")
 		}
 		return err
@@ -402,8 +405,8 @@ func (s *groupService) RemoveGroupMember(ctx context.Context, adminID, groupID, 
 		return fmt.Errorf("admin rights required")
 	}
 
-	_, err = s.db.Exec(ctx,
-		"DELETE FROM group_members WHERE group_id = $1 AND user_id = $2",
+	_, err = s.db.ExecContext(ctx,
+		"DELETE FROM group_members WHERE group_id = ? AND user_id = ?",
 		groupID, targetUserID)
 	return err
 }

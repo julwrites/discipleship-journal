@@ -11,9 +11,10 @@ import (
 
 	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/services"
+
 	"firebase.google.com/go/v4/auth"
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/google/uuid"
-	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -24,13 +25,18 @@ func TestChatHandler_AuthFailures(t *testing.T) {
 	mockNotificationService := new(MockNotificationService)
 
 	// DB is needed for real token auth lookup
-	mockDB, err := pgxmock.NewPool()
+	db, mockDB, err := sqlmock.New()
+	_ = mockDB
+
+	_ = db
+
+	_ = mockDB
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer mockDB.Close()
+	defer db.Close()
 
-	handler := NewChatHandler(mockClient, mockNoteService, mockNotificationService, mockDB)
+	handler := NewChatHandler(mockClient, mockNoteService, mockNotificationService, db)
 
 	payload := map[string]interface{}{
 		"prompt":  "Hello",
@@ -154,9 +160,9 @@ func TestChatHandler_OptionsAndErrors(t *testing.T) {
 		handler := NewChatHandler(mockClient, mockNoteService, mockNotificationService, nil)
 
 		payload := map[string]interface{}{
-			"prompt": "Hello",
+			"prompt":  "Hello",
 			"passage": "Gen 1:1",
-			"themes": []string{},
+			"themes":  []string{},
 			"options": map[string]bool{"stream": false},
 		}
 		body, _ := json.Marshal(payload)
@@ -190,7 +196,7 @@ func TestChatHandler_OptionsAndErrors(t *testing.T) {
 
 		// Query fails, then UpdateNote(failed) also fails
 		payload := map[string]interface{}{
-			"prompt": "Hello",
+			"prompt":  "Hello",
 			"passage": "Gen 1:1",
 			"options": map[string]bool{"stream": false},
 		}

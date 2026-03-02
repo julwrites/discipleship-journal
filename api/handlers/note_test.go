@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -15,21 +16,24 @@ import (
 	"discipleship_journal_api/services"
 
 	"firebase.google.com/go/v4/auth"
+	"github.com/DATA-DOG/go-sqlmock"
 	chi "github.com/go-chi/chi/v5"
-	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
-func setupTest(t *testing.T) (pgxmock.PgxPoolIface, *MockNoteService, *NoteHandler) {
-	dbMock, err := pgxmock.NewPool()
+func setupTest(t *testing.T) (*sql.DB, sqlmock.Sqlmock, *MockNoteService, *NoteHandler) {
+	db, dbMock, err := sqlmock.New()
+	_ = db
+
+	_ = dbMock
 	if err != nil {
 		t.Fatalf("unexpected error opening stub database connection: %v", err)
 	}
 	noteServiceMock := new(MockNoteService)
-	handler := NewNoteHandler(dbMock, noteServiceMock)
-	return dbMock, noteServiceMock, handler
+	handler := NewNoteHandler(db, noteServiceMock)
+	return db, dbMock, noteServiceMock, handler
 }
 
 func TestGetNotes(t *testing.T) {
@@ -38,12 +42,15 @@ func TestGetNotes(t *testing.T) {
 	now := time.Now()
 
 	t.Run("success", func(t *testing.T) {
-		dbMock, noteServiceMock, handler := setupTest(t)
-		defer dbMock.Close()
+		db, dbMock, noteServiceMock, handler := setupTest(t)
+		_ = db
+		_ = db
+		_ = dbMock
+		defer db.Close()
 
 		dbMock.ExpectQuery("SELECT id FROM users").
 			WithArgs(firebaseUID).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userUUID))
 
 		content := json.RawMessage(`{"text": "content"}`)
 		serviceNotes := []services.Note{
@@ -86,12 +93,15 @@ func TestGetNotes(t *testing.T) {
 	})
 
 	t.Run("with_params", func(t *testing.T) {
-		dbMock, noteServiceMock, handler := setupTest(t)
-		defer dbMock.Close()
+		db, dbMock, noteServiceMock, handler := setupTest(t)
+		_ = db
+		_ = db
+		_ = dbMock
+		defer db.Close()
 
 		dbMock.ExpectQuery("SELECT id FROM users").
 			WithArgs(firebaseUID).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userUUID))
 
 		serviceNotes := []services.Note{}
 
@@ -124,12 +134,15 @@ func TestGetNotes(t *testing.T) {
 	})
 
 	t.Run("invalid params", func(t *testing.T) {
-		dbMock, noteServiceMock, handler := setupTest(t)
-		defer dbMock.Close()
+		db, dbMock, noteServiceMock, handler := setupTest(t)
+		_ = db
+		_ = db
+		_ = dbMock
+		defer db.Close()
 
 		dbMock.ExpectQuery("SELECT id FROM users").
 			WithArgs(firebaseUID).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userUUID))
 
 		// Should default to empty filter if parsing fails? Or ignore invalid fields?
 		// Logic in GetNotes handler:
@@ -174,12 +187,15 @@ func TestCreateNoteHandler(t *testing.T) {
 	}
 
 	t.Run("success", func(t *testing.T) {
-		dbMock, noteServiceMock, handler := setupTest(t)
-		defer dbMock.Close()
+		db, dbMock, noteServiceMock, handler := setupTest(t)
+		_ = db
+		_ = db
+		_ = dbMock
+		defer db.Close()
 
 		dbMock.ExpectQuery("SELECT id FROM users").
 			WithArgs(firebaseUID).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userUUID))
 
 		noteServiceMock.On("CreateNote", mock.Anything, userUUID, title, mock.MatchedBy(func(c json.RawMessage) bool {
 			return string(c) == string(contentJSON)
@@ -209,12 +225,15 @@ func TestDeleteNoteHandler(t *testing.T) {
 	noteID := "note-123"
 
 	t.Run("success", func(t *testing.T) {
-		dbMock, noteServiceMock, handler := setupTest(t)
-		defer dbMock.Close()
+		db, dbMock, noteServiceMock, handler := setupTest(t)
+		_ = db
+		_ = db
+		_ = dbMock
+		defer db.Close()
 
 		dbMock.ExpectQuery("SELECT id FROM users").
 			WithArgs(firebaseUID).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userUUID))
 
 		noteServiceMock.On("DeleteNote", mock.Anything, userUUID, noteID).Return(nil)
 
@@ -239,12 +258,15 @@ func TestDeleteNoteHandler(t *testing.T) {
 	})
 
 	t.Run("not found", func(t *testing.T) {
-		dbMock, noteServiceMock, handler := setupTest(t)
-		defer dbMock.Close()
+		db, dbMock, noteServiceMock, handler := setupTest(t)
+		_ = db
+		_ = db
+		_ = dbMock
+		defer db.Close()
 
 		dbMock.ExpectQuery("SELECT id FROM users").
 			WithArgs(firebaseUID).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userUUID))
 
 		noteServiceMock.On("DeleteNote", mock.Anything, userUUID, noteID).Return(models.ErrNotFound)
 
@@ -268,12 +290,15 @@ func TestDeleteNoteHandler(t *testing.T) {
 	})
 
 	t.Run("db error", func(t *testing.T) {
-		dbMock, noteServiceMock, handler := setupTest(t)
-		defer dbMock.Close()
+		db, dbMock, noteServiceMock, handler := setupTest(t)
+		_ = db
+		_ = db
+		_ = dbMock
+		defer db.Close()
 
 		dbMock.ExpectQuery("SELECT id FROM users").
 			WithArgs(firebaseUID).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userUUID))
 
 		noteServiceMock.On("DeleteNote", mock.Anything, userUUID, noteID).Return(errors.New("db error"))
 
@@ -311,12 +336,15 @@ func TestUpdateNoteHandler(t *testing.T) {
 	}
 
 	t.Run("success", func(t *testing.T) {
-		dbMock, noteServiceMock, handler := setupTest(t)
-		defer dbMock.Close()
+		db, dbMock, noteServiceMock, handler := setupTest(t)
+		_ = db
+		_ = db
+		_ = dbMock
+		defer db.Close()
 
 		dbMock.ExpectQuery("SELECT id FROM users").
 			WithArgs(firebaseUID).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userUUID))
 
 		noteServiceMock.On("UpdateNote", mock.Anything, userUUID, noteID, title, mock.MatchedBy(func(c json.RawMessage) bool {
 			return string(c) == string(contentJSON)
@@ -344,12 +372,15 @@ func TestUpdateNoteHandler(t *testing.T) {
 	})
 
 	t.Run("not found", func(t *testing.T) {
-		dbMock, noteServiceMock, handler := setupTest(t)
-		defer dbMock.Close()
+		db, dbMock, noteServiceMock, handler := setupTest(t)
+		_ = db
+		_ = db
+		_ = dbMock
+		defer db.Close()
 
 		dbMock.ExpectQuery("SELECT id FROM users").
 			WithArgs(firebaseUID).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userUUID))
 
 		noteServiceMock.On("UpdateNote", mock.Anything, userUUID, noteID, title, mock.Anything, mock.Anything, mock.Anything).Return(models.ErrNotFound)
 
@@ -381,12 +412,15 @@ func TestGetNoteHandler(t *testing.T) {
 	now := time.Now()
 
 	t.Run("success", func(t *testing.T) {
-		dbMock, noteServiceMock, handler := setupTest(t)
-		defer dbMock.Close()
+		db, dbMock, noteServiceMock, handler := setupTest(t)
+		_ = db
+		_ = db
+		_ = dbMock
+		defer db.Close()
 
 		dbMock.ExpectQuery("SELECT id FROM users").
 			WithArgs(firebaseUID).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userUUID))
 
 		serviceNote := &services.Note{
 			ID:        noteID,
@@ -424,12 +458,15 @@ func TestGetNoteHandler(t *testing.T) {
 	})
 
 	t.Run("not found", func(t *testing.T) {
-		dbMock, noteServiceMock, handler := setupTest(t)
-		defer dbMock.Close()
+		db, dbMock, noteServiceMock, handler := setupTest(t)
+		_ = db
+		_ = db
+		_ = dbMock
+		defer db.Close()
 
 		dbMock.ExpectQuery("SELECT id FROM users").
 			WithArgs(firebaseUID).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userUUID))
 
 		noteServiceMock.On("GetNote", mock.Anything, userUUID, noteID).Return(nil, models.ErrNotFound)
 
@@ -458,12 +495,15 @@ func TestCreateNoteHandler_InvalidBody(t *testing.T) {
 	userUUID := "user-uuid-123"
 
 	t.Run("invalid json", func(t *testing.T) {
-		dbMock, noteServiceMock, handler := setupTest(t)
-		defer dbMock.Close()
+		db, dbMock, noteServiceMock, handler := setupTest(t)
+		_ = db
+		_ = db
+		_ = dbMock
+		defer db.Close()
 
 		dbMock.ExpectQuery("SELECT id FROM users").
 			WithArgs(firebaseUID).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userUUID))
 
 		req := httptest.NewRequest("POST", "/api/notes", bytes.NewBufferString("invalid-json"))
 		token := &auth.Token{UID: firebaseUID}
@@ -484,12 +524,15 @@ func TestUpdateNoteHandler_InvalidBody(t *testing.T) {
 	noteID := "note-123"
 
 	t.Run("invalid json", func(t *testing.T) {
-		dbMock, noteServiceMock, handler := setupTest(t)
-		defer dbMock.Close()
+		db, dbMock, noteServiceMock, handler := setupTest(t)
+		_ = db
+		_ = db
+		_ = dbMock
+		defer db.Close()
 
 		dbMock.ExpectQuery("SELECT id FROM users").
 			WithArgs(firebaseUID).
-			WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userUUID))
 
 		req := httptest.NewRequest("PUT", "/api/notes/"+noteID, bytes.NewBufferString("invalid-json"))
 		rctx := chi.NewRouteContext()
@@ -509,8 +552,11 @@ func TestUpdateNoteHandler_InvalidBody(t *testing.T) {
 }
 
 func TestGetNotes_Unauthorized(t *testing.T) {
-	dbMock, noteServiceMock, handler := setupTest(t)
-	defer dbMock.Close()
+	db, dbMock, noteServiceMock, handler := setupTest(t)
+	_ = db
+	_ = db
+	_ = dbMock
+	defer db.Close()
 
 	req := httptest.NewRequest("GET", "/api/notes", nil)
 	// No token, no TestUserKey
@@ -524,8 +570,11 @@ func TestGetNotes_Unauthorized(t *testing.T) {
 
 func TestGetNotes_UserNotFound(t *testing.T) {
 	firebaseUID := "firebase-uid-123"
-	dbMock, noteServiceMock, handler := setupTest(t)
-	defer dbMock.Close()
+	db, dbMock, noteServiceMock, handler := setupTest(t)
+	_ = db
+	_ = db
+	_ = dbMock
+	defer db.Close()
 
 	dbMock.ExpectQuery("SELECT id FROM users").
 		WithArgs(firebaseUID).
@@ -545,8 +594,11 @@ func TestGetNotes_UserNotFound(t *testing.T) {
 
 func TestCreateNote_UserNotFound(t *testing.T) {
 	firebaseUID := "firebase-uid-123"
-	dbMock, noteServiceMock, handler := setupTest(t)
-	defer dbMock.Close()
+	db, dbMock, noteServiceMock, handler := setupTest(t)
+	_ = db
+	_ = db
+	_ = dbMock
+	defer db.Close()
 
 	dbMock.ExpectQuery("SELECT id FROM users").
 		WithArgs(firebaseUID).
@@ -566,8 +618,11 @@ func TestCreateNote_UserNotFound(t *testing.T) {
 
 func TestUpdateNote_UserNotFound(t *testing.T) {
 	firebaseUID := "firebase-uid-123"
-	dbMock, noteServiceMock, handler := setupTest(t)
-	defer dbMock.Close()
+	db, dbMock, noteServiceMock, handler := setupTest(t)
+	_ = db
+	_ = db
+	_ = dbMock
+	defer db.Close()
 
 	dbMock.ExpectQuery("SELECT id FROM users").
 		WithArgs(firebaseUID).
@@ -587,8 +642,11 @@ func TestUpdateNote_UserNotFound(t *testing.T) {
 
 func TestDeleteNote_UserNotFound(t *testing.T) {
 	firebaseUID := "firebase-uid-123"
-	dbMock, noteServiceMock, handler := setupTest(t)
-	defer dbMock.Close()
+	db, dbMock, noteServiceMock, handler := setupTest(t)
+	_ = db
+	_ = db
+	_ = dbMock
+	defer db.Close()
 
 	dbMock.ExpectQuery("SELECT id FROM users").
 		WithArgs(firebaseUID).
@@ -608,8 +666,11 @@ func TestDeleteNote_UserNotFound(t *testing.T) {
 
 func TestGetNote_UserNotFound(t *testing.T) {
 	firebaseUID := "firebase-uid-123"
-	dbMock, noteServiceMock, handler := setupTest(t)
-	defer dbMock.Close()
+	db, dbMock, noteServiceMock, handler := setupTest(t)
+	_ = db
+	_ = db
+	_ = dbMock
+	defer db.Close()
 
 	dbMock.ExpectQuery("SELECT id FROM users").
 		WithArgs(firebaseUID).
@@ -632,12 +693,16 @@ func TestGetNoteHandler_DBError(t *testing.T) {
 	userUUID := "user-uuid-123"
 	noteID := "note-123"
 
-	dbMock, noteServiceMock, handler := setupTest(t)
-	defer dbMock.Close()
+	db, dbMock, noteServiceMock, handler := setupTest(t)
+
+	_ = db
+	_ = db
+	_ = dbMock
+	defer db.Close()
 
 	dbMock.ExpectQuery("SELECT id FROM users").
 		WithArgs(firebaseUID).
-		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userUUID))
 
 	noteServiceMock.On("GetNote", mock.Anything, userUUID, noteID).Return(nil, errors.New("db error"))
 
@@ -668,12 +733,16 @@ func TestCreateNoteHandler_ServiceError(t *testing.T) {
 		Content: contentMap,
 	}
 
-	dbMock, noteServiceMock, handler := setupTest(t)
-	defer dbMock.Close()
+	db, dbMock, noteServiceMock, handler := setupTest(t)
+
+	_ = db
+	_ = db
+	_ = dbMock
+	defer db.Close()
 
 	dbMock.ExpectQuery("SELECT id FROM users").
 		WithArgs(firebaseUID).
-		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userUUID))
 
 	noteServiceMock.On("CreateNote", mock.Anything, userUUID, title, mock.MatchedBy(func(c json.RawMessage) bool {
 		return string(c) == string(contentJSON)
@@ -704,12 +773,16 @@ func TestUpdateNoteHandler_ServiceError(t *testing.T) {
 		Content: contentMap,
 	}
 
-	dbMock, noteServiceMock, handler := setupTest(t)
-	defer dbMock.Close()
+	db, dbMock, noteServiceMock, handler := setupTest(t)
+
+	_ = db
+	_ = db
+	_ = dbMock
+	defer db.Close()
 
 	dbMock.ExpectQuery("SELECT id FROM users").
 		WithArgs(firebaseUID).
-		WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow(userUUID))
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(userUUID))
 
 	noteServiceMock.On("UpdateNote", mock.Anything, userUUID, noteID, title, mock.MatchedBy(func(c json.RawMessage) bool {
 		return string(c) == string(contentJSON)
@@ -732,7 +805,8 @@ func TestUpdateNoteHandler_ServiceError(t *testing.T) {
 }
 
 func TestCreateNote_Unauthorized(t *testing.T) {
-	_, noteServiceMock, handler := setupTest(t)
+	db, _, noteServiceMock, handler := setupTest(t)
+	_ = db
 	req := httptest.NewRequest("POST", "/api/notes", bytes.NewBufferString("{}"))
 	w := httptest.NewRecorder()
 	handler.CreateNote(w, req)
@@ -741,7 +815,8 @@ func TestCreateNote_Unauthorized(t *testing.T) {
 }
 
 func TestUpdateNote_Unauthorized(t *testing.T) {
-	_, noteServiceMock, handler := setupTest(t)
+	db, _, noteServiceMock, handler := setupTest(t)
+	_ = db
 	req := httptest.NewRequest("PUT", "/api/notes/1", bytes.NewBufferString("{}"))
 	w := httptest.NewRecorder()
 	handler.UpdateNote(w, req)
@@ -750,7 +825,8 @@ func TestUpdateNote_Unauthorized(t *testing.T) {
 }
 
 func TestDeleteNote_Unauthorized(t *testing.T) {
-	_, noteServiceMock, handler := setupTest(t)
+	db, _, noteServiceMock, handler := setupTest(t)
+	_ = db
 	req := httptest.NewRequest("DELETE", "/api/notes/1", nil)
 	w := httptest.NewRecorder()
 	handler.DeleteNote(w, req)
@@ -759,7 +835,8 @@ func TestDeleteNote_Unauthorized(t *testing.T) {
 }
 
 func TestGetNote_Unauthorized(t *testing.T) {
-	_, noteServiceMock, handler := setupTest(t)
+	db, _, noteServiceMock, handler := setupTest(t)
+	_ = db
 	req := httptest.NewRequest("GET", "/api/notes/1", nil)
 	w := httptest.NewRecorder()
 	handler.GetNote(w, req)
@@ -768,7 +845,8 @@ func TestGetNote_Unauthorized(t *testing.T) {
 }
 
 func TestGetTags_Unauthorized(t *testing.T) {
-	_, noteServiceMock, handler := setupTest(t)
+	db, _, noteServiceMock, handler := setupTest(t)
+	_ = db
 	req := httptest.NewRequest("GET", "/api/tags", nil)
 	w := httptest.NewRecorder()
 	handler.GetTags(w, req)
@@ -777,7 +855,8 @@ func TestGetTags_Unauthorized(t *testing.T) {
 }
 
 func TestCreateTag_Unauthorized(t *testing.T) {
-	_, noteServiceMock, handler := setupTest(t)
+	db, _, noteServiceMock, handler := setupTest(t)
+	_ = db
 	req := httptest.NewRequest("POST", "/api/tags", bytes.NewBufferString("{}"))
 	w := httptest.NewRecorder()
 	handler.CreateTag(w, req)
@@ -786,7 +865,8 @@ func TestCreateTag_Unauthorized(t *testing.T) {
 }
 
 func TestDeleteTag_Unauthorized(t *testing.T) {
-	_, noteServiceMock, handler := setupTest(t)
+	db, _, noteServiceMock, handler := setupTest(t)
+	_ = db
 	req := httptest.NewRequest("DELETE", "/api/tags/1", nil)
 	w := httptest.NewRecorder()
 	handler.DeleteTag(w, req)

@@ -3,6 +3,7 @@ package integration
 import (
 	"context"
 	"encoding/json"
+	"github.com/google/uuid"
 	"testing"
 	"time"
 
@@ -25,7 +26,8 @@ func TestNoteService_Integration(t *testing.T) {
 	// In a real scenario we might need to insert the user into the 'users' table if referential integrity is enforced.
 	// Checking the schema...
 	// Usually `users` table exists. Let's try to insert a user first to be safe.
-	_, err := pool.Exec(ctx, "INSERT INTO users (id, firebase_uid, email, created_at, updated_at) VALUES (gen_random_uuid(), $1, 'test@example.com', NOW(), NOW()) ON CONFLICT (firebase_uid) DO NOTHING", userID)
+	newUUID := uuid.New().String()
+	_, err := pool.ExecContext(ctx, "INSERT IGNORE INTO users (id, firebase_uid, email, created_at, updated_at) VALUES (?, ?, 'test@example.com', NOW(), NOW())", newUUID, userID)
 	require.NoError(t, err)
 
 	// We need the internal UUID for the user if the service uses it.
@@ -43,7 +45,7 @@ func TestNoteService_Integration(t *testing.T) {
 
 	// Let's fetch the internal UUID for the seeded user.
 	var internalUserID string
-	err = pool.QueryRow(ctx, "SELECT id FROM users WHERE firebase_uid=$1", userID).Scan(&internalUserID)
+	err = pool.QueryRowContext(ctx, "SELECT id FROM users WHERE firebase_uid=?", userID).Scan(&internalUserID)
 	require.NoError(t, err)
 
 	t.Run("CRUD Lifecycle", func(t *testing.T) {
@@ -87,7 +89,7 @@ func TestNoteService_Integration(t *testing.T) {
 
 		// Verify it's still in DB but with deleted_at
 		var deletedAt *time.Time
-		err = pool.QueryRow(ctx, "SELECT deleted_at FROM notes WHERE id=$1", note.ID).Scan(&deletedAt)
+		err = pool.QueryRowContext(ctx, "SELECT deleted_at FROM notes WHERE id=?", note.ID).Scan(&deletedAt)
 		require.NoError(t, err)
 		assert.NotNil(t, deletedAt)
 	})
@@ -119,9 +121,9 @@ func TestNoteService_Integration(t *testing.T) {
 		t1 := time.Now().Add(-48 * time.Hour)
 		t2 := time.Now().Add(-24 * time.Hour)
 
-		_, err = pool.Exec(ctx, "UPDATE notes SET updated_at=$1 WHERE id=$2", t1, n1.ID)
+		_, err = pool.ExecContext(ctx, "UPDATE notes SET updated_at=? WHERE id=?", t1, n1.ID)
 		require.NoError(t, err)
-		_, err = pool.Exec(ctx, "UPDATE notes SET updated_at=$1 WHERE id=$2", t2, n2.ID)
+		_, err = pool.ExecContext(ctx, "UPDATE notes SET updated_at=? WHERE id=?", t2, n2.ID)
 		require.NoError(t, err)
 
 		// Test Search

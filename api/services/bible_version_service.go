@@ -113,31 +113,31 @@ func (s *bibleVersionService) SyncVersions(ctx context.Context) error {
 	}
 
 	// Use a transaction for bulk update
-	tx, err := s.db.Begin(ctx)
+	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer func() {
-		_ = tx.Rollback(ctx)
+		_ = tx.Rollback()
 	}()
 
 	// We'll prepare a statement or just loop exec. Loop exec is fine for < 1000 items.
 	// We use ON CONFLICT to update existing entries or insert new ones.
 	query := `
 		INSERT INTO bible_versions (name, abbreviation, updated_at)
-		VALUES ($1, $2, NOW())
-		ON CONFLICT (abbreviation) DO UPDATE
-		SET name = EXCLUDED.name, updated_at = NOW();
+		VALUES (?, ?, NOW())
+		ON DUPLICATE KEY UPDATE
+		name = VALUES(name), updated_at = NOW();
 	`
 
 	for abbr, name := range versions {
-		_, err := tx.Exec(ctx, query, name, abbr)
+		_, err := tx.ExecContext(ctx, query, name, abbr)
 		if err != nil {
 			return fmt.Errorf("failed to upsert version %s: %w", abbr, err)
 		}
 	}
 
-	if err := tx.Commit(ctx); err != nil {
+	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
@@ -156,7 +156,7 @@ type BibleVersion struct {
 // GetVersions returns all bible versions sorted by name.
 func (s *bibleVersionService) GetVersions(ctx context.Context) ([]BibleVersion, error) {
 	query := `SELECT id, name, abbreviation, created_at, updated_at FROM bible_versions ORDER BY name ASC`
-	rows, err := s.db.Query(ctx, query)
+	rows, err := s.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query versions: %w", err)
 	}

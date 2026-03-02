@@ -12,6 +12,7 @@ import (
 	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/models"
 	"discipleship_journal_api/services"
+
 	"firebase.google.com/go/v4/auth"
 	chi "github.com/go-chi/chi/v5"
 )
@@ -50,7 +51,7 @@ func (h *NoteHandler) getUserUUID(ctx context.Context, firebaseUID string) (stri
 		return "", fmt.Errorf("database connection is nil")
 	}
 	var id string
-	err := h.db.QueryRow(ctx, "SELECT id FROM users WHERE firebase_uid=$1", firebaseUID).Scan(&id)
+	err := h.db.QueryRowContext(ctx, "SELECT id FROM users WHERE firebase_uid=?", firebaseUID).Scan(&id)
 	if err != nil {
 		return "", err
 	}

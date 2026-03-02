@@ -25,16 +25,16 @@ func TestConnectionAPI_Contract(t *testing.T) {
 	userB_ID := "00000000-0000-0000-0000-000000000011"
 
 	// Seed Users
-	_, err := pool.Exec(ctx, `
+	_, err := pool.ExecContext(ctx, `
 		INSERT INTO users (id, firebase_uid, email, username, created_at, updated_at) VALUES
-		($1, 'test-uid-A', 'userA@example.com', 'UserA', NOW(), NOW()),
-		($2, 'test-uid-B', 'userB@example.com', 'UserB', NOW(), NOW())
+		(?, 'test-uid-A', 'userA@example.com', 'UserA', NOW(), NOW()),
+		(?, 'test-uid-B', 'userB@example.com', 'UserB', NOW(), NOW())
 		ON CONFLICT (id) DO NOTHING
 	`, userA_ID, userB_ID)
 	require.NoError(t, err)
 
 	// Clean up connections for these users to ensure clean state
-	_, err = pool.Exec(ctx, "DELETE FROM connections WHERE requester_id IN ($1, $2) OR receiver_id IN ($1, $2)", userA_ID, userB_ID)
+	_, err = pool.ExecContext(ctx, "DELETE FROM connections WHERE requester_id IN (?, ?) OR receiver_id IN (?, ?)", userA_ID, userB_ID)
 	require.NoError(t, err)
 
 	t.Run("ConnectionFlow", func(t *testing.T) {

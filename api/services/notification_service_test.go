@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"firebase.google.com/go/v4/messaging"
-	"github.com/pashagolub/pgxmock/v4"
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -26,18 +26,18 @@ func (m *MockMessagingClient) SendEachForMulticast(ctx context.Context, message 
 
 func TestNotificationService_RegisterDevice(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
-		mockDB, err := pgxmock.NewConn()
+		db, mockDB, err := sqlmock.New()
 		if err != nil {
-			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+			t.Fatalf("error opening stub database: %s", err)
 		}
-		defer func() { _ = mockDB.Close(context.Background()) }()
+		defer db.Close()
 
 		mockMsgClient := new(MockMessagingClient)
-		service := NewNotificationService(mockDB, mockMsgClient)
+		service := NewNotificationService(db, mockMsgClient)
 
 		mockDB.ExpectExec("INSERT INTO user_devices").
 			WithArgs("user-123", "token-123", "ios").
-			WillReturnResult(pgxmock.NewResult("INSERT", 1))
+			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		err = service.RegisterDevice(context.Background(), "user-123", "token-123", "ios")
 		assert.NoError(t, err)
@@ -45,14 +45,14 @@ func TestNotificationService_RegisterDevice(t *testing.T) {
 	})
 
 	t.Run("DB Error", func(t *testing.T) {
-		mockDB, err := pgxmock.NewConn()
+		db, mockDB, err := sqlmock.New()
 		if err != nil {
-			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+			t.Fatalf("error opening stub database: %s", err)
 		}
-		defer func() { _ = mockDB.Close(context.Background()) }()
+		defer db.Close()
 
 		mockMsgClient := new(MockMessagingClient)
-		service := NewNotificationService(mockDB, mockMsgClient)
+		service := NewNotificationService(db, mockMsgClient)
 
 		mockDB.ExpectExec("INSERT INTO user_devices").
 			WithArgs("user-123", "token-123", "ios").
@@ -66,19 +66,19 @@ func TestNotificationService_RegisterDevice(t *testing.T) {
 
 func TestNotificationService_SendNotification(t *testing.T) {
 	t.Run("Success - Sent to devices", func(t *testing.T) {
-		mockDB, err := pgxmock.NewConn()
+		db, mockDB, err := sqlmock.New()
 		if err != nil {
-			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+			t.Fatalf("error opening stub database: %s", err)
 		}
-		defer func() { _ = mockDB.Close(context.Background()) }()
+		defer db.Close()
 
 		mockMsgClient := new(MockMessagingClient)
-		service := NewNotificationService(mockDB, mockMsgClient)
+		service := NewNotificationService(db, mockMsgClient)
 
 		// 1. Get tokens
 		mockDB.ExpectQuery("SELECT fcm_token FROM user_devices").
 			WithArgs("user-123").
-			WillReturnRows(pgxmock.NewRows([]string{"fcm_token"}).AddRow("token-1"))
+			WillReturnRows(sqlmock.NewRows([]string{"fcm_token"}).AddRow("token-1"))
 
 		// 2. Send message
 		mockMsgClient.On("SendEachForMulticast", mock.Anything, mock.MatchedBy(func(msg *messaging.MulticastMessage) bool {
@@ -92,18 +92,18 @@ func TestNotificationService_SendNotification(t *testing.T) {
 	})
 
 	t.Run("No Devices", func(t *testing.T) {
-		mockDB, err := pgxmock.NewConn()
+		db, mockDB, err := sqlmock.New()
 		if err != nil {
-			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+			t.Fatalf("error opening stub database: %s", err)
 		}
-		defer func() { _ = mockDB.Close(context.Background()) }()
+		defer db.Close()
 
 		mockMsgClient := new(MockMessagingClient)
-		service := NewNotificationService(mockDB, mockMsgClient)
+		service := NewNotificationService(db, mockMsgClient)
 
 		mockDB.ExpectQuery("SELECT fcm_token FROM user_devices").
 			WithArgs("user-123").
-			WillReturnRows(pgxmock.NewRows([]string{"fcm_token"}))
+			WillReturnRows(sqlmock.NewRows([]string{"fcm_token"}))
 
 		err = service.SendNotification(context.Background(), "user-123", "Test Title", "Test Body", nil)
 		assert.NoError(t, err)
@@ -113,19 +113,19 @@ func TestNotificationService_SendNotification(t *testing.T) {
 	})
 
 	t.Run("Cleanup Invalid Tokens", func(t *testing.T) {
-		mockDB, err := pgxmock.NewConn()
+		db, mockDB, err := sqlmock.New()
 		if err != nil {
-			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+			t.Fatalf("error opening stub database: %s", err)
 		}
-		defer func() { _ = mockDB.Close(context.Background()) }()
+		defer db.Close()
 
 		mockMsgClient := new(MockMessagingClient)
-		service := NewNotificationService(mockDB, mockMsgClient)
+		service := NewNotificationService(db, mockMsgClient)
 
 		// 1. Get tokens
 		mockDB.ExpectQuery("SELECT fcm_token FROM user_devices").
 			WithArgs("user-123").
-			WillReturnRows(pgxmock.NewRows([]string{"fcm_token"}).AddRow("valid-token").AddRow("invalid-token"))
+			WillReturnRows(sqlmock.NewRows([]string{"fcm_token"}).AddRow("valid-token").AddRow("invalid-token"))
 
 		// 2. Send message (returns 1 success, 1 failure)
 		mockMsgClient.On("SendEachForMulticast", mock.Anything, mock.Anything).
@@ -140,8 +140,8 @@ func TestNotificationService_SendNotification(t *testing.T) {
 
 		// 3. Remove invalid token
 		mockDB.ExpectExec("DELETE FROM user_devices").
-			WithArgs("user-123", pgxmock.AnyArg()).
-			WillReturnResult(pgxmock.NewResult("DELETE", 1))
+			WithArgs("user-123", sqlmock.AnyArg()).
+			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		err = service.SendNotification(context.Background(), "user-123", "Test Title", "Test Body", nil)
 		assert.NoError(t, err)
@@ -151,14 +151,14 @@ func TestNotificationService_SendNotification(t *testing.T) {
 }
 
 func TestNotificationService_SendNotification_GetTokensError(t *testing.T) {
-	mockDB, err := pgxmock.NewConn()
+	db, mockDB, err := sqlmock.New()
 	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		t.Fatalf("error opening stub database: %s", err)
 	}
-	defer func() { _ = mockDB.Close(context.Background()) }()
+	defer db.Close()
 
 	mockMsgClient := new(MockMessagingClient)
-	service := NewNotificationService(mockDB, mockMsgClient)
+	service := NewNotificationService(db, mockMsgClient)
 
 	mockDB.ExpectQuery("SELECT fcm_token FROM user_devices").
 		WithArgs("user-123").
@@ -170,18 +170,18 @@ func TestNotificationService_SendNotification_GetTokensError(t *testing.T) {
 }
 
 func TestNotificationService_SendNotification_SendError(t *testing.T) {
-	mockDB, err := pgxmock.NewConn()
+	db, mockDB, err := sqlmock.New()
 	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		t.Fatalf("error opening stub database: %s", err)
 	}
-	defer func() { _ = mockDB.Close(context.Background()) }()
+	defer db.Close()
 
 	mockMsgClient := new(MockMessagingClient)
-	service := NewNotificationService(mockDB, mockMsgClient)
+	service := NewNotificationService(db, mockMsgClient)
 
 	mockDB.ExpectQuery("SELECT fcm_token FROM user_devices").
 		WithArgs("user-123").
-		WillReturnRows(pgxmock.NewRows([]string{"fcm_token"}).AddRow("token"))
+		WillReturnRows(sqlmock.NewRows([]string{"fcm_token"}).AddRow("token"))
 
 	mockMsgClient.On("SendEachForMulticast", mock.Anything, mock.Anything).
 		Return(nil, errors.New("fcm error"))
@@ -192,19 +192,19 @@ func TestNotificationService_SendNotification_SendError(t *testing.T) {
 }
 
 func TestNotificationService_SendNotification_CleanupError(t *testing.T) {
-	mockDB, err := pgxmock.NewConn()
+	db, mockDB, err := sqlmock.New()
 	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		t.Fatalf("error opening stub database: %s", err)
 	}
-	defer func() { _ = mockDB.Close(context.Background()) }()
+	defer db.Close()
 
 	mockMsgClient := new(MockMessagingClient)
-	service := NewNotificationService(mockDB, mockMsgClient)
+	service := NewNotificationService(db, mockMsgClient)
 
 	// 1. Get tokens
 	mockDB.ExpectQuery("SELECT fcm_token FROM user_devices").
 		WithArgs("user-123").
-		WillReturnRows(pgxmock.NewRows([]string{"fcm_token"}).AddRow("invalid-token"))
+		WillReturnRows(sqlmock.NewRows([]string{"fcm_token"}).AddRow("invalid-token"))
 
 	// 2. Send message failure
 	mockMsgClient.On("SendEachForMulticast", mock.Anything, mock.Anything).
@@ -218,7 +218,7 @@ func TestNotificationService_SendNotification_CleanupError(t *testing.T) {
 
 	// 3. Remove invalid token -> DB Error
 	mockDB.ExpectExec("DELETE FROM user_devices").
-		WithArgs("user-123", pgxmock.AnyArg()).
+		WithArgs("user-123", sqlmock.AnyArg()).
 		WillReturnError(errors.New("db delete error"))
 
 	err = service.SendNotification(context.Background(), "user-123", "Title", "Body", nil)
@@ -229,21 +229,21 @@ func TestNotificationService_SendNotification_CleanupError(t *testing.T) {
 
 func TestNotificationService_SendMulticastNotification(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
-		mockDB, err := pgxmock.NewConn()
+		db, mockDB, err := sqlmock.New()
 		if err != nil {
-			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+			t.Fatalf("error opening stub database: %s", err)
 		}
-		defer func() { _ = mockDB.Close(context.Background()) }()
+		defer db.Close()
 
 		mockMsgClient := new(MockMessagingClient)
-		service := NewNotificationService(mockDB, mockMsgClient)
+		service := NewNotificationService(db, mockMsgClient)
 
 		userIDs := []string{"user-1", "user-2"}
 
 		// 1. Get tokens
 		mockDB.ExpectQuery("SELECT fcm_token FROM user_devices").
-			WithArgs(userIDs).
-			WillReturnRows(pgxmock.NewRows([]string{"fcm_token"}).AddRow("token-1").AddRow("token-2"))
+			WithArgs(userIDs[0], userIDs[1]).
+			WillReturnRows(sqlmock.NewRows([]string{"fcm_token"}).AddRow("token-1").AddRow("token-2"))
 
 		// 2. Send message
 		mockMsgClient.On("SendEachForMulticast", mock.Anything, mock.MatchedBy(func(msg *messaging.MulticastMessage) bool {
@@ -257,28 +257,29 @@ func TestNotificationService_SendMulticastNotification(t *testing.T) {
 	})
 
 	t.Run("No Users", func(t *testing.T) {
-		mockDB, _ := pgxmock.NewConn()
-		service := NewNotificationService(mockDB, nil)
+		db, _, _ := sqlmock.New()
+		defer db.Close()
+		service := NewNotificationService(db, nil)
 		err := service.SendMulticastNotification(context.Background(), []string{}, "Title", "Body", nil)
 		assert.NoError(t, err)
 	})
 
 	t.Run("Cleanup Failed Tokens", func(t *testing.T) {
-		mockDB, err := pgxmock.NewConn()
+		db, mockDB, err := sqlmock.New()
 		if err != nil {
-			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+			t.Fatalf("error opening stub database: %s", err)
 		}
-		defer func() { _ = mockDB.Close(context.Background()) }()
+		defer db.Close()
 
 		mockMsgClient := new(MockMessagingClient)
-		service := NewNotificationService(mockDB, mockMsgClient)
+		service := NewNotificationService(db, mockMsgClient)
 
-		userIDs := []string{"user-1"}
+		userIDs := []string{"user-1", "user-2"}
 
 		// 1. Get tokens
 		mockDB.ExpectQuery("SELECT fcm_token FROM user_devices").
-			WithArgs(userIDs).
-			WillReturnRows(pgxmock.NewRows([]string{"fcm_token"}).AddRow("token-fail"))
+			WithArgs(userIDs[0], userIDs[1]).
+			WillReturnRows(sqlmock.NewRows([]string{"fcm_token"}).AddRow("token-fail"))
 
 		// 2. Send message
 		mockMsgClient.On("SendEachForMulticast", mock.Anything, mock.Anything).
@@ -292,8 +293,8 @@ func TestNotificationService_SendMulticastNotification(t *testing.T) {
 
 		// 3. Remove tokens
 		mockDB.ExpectExec("DELETE FROM user_devices").
-			WithArgs(pgxmock.AnyArg()).
-			WillReturnResult(pgxmock.NewResult("DELETE", 1))
+			WithArgs(sqlmock.AnyArg()).
+			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		err = service.SendMulticastNotification(context.Background(), userIDs, "Title", "Body", nil)
 		assert.NoError(t, err)

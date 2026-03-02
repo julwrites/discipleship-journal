@@ -25,26 +25,26 @@ func TestReadingPlanAPI_Contract(t *testing.T) {
 	userID := "00000000-0000-0000-0000-000000000001" // Default test user
 
 	// Seed User
-	_, err := pool.Exec(ctx, `
+	_, err := pool.ExecContext(ctx, `
 		INSERT INTO users (id, firebase_uid, email, username, created_at, updated_at)
-		VALUES ($1, 'test-uid-rp', 'rp@example.com', 'ReadingPlanUser', NOW(), NOW())
+		VALUES (?, 'test-uid-rp', 'rp@example.com', 'ReadingPlanUser', NOW(), NOW())
 		ON CONFLICT (id) DO NOTHING
 	`, userID)
 	require.NoError(t, err)
 
 	// Seed Plan
-	_, err = pool.Exec(ctx, `
+	_, err = pool.ExecContext(ctx, `
 		INSERT INTO reading_plans (id, title, description, days, plan_type, created_at, updated_at)
-		VALUES ($1, 'Test Plan', 'A test plan', 365, 'calendar', NOW(), NOW())
+		VALUES (?, 'Test Plan', 'A test plan', 365, 'calendar', NOW(), NOW())
 		ON CONFLICT (id) DO NOTHING
 	`, planID)
 	require.NoError(t, err)
 
 	// Seed Plan Days (at least Day 1)
-	_, err = pool.Exec(ctx, `
+	_, err = pool.ExecContext(ctx, `
 		INSERT INTO reading_plan_days (reading_plan_id, day_number, passage, created_at)
-		VALUES ($1, 1, 'Genesis 1', NOW())
-		ON CONFLICT DO NOTHING
+		VALUES (?, 1, 'Genesis 1', NOW())
+		ON DUPLICATE KEY UPDATE group_id=group_id
 	`, planID)
 	require.NoError(t, err)
 
@@ -75,7 +75,7 @@ func TestReadingPlanAPI_Contract(t *testing.T) {
 
 	t.Run("SubscribeToPlan", func(t *testing.T) {
 		// Ensure clean state
-		_, err := pool.Exec(ctx, "DELETE FROM user_reading_plans WHERE user_id=$1 AND reading_plan_id=$2", userID, planID)
+		_, err := pool.ExecContext(ctx, "DELETE FROM user_reading_plans WHERE user_id=? AND reading_plan_id=?", userID, planID)
 		require.NoError(t, err)
 
 		req := httptest.NewRequest("POST", "/api/reading-plans/"+planID+"/subscribe", nil)

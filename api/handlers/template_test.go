@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"discipleship_journal_api/models"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -204,7 +205,7 @@ func TestTemplateHandler_CloneTemplate(t *testing.T) {
 		userID := uuid.New()
 
 		mockService.On("CloneTemplate", mock.Anything, templateID, userID).Return(&models.StudyTemplate{
-			ID: uuid.New(),
+			ID:    uuid.New(),
 			Title: "Cloned Template",
 		}, nil)
 
