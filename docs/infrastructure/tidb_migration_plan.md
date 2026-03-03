@@ -18,23 +18,15 @@
 To deploy TiDB Serverless, you'll need to use Pulumi and the TiDB Cloud provider (`@tidbcloud/pulumi-tidbcloud`). Since the project doesn't have an existing Pulumi setup, we'll guide you through setting it up from scratch.
 
 ### Environment Strategy
-We will provision **separate** TiDB Serverless clusters for Staging and Production. TiDB Serverless allows up to 5 free clusters per organization (each with 5 GiB storage and 50M RUs/month). Two separate clusters fit well within these free tier limits and provide better isolation than our current shared Cloud SQL instance.
+We have provisioned **separate** TiDB Serverless clusters for Staging and Production via Pulumi in the `bible-api-infrastructure` repository.
 
-### Actions Required From You:
-1.  **Install Pulumi:** Download and install the Pulumi CLI from [pulumi.com](https://www.pulumi.com/docs/install/).
-2.  **Configure Pulumi State Management (GCS):** We will use a Google Cloud Storage (GCS) bucket to manage Pulumi state. This keeps state within our GCP environment securely and incurs negligible costs (pennies per month).
-    *   Create a GCS bucket: `gcloud storage buckets create gs://dj-pulumi-state --location=us-east1`
-    *   Log in to Pulumi using the bucket: `pulumi login gs://dj-pulumi-state`
-3.  **Set Up a TiDB Cloud Account:** Create an account at [tidbcloud.com](https://tidbcloud.com) if you don't have one.
-4.  **Get TiDB Cloud API Keys:** Generate a Public Key and a Private Key in the TiDB Cloud Console (Project Settings > API Access).
-5.  **Initialize Pulumi:** Create a new directory for infrastructure management (e.g., `infra/` at the root of the project).
-    *   Navigate to the directory: `mkdir infra && cd infra`
-    *   Run `pulumi new typescript`
-    *   Install the TiDB Cloud provider: `npm install @tidbcloud/pulumi-tidbcloud`
-6.  **Configure Pulumi with Credentials:** Set the configuration values (in your terminal within the `infra/` directory):
-    *   `pulumi config set tidbcloud:publicKey <your-public-key> --secret`
-    *   `pulumi config set tidbcloud:privateKey <your-private-key> --secret`
-    *   `pulumi config set tidbcloud:projectId <your-tidb-project-id>`
+### Actions Completed:
+1.  **Install Pulumi:** Done.
+2.  **Configure Pulumi State Management (GCS):** Done.
+3.  **Set Up a TiDB Cloud Account:** Done.
+4.  **Get TiDB Cloud API Keys:** Done.
+5.  **Initialize Pulumi:** Done.
+6.  **Configure Pulumi with Credentials:** Done.
 
 ### Proposed Pulumi Code (`infra/index.ts`):
 
@@ -181,24 +173,15 @@ The GitHub Actions pipeline (`.github/workflows/deploy.yml`) currently deploys t
 
 ### Required Changes to `deploy.yml`:
 
-1.  **Remove Cloud SQL Flag:** In the `deploy-backend` job, locate the `google-github-actions/deploy-cloudrun@v2` step.
-    *   **Change From:**
-        ```yaml
-        flags: '--service-account=${{ secrets.GCP_SERVICE_ACCOUNT }} --allow-unauthenticated --set-cloudsql-instances=${{ steps.vars.outputs.CLOUD_SQL_INSTANCE }}'
-        ```
-    *   **Change To:**
-        ```yaml
-        flags: '--service-account=${{ secrets.GCP_SERVICE_ACCOUNT }} --allow-unauthenticated'
-        ```
-2.  **Remove CLOUD_SQL_INSTANCE Environment Variable:** Remove the `CLOUD_SQL_INSTANCE` variable from the `env_vars` section in the same step.
-3.  **Update Secret Configuration (Google Secret Manager):** The deployment script itself doesn't need to change how secrets are loaded, but the *contents* of the secrets in GCP must change.
-    *   **Action Required (You):** Update the following secrets in Google Secret Manager for both `main` and `staging` (prefixed with `STG_`):
-        *   `DB_USERNAME` -> TiDB Username (e.g., `root`)
-        *   `DB_PASSWORD` -> TiDB Password
-        *   `DB_HOST` -> TiDB Endpoint (e.g., `gateway01.us-east-1.prod.aws.tidbcloud.com`)
-        *   `DB_PORT` -> `4000` (TiDB default)
-        *   `DB_NAME` -> `discipleship_journal`
-4.  **Database Connection Logic Update:** As mentioned in Section 3, the Go application's `api/database/db.go` must be updated to construct a standard MySQL DSN using these variables, rather than relying on the Cloud SQL Connector.
+1.  **Remove Cloud SQL Flag:** Completed.
+2.  **Remove CLOUD_SQL_INSTANCE Environment Variable:** Completed.
+3.  **Update Secret Configuration (Google Secret Manager):** Completed. Secrets for PROD and STG have been successfully created and populated via Pulumi.
+    *   `DB_USERNAME`
+    *   `DB_PASSWORD`
+    *   `DB_HOST`
+    *   `DB_PORT`
+    *   `DB_NAME`
+4.  **Database Connection Logic Update:** Completed. `api/database/db.go` has been refactored.
 
 ## 6. Pre-Commit Steps
 
