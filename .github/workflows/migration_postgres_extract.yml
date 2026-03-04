@@ -62,7 +62,7 @@ jobs:
             -e PG_USER=$PG_USER \
             -e PG_PASSWORD=$PG_PASSWORD \
             -e PG_DBNAME=$PG_DBNAME \
-            -v $(pwd)/csv_extracts:/app/csv_extracts \
+            -v $(pwd):/app \
             pg_extractor python3 /app/scripts/extract_postgres_to_csv.py --out-dir /app/csv_extracts
             
       - name: Upload CSV Artifacts
