@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install python dependencies for extraction script
-RUN pip3 install psycopg2-binary
+RUN pip3 install psycopg2-binary --break-system-packages
 
 # Install Cloud SQL Auth Proxy
 # Use arch command to get the right architecture
