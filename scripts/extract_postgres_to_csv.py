@@ -49,17 +49,9 @@ def extract_table_to_csv(conn, table_name: str, output_dir: str):
     
     with conn.cursor() as cursor:
         try:
-            # Check if table exists
-            cursor.execute("""
-                SELECT EXISTS (
-                    SELECT FROM information_schema.tables 
-                    WHERE table_schema = 'public' AND table_name = %s
-                );
-            """, (table_name,))
-            if not cursor.fetchone()[0]:
-                print(f"Table '{table_name}' does not exist, skipping.")
-                return
-            
+            # We skip information_schema because Cloud SQL 'postgres' user might not see tables 
+            # if they are owned by the 'cloudrun-service' IAM identity without explicit GRANTS.
+            # We rely on catching the native failure.
             # Count for progress
             cursor.execute(f'SELECT count(*) FROM "{table_name}"')
             total_rows = cursor.fetchone()[0]
@@ -133,6 +125,19 @@ def main():
     except Exception as e:
         print(f"Failed to connect to database: {e}")
         sys.exit(1)
+
+    # Diagnostic Table Logging
+    print("--- Diagnostic: What tables actually exist in this database? ---")
+    with conn.cursor() as cur:
+        try:
+            cur.execute("SELECT schemaname, tablename, tableowner FROM pg_catalog.pg_tables WHERE schemaname NOT IN ('pg_catalog', 'information_schema')")
+            all_tables = cur.fetchall()
+            for t in all_tables:
+                print(f"Schema: {t[0]}, Table: {t[1]}, Owner: {t[2]}")
+        except Exception as e:
+            print(f"Could not load pg_tables catalog: {e}")
+            conn.rollback()
+    print("----------------------------------------------------------------")
 
     # Track metrics
     extracted_tables = 0
