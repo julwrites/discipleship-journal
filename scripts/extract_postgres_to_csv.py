@@ -2,6 +2,7 @@ import os
 import csv
 import json
 import uuid
+import sys
 from typing import Any, List, Dict
 import argparse
 
@@ -10,7 +11,7 @@ try:
     from psycopg2.extras import RealDictCursor
 except ImportError:
     print("Error: psycopg2-binary is required. Install it via 'pip install psycopg2-binary'")
-    exit(1)
+    sys.exit(1)
 
 # List of all tables we want to extract
 USER_CENTRIC_TABLES = [
@@ -93,6 +94,7 @@ def extract_table_to_csv(conn, table_name: str, output_dir: str):
         except Exception as e:
             print(f"Error extracting table {table_name}: {e}")
             conn.rollback()
+            raise
 
 def main():
     parser = argparse.ArgumentParser(description="Extract Postgres tables to CSV for TiDB Import")
@@ -121,7 +123,7 @@ def main():
         )
     except Exception as e:
         print(f"Failed to connect to database: {e}")
-        return
+        sys.exit(1)
 
     tables_to_extract = USER_CENTRIC_TABLES
     
