@@ -56,8 +56,8 @@ jobs:
           # Generate short-lived OAuth token for IAM Auth based on the impersonated identity
           IAM_TOKEN=$(gcloud auth print-access-token)
           
-          # Get the email of the impersonated service account and clean it for Postgres
-          SA_EMAIL=${{ secrets.GCP_SERVICE_ACCOUNT }}
+          # Extract the service account email directly from the GCP_SA_KEY JSON secret
+          SA_EMAIL=$(echo '${{ secrets.GCP_SA_KEY }}' | jq -r .client_email)
           DB_USER=$(echo "$SA_EMAIL" | sed 's/\.gserviceaccount\.com//')
           
           # Mask token so it doesn't leak in logs
