@@ -38,15 +38,25 @@ jobs:
           # Wait a moment for proxy to initialize
           sleep 5
 
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
       - name: Set Environment Secrets
         id: vars
         run: |
-          # Using the global Postgres credentials configured in GCP Secret Manager prior to TiDB
+          # Fetch Postgres credentials dynamically from GCP Secret Manager
+          DB_USER=$(gcloud secrets versions access latest --secret="DB_USERNAME")
+          DB_PASS=$(gcloud secrets versions access latest --secret="DB_PASSWORD")
+          DB_NAME=$(gcloud secrets versions access latest --secret="DB_NAME")
+          
+          # Mask password so it doesn't leak in logs
+          echo "::add-mask::$DB_PASS"
+          
           echo "PG_HOST=127.0.0.1" >> $GITHUB_ENV
           echo "PG_PORT=5432" >> $GITHUB_ENV
-          echo "PG_USER=${{ secrets.DB_USERNAME }}" >> $GITHUB_ENV
-          echo "PG_PASSWORD=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
-          echo "PG_DBNAME=${{ secrets.DB_NAME }}" >> $GITHUB_ENV
+          echo "PG_USER=$DB_USER" >> $GITHUB_ENV
+          echo "PG_PASSWORD=$DB_PASS" >> $GITHUB_ENV
+          echo "PG_DBNAME=$DB_NAME" >> $GITHUB_ENV
 
       - name: Build and Run Data Extractor Image
         run: |
