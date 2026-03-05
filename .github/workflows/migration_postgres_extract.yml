@@ -19,10 +19,11 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Authenticate to Google Cloud (CI/CD Identity)
+      - name: Authenticate to Google Cloud (Impersonating App Service Account)
         uses: google-github-actions/auth@v2
         with:
           credentials_json: '${{ secrets.GCP_SA_KEY }}'
+          service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
 
       - name: Setup Cloud SQL Proxy
         run: |
@@ -56,9 +57,12 @@ jobs:
           # Generate short-lived OAuth token for IAM Auth based on the impersonated identity
           IAM_TOKEN=$(gcloud auth print-access-token)
           
-          # Extract the service account email directly from the GCP_SA_KEY JSON secret
-          # length is < 63 characters, so do NOT strip .gserviceaccount.com suffix!
-          DB_USER=$(echo '${{ secrets.GCP_SA_KEY }}' | jq -r .client_email)
+          # Extract the service account email directly from the string since we are impersonating it!
+          SA_EMAIL=${{ secrets.GCP_SERVICE_ACCOUNT }}
+          
+          # Postgres enforces exactly 63 characters max. cloudrun-service@discipleship-journal-52a2c.iam.gserviceaccount.com = 65 characters!
+          # We MUST truncate the .gserviceaccount.com part for this specific email!
+          DB_USER=$(echo "$SA_EMAIL" | sed 's/\.gserviceaccount\.com//')
           
           # Mask token so it doesn't leak in logs
           echo "::add-mask::$IAM_TOKEN"
