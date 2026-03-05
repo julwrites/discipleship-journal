@@ -10,7 +10,7 @@ on:
       pg_password:
         description: 'Legacy PostgreSQL Master Password for the `postgres` user'
         required: true
-        type: password
+        type: string
 
 jobs:
   extract-data:
