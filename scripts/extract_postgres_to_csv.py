@@ -13,16 +13,20 @@ except ImportError:
     print("Error: psycopg2-binary is required. Install it via 'pip install psycopg2-binary'")
     sys.exit(1)
 
-# List of all tables we want to extract
 USER_CENTRIC_TABLES = [
     "users",
-    "journal_entries",
+    "notes",
     "connections",
     "groups",
+    "group_members",
     "group_shares",
     "reading_plans",
+    "reading_plan_days",
+    "user_reading_plans",
+    "user_reading_plan_progress",
     "reading_plan_bookmarks",  # common pattern, but we'll try to extract what exists
     "memory_verses",
+    "verse_packs",
     "user_devices",
     "tags",
     "note_tags",
@@ -84,6 +88,10 @@ def extract_table_to_csv(conn, table_name: str, output_dir: str):
             print(f"Finished extracting {table_name} to {output_file}")
             return True
             
+        except psycopg2.errors.UndefinedTable:
+            print(f"Table '{table_name}' does not exist natively, skipping.")
+            conn.rollback()
+            return False
         except Exception as e:
             print(f"Error extracting table {table_name}: {e}")
             conn.rollback()
