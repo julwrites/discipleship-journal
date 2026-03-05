@@ -45,6 +45,8 @@ jobs:
 
       - name: Set Environment Secrets
         id: vars
+        env:
+          PG_EXTRACT_PASSWORD: ${{ github.event.inputs.pg_password }}
         run: |
           if [ "${{ github.event.inputs.target_env }}" == "production" ]; then
             ENV_PREFIX="PROD"
@@ -58,7 +60,7 @@ jobs:
           echo "PG_HOST=127.0.0.1" >> $GITHUB_ENV
           echo "PG_PORT=5432" >> $GITHUB_ENV
           echo "PG_USER=postgres" >> $GITHUB_ENV
-          echo "PG_PASSWORD=${{ github.event.inputs.pg_password }}" >> $GITHUB_ENV
+          echo "PG_PASSWORD=${PG_EXTRACT_PASSWORD}" >> $GITHUB_ENV
           echo "PG_DBNAME=$DB_NAME" >> $GITHUB_ENV
 
       - name: Build and Run Data Extractor Image
