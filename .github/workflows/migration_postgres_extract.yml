@@ -32,9 +32,9 @@ jobs:
           
           # Launch the proxy connecting to the OLD Google Cloud SQL Postgres Instance. 
           # Ensure it uses the explicit authentication JSON mapped from GitHub Secrets
-          # --auto-iam-authn is required for IAM authentication to work smoothly
+          # We omit --auto-iam-authn because Python passes the token explicitly as the database password
           export GOOGLE_APPLICATION_CREDENTIALS=${{ env.GOOGLE_GHA_CREDS_PATH }}
-          ./cloud-sql-proxy --auto-iam-authn ${{ secrets.CLOUD_SQL_INSTANCE }} &
+          ./cloud-sql-proxy ${{ secrets.CLOUD_SQL_INSTANCE }} &
           
           # Wait a moment for proxy to initialize
           sleep 5
