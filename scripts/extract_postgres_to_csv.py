@@ -115,13 +115,21 @@ def main():
     print(f"Connecting to Postgres: {args.user}@{args.host}:{args.port}/{args.dbname}")
     
     try:
-        conn = psycopg2.connect(
-            host=args.host,
-            port=args.port,
-            dbname=args.dbname,
-            user=args.user,
-            password=args.password
-        )
+        conn_kwargs = {
+            "host": args.host,
+            "port": args.port,
+            "dbname": args.dbname,
+            "user": args.user,
+        }
+        
+        # If using IAM authentication, sometimes the password should be passed or omitted
+        # The proxy auto-iam-authn handles generating the token, but we still have to give it to psycopg.
+        # Ensure password is included in kwargs if provided
+        if args.password:
+             conn_kwargs["password"] = args.password
+             
+        conn = psycopg2.connect(**conn_kwargs)
+        
     except Exception as e:
         print(f"Failed to connect to database: {e}")
         sys.exit(1)
