@@ -57,8 +57,8 @@ jobs:
           IAM_TOKEN=$(gcloud auth print-access-token)
           
           # Extract the service account email directly from the GCP_SA_KEY JSON secret
-          SA_EMAIL=$(echo '${{ secrets.GCP_SA_KEY }}' | jq -r .client_email)
-          DB_USER=$(echo "$SA_EMAIL" | sed 's/\.gserviceaccount\.com//')
+          # length is < 63 characters, so do NOT strip .gserviceaccount.com suffix!
+          DB_USER=$(echo '${{ secrets.GCP_SA_KEY }}' | jq -r .client_email)
           
           # Mask token so it doesn't leak in logs
           echo "::add-mask::$IAM_TOKEN"
