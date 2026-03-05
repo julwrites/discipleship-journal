@@ -43,10 +43,16 @@ jobs:
       - name: Set Environment Secrets
         id: vars
         run: |
+          if [ "${{ github.event.inputs.target_env }}" == "production" ]; then
+            ENV_PREFIX="PROD"
+          else
+            ENV_PREFIX="STG"
+          fi
+          
           # Fetch Postgres credentials dynamically from GCP Secret Manager
-          DB_USER=$(gcloud secrets versions access latest --secret="DB_USERNAME")
-          DB_PASS=$(gcloud secrets versions access latest --secret="DB_PASSWORD")
-          DB_NAME=$(gcloud secrets versions access latest --secret="DB_NAME")
+          DB_USER=$(gcloud secrets versions access latest --secret="${ENV_PREFIX}_DJ_DB_USERNAME")
+          DB_PASS=$(gcloud secrets versions access latest --secret="${ENV_PREFIX}_DJ_DB_PASSWORD")
+          DB_NAME=$(gcloud secrets versions access latest --secret="${ENV_PREFIX}_DJ_DB_NAME")
           
           # Mask password so it doesn't leak in logs
           echo "::add-mask::$DB_PASS"
