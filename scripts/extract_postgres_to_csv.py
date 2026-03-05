@@ -152,7 +152,9 @@ def main():
                 cur.execute(f'GRANT "{owner}" TO postgres')
                 
                 print(f"Switching Postgres Role to table owner: {owner} to grant extraction permissions")
-                cur.execute(f'SET ROLE "{owner}"')
+                # Commit the transaction so the role switch and GRANT persist for the entire session!
+                # If we don't commit here, a later conn.rollback() from a missing table will undo the SET ROLE!
+                conn.commit()
                 
         except Exception as e:
             print(f"Could not load pg_tables catalog: {e}")
