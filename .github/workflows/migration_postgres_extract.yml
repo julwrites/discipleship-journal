@@ -7,7 +7,6 @@ on:
         description: 'Environment DB Secrets to pull (staging/production)'
         required: true
         default: 'staging'
-        # Removed cloud_sql_instance input as we'll pull from secrets
 
 jobs:
   extract-data:
@@ -20,10 +19,11 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Authenticate to Google Cloud
+      - name: Authenticate to Google Cloud (Impersonating App Service Account)
         uses: google-github-actions/auth@v2
         with:
           credentials_json: '${{ secrets.GCP_SA_KEY }}'
+          service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
 
       - name: Setup Cloud SQL Proxy
         run: |
@@ -31,8 +31,10 @@ jobs:
           chmod +x cloud-sql-proxy
           
           # Launch the proxy connecting to the OLD Google Cloud SQL Postgres Instance. 
-          # Pull instance config directly from the repository secrets map
-          ./cloud-sql-proxy ${{ secrets.CLOUD_SQL_INSTANCE }} &
+          # Ensure it uses the explicit authentication JSON mapped from GitHub Secrets
+          # --auto-iam-authn is required for IAM authentication to work smoothly
+          export GOOGLE_APPLICATION_CREDENTIALS=${{ env.GOOGLE_GHA_CREDS_PATH }}
+          ./cloud-sql-proxy --auto-iam-authn ${{ secrets.CLOUD_SQL_INSTANCE }} &
           
           # Wait a moment for proxy to initialize
           sleep 5
@@ -49,18 +51,23 @@ jobs:
             ENV_PREFIX="STG"
           fi
           
-          # Fetch Postgres credentials dynamically from GCP Secret Manager
-          DB_USER=$(gcloud secrets versions access latest --secret="${ENV_PREFIX}_DJ_DB_USERNAME")
-          DB_PASS=$(gcloud secrets versions access latest --secret="${ENV_PREFIX}_DJ_DB_PASSWORD")
+          # Get the database name from the secret manager (same for TiDB and Postgres)
           DB_NAME=$(gcloud secrets versions access latest --secret="${ENV_PREFIX}_DJ_DB_NAME")
           
-          # Mask password so it doesn't leak in logs
-          echo "::add-mask::$DB_PASS"
+          # Generate short-lived OAuth token for IAM Auth based on the impersonated identity
+          IAM_TOKEN=$(gcloud auth print-access-token)
+          
+          # Get the email of the impersonated service account and clean it for Postgres
+          SA_EMAIL=${{ secrets.GCP_SERVICE_ACCOUNT }}
+          DB_USER=$(echo "$SA_EMAIL" | sed 's/\.gserviceaccount\.com//')
+          
+          # Mask token so it doesn't leak in logs
+          echo "::add-mask::$IAM_TOKEN"
           
           echo "PG_HOST=127.0.0.1" >> $GITHUB_ENV
           echo "PG_PORT=5432" >> $GITHUB_ENV
           echo "PG_USER=$DB_USER" >> $GITHUB_ENV
-          echo "PG_PASSWORD=$DB_PASS" >> $GITHUB_ENV
+          echo "PG_PASSWORD=$IAM_TOKEN" >> $GITHUB_ENV
           echo "PG_DBNAME=$DB_NAME" >> $GITHUB_ENV
 
       - name: Build and Run Data Extractor Image

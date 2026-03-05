@@ -4,14 +4,19 @@ on:
   push:
     branches:
       - main
-      - staging
   workflow_dispatch:
 
 env:
-  # Shared Backend GCP configuration
+  # Backend GCP configuration (from secrets)
+  # GCP_PROJECT_ID: Shared backend GCP project ID (different from Firebase project IDs)
+  # Create this secret if it doesn't exist
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GCP_REGION: ${{ secrets.GCP_REGION }}
+  GCP_SERVICE_NAME: ${{ secrets.GCP_SERVICE_NAME }}
   GCP_ARTIFACT_REPOSITORY: ${{ secrets.GCP_ARTIFACT_REPOSITORY }}
+
+  # Backend Firebase configuration (production Firebase project for authentication)
+  FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
 
 jobs:
   deploy-backend:
@@ -40,22 +45,6 @@ jobs:
       - name: Configure Docker to use gcloud as credential helper
         run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev
 
-      - name: Set Environment Variables
-        id: vars
-        run: |
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            echo "SERVICE_NAME=${{ secrets.GCP_SERVICE_NAME }}" >> $GITHUB_OUTPUT
-            echo "FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}" >> $GITHUB_OUTPUT
-            echo "CLOUD_SQL_INSTANCE=${{ secrets.CLOUD_SQL_INSTANCE }}" >> $GITHUB_OUTPUT
-            echo "APP_ENV=production" >> $GITHUB_OUTPUT
-          else
-            echo "SERVICE_NAME=${{ secrets.STG_GCP_SERVICE_NAME }}" >> $GITHUB_OUTPUT
-            echo "FIREBASE_PROJECT_ID=${{ secrets.STG_FIREBASE_PROJECT_ID }}" >> $GITHUB_OUTPUT
-            # Use production Cloud SQL instance for staging (shared instance), but app will use STG_ secrets to select DB
-            echo "CLOUD_SQL_INSTANCE=${{ secrets.CLOUD_SQL_INSTANCE }}" >> $GITHUB_OUTPUT
-            echo "APP_ENV=staging" >> $GITHUB_OUTPUT
-          fi
-
       - name: Validate Configuration
         run: |
           echo "🔍 Validating configuration..."
@@ -71,16 +60,12 @@ jobs:
             echo "❌ ERROR: GCP_ARTIFACT_REPOSITORY is empty!"
             exit 1
           fi
-          if [ -z "${{ steps.vars.outputs.SERVICE_NAME }}" ]; then
-            echo "❌ ERROR: SERVICE_NAME is empty!"
-            exit 1
-          fi
           echo "✅ Configuration validated"
 
       - name: Build and Push Container to Artifact Registry
         run: |
           # Build image with Artifact Registry tag
-          IMAGE_TAG=${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPOSITORY }}/${{ steps.vars.outputs.SERVICE_NAME }}:${{ github.sha }}
+          IMAGE_TAG=${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPOSITORY }}/${{ env.GCP_SERVICE_NAME }}:${{ github.sha }}
 
           echo "Building image: $IMAGE_TAG"
           docker build -t $IMAGE_TAG .
@@ -89,20 +74,19 @@ jobs:
           docker push $IMAGE_TAG
 
           echo "✅ Image pushed successfully to Artifact Registry"
-          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
       - name: Deploy to Cloud Run from Artifact Registry
         uses: google-github-actions/deploy-cloudrun@v2
         with:
-          service: ${{ steps.vars.outputs.SERVICE_NAME }}
-          image: ${{ env.IMAGE_TAG }}
+          service: ${{ env.GCP_SERVICE_NAME }}
+          image: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPOSITORY }}/${{ env.GCP_SERVICE_NAME }}:${{ github.sha }}
           region: ${{ env.GCP_REGION }}
-          flags: '--service-account=${{ secrets.GCP_SERVICE_ACCOUNT }} --allow-unauthenticated --set-cloudsql-instances=${{ steps.vars.outputs.CLOUD_SQL_INSTANCE }}'
+          flags: '--service-account=${{ secrets.GCP_SERVICE_ACCOUNT }} --allow-unauthenticated --set-cloudsql-instances=${{ secrets.CLOUD_SQL_INSTANCE }}'
           env_vars: |
-            APP_ENV=${{ steps.vars.outputs.APP_ENV }}
+            APP_ENV=production
             GOOGLE_CLOUD_PROJECT=${{ env.GCP_PROJECT_ID }}
-            FIREBASE_PROJECT_ID=${{ steps.vars.outputs.FIREBASE_PROJECT_ID }}
-            CLOUD_SQL_INSTANCE=${{ steps.vars.outputs.CLOUD_SQL_INSTANCE }}
+            FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
+            CLOUD_SQL_INSTANCE=${{ secrets.CLOUD_SQL_INSTANCE }}
             # Note: CLOUD_SQL_INSTANCE env var is required for the app to detect Cloud SQL connection
             # Application secrets (DB_USERNAME, DB_PASSWORD, DB_NAME) are loaded from Google Secret Manager at runtime
 
@@ -115,17 +99,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Determine Environment
-        id: env
-        run: |
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            echo "is_prod=true" >> $GITHUB_OUTPUT
-            echo "FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}" >> $GITHUB_OUTPUT
-          else
-            echo "is_prod=false" >> $GITHUB_OUTPUT
-            echo "FIREBASE_PROJECT_ID=${{ secrets.STG_FIREBASE_PROJECT_ID }}" >> $GITHUB_OUTPUT
-          fi
-
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
@@ -134,7 +107,7 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
         with:
-          project_id: ${{ steps.env.outputs.FIREBASE_PROJECT_ID }}
+          project_id: ${{ env.FIREBASE_PROJECT_ID }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -149,19 +122,19 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          FIREBASE_API_KEY: ${{ steps.env.outputs.is_prod == 'true' && secrets.FIREBASE_API_KEY || secrets.STG_FIREBASE_API_KEY }}
-          FIREBASE_AUTH_DOMAIN: ${{ steps.env.outputs.is_prod == 'true' && secrets.FIREBASE_AUTH_DOMAIN || secrets.STG_FIREBASE_AUTH_DOMAIN }}
-          FIREBASE_PROJECT_ID: ${{ steps.env.outputs.FIREBASE_PROJECT_ID }}
-          FIREBASE_STORAGE_BUCKET: ${{ steps.env.outputs.is_prod == 'true' && secrets.FIREBASE_STORAGE_BUCKET || secrets.STG_FIREBASE_STORAGE_BUCKET }}
-          FIREBASE_MESSAGING_SENDER_ID: ${{ steps.env.outputs.is_prod == 'true' && secrets.FIREBASE_MESSAGING_SENDER_ID || secrets.STG_FIREBASE_MESSAGING_SENDER_ID }}
-          FIREBASE_APP_ID: ${{ steps.env.outputs.is_prod == 'true' && secrets.FIREBASE_APP_ID || secrets.STG_FIREBASE_APP_ID }}
-          FIREBASE_MEASUREMENT_ID: ${{ steps.env.outputs.is_prod == 'true' && secrets.FIREBASE_MEASUREMENT_ID || secrets.STG_FIREBASE_MEASUREMENT_ID }}
-          GCP_API_URL: ${{ steps.env.outputs.is_prod == 'true' && secrets.GCP_API_URL || secrets.STG_GCP_API_URL }}
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_PROJECT_ID: ${{ env.FIREBASE_PROJECT_ID }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
+          GCP_API_URL: ${{ secrets.GCP_API_URL }}
 
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: ${{ steps.env.outputs.is_prod == 'true' && secrets.FIREBASE_SERVICE_ACCOUNT_DISCIPLESHIP_JOURNAL || secrets.STG_FIREBASE_SERVICE_ACCOUNT_DISCIPLESHIP_JOURNAL }}
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_DISCIPLESHIP_JOURNAL }}'
           channelId: live
-          projectId: ${{ steps.env.outputs.FIREBASE_PROJECT_ID }}
+          projectId: ${{ env.FIREBASE_PROJECT_ID }}
