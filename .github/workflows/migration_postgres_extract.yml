@@ -19,11 +19,10 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Authenticate to Google Cloud (Impersonating App Service Account)
+      - name: Authenticate to Google Cloud (CI/CD Identity)
         uses: google-github-actions/auth@v2
         with:
           credentials_json: '${{ secrets.GCP_SA_KEY }}'
-          service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
 
       - name: Setup Cloud SQL Proxy
         run: |
@@ -57,8 +56,8 @@ jobs:
           # Generate short-lived OAuth token for IAM Auth based on the impersonated identity
           IAM_TOKEN=$(gcloud auth print-access-token)
           
-          # Get the email of the impersonated service account and clean it for Postgres
-          SA_EMAIL=${{ secrets.GCP_SERVICE_ACCOUNT }}
+          # Get the email of the authenticated CI/CD service account
+          SA_EMAIL=$(gcloud config get-value account)
           DB_USER=$(echo "$SA_EMAIL" | sed 's/\.gserviceaccount\.com//')
           
           # Mask token so it doesn't leak in logs
