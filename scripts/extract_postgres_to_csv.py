@@ -67,7 +67,7 @@ def extract_table_to_csv(conn, table_name: str, output_dir: str):
             
             if total_rows == 0:
                 print(f"Skipping empty table: {table_name}")
-                return
+                return True
 
             cursor.execute(f'SELECT * FROM "{table_name}"')
             
@@ -90,6 +90,7 @@ def extract_table_to_csv(conn, table_name: str, output_dir: str):
                         print(f"  ... {rows_written}/{total_rows} rows extracted")
                         
             print(f"Finished extracting {table_name} to {output_file}")
+            return True
             
         except Exception as e:
             print(f"Error extracting table {table_name}: {e}")
@@ -125,9 +126,12 @@ def main():
         print(f"Failed to connect to database: {e}")
         sys.exit(1)
 
+    # Track metrics
+    extracted_tables = 0
     tables_to_extract = USER_CENTRIC_TABLES
     
     if args.all_tables:
+        print("Using --all-tables rule")
         with conn.cursor() as cursor:
             cursor.execute("""
                 SELECT table_name 
@@ -137,10 +141,17 @@ def main():
             tables_to_extract = [row[0] for row in cursor.fetchall()]
 
     for table in tables_to_extract:
-        extract_table_to_csv(conn, table, args.out_dir)
-        
+        result = extract_table_to_csv(conn, table, args.out_dir)
+        if result:
+            extracted_tables += 1
+            
     conn.close()
-    print("Migration extraction complete.")
+    
+    if extracted_tables == 0:
+        print("MIGRATION FAILED: No tables were extracted. Please check database connectivity and target Schema.")
+        sys.exit(1)
+        
+    print(f"Migration extraction complete. Total tables: {extracted_tables}")
 
 if __name__ == "__main__":
     main()
