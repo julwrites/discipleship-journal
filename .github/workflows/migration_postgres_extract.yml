@@ -33,7 +33,8 @@ jobs:
           chmod +x cloud-sql-proxy
           
           # Launch the proxy connecting to the OLD Google Cloud SQL Postgres Instance. 
-          ./cloud-sql-proxy ${{ github.event.inputs.cloud_sql_instance }} &
+          # Enable automatic IAM authentication since we are using an IAM service account user.
+          ./cloud-sql-proxy --auto-iam-authn ${{ github.event.inputs.cloud_sql_instance }} &
           
           # Wait a moment for proxy to initialize
           sleep 5
