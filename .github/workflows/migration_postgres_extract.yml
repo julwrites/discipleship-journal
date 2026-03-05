@@ -7,9 +7,7 @@ on:
         description: 'Environment DB Secrets to pull (staging/production)'
         required: true
         default: 'staging'
-      cloud_sql_instance:
-        description: 'Cloud SQL Instance Connection Name (e.g. project:region:instance)'
-        required: true
+        # Removed cloud_sql_instance input as we'll pull from secrets
 
 jobs:
   extract-data:
@@ -26,7 +24,6 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           credentials_json: '${{ secrets.GCP_SA_KEY }}'
-          service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
 
       - name: Setup Cloud SQL Proxy
         run: |
@@ -34,10 +31,8 @@ jobs:
           chmod +x cloud-sql-proxy
           
           # Launch the proxy connecting to the OLD Google Cloud SQL Postgres Instance. 
-          # Ensure it uses the explicit authentication JSON mapped from GitHub Secrets
-          # --auto-iam-authn is required for IAM authentication to work
-          export GOOGLE_APPLICATION_CREDENTIALS=${{ env.GOOGLE_GHA_CREDS_PATH }}
-          ./cloud-sql-proxy --auto-iam-authn ${{ github.event.inputs.cloud_sql_instance }} &
+          # Pull instance config directly from the repository secrets map
+          ./cloud-sql-proxy ${{ secrets.CLOUD_SQL_INSTANCE }} &
           
           # Wait a moment for proxy to initialize
           sleep 5
@@ -47,22 +42,11 @@ jobs:
 
       - name: Set Environment Secrets
         id: vars
-        run: |
-          # Fetch Postgres credentials dynamically from GCP Secret Manager
-          DB_USER=$(gcloud secrets versions access latest --secret="DB_USERNAME")
-          DB_NAME=$(gcloud secrets versions access latest --secret="DB_NAME")
-          
-          # Generate short-lived OAuth token for IAM Auth
-          IAM_TOKEN=$(gcloud auth print-access-token)
-          
-          # Mask token so it doesn't leak in logs
-          echo "::add-mask::$IAM_TOKEN"
-          
           echo "PG_HOST=127.0.0.1" >> $GITHUB_ENV
           echo "PG_PORT=5432" >> $GITHUB_ENV
-          echo "PG_USER=$DB_USER" >> $GITHUB_ENV
-          echo "PG_PASSWORD=$IAM_TOKEN" >> $GITHUB_ENV
-          echo "PG_DBNAME=$DB_NAME" >> $GITHUB_ENV
+          echo "PG_USER=postgres" >> $GITHUB_ENV
+          echo "PG_PASSWORD=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
+          echo "PG_DBNAME=${{ secrets.DB_NAME }}" >> $GITHUB_ENV
 
       - name: Build and Run Data Extractor Image
         run: |
