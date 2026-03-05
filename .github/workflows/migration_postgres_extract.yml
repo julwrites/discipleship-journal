@@ -7,6 +7,10 @@ on:
         description: 'Environment DB Secrets to pull (staging/production)'
         required: true
         default: 'staging'
+      pg_password:
+        description: 'Legacy PostgreSQL Master Password for the `postgres` user'
+        required: true
+        type: password
 
 jobs:
   extract-data:
@@ -31,9 +35,6 @@ jobs:
           chmod +x cloud-sql-proxy
           
           # Launch the proxy connecting to the OLD Google Cloud SQL Postgres Instance. 
-          # Ensure it uses the explicit authentication JSON mapped from GitHub Secrets
-          # We omit --auto-iam-authn because Python passes the token explicitly as the database password
-          export GOOGLE_APPLICATION_CREDENTIALS=${{ env.GOOGLE_GHA_CREDS_PATH }}
           ./cloud-sql-proxy ${{ secrets.CLOUD_SQL_INSTANCE }} &
           
           # Wait a moment for proxy to initialize
@@ -51,26 +52,13 @@ jobs:
             ENV_PREFIX="STG"
           fi
           
-          # Get the database name from the secret manager (same for TiDB and Postgres)
+          # Get the database name from the secret manager 
           DB_NAME=$(gcloud secrets versions access latest --secret="${ENV_PREFIX}_DJ_DB_NAME")
-          
-          # Generate short-lived OAuth token for IAM Auth based on the impersonated identity
-          IAM_TOKEN=$(gcloud auth print-access-token)
-          
-          # Extract the service account email directly from the string since we are impersonating it!
-          SA_EMAIL=${{ secrets.GCP_SERVICE_ACCOUNT }}
-          
-          # Postgres enforces exactly 63 characters max. cloudrun-service@discipleship-journal-52a2c.iam.gserviceaccount.com = 65 characters!
-          # We MUST truncate the .gserviceaccount.com part for this specific email!
-          DB_USER=$(echo "$SA_EMAIL" | sed 's/\.gserviceaccount\.com//')
-          
-          # Mask token so it doesn't leak in logs
-          echo "::add-mask::$IAM_TOKEN"
           
           echo "PG_HOST=127.0.0.1" >> $GITHUB_ENV
           echo "PG_PORT=5432" >> $GITHUB_ENV
-          echo "PG_USER=$DB_USER" >> $GITHUB_ENV
-          echo "PG_PASSWORD=$IAM_TOKEN" >> $GITHUB_ENV
+          echo "PG_USER=postgres" >> $GITHUB_ENV
+          echo "PG_PASSWORD=${{ github.event.inputs.pg_password }}" >> $GITHUB_ENV
           echo "PG_DBNAME=$DB_NAME" >> $GITHUB_ENV
 
       - name: Build and Run Data Extractor Image
