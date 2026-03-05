@@ -35,8 +35,9 @@ jobs:
           
           # Launch the proxy connecting to the OLD Google Cloud SQL Postgres Instance. 
           # Ensure it uses the explicit authentication JSON mapped from GitHub Secrets
+          # --auto-iam-authn is required for IAM authentication to work
           export GOOGLE_APPLICATION_CREDENTIALS=${{ env.GOOGLE_GHA_CREDS_PATH }}
-          ./cloud-sql-proxy ${{ github.event.inputs.cloud_sql_instance }} &
+          ./cloud-sql-proxy --auto-iam-authn ${{ github.event.inputs.cloud_sql_instance }} &
           
           # Wait a moment for proxy to initialize
           sleep 5
@@ -49,16 +50,18 @@ jobs:
         run: |
           # Fetch Postgres credentials dynamically from GCP Secret Manager
           DB_USER=$(gcloud secrets versions access latest --secret="DB_USERNAME")
-          DB_PASS=$(gcloud secrets versions access latest --secret="DB_PASSWORD")
           DB_NAME=$(gcloud secrets versions access latest --secret="DB_NAME")
           
-          # Mask password so it doesn't leak in logs
-          echo "::add-mask::$DB_PASS"
+          # Generate short-lived OAuth token for IAM Auth
+          IAM_TOKEN=$(gcloud auth print-access-token)
+          
+          # Mask token so it doesn't leak in logs
+          echo "::add-mask::$IAM_TOKEN"
           
           echo "PG_HOST=127.0.0.1" >> $GITHUB_ENV
           echo "PG_PORT=5432" >> $GITHUB_ENV
-          echo "PG_USER=postgres" >> $GITHUB_ENV
-          echo "PG_PASSWORD=$DB_PASS" >> $GITHUB_ENV
+          echo "PG_USER=$DB_USER" >> $GITHUB_ENV
+          echo "PG_PASSWORD=$IAM_TOKEN" >> $GITHUB_ENV
           echo "PG_DBNAME=$DB_NAME" >> $GITHUB_ENV
 
       - name: Build and Run Data Extractor Image
