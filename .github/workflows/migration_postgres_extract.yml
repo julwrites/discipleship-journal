@@ -8,9 +8,9 @@ on:
         required: true
         default: 'staging'
       pg_password:
-        description: 'Legacy PostgreSQL Master Password for the postgres user'
+        description: 'Legacy PostgreSQL Master Password for the `postgres` user'
         required: true
-        default: ''
+        type: password
 
 jobs:
   extract-data:
