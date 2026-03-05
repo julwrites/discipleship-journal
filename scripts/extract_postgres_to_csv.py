@@ -136,9 +136,13 @@ def main():
                 print(f"Schema: {t[0]}, Table: {t[1]}, Owner: {t[2]}")
                 
             # If tables exist, switch our database execution role to the owner of the first table
-            # This bypasses the permission denial when 'postgres' tries to read 'cloudrun-service' tables
+            # In Cloud SQL, 'postgres' is a cloudsqlsuperuser and can grant roles.
+            # We first grant the IAM role to postgres, which allows postgres to inherit/switch to it.
             if all_tables:
                 owner = all_tables[0][2]
+                print(f"Granting table owner role '{owner}' to postgres user...")
+                cur.execute(f'GRANT "{owner}" TO postgres')
+                
                 print(f"Switching Postgres Role to table owner: {owner} to grant extraction permissions")
                 cur.execute(f'SET ROLE "{owner}"')
                 
