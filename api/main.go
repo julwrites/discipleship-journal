@@ -21,9 +21,9 @@ import (
 	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/services"
 
+	"database/sql"
 	_ "discipleship_journal_api/docs"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
+
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
@@ -44,28 +44,20 @@ type mockDatabase struct {
 	connected bool
 }
 
-func (m *mockDatabase) Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error) {
+func (m *mockDatabase) QueryContext(ctx context.Context, sql string, args ...any) (*sql.Rows, error) {
 	return nil, fmt.Errorf("database not connected")
 }
 
-func (m *mockDatabase) QueryRow(ctx context.Context, sql string, args ...any) pgx.Row {
-	// Return a mock row that will error on Scan
-	return &mockRow{}
+func (m *mockDatabase) QueryRowContext(ctx context.Context, sql string, args ...any) *sql.Row {
+	return nil
 }
 
-func (m *mockDatabase) Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error) {
-	return pgconn.CommandTag{}, fmt.Errorf("database not connected")
-}
-
-func (m *mockDatabase) Begin(ctx context.Context) (pgx.Tx, error) {
+func (m *mockDatabase) ExecContext(ctx context.Context, sql string, arguments ...any) (sql.Result, error) {
 	return nil, fmt.Errorf("database not connected")
 }
 
-// mockRow implements pgx.Row but returns error on Scan
-type mockRow struct{}
-
-func (m *mockRow) Scan(dest ...any) error {
-	return fmt.Errorf("database not connected")
+func (m *mockDatabase) BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error) {
+	return nil, fmt.Errorf("database not connected")
 }
 
 // @host localhost:8080
@@ -95,9 +87,38 @@ func main() {
 
 	// Load configuration from Secret Manager or environment variables
 	loadSecret := func(secretName string) string {
+		ctx := context.Background()
+		var gsmNames []string
+
+		if strings.HasPrefix(secretName, "DB_") {
+			if os.Getenv("APP_ENV") == "production" {
+				gsmNames = append(gsmNames, "PROD_DJ_"+secretName)
+			} else {
+				gsmNames = append(gsmNames, "STG_DJ_"+secretName)
+			}
+		} else {
+			if os.Getenv("APP_ENV") != "production" {
+				gsmNames = append(gsmNames, "STG_"+secretName)
+			}
+			gsmNames = append(gsmNames, secretName)
+		}
+
+		for _, name := range gsmNames {
+			if secretLoader != nil {
+				if v, err := secretLoader.LoadSecret(ctx, name); err == nil && v != "" {
+					return v
+				}
+			} else {
+				if v := os.Getenv(name); v != "" {
+					return v
+				}
+			}
+		}
+
+		// Fallback
 		var value string
 		if secretLoader != nil {
-			value, _ = secretLoader.LoadSecret(context.Background(), secretName)
+			value, _ = secretLoader.LoadSecret(ctx, secretName)
 			if value == "" {
 				value = os.Getenv(secretName)
 			}
@@ -124,6 +145,7 @@ func main() {
 
 	// Load CORS allowed origins from Secret Manager
 	corsOrigins := loadSecret("CORS_ALLOWED_ORIGINS")
+
 	if corsOrigins != "" {
 		_ = os.Setenv("CORS_ALLOWED_ORIGINS", corsOrigins)
 		logger.Info("Loaded CORS allowed origins", "value", corsOrigins)
@@ -241,7 +263,8 @@ func main() {
 
 	// Update handlers to use notification service
 	connectionHandler := handlers.NewConnectionHandler(dbWrapper, notificationService)
-	groupHandler := handlers.NewGroupHandler(dbWrapper, notificationService)
+	groupService := services.NewGroupService(dbWrapper, notificationService)
+	groupHandler := handlers.NewGroupHandler(groupService)
 	groupShareHandler := handlers.NewGroupShareHandler(dbWrapper, notificationService)
 	notificationHandler := handlers.NewNotificationHandler(notificationService)
 
@@ -298,7 +321,7 @@ func main() {
 			return
 		}
 
-		if err := database.DB.Ping(r.Context()); err != nil {
+		if err := database.DB.PingContext(r.Context()); err != nil {
 			w.WriteHeader(http.StatusServiceUnavailable)
 			logger.Error("Health check failed: DB ping failed", "error", err)
 			if _, err := w.Write([]byte("DATABASE_PING_FAILED")); err != nil {
@@ -329,6 +352,10 @@ func main() {
 		r.Put("/api/notes/{id}", noteHandler.UpdateNote)
 		r.Delete("/api/notes/{id}", noteHandler.DeleteNote)
 
+		r.Get("/api/tags", noteHandler.GetTags)
+		r.Post("/api/tags", noteHandler.CreateTag)
+		r.Delete("/api/tags/{id}", noteHandler.DeleteTag)
+
 		r.Get("/api/bible/passage", bibleHandler.GetBiblePassage)
 		r.Get("/api/bible/versions", bibleHandler.GetBibleVersions) // Added this
 		r.Post("/api/chat", chatHandler.ChatWithAI)
@@ -348,6 +375,7 @@ func main() {
 		r.Post("/api/groups", groupHandler.CreateGroup)
 		r.Get("/api/groups", groupHandler.ListMyGroups)
 		r.Get("/api/groups/search", groupHandler.SearchGroups)
+		r.Post("/api/groups/direct", groupHandler.GetOrCreateDirectGroup)
 		r.Post("/api/groups/{id}/join", groupHandler.JoinGroup)
 		r.Delete("/api/groups/{id}/leave", groupHandler.LeaveGroup)
 		r.Get("/api/groups/{id}/members", groupHandler.GetGroupMembers)
@@ -363,8 +391,10 @@ func main() {
 		r.Get("/api/reading-plans", readingPlanHandler.GetAllPlans)
 		r.Get("/api/reading-plans/{id}", readingPlanHandler.GetPlan)
 		r.Post("/api/reading-plans/{id}/subscribe", readingPlanHandler.Subscribe)
+		r.Delete("/api/reading-plans/{id}/subscribe", readingPlanHandler.Unsubscribe)
 		r.Get("/api/my-reading-plans", readingPlanHandler.GetUserPlans)
 		r.Post("/api/my-reading-plans/{id}/progress", readingPlanHandler.MarkDayComplete)
+		r.Delete("/api/my-reading-plans/{id}/progress/{day_number}", readingPlanHandler.UnmarkDayComplete)
 		r.Get("/api/my-reading-plans/{id}/progress", readingPlanHandler.GetPlanProgress)
 
 		// Memory Verses (Refactored)
@@ -377,6 +407,8 @@ func main() {
 		r.Post("/api/verse-packs/{id}/clone", memoryVerseHandler.ClonePack)
 		r.Put("/api/memory-verses/{verseId}", memoryVerseHandler.UpdateVerse)
 		r.Delete("/api/memory-verses/{verseId}", memoryVerseHandler.DeleteVerse)
+		r.Put("/api/memory-verses/{verseId}/preference", memoryVerseHandler.SetVersePreference)
+		r.Delete("/api/memory-verses/{verseId}/preference", memoryVerseHandler.RemoveVersePreference)
 
 		// Study Templates
 		r.Post("/api/templates", templateHandler.CreateTemplate)
