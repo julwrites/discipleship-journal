@@ -142,11 +142,16 @@ def main():
                 sql_path = os.path.join(migrations_dir, f)
                 with open(sql_path, 'r', encoding='utf-8') as sql_file:
                     sql_content = sql_file.read().strip()
-                    if sql_content:
-                        try:
-                            cursor.execute(sql_content)
-                        except Exception as e:
-                            print(f"Warning: Migrations error on {f} (may be safe if already exists): {e}")
+                
+                # Execute statements individually to prevent one failure from dropping the rest of the file
+                # Basic split by semicolon. (Ignores semicolons inside quotes roughly, but sufficient for these schemas)
+                import re
+                statements = [s.strip() for s in sql_content.split(';') if s.strip()]
+                for stmt in statements:
+                    try:
+                        cursor.execute(stmt)
+                    except Exception as e:
+                        print(f"Warning: Migrations error on {f} (statement: {stmt[:40]}...): {e}")
             
             cursor.execute("SET FOREIGN_KEY_CHECKS=1;")
             conn.commit()
