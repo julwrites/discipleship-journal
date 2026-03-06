@@ -1,5 +1,5 @@
 ALTER TABLE study_templates
-ADD COLUMN bible_references JSONB DEFAULT '[]',
-ADD COLUMN allow_user_passages BOOLEAN DEFAULT FALSE,
-ADD COLUMN template_body TEXT DEFAULT '',
-ADD COLUMN required_version TEXT DEFAULT '';
+ADD COLUMN bible_references JSON,
+ADD COLUMN allow_user_passages BOOLEAN DEFAULT false,
+ADD COLUMN template_body TEXT,
+ADD COLUMN required_version VARCHAR(50) DEFAULT '';
