@@ -87,25 +87,36 @@ func main() {
 
 	// Load configuration from Secret Manager or environment variables
 	loadSecret := func(secretName string) string {
-		var value string
 		ctx := context.Background()
+		var gsmNames []string
 
-		// If not production, try to load STG_ prefixed secret first (e.g., STG_DB_NAME)
-		// This allows Staging to override specific secrets while sharing others
-		if os.Getenv("APP_ENV") != "production" {
-			stgName := "STG_" + secretName
+		if strings.HasPrefix(secretName, "DB_") {
+			if os.Getenv("APP_ENV") == "production" {
+				gsmNames = append(gsmNames, "PROD_DJ_"+secretName)
+			} else {
+				gsmNames = append(gsmNames, "STG_DJ_"+secretName)
+			}
+		} else {
+			if os.Getenv("APP_ENV") != "production" {
+				gsmNames = append(gsmNames, "STG_"+secretName)
+			}
+			gsmNames = append(gsmNames, secretName)
+		}
+
+		for _, name := range gsmNames {
 			if secretLoader != nil {
-				// LoadSecret checks GSM then Env for stgName
-				if v, err := secretLoader.LoadSecret(ctx, stgName); err == nil && v != "" {
+				if v, err := secretLoader.LoadSecret(ctx, name); err == nil && v != "" {
 					return v
 				}
 			} else {
-				if v := os.Getenv(stgName); v != "" {
+				if v := os.Getenv(name); v != "" {
 					return v
 				}
 			}
 		}
 
+		// Fallback
+		var value string
 		if secretLoader != nil {
 			value, _ = secretLoader.LoadSecret(ctx, secretName)
 			if value == "" {

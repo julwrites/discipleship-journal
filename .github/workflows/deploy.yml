@@ -81,12 +81,11 @@ jobs:
           service: ${{ env.GCP_SERVICE_NAME }}
           image: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPOSITORY }}/${{ env.GCP_SERVICE_NAME }}:${{ github.sha }}
           region: ${{ env.GCP_REGION }}
-          flags: '--service-account=${{ secrets.GCP_SERVICE_ACCOUNT }} --allow-unauthenticated --set-cloudsql-instances=${{ secrets.CLOUD_SQL_INSTANCE }}'
+          flags: '--service-account=${{ secrets.GCP_SERVICE_ACCOUNT }} --allow-unauthenticated'
           env_vars: |
             APP_ENV=production
             GOOGLE_CLOUD_PROJECT=${{ env.GCP_PROJECT_ID }}
             FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
-            CLOUD_SQL_INSTANCE=${{ secrets.CLOUD_SQL_INSTANCE }}
             # Note: CLOUD_SQL_INSTANCE env var is required for the app to detect Cloud SQL connection
             # Application secrets (DB_USERNAME, DB_PASSWORD, DB_NAME) are loaded from Google Secret Manager at runtime
 
