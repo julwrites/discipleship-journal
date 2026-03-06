@@ -58,14 +58,24 @@ jobs:
           # Fetch the legacy postgres password directly from Secret Manager's DB_PASSWORD
           PG_EXTRACT_PASSWORD=$(gcloud secrets versions access latest --secret="DB_PASSWORD")
           
+          # Fetch the new TiDB credentials
+          TIDB_HOST=$(gcloud secrets versions access latest --secret="${ENV_PREFIX}_DJ_DB_HOST")
+          TIDB_USER=$(gcloud secrets versions access latest --secret="${ENV_PREFIX}_DJ_DB_USERNAME")
+          TIDB_PASSWORD=$(gcloud secrets versions access latest --secret="${ENV_PREFIX}_DJ_DB_PASSWORD")
+          
           # Mask password securely
           echo "::add-mask::$PG_EXTRACT_PASSWORD"
+          echo "::add-mask::$TIDB_PASSWORD"
           
           echo "PG_HOST=127.0.0.1" >> $GITHUB_ENV
           echo "PG_PORT=5432" >> $GITHUB_ENV
           echo "PG_USER=postgres" >> $GITHUB_ENV
           echo "PG_PASSWORD=${PG_EXTRACT_PASSWORD}" >> $GITHUB_ENV
           echo "PG_DBNAME=$DB_NAME" >> $GITHUB_ENV
+          
+          echo "TIDB_HOST=${TIDB_HOST}" >> $GITHUB_ENV
+          echo "TIDB_USER=${TIDB_USER}" >> $GITHUB_ENV
+          echo "TIDB_PASSWORD=${TIDB_PASSWORD}" >> $GITHUB_ENV
 
       - name: Build and Run Data Extractor Image
         run: |
@@ -83,6 +93,23 @@ jobs:
             -e PG_DBNAME=$PG_DBNAME \
             -v $(pwd):/app \
             pg_extractor python3 /app/scripts/extract_postgres_to_csv.py --out-dir /app/csv_extracts
+            
+      - name: Import Extracted CSVs into TiDB
+        run: |
+          # Run the importer script inside the same python environment
+          docker run \
+            --network host \
+            -e TIDB_HOST=$TIDB_HOST \
+            -e TIDB_USER=$TIDB_USER \
+            -e TIDB_PASSWORD=$TIDB_PASSWORD \
+            -e PG_DBNAME=$PG_DBNAME \
+            -v $(pwd):/app \
+            pg_extractor python3 /app/scripts/import_csv_to_tidb.py \
+              --host "$TIDB_HOST" \
+              --user "$TIDB_USER" \
+              --password "$TIDB_PASSWORD" \
+              --dbname "$PG_DBNAME" \
+              --csv-dir /app/csv_extracts
             
       - name: Upload CSV Artifacts
         uses: actions/upload-artifact@v4
