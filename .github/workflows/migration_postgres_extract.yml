@@ -11,10 +11,6 @@ on:
         options:
           - staging
           - production
-      pg_password:
-        description: 'Legacy PostgreSQL Master Password for the postgres user'
-        required: true
-        type: string
 
 jobs:
   extract-data:
@@ -49,8 +45,6 @@ jobs:
 
       - name: Set Environment Secrets
         id: vars
-        env:
-          PG_EXTRACT_PASSWORD: ${{ github.event.inputs.pg_password }}
         run: |
           if [ "${{ github.event.inputs.target_env }}" == "production" ]; then
             ENV_PREFIX="PROD"
@@ -60,6 +54,9 @@ jobs:
           
           # Get the database name from the secret manager 
           DB_NAME=$(gcloud secrets versions access latest --secret="${ENV_PREFIX}_DJ_DB_NAME")
+          
+          # Fetch the legacy postgres password directly from Secret Manager's DB_PASSWORD
+          PG_EXTRACT_PASSWORD=$(gcloud secrets versions access latest --secret="DB_PASSWORD")
           
           # Mask password securely
           echo "::add-mask::$PG_EXTRACT_PASSWORD"
