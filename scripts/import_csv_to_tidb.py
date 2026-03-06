@@ -5,6 +5,7 @@ import argparse
 
 try:
     import pymysql
+    from pymysql.constants import CLIENT
 except ImportError:
     print("Error: PyMySQL is required. Install it via 'pip install pymysql'")
     sys.exit(1)
@@ -104,13 +105,15 @@ def main():
 
     print(f"Attempting to connect to TiDB Serverless cluster...")
     try:
-        # Connect initially without specifying a database to ensure we can create it if it's missing
+        # Connect to the default 'test' database to satisfy TiDB Serverless TLS SNI routing requirements!
         conn = pymysql.connect(
             host=args.host,
             user=args.user,
             password=args.password,
+            database="test",
             port=int(args.port),
-            ssl={'ssl': {'ca': ''}} # PyMySQL will generally default trust the system certs for TLS
+            ssl={'ssl': {'ca': ''}}, # PyMySQL will generally default trust the system certs for TLS
+            client_flag=CLIENT.MULTI_STATEMENTS # Enable executing full SQL migration scripts that contain multiple statements
         )
         print("Connected successfully!")
         
@@ -120,8 +123,36 @@ def main():
              cursor.execute(f"USE `{args.dbname}`")
              
     except Exception as e:
-        print(f"Failed to connect to TiDB: {e}")
+        print(f"Failed to connect to TiDB or provision database: {e}")
         sys.exit(1)
+
+    print("--- Executing Schema Migrations ---")
+    migrations_dir = "/app/api/migrations"
+    if os.path.exists(migrations_dir):
+        up_files = sorted([f for f in os.listdir(migrations_dir) if f.endswith('.up.sql')])
+        with conn.cursor() as cursor:
+            # Disable FK checks during migrations due to order of operations
+            cursor.execute("SET FOREIGN_KEY_CHECKS=0;")
+            for f in up_files:
+                if "reseed" in f:
+                    print(f"Skipping seeding migration (we rely entirely on your CSV backups): {f}")
+                    continue
+                
+                print(f"Executing migration: {f}")
+                sql_path = os.path.join(migrations_dir, f)
+                with open(sql_path, 'r', encoding='utf-8') as sql_file:
+                    sql_content = sql_file.read().strip()
+                    if sql_content:
+                        try:
+                            cursor.execute(sql_content)
+                        except Exception as e:
+                            print(f"Warning: Migrations error on {f} (may be safe if already exists): {e}")
+            
+            cursor.execute("SET FOREIGN_KEY_CHECKS=1;")
+            conn.commit()
+    else:
+        print("Warning: Migrations directory not found. Assuming tables already exist.")
+    print("-----------------------------------")
 
     successful_imports = 0
     # Walk through the tables requested
