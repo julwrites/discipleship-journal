@@ -104,16 +104,21 @@ def main():
 
     print(f"Attempting to connect to TiDB Serverless cluster...")
     try:
-        # TiDB Serverless requires TLS!
+        # Connect initially without specifying a database to ensure we can create it if it's missing
         conn = pymysql.connect(
             host=args.host,
             user=args.user,
             password=args.password,
-            database=args.dbname,
             port=int(args.port),
             ssl={'ssl': {'ca': ''}} # PyMySQL will generally default trust the system certs for TLS
         )
         print("Connected successfully!")
+        
+        # Provision the database explicitly so we never hit an "Unknown Database" fatal error
+        with conn.cursor() as cursor:
+             cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{args.dbname}`")
+             cursor.execute(f"USE `{args.dbname}`")
+             
     except Exception as e:
         print(f"Failed to connect to TiDB: {e}")
         sys.exit(1)
