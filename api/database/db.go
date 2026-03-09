@@ -37,8 +37,13 @@ func BuildConnectionString() (string, error) {
 		port = "4000" // TiDB default
 	}
 
-	// Format: user:password@tcp(host:port)/dbname?tls=true&parseTime=true
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?tls=true&parseTime=true", username, password, host, port, dbName)
+	// Format: user:password@tcp(host:port)/dbname?<params>
+	// tidb_skip_isolation_level_check=1 is required because golang-migrate opens
+	// migration transactions with SERIALIZABLE isolation level, which TiDB does
+	// not support. This DSN param causes go-sql-driver/mysql to send
+	// SET tidb_skip_isolation_level_check=1 on each new connection, instructing
+	// TiDB to silently downgrade unsupported isolation levels instead of erroring.
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?tls=true&parseTime=true&tidb_skip_isolation_level_check=1", username, password, host, port, dbName)
 	return dsn, nil
 }
 

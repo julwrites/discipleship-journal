@@ -37,6 +37,7 @@ func TestBuildConnectionString(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Contains(t, str, "user:pass@tcp(127.0.0.1:4000)/db")
 		assert.Contains(t, str, "tls=true")
+		assert.Contains(t, str, "tidb_skip_isolation_level_check=1")
 	})
 
 	t.Run("Local_Custom_Host", func(t *testing.T) {
@@ -46,6 +47,7 @@ func TestBuildConnectionString(t *testing.T) {
 		str, err := BuildConnectionString()
 		assert.NoError(t, err)
 		assert.Contains(t, str, "user:pass@tcp(db-host:5433)/db")
+		assert.Contains(t, str, "tidb_skip_isolation_level_check=1")
 	})
 
 	// Cleanup
