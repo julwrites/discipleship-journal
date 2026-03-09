@@ -102,10 +102,10 @@ func applyMigrations(m *migrate.Migrate) error {
 			continue
 		}
 
-		// Schema conflict: the object this migration creates/alters already
-		// exists (e.g. column added by a previous partial run or data import).
+		// Migration conflict: the DDL object already exists (schema conflict) or
+		// the DML rows already exist (data conflict from CSV import).
 		// Mark this version as applied and move on.
-		if isSchemaConflictError(err) {
+		if isMigrationConflictError(err) {
 			v, dirty, vErr := m.Version()
 			if vErr != nil {
 				return fmt.Errorf("failed to get version after schema conflict: %w", vErr)
@@ -124,13 +124,21 @@ func applyMigrations(m *migrate.Migrate) error {
 	return nil
 }
 
-// isSchemaConflictError returns true for TiDB/MySQL errors that indicate the
-// schema change in a migration was already applied. These are safe to skip
-// because the database is already in (or past) the target state.
-func isSchemaConflictError(err error) bool {
+// isMigrationConflictError returns true for TiDB/MySQL errors that indicate a
+// migration was already applied — either its DDL (schema) or DML (seed data)
+// objects already exist in the database. Safe to skip in all cases because the
+// database is already in or past the target state for that migration.
+//
+// DDL conflicts arise when schema migrations (ADD COLUMN, CREATE INDEX, RENAME)
+// were partially applied by a previous run.
+//
+// DML conflicts (Duplicate entry) arise when seed-data migrations try to INSERT
+// rows that were already loaded into TiDB by the CSV data import.
+func isMigrationConflictError(err error) bool {
 	s := err.Error()
 	return strings.Contains(s, "Duplicate column name") || // ADD COLUMN already done
 		strings.Contains(s, "Duplicate key name") || // ADD INDEX already done
+		strings.Contains(s, "Duplicate entry") || // INSERT row already exists (seed data)
 		strings.Contains(s, "already exists") || // generic already-exists
 		strings.Contains(s, "doesn't exist") || // RENAME source gone (already renamed)
 		strings.Contains(s, "Unknown table") // DROP / RENAME on already-removed table
