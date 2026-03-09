@@ -192,14 +192,11 @@ func (s *NoteService) UpdateNote(ctx context.Context, userID, noteID, title stri
 		args = []interface{}{title, content, noteID, userID}
 	}
 
-	commandTag, err := tx.ExecContext(ctx, query, args...)
+	_, err = tx.ExecContext(ctx, query, args...)
 	if err != nil {
 		return err
 	}
-	rowsAffected, _ := commandTag.RowsAffected()
-	if rowsAffected == 0 {
-		return models.ErrNotFound
-	}
+	// MySQL returns 0 rows affected if the row exists but the values didn't change
 
 	// Update tags
 	// First, remove existing tags that are not in the new list?

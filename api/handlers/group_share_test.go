@@ -69,7 +69,7 @@ func TestShareItemToGroup(t *testing.T) {
 
 		// 3. Create share
 		mockDB.ExpectExec(`INSERT INTO group_shares`).
-			WithArgs(groupID.String(), noteID.String(), userID, "Check this out").
+			WithArgs(groupID.String(), noteID.String(), userID, "Check this out", "Check this out").
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		// 4. Fetch details for notification
@@ -155,7 +155,7 @@ func TestShareItemToGroup(t *testing.T) {
 
 		// 4. Create share
 		mockDB.ExpectExec(`INSERT INTO group_shares`).
-			WithArgs(groupID.String(), packID.String(), userID, "Great pack").
+			WithArgs(groupID.String(), packID.String(), userID, "Great pack", "Great pack").
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		// 5. Notifications (simplified expectations)

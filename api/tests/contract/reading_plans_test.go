@@ -26,25 +26,22 @@ func TestReadingPlanAPI_Contract(t *testing.T) {
 
 	// Seed User
 	_, err := pool.ExecContext(ctx, `
-		INSERT INTO users (id, firebase_uid, email, username, created_at, updated_at)
+		INSERT IGNORE INTO users (id, firebase_uid, email, username, created_at, updated_at)
 		VALUES (?, 'test-uid-rp', 'rp@example.com', 'ReadingPlanUser', NOW(), NOW())
-		ON CONFLICT (id) DO NOTHING
 	`, userID)
 	require.NoError(t, err)
 
 	// Seed Plan
 	_, err = pool.ExecContext(ctx, `
-		INSERT INTO reading_plans (id, title, description, days, plan_type, created_at, updated_at)
+		INSERT IGNORE INTO reading_plans (id, title, description, days, plan_type, created_at, updated_at)
 		VALUES (?, 'Test Plan', 'A test plan', 365, 'calendar', NOW(), NOW())
-		ON CONFLICT (id) DO NOTHING
 	`, planID)
 	require.NoError(t, err)
 
 	// Seed Plan Days (at least Day 1)
 	_, err = pool.ExecContext(ctx, `
-		INSERT INTO reading_plan_days (reading_plan_id, day_number, passage, created_at)
+		INSERT IGNORE INTO reading_plan_days (reading_plan_id, day_number, passage, created_at)
 		VALUES (?, 1, 'Genesis 1', NOW())
-		ON DUPLICATE KEY UPDATE group_id=group_id
 	`, planID)
 	require.NoError(t, err)
 

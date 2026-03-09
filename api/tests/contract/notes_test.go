@@ -26,7 +26,7 @@ func TestNoteAPI_Contract(t *testing.T) {
 	if !testing.Short() {
 		// Insert user to satisfy FK
 		// We use ON DUPLICATE KEY UPDATE group_id=group_id in case it runs multiple times or in parallel (though parallel integration tests usually get their own DB/Container)
-		_, err := pool.ExecContext(ctx, "INSERT INTO users (id, firebase_uid, email, created_at, updated_at) VALUES (?, 'test-uid', 'test@example.com', NOW(), NOW()) ON CONFLICT (id) DO NOTHING", testUUID)
+		_, err := pool.ExecContext(ctx, "INSERT IGNORE INTO users (id, firebase_uid, email, created_at, updated_at) VALUES (?, 'test-uid', 'test@example.com', NOW(), NOW())", testUUID)
 		require.NoError(t, err)
 	}
 

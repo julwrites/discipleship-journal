@@ -26,18 +26,25 @@ func TestConnectionAPI_Contract(t *testing.T) {
 
 	// Seed Users
 	_, err := pool.ExecContext(ctx, `
-		INSERT INTO users (id, firebase_uid, email, username, created_at, updated_at) VALUES
-		(?, 'test-uid-A', 'userA@example.com', 'UserA', NOW(), NOW()),
+		INSERT IGNORE INTO users (id, firebase_uid, email, username, created_at, updated_at) VALUES
+		(?, 'test-uid-A', 'userA@example.com', 'UserA', NOW(), NOW())
+	`, userA_ID)
+	require.NoError(t, err)
+
+	_, err = pool.ExecContext(ctx, `
+		INSERT IGNORE INTO users (id, firebase_uid, email, username, created_at, updated_at) VALUES
 		(?, 'test-uid-B', 'userB@example.com', 'UserB', NOW(), NOW())
-		ON CONFLICT (id) DO NOTHING
-	`, userA_ID, userB_ID)
+	`, userB_ID)
 	require.NoError(t, err)
 
 	// Clean up connections for these users to ensure clean state
-	_, err = pool.ExecContext(ctx, "DELETE FROM connections WHERE requester_id IN (?, ?) OR receiver_id IN (?, ?)", userA_ID, userB_ID)
+	_, err = pool.ExecContext(ctx, "DELETE FROM connections WHERE requester_id IN (?, ?) OR receiver_id IN (?, ?)", userA_ID, userB_ID, userA_ID, userB_ID)
 	require.NoError(t, err)
 
 	t.Run("ConnectionFlow", func(t *testing.T) {
+		// Clean up connections for these users to ensure clean state
+		_, err = pool.ExecContext(ctx, "DELETE FROM connections WHERE requester_id IN (?, ?) OR receiver_id IN (?, ?)", userA_ID, userB_ID, userA_ID, userB_ID)
+		require.NoError(t, err)
 		// 1. Send Request (User A -> User B)
 		reqPayload := map[string]string{
 			"receiver_id": userB_ID,

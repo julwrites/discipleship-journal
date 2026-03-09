@@ -205,7 +205,7 @@ func TestSearchGroups(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		mock.ExpectQuery("SELECT g.id, g.name, g.description, g.created_by, g.type").
-			WithArgs("%"+query+"%", userID).
+			WithArgs(userID, "%"+query+"%").
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "description", "created_by", "type", "role"}).
 				AddRow(groupID, "Test Group", strPtr("Desc"), user2ID, strPtr("group"), ""))
 
@@ -219,7 +219,7 @@ func TestSearchGroups(t *testing.T) {
 
 	t.Run("db error", func(t *testing.T) {
 		mock.ExpectQuery("SELECT g.id, g.name, g.description, g.created_by, g.type").
-			WithArgs("%"+query+"%", userID).
+			WithArgs(userID, "%"+query+"%").
 			WillReturnError(errors.New("db error"))
 
 		groups, err := service.SearchGroups(ctx, query, userID)

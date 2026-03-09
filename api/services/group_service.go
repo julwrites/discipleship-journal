@@ -136,7 +136,7 @@ func (s *groupService) SearchGroups(ctx context.Context, query, userID string) (
 		`SELECT g.id, g.name, g.description, g.created_by, g.type,
 		 COALESCE((SELECT role FROM group_members WHERE group_id = g.id AND user_id = ?), '') as role
 		 FROM `+"`groups`"+` g
-		 WHERE g.name LIKE ? AND (g.type = 'group' OR g.type IS NULL) LIMIT 20`, "%"+query+"%", userID)
+		 WHERE g.name LIKE ? AND (g.type = 'group' OR g.type IS NULL) LIMIT 20`, userID, "%"+query+"%")
 	if err != nil {
 		return nil, err
 	}
