@@ -11,6 +11,7 @@ import (
 	"discipleship_journal_api/services"
 
 	chi "github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 type ConnectionRequest struct {
@@ -137,14 +138,14 @@ func (h *ConnectionHandler) SendConnectionRequest(w http.ResponseWriter, r *http
 	}
 
 	// Insert connection
-	var connID string
-	err = h.db.QueryRowContext(r.Context(),
-		`INSERT INTO connections (requester_id, receiver_id, status)
-		 VALUES (?, ?, 'pending')
-		 RETURNING id`, requesterUUID, receiverUUID).Scan(&connID)
+	connID := uuid.New().String()
+	_, err = h.db.ExecContext(r.Context(),
+		`INSERT INTO connections (id, requester_id, receiver_id, status)
+		 VALUES (?, ?, ?, 'pending')`, connID, requesterUUID, receiverUUID)
 
 	if err != nil {
 		// Handle unique constraint violation gracefully
+		slog.Error("Failed to insert connection request", "error", err)
 		http.Error(w, "Connection request already exists or error", http.StatusConflict)
 		return
 	}
@@ -195,7 +196,7 @@ func (h *ConnectionHandler) ListConnections(w http.ResponseWriter, r *http.Reque
 		 FROM connections c
 		 JOIN users u1 ON c.requester_id = u1.id
 		 JOIN users u2 ON c.receiver_id = u2.id
-		 WHERE c.requester_id = ? OR c.receiver_id = ?`, userUUID)
+		 WHERE c.requester_id = ? OR c.receiver_id = ?`, userUUID, userUUID)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return

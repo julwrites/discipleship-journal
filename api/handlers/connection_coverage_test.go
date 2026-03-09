@@ -116,7 +116,7 @@ func TestListConnections_ScanError(t *testing.T) {
 	// Query: SELECT c.id, c.requester_id, c.receiver_id, c.status, u1.email, u2.email, u1.username, u2.username
 	// Return fewer columns
 	dbMock.ExpectQuery("SELECT c.id, c.requester_id").
-		WithArgs(userUUID).
+		WithArgs(userUUID.String(), userUUID.String()).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "requester_id"}).
 			AddRow("conn-1", "req-1"))
 
