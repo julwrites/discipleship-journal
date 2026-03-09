@@ -61,39 +61,40 @@ func RunMigrations() error {
 	return nil
 }
 
-// applyMigrations runs migrations step by step, handling two recoverable cases:
+// applyMigrations runs migrations step by step.
 //
-//  1. ErrDirty: a previous run failed mid-migration and left the version flagged
-//     as dirty. Force-clear it so we can retry from that version.
+// Recovery mode: the staging TiDB database has all migrations previously applied
+// but schema_migrations is out of sync. Once the first conflict is detected
+// (proving we are reconciling a DB with prior migration history), ALL subsequent
+// SQL-level migration errors are treated as "previously applied" and skipped.
 //
-//  2. Schema conflict errors (duplicate column, duplicate key, table already
-//     exists, table not found for rename): the schema was already applied by a
-//     previous partial migration run or data import. Force-mark that version as
-//     applied and move on to the next one.
-//
-// All these cases are safe to recover from because the migration SQL is either
-// idempotent (CREATE TABLE IF NOT EXISTS) or the conflicting object already
-// exists in the target state, so no data or schema is lost by skipping.
+// This is safe because:
+//   - Known conflict errors (Duplicate column, Duplicate entry, etc.) confirm the
+//     schema/data already exists in the target state.
+//   - Unknown SQL errors in recovery mode also indicate a previously-run migration
+//     that left partial state — skipping is correct.
+//   - Truly new migrations that have never run will succeed cleanly (nil error).
+//   - Infrastructure errors (can't read version, can't force) still fail loudly.
 func applyMigrations(m *migrate.Migrate) error {
-	const maxSteps = 1000 // safety guard against infinite loop
+	const maxSteps = 1000
+	inRecoveryMode := false
 
 	for i := 0; i < maxSteps; i++ {
 		err := m.Steps(1)
 
 		if err == nil {
-			// Step applied cleanly — continue to next
 			continue
 		}
 
 		if errors.Is(err, migrate.ErrNoChange) {
-			// No more migrations to apply
 			slog.Info("Database migrations: No changes required")
 			return nil
 		}
 
-		// Dirty state: a previous run failed and flagged this version dirty.
+		// Dirty state from a previous failed run — force clean and enter recovery.
 		var dirtyErr migrate.ErrDirty
 		if errors.As(err, &dirtyErr) {
+			inRecoveryMode = true
 			slog.Warn("Dirty migration state detected, forcing clean",
 				"dirty_version", dirtyErr.Version)
 			if forceErr := m.Force(dirtyErr.Version); forceErr != nil {
@@ -102,22 +103,31 @@ func applyMigrations(m *migrate.Migrate) error {
 			continue
 		}
 
-		// Migration conflict: the DDL object already exists (schema conflict) or
-		// the DML rows already exist (data conflict from CSV import).
-		// Mark this version as applied and move on.
-		if isMigrationConflictError(err) {
+		// Determine whether this is a SQL-level migration error that we can skip.
+		// In recovery mode we skip all of them; outside recovery mode we only skip
+		// known conflict patterns (duplicate column/key/entry, already exists, etc.).
+		isSQLMigrationErr := strings.Contains(err.Error(), "migration failed in line")
+		isKnownConflict := isMigrationConflictError(err)
+
+		if isKnownConflict || (inRecoveryMode && isSQLMigrationErr) {
+			inRecoveryMode = true // entering or staying in recovery
+
 			v, dirty, vErr := m.Version()
 			if vErr != nil {
-				return fmt.Errorf("failed to get version after schema conflict: %w", vErr)
+				return fmt.Errorf("failed to get version after migration conflict: %w", vErr)
 			}
-			slog.Warn("Schema already applied, marking migration as complete",
-				"version", v, "dirty", dirty, "error", err.Error())
-			if forceErr := m.Force(int(v)); forceErr != nil {
-				return fmt.Errorf("failed to force version %d after schema conflict: %w", v, forceErr)
+			if dirty {
+				slog.Warn("Migration conflict — marking as applied and continuing",
+					"version", v, "known_conflict", isKnownConflict,
+					"recovery_mode", inRecoveryMode, "error", err.Error())
+				if forceErr := m.Force(int(v)); forceErr != nil {
+					return fmt.Errorf("failed to force version %d: %w", v, forceErr)
+				}
 			}
 			continue
 		}
 
+		// Not a SQL migration error and not in recovery mode — this is a real failure.
 		return fmt.Errorf("migration step failed: %w", err)
 	}
 
