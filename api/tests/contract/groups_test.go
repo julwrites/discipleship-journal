@@ -27,16 +27,14 @@ func TestGroupAPI_Contract(t *testing.T) {
 
 	// Upsert users
 	_, err := pool.ExecContext(ctx, `
-		INSERT INTO users (id, firebase_uid, email, username, created_at, updated_at)
+		INSERT IGNORE INTO users (id, firebase_uid, email, username, created_at, updated_at)
 		VALUES (?, 'test-uid-1', 'user1@example.com', 'user1', NOW(), NOW())
-		ON CONFLICT (id) DO NOTHING
 	`, user1ID)
 	require.NoError(t, err)
 
 	_, err = pool.ExecContext(ctx, `
-		INSERT INTO users (id, firebase_uid, email, username, created_at, updated_at)
+		INSERT IGNORE INTO users (id, firebase_uid, email, username, created_at, updated_at)
 		VALUES (?, 'test-uid-2', 'user2@example.com', 'user2', NOW(), NOW())
-		ON CONFLICT (id) DO NOTHING
 	`, user2ID)
 	require.NoError(t, err)
 
@@ -132,9 +130,8 @@ func TestGroupAPI_Contract(t *testing.T) {
 		// Prerequisite: Users must be connected
 		// We can inject connection directly into DB for this test setup
 		_, err := pool.ExecContext(ctx, `
-			INSERT INTO connections (requester_id, receiver_id, status, created_at, updated_at)
+			INSERT IGNORE INTO connections (requester_id, receiver_id, status, created_at, updated_at)
 			VALUES (?, ?, 'accepted', NOW(), NOW())
-			ON DUPLICATE KEY UPDATE group_id=group_id
 		`, user1ID, user2ID)
 		require.NoError(t, err)
 
@@ -175,9 +172,8 @@ func TestGroupAPI_Contract(t *testing.T) {
 	t.Run("GroupFeatures", func(t *testing.T) {
 		// Prerequisite: Ensure connection exists for AddMember
 		_, err := pool.ExecContext(ctx, `
-			INSERT INTO connections (requester_id, receiver_id, status, created_at, updated_at)
+			INSERT IGNORE INTO connections (requester_id, receiver_id, status, created_at, updated_at)
 			VALUES (?, ?, 'accepted', NOW(), NOW())
-			ON DUPLICATE KEY UPDATE group_id=group_id
 		`, user1ID, user2ID)
 		require.NoError(t, err)
 
@@ -206,12 +202,12 @@ func TestGroupAPI_Contract(t *testing.T) {
 		t.Logf("DEBUG: Database check: group_members count for group %s, user %s: %d", groupID, user1ID, memberCount)
 
 		var groupName string
-		err = pool.QueryRowContext(ctx, "SELECT name FROM groups WHERE id = ?", groupID).Scan(&groupName)
+		err = pool.QueryRowContext(ctx, "SELECT name FROM `groups` WHERE id = ?", groupID).Scan(&groupName)
 		require.NoError(t, err)
 		t.Logf("DEBUG: Group name in database: %s", groupName)
 
 		var groupDesc *string
-		err = pool.QueryRowContext(ctx, "SELECT description FROM groups WHERE id = ?", groupID).Scan(&groupDesc)
+		err = pool.QueryRowContext(ctx, "SELECT description FROM `groups` WHERE id = ?", groupID).Scan(&groupDesc)
 		require.NoError(t, err)
 		if groupDesc == nil {
 			t.Logf("DEBUG: Feature Group description is NULL in database!")
@@ -220,11 +216,7 @@ func TestGroupAPI_Contract(t *testing.T) {
 		}
 
 		// DEBUG: Run the actual ListMyGroups query directly
-		rows, err := pool.QueryContext(ctx, `
-			SELECT g.id, g.name, g.description, g.created_by, g.type, gm.role
-			FROM groups g
-			JOIN group_members gm ON g.id = gm.group_id
-			WHERE gm.user_id = ?`, user1ID)
+		rows, err := pool.QueryContext(ctx, "SELECT g.id, g.name, g.description, g.created_by, g.type, gm.role FROM `groups` g JOIN group_members gm ON g.id = gm.group_id WHERE gm.user_id = ?", user1ID)
 		require.NoError(t, err)
 		defer rows.Close()
 		t.Logf("DEBUG: Direct query results for user %s:", user1ID)
@@ -304,9 +296,8 @@ func TestGroupAPI_Contract(t *testing.T) {
 		// Seed Note
 		noteID := "00000000-0000-0000-0000-000000000050"
 		_, err = pool.ExecContext(ctx, `
-			INSERT INTO notes (id, user_id, title, content, created_at, updated_at)
+			INSERT IGNORE INTO notes (id, user_id, title, content, created_at, updated_at)
 			VALUES (?, ?, 'Shared Note', '{"text": "Shared Content"}', NOW(), NOW())
-			ON CONFLICT (id) DO NOTHING
 		`, noteID, user1ID)
 		require.NoError(t, err)
 

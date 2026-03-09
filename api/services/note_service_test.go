@@ -199,15 +199,14 @@ func TestUpdateNote(t *testing.T) {
 		mock.ExpectExec("UPDATE notes").
 			WithArgs(title, content, noteID, userID).
 			WillReturnResult(sqlmock.NewResult(1, 0))
-		// Rollback is deferred, but CreateNote returns early.
-		// Wait, in my implementation UpdateNote returns error early if rows affected == 0.
-		// And deferred Rollback will be called.
-		mock.ExpectRollback()
+		mock.ExpectExec("DELETE FROM note_tags").
+			WithArgs(noteID).
+			WillReturnResult(sqlmock.NewResult(1, 0))
+		mock.ExpectCommit()
 
 		err := service.UpdateNote(ctx, userID, noteID, title, content, nil)
 
-		assert.Error(t, err)
-		assert.Equal(t, models.ErrNotFound, err)
+		assert.NoError(t, err) // now we do not error if rows affected is 0 because MySQL won't affect rows if no data actually changed
 	})
 
 	t.Run("database error", func(t *testing.T) {

@@ -66,7 +66,7 @@ func TestShareItemToGroup_NotificationErrors(t *testing.T) {
 
 		// 3. Create share
 		mockDB.ExpectExec(`INSERT INTO group_shares`).
-			WithArgs(groupID.String(), noteID.String(), userID, "Check this out").
+			WithArgs(groupID.String(), noteID.String(), userID, "Check this out", "Check this out").
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		// 4. Notification Logic - DB Error on group name
@@ -140,7 +140,7 @@ func TestShareItemToGroup_NotificationErrors(t *testing.T) {
 
 		// 3. Create share
 		mockDB.ExpectExec(`INSERT INTO group_shares`).
-			WithArgs(groupID.String(), noteID.String(), userID, "Check this out").
+			WithArgs(groupID.String(), noteID.String(), userID, "Check this out", "Check this out").
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		// 4. Notification Logic

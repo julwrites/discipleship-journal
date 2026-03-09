@@ -105,9 +105,8 @@ func (h *GroupShareHandler) ShareItemToGroup(w http.ResponseWriter, r *http.Requ
 		_, err = h.db.ExecContext(r.Context(),
 			`INSERT INTO group_shares (group_id, note_id, shared_by, comment)
 			 VALUES (?, ?, ?, ?)
-			 ON CONFLICT (group_id, note_id) WHERE note_id IS NOT NULL
-			 DO UPDATE SET shared_at = NOW(), comment = ?`,
-			groupID, resourceID, userUUID, req.Comment)
+			 ON DUPLICATE KEY UPDATE shared_at = NOW(), comment = ?`,
+			groupID, resourceID, userUUID, req.Comment, req.Comment)
 	} else if req.VersePackID != nil {
 		resourceType = "verse_pack"
 		resourceID = *req.VersePackID
@@ -154,8 +153,8 @@ func (h *GroupShareHandler) ShareItemToGroup(w http.ResponseWriter, r *http.Requ
 			_, err = h.db.ExecContext(r.Context(), "UPDATE group_shares SET shared_at = NOW(), comment = ? WHERE id = ? AND group_id = ?", existingShareID, groupID, req.Comment)
 		} else {
 			_, err = h.db.ExecContext(r.Context(),
-				"INSERT INTO group_shares (group_id, verse_pack_id, shared_by, comment) VALUES (?, ?, ?, ?)",
-				groupID, resourceID, userUUID, req.Comment)
+				"INSERT INTO group_shares (group_id, verse_pack_id, shared_by, comment) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE shared_at = NOW(), comment = ?",
+				groupID, resourceID, userUUID, req.Comment, req.Comment)
 		}
 	}
 
