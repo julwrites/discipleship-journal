@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"database/sql"
 	"discipleship_journal_api/migrations"
@@ -60,36 +61,77 @@ func RunMigrations() error {
 	return nil
 }
 
-// applyMigrations runs m.Up() and handles the ErrDirty case that arises when
-// a previous run failed mid-migration. All migrations use CREATE TABLE IF NOT
-// EXISTS, making them idempotent, so it is safe to force-clear the dirty
-// version and retry rather than requiring a manual database intervention.
+// applyMigrations runs migrations step by step, handling two recoverable cases:
+//
+//  1. ErrDirty: a previous run failed mid-migration and left the version flagged
+//     as dirty. Force-clear it so we can retry from that version.
+//
+//  2. Schema conflict errors (duplicate column, duplicate key, table already
+//     exists, table not found for rename): the schema was already applied by a
+//     previous partial migration run or data import. Force-mark that version as
+//     applied and move on to the next one.
+//
+// All these cases are safe to recover from because the migration SQL is either
+// idempotent (CREATE TABLE IF NOT EXISTS) or the conflicting object already
+// exists in the target state, so no data or schema is lost by skipping.
 func applyMigrations(m *migrate.Migrate) error {
-	err := m.Up()
-	if err == nil || errors.Is(err, migrate.ErrNoChange) {
+	const maxSteps = 1000 // safety guard against infinite loop
+
+	for i := 0; i < maxSteps; i++ {
+		err := m.Steps(1)
+
+		if err == nil {
+			// Step applied cleanly — continue to next
+			continue
+		}
+
 		if errors.Is(err, migrate.ErrNoChange) {
+			// No more migrations to apply
 			slog.Info("Database migrations: No changes required")
+			return nil
 		}
-		return nil
+
+		// Dirty state: a previous run failed and flagged this version dirty.
+		var dirtyErr migrate.ErrDirty
+		if errors.As(err, &dirtyErr) {
+			slog.Warn("Dirty migration state detected, forcing clean",
+				"dirty_version", dirtyErr.Version)
+			if forceErr := m.Force(dirtyErr.Version); forceErr != nil {
+				return fmt.Errorf("failed to force dirty version %d: %w", dirtyErr.Version, forceErr)
+			}
+			continue
+		}
+
+		// Schema conflict: the object this migration creates/alters already
+		// exists (e.g. column added by a previous partial run or data import).
+		// Mark this version as applied and move on.
+		if isSchemaConflictError(err) {
+			v, dirty, vErr := m.Version()
+			if vErr != nil {
+				return fmt.Errorf("failed to get version after schema conflict: %w", vErr)
+			}
+			slog.Warn("Schema already applied, marking migration as complete",
+				"version", v, "dirty", dirty, "error", err.Error())
+			if forceErr := m.Force(int(v)); forceErr != nil {
+				return fmt.Errorf("failed to force version %d after schema conflict: %w", v, forceErr)
+			}
+			continue
+		}
+
+		return fmt.Errorf("migration step failed: %w", err)
 	}
 
-	// Dirty database: a prior run failed mid-migration and left the version
-	// flagged as dirty. Force-clear it so we can retry cleanly.
-	var dirtyErr migrate.ErrDirty
-	if errors.As(err, &dirtyErr) {
-		slog.Warn("Dirty migration state detected, forcing clean and retrying",
-			"dirty_version", dirtyErr.Version)
+	return nil
+}
 
-		if forceErr := m.Force(dirtyErr.Version); forceErr != nil {
-			return fmt.Errorf("failed to force dirty version %d: %w", dirtyErr.Version, forceErr)
-		}
-
-		// Retry after clearing dirty flag
-		if retryErr := m.Up(); retryErr != nil && !errors.Is(retryErr, migrate.ErrNoChange) {
-			return fmt.Errorf("failed to apply migrations after dirty state fix: %w", retryErr)
-		}
-		return nil
-	}
-
-	return fmt.Errorf("failed to apply migrations: %w", err)
+// isSchemaConflictError returns true for TiDB/MySQL errors that indicate the
+// schema change in a migration was already applied. These are safe to skip
+// because the database is already in (or past) the target state.
+func isSchemaConflictError(err error) bool {
+	s := err.Error()
+	return strings.Contains(s, "Duplicate column name") || // ADD COLUMN already done
+		strings.Contains(s, "Duplicate key name") || // ADD INDEX already done
+		strings.Contains(s, "already exists") || // generic already-exists
+		strings.Contains(s, "doesn't exist") || // RENAME source gone (already renamed)
+		strings.Contains(s, "Unknown table") // DROP / RENAME on already-removed table
 }

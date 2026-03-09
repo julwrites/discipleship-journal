@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -138,4 +139,26 @@ func TestRunMigrations_Coverage(t *testing.T) {
 		os.Unsetenv("DB_HOST")
 		os.Unsetenv("DB_PORT")
 	})
+}
+
+func TestIsSchemaConflictError(t *testing.T) {
+	cases := []struct {
+		name string
+		msg  string
+		want bool
+	}{
+		{"duplicate column", "migration failed: Duplicate column name 'username'", true},
+		{"duplicate key", "migration failed: Duplicate key name 'idx_users_username'", true},
+		{"already exists", "Table 'notes' already exists", true},
+		{"doesn't exist rename source", "Table 'journal_entries' doesn't exist", true},
+		{"unknown table drop", "Unknown table 'old_table'", true},
+		{"real error", "connection refused", false},
+		{"syntax error", "You have an error in your SQL syntax", false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := fmt.Errorf("%s", tc.msg)
+			assert.Equal(t, tc.want, isSchemaConflictError(err))
+		})
+	}
 }
