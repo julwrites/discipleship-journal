@@ -19,9 +19,14 @@ func RunMigrations() error {
 		return fmt.Errorf("failed to build connection string for migrations: %w", err)
 	}
 
-	db, err := sql.Open("mysql", dsn)
+	// multiStatements=true is required because each migration file contains
+	// multiple SQL statements. This is intentionally NOT added to the main app
+	// connection string (db.go) since it is a security risk for general queries.
+	migrationDSN := dsn + "&multiStatements=true"
+
+	db, err := sql.Open("mysql", migrationDSN)
 	if err != nil {
-		return fmt.Errorf("failed to connect to mysql: %w", err)
+		return fmt.Errorf("failed to connect to mysql for migrations: %w", err)
 	}
 	defer func() { _ = db.Close() }()
 
