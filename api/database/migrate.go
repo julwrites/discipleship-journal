@@ -86,8 +86,12 @@ func applyMigrations(m *migrate.Migrate) error {
 			continue
 		}
 
-		if errors.Is(err, migrate.ErrNoChange) {
-			slog.Info("Database migrations: No changes required")
+		if errors.Is(err, migrate.ErrNoChange) || strings.Contains(err.Error(), "file does not exist") {
+			// ErrNoChange: golang-migrate confirmed nothing left to apply.
+			// "file does not exist": the source driver has no migration file at or
+			// after the current DB version — we are at/past the last migration.
+			// Both are terminal success conditions.
+			slog.Info("Database migrations: all migrations applied")
 			return nil
 		}
 
