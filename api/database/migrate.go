@@ -1,6 +1,7 @@
 package database
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -51,14 +52,44 @@ func RunMigrations() error {
 		return fmt.Errorf("failed to initialize migrate: %w", err)
 	}
 
-	if err := m.Up(); err != nil {
-		if err == migrate.ErrNoChange {
-			slog.Info("Database migrations: No changes required")
-			return nil
-		}
-		return fmt.Errorf("failed to apply migrations: %w", err)
+	if err := applyMigrations(m); err != nil {
+		return err
 	}
 
 	slog.Info("Database migrations applied successfully")
 	return nil
+}
+
+// applyMigrations runs m.Up() and handles the ErrDirty case that arises when
+// a previous run failed mid-migration. All migrations use CREATE TABLE IF NOT
+// EXISTS, making them idempotent, so it is safe to force-clear the dirty
+// version and retry rather than requiring a manual database intervention.
+func applyMigrations(m *migrate.Migrate) error {
+	err := m.Up()
+	if err == nil || errors.Is(err, migrate.ErrNoChange) {
+		if errors.Is(err, migrate.ErrNoChange) {
+			slog.Info("Database migrations: No changes required")
+		}
+		return nil
+	}
+
+	// Dirty database: a prior run failed mid-migration and left the version
+	// flagged as dirty. Force-clear it so we can retry cleanly.
+	var dirtyErr migrate.ErrDirty
+	if errors.As(err, &dirtyErr) {
+		slog.Warn("Dirty migration state detected, forcing clean and retrying",
+			"dirty_version", dirtyErr.Version)
+
+		if forceErr := m.Force(dirtyErr.Version); forceErr != nil {
+			return fmt.Errorf("failed to force dirty version %d: %w", dirtyErr.Version, forceErr)
+		}
+
+		// Retry after clearing dirty flag
+		if retryErr := m.Up(); retryErr != nil && !errors.Is(retryErr, migrate.ErrNoChange) {
+			return fmt.Errorf("failed to apply migrations after dirty state fix: %w", retryErr)
+		}
+		return nil
+	}
+
+	return fmt.Errorf("failed to apply migrations: %w", err)
 }
