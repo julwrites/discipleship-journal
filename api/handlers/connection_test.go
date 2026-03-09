@@ -34,7 +34,6 @@ func TestSendConnectionRequest(t *testing.T) {
 	requesterUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 	receiverEmail := "user2@example.com"
 	receiverUUID := uuid.MustParse("00000000-0000-0000-0000-000000000002")
-	connID := "00000000-0000-0000-0000-000000000003"
 
 	// Mock receiver UUID lookup by email
 	mock.ExpectQuery("SELECT id FROM users WHERE email =").
@@ -42,9 +41,9 @@ func TestSendConnectionRequest(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(receiverUUID.String()))
 
 	// Mock insert connection
-	mock.ExpectQuery("INSERT INTO connections").
-		WithArgs(requesterUUID, receiverUUID.String()).
-		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(connID))
+	mock.ExpectExec("INSERT INTO connections").
+		WithArgs(sqlmock.AnyArg(), requesterUUID, receiverUUID.String()).
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	// Expect synchronous requester name lookup
 	mock.ExpectQuery("SELECT username FROM users WHERE id").
@@ -230,7 +229,7 @@ func TestListConnections(t *testing.T) {
 	requesterUsername := "user2"
 	receiverUsername := "user1"
 	mock.ExpectQuery("SELECT c.id, c.requester_id, c.receiver_id, c.status").
-		WithArgs(userUUID).
+		WithArgs(userUUID.String(), userUUID.String()).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "requester_id", "receiver_id", "status", "requester_email", "receiver_email", "requester_username", "receiver_username"}).
 			AddRow(connID.String(), requesterUUID.String(), userUUID.String(), "pending", "user2@example.com", "user1@example.com", &requesterUsername, &receiverUsername))
 
@@ -270,7 +269,7 @@ func TestListConnections_Error(t *testing.T) {
 	handler := NewConnectionHandler(db, nil)
 	userUUID := uuid.New()
 
-	mockDB.ExpectQuery("SELECT c.id").WillReturnError(assert.AnError)
+	mockDB.ExpectQuery("SELECT c.id").WithArgs(userUUID, userUUID).WillReturnError(assert.AnError)
 
 	req := httptest.NewRequest("GET", "/api/connections", nil)
 	req = req.WithContext(context.WithValue(req.Context(), TestUserKey, userUUID))
@@ -503,8 +502,8 @@ func TestSendConnectionRequest_MoreErrors(t *testing.T) {
 			WithArgs("some@email.com").
 			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(receiverUUID.String()))
 
-		mockDB.ExpectQuery("INSERT INTO connections").
-			WithArgs(requesterUUID, receiverUUID.String()).
+		mockDB.ExpectExec("INSERT INTO connections").
+			WithArgs(sqlmock.AnyArg(), requesterUUID, receiverUUID.String()).
 			WillReturnError(errors.New("duplicate key value violates unique constraint"))
 
 		reqBody := ConnectionRequest{ReceiverEmail: "some@email.com"}
@@ -518,15 +517,14 @@ func TestSendConnectionRequest_MoreErrors(t *testing.T) {
 
 	t.Run("RequesterNameLookupFailure", func(t *testing.T) {
 		receiverUUID := uuid.New()
-		connID := "new-conn-id"
 
 		mockDB.ExpectQuery("SELECT id FROM users WHERE email =").
 			WithArgs("some@email.com").
 			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(receiverUUID.String()))
 
-		mockDB.ExpectQuery("INSERT INTO connections").
-			WithArgs(requesterUUID, receiverUUID.String()).
-			WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(connID))
+		mockDB.ExpectExec("INSERT INTO connections").
+			WithArgs(sqlmock.AnyArg(), requesterUUID, receiverUUID.String()).
+			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		// Fail name lookup
 		mockDB.ExpectQuery("SELECT username FROM users WHERE id").
