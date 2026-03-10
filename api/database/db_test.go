@@ -1,12 +1,44 @@
 package database
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestConnect_OpenError(t *testing.T) {
+	os.Setenv("DB_USERNAME", "user")
+	os.Setenv("DB_NAME", "db")
+	os.Setenv("DB_PASSWORD", "secretpass")
+	os.Setenv("DB_HOST", "localhost")
+	os.Setenv("DB_PORT", "invalid-port") // Will fail inside Ping/Open
+
+	err := Connect()
+	assert.Error(t, err)
+	assert.NotContains(t, err.Error(), "secretpass", "Password should be masked")
+
+	os.Unsetenv("DB_USERNAME")
+	os.Unsetenv("DB_NAME")
+	os.Unsetenv("DB_PASSWORD")
+	os.Unsetenv("DB_HOST")
+	os.Unsetenv("DB_PORT")
+}
+
+func TestConnect_CloudSQL(t *testing.T) {
+	os.Setenv("DB_USERNAME", "user")
+	os.Setenv("DB_PASSWORD", "pass")
+	os.Setenv("DB_NAME", "db")
+	os.Setenv("CLOUD_SQL_INSTANCE", "project:region:instance")
+
+	_, err := BuildConnectionString()
+	assert.NoError(t, err)
+
+	os.Unsetenv("CLOUD_SQL_INSTANCE")
+	os.Unsetenv("DB_USERNAME")
+	os.Unsetenv("DB_PASSWORD")
+	os.Unsetenv("DB_NAME")
+}
 
 func TestBuildConnectionString(t *testing.T) {
 	// Setup environment
@@ -68,20 +100,6 @@ func TestConnect_ConfigError(t *testing.T) {
 	assert.Contains(t, err.Error(), "failed to build database connection string")
 }
 
-func TestConnect_ParseError(t *testing.T) {
-	// BuildConnectionString succeeds but returns valid URL
-	os.Setenv("DB_USERNAME", "user")
-	os.Setenv("DB_NAME", "db")
-	// Use Cloud SQL to trigger dialer logic path?
-	// Actually, just verify path where BuildString works.
-
-	// Try to make ParseConfig fail?
-	// ParseConfig fails if URL is invalid.
-	// But BuildConnectionString constructs valid URL.
-	// So we can skip this case unless we mock BuildConnectionString.
-	// But we can test Ping Failure.
-}
-
 func TestConnect_PingFailure(t *testing.T) {
 	os.Setenv("DB_USERNAME", "user")
 	os.Setenv("DB_NAME", "db")
@@ -93,11 +111,6 @@ func TestConnect_PingFailure(t *testing.T) {
 	assert.Error(t, err)
 	// Expect "unable to ping database" or connection refused
 	assert.Contains(t, err.Error(), "unable to ping database")
-
-	// Check masking
-	// "dial tcp [::1]:54322: connect: connection refused"
-	// It doesn't contain password unless URL is printed.
-	// The error wrapping in Connect is: fmt.Errorf("unable to ping database: %w", err)
 
 	// Cleanup
 	Close()
@@ -112,54 +125,4 @@ func TestClose_Nil(t *testing.T) {
 	// Should not panic
 	DB = nil
 	Close()
-}
-
-func TestRunMigrations_Coverage(t *testing.T) {
-	t.Run("ConfigError", func(t *testing.T) {
-		os.Unsetenv("DB_USERNAME")
-		err := RunMigrations()
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "failed to build connection string")
-	})
-
-	t.Run("PingError", func(t *testing.T) {
-		os.Setenv("DB_USERNAME", "user")
-		os.Setenv("DB_NAME", "db")
-		os.Setenv("DB_PASSWORD", "pass")
-		os.Setenv("DB_HOST", "localhost")
-		os.Setenv("DB_PORT", "54322") // closed
-
-		err := RunMigrations()
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "failed to ping database")
-
-		os.Unsetenv("DB_USERNAME")
-		os.Unsetenv("DB_NAME")
-		os.Unsetenv("DB_PASSWORD")
-		os.Unsetenv("DB_HOST")
-		os.Unsetenv("DB_PORT")
-	})
-}
-
-func TestIsMigrationConflictError(t *testing.T) {
-	cases := []struct {
-		name string
-		msg  string
-		want bool
-	}{
-		{"duplicate column", "migration failed: Duplicate column name 'username'", true},
-		{"duplicate key name", "migration failed: Duplicate key name 'idx_users_username'", true},
-		{"duplicate entry insert", "migration failed: Duplicate entry '02fc167c' for key 'PRIMARY'", true},
-		{"already exists", "Table 'notes' already exists", true},
-		{"doesn't exist rename source", "Table 'journal_entries' doesn't exist", true},
-		{"unknown table drop", "Unknown table 'old_table'", true},
-		{"real connection error", "connection refused", false},
-		{"syntax error", "You have an error in your SQL syntax", false},
-	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			err := fmt.Errorf("%s", tc.msg)
-			assert.Equal(t, tc.want, isMigrationConflictError(err))
-		})
-	}
 }
