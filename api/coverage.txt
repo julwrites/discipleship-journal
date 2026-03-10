@@ -2,7 +2,7 @@ discipleship_journal_api/database/db.go:18:				BuildConnectionString		100.0%
 discipleship_journal_api/database/db.go:50:				Connect				68.4%
 discipleship_journal_api/database/db.go:83:				Close				100.0%
 discipleship_journal_api/database/migrate.go:18:			RunMigrations			40.0%
-discipleship_journal_api/database/migrate.go:78:			applyMigrations			0.0%
+discipleship_journal_api/database/migrate.go:78:			applyMigrations			26.7%
 discipleship_journal_api/database/migrate.go:151:			isMigrationConflictError	100.0%
 discipleship_journal_api/docs/docs.go:979:				init				0.0%
 discipleship_journal_api/handlers/admin.go:16:				NewAdminHandler			100.0%
@@ -95,6 +95,11 @@ discipleship_journal_api/handlers/user.go:51:				CreateOrUpdateUser		90.3%
 discipleship_journal_api/handlers/user.go:267:				UpdateUser			100.0%
 discipleship_journal_api/handlers/user.go:278:				GetMe				90.0%
 discipleship_journal_api/handlers/validate.go:15:			DecodeAndValidate		90.5%
+discipleship_journal_api/main.go:47:					QueryContext			100.0%
+discipleship_journal_api/main.go:51:					QueryRowContext			100.0%
+discipleship_journal_api/main.go:55:					ExecContext			100.0%
+discipleship_journal_api/main.go:59:					BeginTx				100.0%
+discipleship_journal_api/main.go:65:					main				0.0%
 discipleship_journal_api/middleware/auth.go:23:				NewAuthMiddlewareFromClient	100.0%
 discipleship_journal_api/middleware/auth.go:27:				NewAuthMiddleware		75.0%
 discipleship_journal_api/middleware/auth.go:41:				VerifyToken			100.0%
@@ -119,13 +124,13 @@ discipleship_journal_api/services/bible_ai_mock.go:56:			StreamChatCompletion		9
 discipleship_journal_api/services/bible_ai_mock.go:92:			Name				100.0%
 discipleship_journal_api/services/bible_ai_mock.go:96:			Query				100.0%
 discipleship_journal_api/services/bible_ai_mock.go:103:			Stream				91.7%
-discipleship_journal_api/services/bible_ai_mock.go:131:			GetSystemPrompt			66.7%
+discipleship_journal_api/services/bible_ai_mock.go:131:			GetSystemPrompt			100.0%
 discipleship_journal_api/services/bible_ai_mock.go:138:			GetVersions			100.0%
 discipleship_journal_api/services/bible_version_service.go:34:		NewBibleVersionService		100.0%
 discipleship_journal_api/services/bible_version_service.go:43:		ScrapeVersions			94.6%
 discipleship_journal_api/services/bible_version_service.go:109:		SyncVersions			100.0%
 discipleship_journal_api/services/bible_version_service.go:157:		GetVersions			100.0%
-discipleship_journal_api/services/firebase_service.go:18:		NewFirebaseService		66.7%
+discipleship_journal_api/services/firebase_service.go:18:		NewFirebaseService		91.7%
 discipleship_journal_api/services/group_service.go:48:			NewGroupService			100.0%
 discipleship_journal_api/services/group_service.go:55:			CreateGroup			90.0%
 discipleship_journal_api/services/group_service.go:99:			ListUserGroups			80.0%
@@ -173,9 +178,9 @@ discipleship_journal_api/services/notification_service.go:154:		getUserTokens			
 discipleship_journal_api/services/notification_service.go:172:		getUsersTokens			82.4%
 discipleship_journal_api/services/notification_service.go:198:		removeInvalidTokens		88.9%
 discipleship_journal_api/services/notification_service.go:212:		removeTokens			87.5%
-discipleship_journal_api/services/notification_service_mock.go:14:	NewMockNotificationService	75.0%
+discipleship_journal_api/services/notification_service_mock.go:14:	NewMockNotificationService	100.0%
 discipleship_journal_api/services/notification_service_mock.go:28:	RegisterDevice			100.0%
-discipleship_journal_api/services/notification_service_mock.go:35:	SendMulticastNotification	0.0%
+discipleship_journal_api/services/notification_service_mock.go:35:	SendMulticastNotification	100.0%
 discipleship_journal_api/services/notification_service_mock.go:42:	SendNotification		100.0%
 discipleship_journal_api/services/reading_plan_service.go:34:		NewReadingPlanService		100.0%
 discipleship_journal_api/services/reading_plan_service.go:38:		GetAllPlans			83.3%
@@ -205,4 +210,4 @@ discipleship_journal_api/services/template_service.go:179:		CloneTemplate			80.0
 discipleship_journal_api/services/template_service.go:202:		GenerateContent			91.2%
 discipleship_journal_api/validation/validator.go:12:			init				83.3%
 discipleship_journal_api/validation/validator.go:25:			ValidateStruct			100.0%
-total:									(statements)			89.5%
+total:									(statements)			84.0%
