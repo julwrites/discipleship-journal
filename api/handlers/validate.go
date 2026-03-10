@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"discipleship_journal_api/validation"
+
 	"github.com/go-playground/validator/v10"
 )
 

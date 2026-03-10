@@ -38,7 +38,12 @@ type RegisterDeviceRequest struct {
 // @Router /api/notifications/register [post]
 // @Security BearerAuth
 func (h *NotificationHandler) RegisterDevice(w http.ResponseWriter, r *http.Request) {
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
+	token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token)
+	if !ok || token == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	userID, err := GetUserUUID(r.Context(), token.UID)
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)

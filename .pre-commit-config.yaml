@@ -40,18 +40,28 @@ repos:
       - id: gitleaks
         args: ['--verbose', '--redact']
 
+  - repo: https://github.com/golangci/golangci-lint
+    rev: v1.64.5
+    hooks:
+      - id: golangci-lint
+        entry: golangci-lint run --fix
+        files: ^api/
+        types: [go]
+        args: ["--path-prefix=./api"]
+
   - repo: local
     hooks:
       - id: check-for-secrets
         name: Check for common secret patterns
-        entry: bash -c '
+        entry: |
+          bash -c '
           echo "🔍 Running custom secret pattern checks..."
           PATTERNS=(
-            "password[[:space:]]*=[[:space:]]*[\"'"'"']?[^\"'"'"'[:space:]]+"
-            "api[_-]?key[[:space:]]*=[[:space:]]*[\"'"'"']?[^\"'"'"'[:space:]]+"
-            "secret[[:space:]]*=[[:space:]]*[\"'"'"']?[^\"'"'"'[:space:]]+"
-            "token[[:space:]]*=[[:space:]]*[\"'"'"']?[^\"'"'"'[:space:]]+"
-            "credential[[:space:]]*=[[:space:]]*[\"'"'"']?[^\"'"'"'[:space:]]+"
+            "password[[:space:]]*=[[:space:]]*[\"'\''\"]?[^\"'\''[:space:]]+"
+            "api[_-]?key[[:space:]]*=[[:space:]]*[\"'\''\"]?[^\"'\''[:space:]]+"
+            "secret[[:space:]]*=[[:space:]]*[\"'\''\"]?[^\"'\''[:space:]]+"
+            "token[[:space:]]*=[[:space:]]*[\"'\''\"]?[^\"'\''[:space:]]+"
+            "credential[[:space:]]*=[[:space:]]*[\"'\''\"]?[^\"'\''[:space:]]+"
           )
           for pattern in "${PATTERNS[@]}"; do
             if git diff --cached --name-only | xargs grep -n -E "$pattern" 2>/dev/null; then
@@ -61,6 +71,6 @@ repos:
             fi
           done
           echo "✅ No obvious secrets found in staged files"
-        '
+          '
         language: system
         stages: [commit]

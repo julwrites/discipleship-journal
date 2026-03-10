@@ -1,11 +1,11 @@
 ---
 id: DOMAIN-20260101-100010-IWD
-status: review_requested
+status: completed
 title: Fix Bible AI API integration: incorrect request handling for get passage and ask AI
 priority: medium
 created: 2026-01-01 10:00:10
 category: domain
-dependencies: 
+dependencies:
 type: bug
 ---
 

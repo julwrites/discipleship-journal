@@ -1,127 +1,128 @@
 package database
 
 import (
-	"net/url"
 	"os"
-	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
+func TestConnect_OpenError(t *testing.T) {
+	os.Setenv("DB_USERNAME", "user")
+	os.Setenv("DB_NAME", "db")
+	os.Setenv("DB_PASSWORD", "secretpass")
+	os.Setenv("DB_HOST", "localhost")
+	os.Setenv("DB_PORT", "invalid-port") // Will fail inside Ping/Open
+
+	err := Connect()
+	assert.Error(t, err)
+	assert.NotContains(t, err.Error(), "secretpass", "Password should be masked")
+
+	os.Unsetenv("DB_USERNAME")
+	os.Unsetenv("DB_NAME")
+	os.Unsetenv("DB_PASSWORD")
+	os.Unsetenv("DB_HOST")
+	os.Unsetenv("DB_PORT")
+}
+
+func TestConnect_CloudSQL(t *testing.T) {
+	os.Setenv("DB_USERNAME", "user")
+	os.Setenv("DB_PASSWORD", "pass")
+	os.Setenv("DB_NAME", "db")
+	os.Setenv("CLOUD_SQL_INSTANCE", "project:region:instance")
+
+	_, err := BuildConnectionString()
+	assert.NoError(t, err)
+
+	os.Unsetenv("CLOUD_SQL_INSTANCE")
+	os.Unsetenv("DB_USERNAME")
+	os.Unsetenv("DB_PASSWORD")
+	os.Unsetenv("DB_NAME")
+}
+
 func TestBuildConnectionString(t *testing.T) {
-	// Save current env vars
-	originalUsername := os.Getenv("DB_USERNAME")
-	originalPassword := os.Getenv("DB_PASSWORD")
-	originalDBName := os.Getenv("DB_NAME")
-	originalHost := os.Getenv("DB_HOST")
-	originalPort := os.Getenv("DB_PORT")
-	originalCloudInstance := os.Getenv("CLOUD_SQL_INSTANCE")
+	// Setup environment
+	os.Setenv("DB_USERNAME", "user")
+	os.Setenv("DB_NAME", "db")
+	os.Unsetenv("DB_PASSWORD")
+	os.Unsetenv("CLOUD_SQL_INSTANCE")
+	os.Unsetenv("DB_HOST")
+	os.Unsetenv("DB_PORT")
 
-	// Restore env vars after test
-	defer func() {
-		_ = os.Setenv("DB_USERNAME", originalUsername)
-		_ = os.Setenv("DB_PASSWORD", originalPassword)
-		_ = os.Setenv("DB_NAME", originalDBName)
-		_ = os.Setenv("DB_HOST", originalHost)
-		_ = os.Setenv("DB_PORT", originalPort)
-		_ = os.Setenv("CLOUD_SQL_INSTANCE", originalCloudInstance)
-	}()
+	t.Run("Missing_Credentials", func(t *testing.T) {
+		os.Unsetenv("DB_USERNAME")
+		_, err := BuildConnectionString()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "DB_USERNAME and DB_NAME environment variables are required")
+		os.Setenv("DB_USERNAME", "user")
+	})
 
-	tests := []struct {
-		name          string
-		username      string
-		password      string
-		dbName        string
-		cloudInstance string // If empty, standard TCP
-		host          string
-		port          string
-		wantContains  []string
-	}{
-		{
-			name:          "Standard TCP with simple password",
-			username:      "user",
-			password:      "pass",
-			dbName:        "mydb",
-			cloudInstance: "",
-			host:          "localhost",
-			port:          "5432",
-			wantContains:  []string{"postgres://user:pass@localhost:5432/mydb", "sslmode=disable"},
-		},
-		{
-			name:          "Standard TCP with special chars in password",
-			username:      "user",
-			password:      "pass%^&word",
-			dbName:        "mydb",
-			cloudInstance: "",
-			host:          "db-host",
-			port:          "5432",
-			// & is NOT encoded by url.UserPassword as it is a sub-delim allowed in userinfo
-			wantContains: []string{"postgres://user:pass%25%5E&word@db-host:5432/mydb", "sslmode=disable"},
-		},
-		{
-			name:          "Cloud SQL with complex password",
-			username:      "postgres",
-			password:      "yd%^9VLMi[J=%d:xxxxxx",
-			dbName:        "postgres",
-			cloudInstance: "project:region:instance",
-			wantContains: []string{
-				"postgres://postgres:yd%25%5E9VLMi%5BJ=%25d%3Axxxxxx@127.0.0.1/postgres",
-				"sslmode=disable",
-			},
-		},
-		{
-			name:          "Cloud SQL with IAM Auth (No Password)",
-			username:      "sa-email@project.iam",
-			password:      "",
-			dbName:        "mydb",
-			cloudInstance: "project:region:instance",
-			wantContains: []string{
-				// User only, no password
-				"postgres://sa-email%40project.iam@127.0.0.1/mydb",
-				"sslmode=disable",
-			},
-		},
-	}
+	t.Run("Local_Missing_Password", func(t *testing.T) {
+		// No cloud sql instance, no password
+		_, err := BuildConnectionString()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "DB_PASSWORD is required")
+	})
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			_ = os.Setenv("DB_USERNAME", tt.username)
-			_ = os.Setenv("DB_PASSWORD", tt.password)
-			_ = os.Setenv("DB_NAME", tt.dbName)
-			_ = os.Setenv("CLOUD_SQL_INSTANCE", tt.cloudInstance)
-			if tt.cloudInstance == "" {
-				_ = os.Setenv("DB_HOST", tt.host)
-				_ = os.Setenv("DB_PORT", tt.port)
-			} else {
-				_ = os.Unsetenv("DB_HOST")
-				_ = os.Unsetenv("DB_PORT")
-			}
+	t.Run("Local_Success", func(t *testing.T) {
+		os.Setenv("DB_PASSWORD", "pass")
+		str, err := BuildConnectionString()
+		assert.NoError(t, err)
+		assert.Contains(t, str, "user:pass@tcp(127.0.0.1:4000)/db")
+		assert.Contains(t, str, "tls=true")
+		assert.Contains(t, str, "tidb_skip_isolation_level_check=1")
+	})
 
-			got, err := BuildConnectionString()
-			if err != nil {
-				t.Fatalf("BuildConnectionString() error = %v", err)
-			}
-			t.Logf("Got: %s", got)
+	t.Run("Local_Custom_Host", func(t *testing.T) {
+		os.Setenv("DB_PASSWORD", "pass")
+		os.Setenv("DB_HOST", "db-host")
+		os.Setenv("DB_PORT", "5433")
+		str, err := BuildConnectionString()
+		assert.NoError(t, err)
+		assert.Contains(t, str, "user:pass@tcp(db-host:5433)/db")
+		assert.Contains(t, str, "tidb_skip_isolation_level_check=1")
+	})
 
-			// Parse result URL to verify decoding works
-			u, err := url.Parse(got)
-			if err != nil {
-				t.Fatalf("Result is not a valid URL: %v", err)
-			}
+	// Cleanup
+	os.Unsetenv("DB_USERNAME")
+	os.Unsetenv("DB_NAME")
+	os.Unsetenv("DB_PASSWORD")
+	os.Unsetenv("CLOUD_SQL_INSTANCE")
+	os.Unsetenv("DB_HOST")
+	os.Unsetenv("DB_PORT")
+}
 
-			// Only check password if it was provided
-			if tt.password != "" {
-				gotPass, _ := u.User.Password()
-				if gotPass != tt.password {
-					t.Errorf("Decoded password = %v, want %v", gotPass, tt.password)
-				}
-			}
+func TestConnect_ConfigError(t *testing.T) {
+	// Force BuildConnectionString failure
+	os.Unsetenv("DB_USERNAME")
+	err := Connect()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to build database connection string")
+}
 
-			// Check raw string components
-			for _, want := range tt.wantContains {
-				if !strings.Contains(got, want) {
-					t.Errorf("BuildConnectionString() = %v, want to contain %v", got, want)
-				}
-			}
-		})
-	}
+func TestConnect_PingFailure(t *testing.T) {
+	os.Setenv("DB_USERNAME", "user")
+	os.Setenv("DB_NAME", "db")
+	os.Setenv("DB_PASSWORD", "pass")
+	os.Setenv("DB_HOST", "localhost")
+	os.Setenv("DB_PORT", "54322") // closed port
+
+	err := Connect()
+	assert.Error(t, err)
+	// Expect "unable to ping database" or connection refused
+	assert.Contains(t, err.Error(), "unable to ping database")
+
+	// Cleanup
+	Close()
+	os.Unsetenv("DB_USERNAME")
+	os.Unsetenv("DB_NAME")
+	os.Unsetenv("DB_PASSWORD")
+	os.Unsetenv("DB_HOST")
+	os.Unsetenv("DB_PORT")
+}
+
+func TestClose_Nil(t *testing.T) {
+	// Should not panic
+	DB = nil
+	Close()
 }

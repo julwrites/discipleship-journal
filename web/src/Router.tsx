@@ -10,6 +10,7 @@ import ReadingPlanDetail from "@/pages/ReadingPlanDetail";
 import MemoryVersesPage, { VersePackDetail } from "@/pages/MemoryVersesPage";
 import TemplatesPage from "@/pages/TemplatesPage";
 import TemplateEditor from "@/pages/TemplateEditor";
+import TagsPage from "@/pages/TagsPage";
 import Settings from "@/pages/Settings";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfService from "@/pages/TermsOfService";
@@ -94,6 +95,10 @@ export const router = createBrowserRouter([
       {
         path: "/templates/new",
         element: <TemplateEditor />,
+      },
+      {
+        path: "/tags",
+        element: <TagsPage />,
       },
     ],
   },

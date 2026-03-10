@@ -5,7 +5,7 @@ title: Update architecture documentation with current implementation
 priority: medium
 created: 2025-12-31 20:43:07
 category: foundation
-dependencies: 
+dependencies:
 type: task
 ---
 

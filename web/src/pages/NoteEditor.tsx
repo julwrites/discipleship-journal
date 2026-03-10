@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useParams, useNavigate, useBlocker } from "react-router-dom";
+import { useParams, useNavigate, useBlocker, useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,9 +16,12 @@ import {
     MemoryVerse,
     syncUser,
     getConnections,
-    getOrCreateDirectGroup
+    getOrCreateDirectGroup,
+    getTags,
+    Tag
 } from "@/services/api";
 import RichTextEditor from "@/components/RichTextEditor";
+import { TagInput } from "@/components/TagInput";
 import { Editor } from "@tiptap/react";
 import {
   Dialog,
@@ -55,14 +59,19 @@ import { BibleReferenceInput } from "@/components/BibleReferenceInput";
 export default function NoteEditor() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
+    const { user } = useAuth();
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
+    const [tags, setTags] = useState<string[]>([]);
+    const [suggestions, setSuggestions] = useState<string[]>([]);
     const [initialTitle, setInitialTitle] = useState("");
     const [initialContent, setInitialContent] = useState("");
+    const [initialTags, setInitialTags] = useState<string[]>([]);
     const [mode, setMode] = useState<"edit" | "preview">("edit");
 
     // Derived state for dirty check
-    const isDirty = (title !== initialTitle) || (content !== initialContent);
+    const isDirty = (title !== initialTitle) || (content !== initialContent) || (JSON.stringify(tags) !== JSON.stringify(initialTags));
 
     const [saving, setSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<string | null>(null);
@@ -73,6 +82,7 @@ export default function NoteEditor() {
     // Default Version from User Settings
     const [userVersion, setUserVersion] = useState("ESV");
     const [currentUserEmail, setCurrentUserEmail] = useState("");
+    const [currentUserId, setCurrentUserId] = useState("");
 
     // Bible Passage State
     const [passageRef, setPassageRef] = useState("");
@@ -95,6 +105,8 @@ export default function NoteEditor() {
     const [aiVersion, setAiVersion] = useState("ESV");
     const [askingAI, setAskingAI] = useState(false);
     const [aiDialogOpen, setAiDialogOpen] = useState(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const fetchingPromiseRef = useRef<Promise<any> | null>(null);
 
     // Sharing State
     const [myGroups, setMyGroups] = useState<{ id: string, name: string }[]>([]);
@@ -112,6 +124,7 @@ export default function NoteEditor() {
     useEffect(() => {
         // Load user settings for default version
         syncUser().then(u => {
+            if (u.id) setCurrentUserId(u.id);
             if (u.email) setCurrentUserEmail(u.email);
             if (u.settings?.bible_version) {
                 setUserVersion(u.settings.bible_version);
@@ -120,8 +133,18 @@ export default function NoteEditor() {
             }
         }).catch(console.error);
 
+        // Load tags for autocomplete
+        getTags().then(tags => setSuggestions(tags.map((t: Tag) => t.name))).catch(console.error);
+
         if (id && id !== "new") {
-            setLoading(true);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const state = location.state as any;
+            // Optimization: If we just created the note (auto-save), don't set loading to true
+            // to avoid unmounting the editor and losing cursor focus/scroll.
+            if (!state?.fromCreate) {
+                setLoading(true);
+            }
+
             getNote(id).then(note => {
                 setTitle(note.title);
                 setInitialTitle(note.title);
@@ -137,6 +160,12 @@ export default function NoteEditor() {
                 }
                 setContent(noteContent as string);
                 setInitialContent(noteContent as string);
+
+                // Set tags
+                const noteTags = note.tags ? note.tags.map((t: Tag) => t.name) : [];
+                setTags(noteTags);
+                setInitialTags(noteTags);
+
                 setLastSaved("Loaded");
             }).catch(e => {
                 console.error(e);
@@ -145,9 +174,46 @@ export default function NoteEditor() {
                 setLoading(false);
             });
         } else {
-            setLoading(false);
+            // Handle pre-population from location state
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const state = location.state as any;
+            let promise = Promise.resolve();
+
+            if (state) {
+                if (state.title) setTitle(state.title);
+                if (state.tags) setTags(state.tags);
+                if (state.content) setContent(state.content);
+
+                // Fetch passage if provided
+                if (state.passageRef) {
+                    if (!fetchingPromiseRef.current) {
+                        const version = state.passageVersion || "ESV";
+                        const refs = state.passageRef.split(';').map((r: string) => r.trim()).filter((r: string) => r.length > 0);
+
+                        fetchingPromiseRef.current = Promise.all(refs.map((ref: string) =>
+                            getBiblePassage(ref, version).then(res => ({ ref, res })).catch(err => ({ ref, err }))
+                        )).then((results) => {
+                            let combinedHtml = "";
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            results.forEach(({ ref, res, err }: any) => {
+                                if (err) {
+                                    console.error(`Failed to fetch ${ref}`, err);
+                                    combinedHtml += `<blockquote><p><strong>${ref} (${version})</strong></p>Failed to load text.</blockquote><p></p>`;
+                                } else {
+                                    const text = res.verse || res.text || res.content || "";
+                                    combinedHtml += `<blockquote><p><strong>${ref} (${version})</strong></p>${text}</blockquote><p></p>`;
+                                }
+                            });
+                            setContent(prev => prev + combinedHtml);
+                        });
+                    }
+                    promise = fetchingPromiseRef.current;
+                }
+            }
+
+            promise.finally(() => setLoading(false));
         }
-    }, [id]);
+    }, [id, location.state]);
 
     useEffect(() => {
         if (verseDialogOpen) {
@@ -165,19 +231,22 @@ export default function NoteEditor() {
         setSaveError(false);
         try {
             if (id === "new") {
-                const res = await createNote(title, content);
+                const res = await createNote(title, content, tags);
                 if (shouldNavigate) {
-                    navigate(`/notes/${res.id}`, { replace: true });
+                    // Pass fromCreate state to prevent reloading/flashing
+                    navigate(`/notes/${res.id}`, { replace: true, state: { ...location.state, fromCreate: true } });
                 }
                 setLastSaved(new Date().toLocaleTimeString());
                 setInitialTitle(title);
                 setInitialContent(content);
+                setInitialTags(tags);
                 return true;
             } else if (id) {
-                await updateNote(id, title, content);
+                await updateNote(id, title, content, tags);
                 setLastSaved(new Date().toLocaleTimeString());
                 setInitialTitle(title);
                 setInitialContent(content);
+                setInitialTags(tags);
                 return true;
             }
         } catch (e) {
@@ -194,11 +263,23 @@ export default function NoteEditor() {
             setSaving(false);
         }
         return false;
-    }, [id, title, content, navigate]);
+    }, [id, title, content, tags, navigate, location.state]);
 
     const handleSave = useCallback(() => {
         saveNote(true);
     }, [saveNote]);
+
+    // Auto-save effect
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            // Auto-save if dirty, not currently saving, and we have a title
+            if (isDirty && !saving && title.trim()) {
+                saveNote(true);
+            }
+        }, 2000);
+
+        return () => clearTimeout(timeoutId);
+    }, [isDirty, saving, title, saveNote]);
 
     // Handle Ctrl+S / Cmd+S
     useEffect(() => {
@@ -421,6 +502,7 @@ export default function NoteEditor() {
                                 <Button variant="outline" onClick={() => {
                                     setShareDialogOpen(true);
                                     fetchMyGroups();
+                                    fetchConnections();
                                 }}>Share</Button>
                                 <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
                                     {deleting ? "..." : "Delete"}
@@ -694,28 +776,14 @@ export default function NoteEditor() {
                                     <option value="">Select a Connection...</option>
                                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                                     {myConnections.filter((c: any) => c.status === 'accepted').map((c: any) => {
-                                        // Need to identify which user is the 'other' one
-                                        // But we don't have current user email easily here unless we use auth hook or syncUser data
-                                        // Just display both emails or try to guess?
-                                        // Connections list usually returns requester_email and receiver_email.
-                                        // If I am requester, show receiver.
-                                        // I will assume simple display for now: "requester <-> receiver" or just map all?
-                                        // Better: The ConnectionsPage logic filters this.
-                                        // I'll try to find the "other" email.
-                                        // But I don't have 'user' object in this scope easily (useAuth hook is not used in top level... wait, it is NOT used in NoteEditor currently)
-                                        // NoteEditor uses `syncUser`.
-                                        // I'll just show the email that isn't null? Or maybe just render the object as string if I can't filter?
-                                        // Actually `getConnections` returns { ... requester_email, receiver_email ... }.
-                                        // I'll list both emails or just the ID.
-                                        // Wait, I need to know which one is the OTHER.
-                                        // I'll show: "Connection (ID: ...)" fallback?
-                                        // No, that's bad UX.
-                                        // I'll fetch user in useEffect or use `syncUser` result.
-                                        // `syncUser` is called in useEffect. I can store user.
-                                        // I'll add `currentUser` state.
+                                        // Use ID if available, fallback to email if ID not yet loaded (though ID is preferred)
+                                        const isRequester = currentUserId ? c.requester_id === currentUserId : (c.requester_email === currentUserEmail || (user?.email === c.requester_email));
+                                        const otherId = isRequester ? c.receiver_id : c.requester_id;
+                                        const otherEmail = isRequester ? c.receiver_email : c.requester_email;
+
                                         return (
-                                            <option key={c.id} value={c.requester_email === currentUserEmail ? c.receiver_id : c.requester_id}>
-                                                {c.requester_email === currentUserEmail ? c.receiver_email : c.requester_email}
+                                            <option key={c.id} value={otherId}>
+                                                {otherEmail}
                                             </option>
                                         );
                                     })}
@@ -742,6 +810,10 @@ export default function NoteEditor() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
             />
+
+            <div className="mb-4">
+                <TagInput value={tags} onChange={setTags} suggestions={suggestions} />
+            </div>
 
             <div className="flex-1 overflow-hidden flex flex-col">
                 {mode === "edit" ? (

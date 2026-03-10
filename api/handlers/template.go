@@ -7,6 +7,7 @@ import (
 	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/models"
 	"discipleship_journal_api/services"
+
 	"firebase.google.com/go/v4/auth"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -211,7 +212,7 @@ func (h *TemplateHandler) Generate(w http.ResponseWriter, r *http.Request) {
 
 func (h *TemplateHandler) getUserID(r *http.Request) (uuid.UUID, error) {
 	firebaseUID := ""
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		firebaseUID = token.UID
 	}
 	return GetUserUUID(r.Context(), firebaseUID)

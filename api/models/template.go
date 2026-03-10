@@ -7,20 +7,20 @@ import (
 )
 
 type StudyTemplate struct {
-	ID          uuid.UUID              `json:"id"`
-	CreatorID   uuid.UUID              `json:"creator_id"`
-	Title       string                 `json:"title"`
-	Description string                 `json:"description"`
-	Structure   map[string]interface{} `json:"structure"` // JSONB
-	Prompts     map[string]interface{} `json:"prompts"`   // JSONB
-	Fields      []TemplateField        `json:"fields"`    // JSONB
-	IsPublic    bool                   `json:"is_public"`
+	ID                uuid.UUID              `json:"id"`
+	CreatorID         uuid.UUID              `json:"creator_id"`
+	Title             string                 `json:"title"`
+	Description       string                 `json:"description"`
+	Structure         map[string]interface{} `json:"structure"` // JSONB
+	Prompts           map[string]interface{} `json:"prompts"`   // JSONB
+	Fields            []TemplateField        `json:"fields"`    // JSONB
+	IsPublic          bool                   `json:"is_public"`
 	BibleReferences   []string               `json:"bible_references"`
 	AllowUserPassages bool                   `json:"allow_user_passages"`
 	TemplateBody      string                 `json:"template_body"`
 	RequiredVersion   string                 `json:"required_version"`
-	CreatedAt   time.Time              `json:"created_at"`
-	UpdatedAt   time.Time              `json:"updated_at"`
+	CreatedAt         time.Time              `json:"created_at"`
+	UpdatedAt         time.Time              `json:"updated_at"`
 }
 
 type TemplateField struct {

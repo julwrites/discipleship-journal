@@ -11,6 +11,7 @@ import (
 
 	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/services"
+
 	"firebase.google.com/go/v4/auth"
 	"github.com/google/uuid"
 )
@@ -97,9 +98,9 @@ func (h *ChatHandler) AskAI(w http.ResponseWriter, r *http.Request) {
 func (h *ChatHandler) handleRequest(w http.ResponseWriter, r *http.Request, reqType string, reqData interface{}) {
 	// 1. Authenticate & Create Note
 	var userUUID uuid.UUID
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		uid := token.UID
-		if err := h.DB.QueryRow(r.Context(), "SELECT id FROM users WHERE firebase_uid=$1", uid).Scan(&userUUID); err != nil {
+		if err := h.DB.QueryRowContext(r.Context(), "SELECT id FROM users WHERE firebase_uid=?", uid).Scan(&userUUID); err != nil {
 			http.Error(w, "User not found", http.StatusNotFound)
 			return
 		}
@@ -151,7 +152,7 @@ func (h *ChatHandler) handleRequest(w http.ResponseWriter, r *http.Request, reqT
 
 	contentJSON, _ := json.Marshal(initialContent)
 	// Create note with "pending" status
-	note, err := h.NoteService.CreateNote(r.Context(), userUUID.String(), noteTitle, contentJSON, "pending")
+	note, err := h.NoteService.CreateNote(r.Context(), userUUID.String(), noteTitle, contentJSON, nil, "pending")
 	if err != nil {
 		slog.Error("Failed to create pending note", "error", err)
 		http.Error(w, "Failed to initialize operation", http.StatusInternalServerError)
@@ -179,7 +180,7 @@ func (h *ChatHandler) handleRequest(w http.ResponseWriter, r *http.Request, reqT
 		resp, _, err := h.Client.Query(ctxWithOpts, fullPrompt, "")
 		if err != nil {
 			slog.Error("Failed to query AI", "error", err)
-			if err := h.NoteService.UpdateNote(bgCtx, userUUID.String(), note.ID, noteTitle, contentJSON, "failed"); err != nil {
+			if err := h.NoteService.UpdateNote(bgCtx, userUUID.String(), note.ID, noteTitle, contentJSON, nil, "failed"); err != nil {
 				slog.Error("Failed to mark note as failed", "error", err)
 			}
 			http.Error(w, "AI Request failed: "+err.Error(), http.StatusInternalServerError)
@@ -191,7 +192,7 @@ func (h *ChatHandler) handleRequest(w http.ResponseWriter, r *http.Request, reqT
 		// Update Note
 		finalHTML := h.formatFinalHTML(reqType, reqData, fullAnswer)
 		finalJSON, _ := json.Marshal(finalHTML)
-		if err := h.NoteService.UpdateNote(bgCtx, userUUID.String(), note.ID, noteTitle, finalJSON, "active"); err != nil {
+		if err := h.NoteService.UpdateNote(bgCtx, userUUID.String(), note.ID, noteTitle, finalJSON, nil, "active"); err != nil {
 			slog.Error("Failed to update note status", "error", err)
 		} else {
 			h.sendNotification(bgCtx, userUUID.String(), note.ID)
@@ -231,7 +232,7 @@ func (h *ChatHandler) handleRequest(w http.ResponseWriter, r *http.Request, reqT
 	outChan, _, err := h.Client.Stream(ctxWithOpts, fullPrompt)
 	if err != nil {
 		slog.Error("Failed to start AI stream", "error", err)
-		if err := h.NoteService.UpdateNote(bgCtx, userUUID.String(), note.ID, noteTitle, contentJSON, "failed"); err != nil {
+		if err := h.NoteService.UpdateNote(bgCtx, userUUID.String(), note.ID, noteTitle, contentJSON, nil, "failed"); err != nil {
 			slog.Error("Failed to mark note as failed", "error", err)
 		}
 		errMsg, _ := json.Marshal(map[string]string{"error": err.Error()})
@@ -299,7 +300,7 @@ StreamFinished:
 	finalHTML := h.formatFinalHTML(reqType, reqData, fullAnswer)
 	finalJSON, _ := json.Marshal(finalHTML)
 
-	if err := h.NoteService.UpdateNote(bgCtx, userUUID.String(), note.ID, noteTitle, finalJSON, "active"); err != nil {
+	if err := h.NoteService.UpdateNote(bgCtx, userUUID.String(), note.ID, noteTitle, finalJSON, nil, "active"); err != nil {
 		slog.Error("Failed to update note status", "error", err)
 	} else {
 		slog.Info("Note updated successfully", "id", note.ID)

@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -11,6 +12,7 @@ import (
 	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/models"
 	"discipleship_journal_api/services"
+
 	"firebase.google.com/go/v4/auth"
 	chi "github.com/go-chi/chi/v5"
 )
@@ -22,11 +24,17 @@ type Note struct {
 	Content   json.RawMessage `json:"content,omitempty"`
 	CreatedAt time.Time       `json:"created_at"`
 	UpdatedAt time.Time       `json:"updated_at"`
+	Tags      []services.Tag  `json:"tags"`
 }
 
 type CreateNoteRequest struct {
 	Title   string      `json:"title" validate:"max=100"`
 	Content interface{} `json:"content"`
+	Tags    []string    `json:"tags"`
+}
+
+type CreateTagRequest struct {
+	Name string `json:"name" validate:"required,max=50"`
 }
 
 type NoteHandler struct {
@@ -39,8 +47,11 @@ func NewNoteHandler(db DBInterface, noteService services.NoteServiceInterface) *
 }
 
 func (h *NoteHandler) getUserUUID(ctx context.Context, firebaseUID string) (string, error) {
+	if h.db == nil {
+		return "", fmt.Errorf("database connection is nil")
+	}
 	var id string
-	err := h.db.QueryRow(ctx, "SELECT id FROM users WHERE firebase_uid=$1", firebaseUID).Scan(&id)
+	err := h.db.QueryRowContext(ctx, "SELECT id FROM users WHERE firebase_uid=?", firebaseUID).Scan(&id)
 	if err != nil {
 		return "", err
 	}
@@ -77,8 +88,13 @@ type NotesResponse struct {
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /api/notes [get]
 func (h *NoteHandler) GetNotes(w http.ResponseWriter, r *http.Request) {
+	if h.noteService == nil {
+		slog.Error("NoteService is nil in NoteHandler.GetNotes")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 	var uid string
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		uid = token.UID
 	} else if testUserID, ok := r.Context().Value(TestUserKey).(string); ok {
 		// Test environment override
@@ -120,6 +136,7 @@ func (h *NoteHandler) getNotesWithUUID(w http.ResponseWriter, r *http.Request, u
 	// Filter parameters
 	filter := services.NoteFilter{
 		SearchQuery: r.URL.Query().Get("q"),
+		Tag:         r.URL.Query().Get("tag"),
 		SortBy:      r.URL.Query().Get("sortBy"),
 		SortOrder:   r.URL.Query().Get("sortOrder"),
 	}
@@ -152,6 +169,7 @@ func (h *NoteHandler) getNotesWithUUID(w http.ResponseWriter, r *http.Request, u
 			Content:   sn.Content,
 			CreatedAt: sn.CreatedAt,
 			UpdatedAt: sn.UpdatedAt,
+			Tags:      sn.Tags,
 		})
 	}
 
@@ -193,9 +211,14 @@ func (h *NoteHandler) getNotesWithUUID(w http.ResponseWriter, r *http.Request, u
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /api/notes/{id} [delete]
 func (h *NoteHandler) DeleteNote(w http.ResponseWriter, r *http.Request) {
+	if h.noteService == nil {
+		slog.Error("NoteService is nil in NoteHandler.DeleteNote")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 	var userUUID string
 	var err error
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		userUUID, err = h.getUserUUID(r.Context(), token.UID)
 		if err != nil {
 			http.Error(w, "User not found", http.StatusNotFound)
@@ -240,9 +263,14 @@ func (h *NoteHandler) DeleteNote(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /api/notes [post]
 func (h *NoteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
+	if h.noteService == nil {
+		slog.Error("NoteService is nil in NoteHandler.CreateNote")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 	var userUUID string
 	var err error
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		userUUID, err = h.getUserUUID(r.Context(), token.UID)
 		if err != nil {
 			http.Error(w, "User not found", http.StatusNotFound)
@@ -266,7 +294,7 @@ func (h *NoteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	note, err := h.noteService.CreateNote(r.Context(), userUUID, req.Title, contentJSON)
+	note, err := h.noteService.CreateNote(r.Context(), userUUID, req.Title, contentJSON, req.Tags)
 	if err != nil {
 		slog.Error("Failed to create note", "error", err, "user_id", userUUID)
 		http.Error(w, "Failed to create note", http.StatusInternalServerError)
@@ -294,9 +322,14 @@ func (h *NoteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /api/notes/{id} [put]
 func (h *NoteHandler) UpdateNote(w http.ResponseWriter, r *http.Request) {
+	if h.noteService == nil {
+		slog.Error("NoteService is nil in NoteHandler.UpdateNote")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 	var userUUID string
 	var err error
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		userUUID, err = h.getUserUUID(r.Context(), token.UID)
 		if err != nil {
 			http.Error(w, "User not found", http.StatusNotFound)
@@ -321,7 +354,7 @@ func (h *NoteHandler) UpdateNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.noteService.UpdateNote(r.Context(), userUUID, noteID, req.Title, contentJSON)
+	err = h.noteService.UpdateNote(r.Context(), userUUID, noteID, req.Title, contentJSON, req.Tags)
 
 	if err != nil {
 		if err == models.ErrNotFound {
@@ -351,9 +384,14 @@ func (h *NoteHandler) UpdateNote(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {string} string "Note not found"
 // @Router /api/notes/{id} [get]
 func (h *NoteHandler) GetNote(w http.ResponseWriter, r *http.Request) {
+	if h.noteService == nil {
+		slog.Error("NoteService is nil in NoteHandler.GetNote")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 	var userUUID string
 	var err error
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		userUUID, err = h.getUserUUID(r.Context(), token.UID)
 		if err != nil {
 			http.Error(w, "User not found", http.StatusNotFound)
@@ -386,10 +424,159 @@ func (h *NoteHandler) GetNote(w http.ResponseWriter, r *http.Request) {
 		Content:   sn.Content,
 		CreatedAt: sn.CreatedAt,
 		UpdatedAt: sn.UpdatedAt,
+		Tags:      sn.Tags,
 	}
 
 	if err := json.NewEncoder(w).Encode(note); err != nil {
 		slog.Error("Failed to encode response", "error", err)
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	}
+}
+
+// GetTags godoc
+// @Summary Get all tags for user
+// @Description Fetch all tags belonging to the authenticated user
+// @Tags tags
+// @Accept json
+// @Produce json
+// @Success 200 {object} []services.Tag
+// @Failure 401 {string} string "Unauthorized"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /api/tags [get]
+func (h *NoteHandler) GetTags(w http.ResponseWriter, r *http.Request) {
+	if h.noteService == nil {
+		slog.Error("NoteService is nil in NoteHandler.GetTags")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	var userUUID string
+	var err error
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
+		userUUID, err = h.getUserUUID(r.Context(), token.UID)
+		if err != nil {
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
+	} else if testUserID, ok := r.Context().Value(TestUserKey).(string); ok {
+		userUUID = testUserID
+	} else {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	tags, err := h.noteService.GetUserTags(r.Context(), userUUID)
+	if err != nil {
+		slog.Error("Failed to fetch tags", "error", err, "user_id", userUUID)
+		http.Error(w, "Failed to fetch tags", http.StatusInternalServerError)
+		return
+	}
+
+	if err := json.NewEncoder(w).Encode(tags); err != nil {
+		slog.Error("Failed to encode response", "error", err)
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	}
+}
+
+// CreateTag godoc
+// @Summary Create a new tag
+// @Description Create a new tag
+// @Tags tags
+// @Accept json
+// @Produce json
+// @Param request body CreateTagRequest true "Create Tag Request"
+// @Success 200 {object} services.Tag
+// @Failure 400 {string} string "Bad Request"
+// @Failure 401 {string} string "Unauthorized"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /api/tags [post]
+func (h *NoteHandler) CreateTag(w http.ResponseWriter, r *http.Request) {
+	if h.noteService == nil {
+		slog.Error("NoteService is nil in NoteHandler.CreateTag")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	var userUUID string
+	var err error
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
+		userUUID, err = h.getUserUUID(r.Context(), token.UID)
+		if err != nil {
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
+	} else if testUserID, ok := r.Context().Value(TestUserKey).(string); ok {
+		userUUID = testUserID
+	} else {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req CreateTagRequest
+	if !DecodeAndValidate(w, r, &req) {
+		return
+	}
+
+	tag, err := h.noteService.CreateTag(r.Context(), userUUID, req.Name)
+	if err != nil {
+		slog.Error("Failed to create tag", "error", err, "user_id", userUUID)
+		http.Error(w, "Failed to create tag", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(tag); err != nil {
+		slog.Error("Failed to encode response", "error", err)
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	}
+}
+
+// DeleteTag godoc
+// @Summary Delete a tag
+// @Description Delete a tag by ID
+// @Tags tags
+// @Accept json
+// @Produce json
+// @Param id path string true "Tag ID"
+// @Success 200
+// @Failure 401 {string} string "Unauthorized"
+// @Failure 404 {string} string "Not Found"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /api/tags/{id} [delete]
+func (h *NoteHandler) DeleteTag(w http.ResponseWriter, r *http.Request) {
+	if h.noteService == nil {
+		slog.Error("NoteService is nil in NoteHandler.DeleteTag")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	var userUUID string
+	var err error
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
+		userUUID, err = h.getUserUUID(r.Context(), token.UID)
+		if err != nil {
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
+	} else if testUserID, ok := r.Context().Value(TestUserKey).(string); ok {
+		userUUID = testUserID
+	} else {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	tagID := chi.URLParam(r, "id")
+	err = h.noteService.DeleteTag(r.Context(), userUUID, tagID)
+
+	if err != nil {
+		if err == models.ErrNotFound {
+			http.Error(w, "Tag not found", http.StatusNotFound)
+		} else {
+			slog.Error("Failed to delete tag", "error", err, "tag_id", tagID)
+			http.Error(w, "Database error", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(map[string]bool{"success": true}); err != nil {
+		slog.Error("Failed to encode response", "error", err)
 	}
 }

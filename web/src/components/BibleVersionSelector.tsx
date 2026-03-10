@@ -63,7 +63,7 @@ export function BibleVersionSelector({ value, onChange, placeholder = "Select ve
         }
         return v.value || v.abbreviation || v.code || v.id || v.version || v.name;
     };
-    
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const getUniqueId = (v: any) => v.value || v.id || v.abbreviation || v.code || v.version || v.name;
 
@@ -106,15 +106,15 @@ export function BibleVersionSelector({ value, onChange, placeholder = "Select ve
                             {versions.map((version) => {
                                 const code = getVersionCode(version);
                                 const uniqueId = getUniqueId(version);
-                                
+
                                 if (!code || !uniqueId) return null;
 
                                 const isSelected = value && code.toLowerCase() === value.toLowerCase();
-                                
+
                                 return (
                                     <CommandItem
                                         key={uniqueId}
-                                        value={uniqueId.toLowerCase()} 
+                                        value={uniqueId.toLowerCase()}
                                         onSelect={() => {
                                             if (code) {
                                                 onChange(code);

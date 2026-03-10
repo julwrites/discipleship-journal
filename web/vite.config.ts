@@ -61,5 +61,15 @@ export default defineConfig({
     setupFiles: './src/test/setup.ts',
     css: true,
     exclude: ['**/e2e/**', '**/node_modules/**', '**/verification/**'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html', 'json-summary'],
+      thresholds: {
+        statements: 71.8,
+        branches: 58.4,
+        functions: 66.6,
+        lines: 74.3,
+      },
+    },
   },
 })

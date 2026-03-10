@@ -1,11 +1,11 @@
 ---
 id: INFRASTRUCTURE-20260131-013107-LHE
-status: review_requested
+status: completed
 title: Fix Google OAuth redirect flow - getRedirectResult returns null
 priority: medium
 created: 2026-01-31 01:31:07
 category: infrastructure
-dependencies: 
+dependencies:
 type: bug
 ---
 

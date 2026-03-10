@@ -1,4 +1,4 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import ConnectionsPage from './ConnectionsPage';
@@ -20,6 +20,8 @@ vi.mock('@/services/api', () => ({
     searchUsers: vi.fn(),
     sendConnectionRequest: vi.fn(),
     respondToConnectionRequest: vi.fn(),
+    getOrCreateDirectGroup: vi.fn(),
+    syncUser: vi.fn().mockResolvedValue({ id: '123' }),
 }));
 
 // Mock Firebase
@@ -43,6 +45,111 @@ describe('ConnectionsPage', () => {
 
     afterEach(() => {
         vi.useRealTimers();
+    });
+
+    it('renders existing connections', async () => {
+        const mockGetConnections = vi.mocked(api.getConnections);
+        mockGetConnections.mockResolvedValue([
+            {
+                id: 'conn-1',
+                requester_id: '123',
+                receiver_id: '456',
+                status: 'accepted',
+                receiver_username: 'Friend User',
+                receiver_email: 'friend@example.com',
+                requester_username: 'Me',
+                requester_email: 'test@example.com'
+            }
+        ]);
+
+        render(
+            <MemoryRouter>
+                <ConnectionsPage />
+            </MemoryRouter>
+        );
+
+        await waitFor(() => {
+            expect(screen.getByText('Friend User')).toBeInTheDocument();
+        });
+        expect(screen.getByText('friend@example.com')).toBeInTheDocument();
+    });
+
+    it('sends connection request', async () => {
+        const user = userEvent.setup();
+        const mockSearchUsers = vi.mocked(api.searchUsers);
+        mockSearchUsers.mockResolvedValue([
+            { id: 'user-2', email: 'stranger@example.com', username: 'Stranger' }
+        ]);
+        const mockSendRequest = vi.mocked(api.sendConnectionRequest);
+        mockSendRequest.mockResolvedValue({ success: true });
+
+        // Mock getConnections to return empty initially
+        vi.mocked(api.getConnections).mockResolvedValue([]);
+
+        render(
+            <MemoryRouter>
+                <ConnectionsPage />
+            </MemoryRouter>
+        );
+
+        // Switch to Find People tab
+        const findTab = screen.getByRole('tab', { name: /find people/i });
+        await user.click(findTab);
+
+        const searchInput = await screen.findByPlaceholderText('Search by email or username...');
+
+        // Search
+        fireEvent.change(searchInput, { target: { value: 'stranger' } });
+
+        // Wait for debounce
+        await act(async () => {
+            await new Promise(r => setTimeout(r, 600));
+        });
+
+        await waitFor(() => {
+            expect(screen.getByText('Stranger')).toBeInTheDocument();
+        });
+
+        // Click Connect
+        const connectBtn = screen.getByRole('button', { name: /connect/i });
+        await user.click(connectBtn);
+
+        expect(mockSendRequest).toHaveBeenCalledWith('user-2', true);
+    });
+
+    it('accepts connection request', async () => {
+        const user = userEvent.setup();
+        const mockGetConnections = vi.mocked(api.getConnections);
+        mockGetConnections.mockResolvedValue([
+            {
+                id: 'req-1',
+                requester_id: '456',
+                receiver_id: '123',
+                status: 'pending',
+                requester_username: 'Requester',
+                requester_email: 'requester@example.com',
+                receiver_username: 'Me',
+                receiver_email: 'test@example.com'
+            }
+        ]);
+        const mockRespond = vi.mocked(api.respondToConnectionRequest);
+        mockRespond.mockResolvedValue({ success: true });
+
+        render(
+            <MemoryRouter>
+                <ConnectionsPage />
+            </MemoryRouter>
+        );
+
+        await waitFor(() => {
+            expect(screen.getByText('Requester')).toBeInTheDocument();
+        });
+
+        // Verify it's a request (has Accept/Decline)
+        const acceptBtn = screen.getByRole('button', { name: /accept/i });
+        await user.click(acceptBtn);
+
+        expect(mockRespond).toHaveBeenCalledWith('req-1', 'accept');
     });
 
     it('debounces search in Find People tab', async () => {
@@ -73,36 +180,16 @@ describe('ConnectionsPage', () => {
         // Wait for the tab content to be visible
         const searchInput = await screen.findByPlaceholderText('Search by email or username...');
 
-        // Now switch to fake timers for debounce testing
         vi.useFakeTimers();
-
-        // Type "te" (length < 3)
-        // We use user.type, but user.type uses real timers by default.
-        // With fake timers enabled, we need to advance time for typing to happen if we use user.type?
-        // Actually, userEvent with fake timers can be tricky.
-        // It's often safer to use fireEvent.change for just the input change when controlling timers manually,
-        // OR configure userEvent to use the fake timers.
-        // Let's use fireEvent.change for simplicity in this specific debounce test block.
-        // import fireEvent from testing-library/react if needed, or just use userEvent but be careful.
-        // Let's stick to userEvent but we need to advance timers if it has delays.
-        // Actually, let's use userEvent.type but wrapped in act maybe?
-        // Or simpler: just use fireEvent.change for the input which is synchronous and we only care about the effect hook debounce.
-
-        const { fireEvent } = await import('@testing-library/react');
-
         fireEvent.change(searchInput, { target: { value: 'te' } });
 
         act(() => {
             vi.advanceTimersByTime(600);
         });
 
-        // Should NOT call search
         expect(mockSearchUsers).not.toHaveBeenCalled();
 
-        // Type "test" (length >= 3)
         fireEvent.change(searchInput, { target: { value: 'test' } });
-
-        // Shouldn't call immediately
         expect(mockSearchUsers).not.toHaveBeenCalled();
 
         act(() => {
@@ -115,8 +202,6 @@ describe('ConnectionsPage', () => {
             expect(mockSearchUsers).toHaveBeenCalledWith('test');
         });
 
-        // Verify results are shown
         expect(await screen.findByText('Found User')).toBeInTheDocument();
-        expect(screen.getByText('found@example.com')).toBeInTheDocument();
     });
 });

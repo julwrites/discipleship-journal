@@ -1,4 +1,4 @@
-name: Deploy Staging
+name: Deploy (Staging)
 
 on:
   push:
@@ -7,15 +7,14 @@ on:
   workflow_dispatch:
 
 env:
-  # Backend GCP configuration (from secrets)
-  # GCP_PROJECT_ID: Shared backend GCP project ID (different from Firebase project IDs)
-  # Create this secret if it doesn't exist
+  # Backend GCP configuration
+  # Shared infrastructure secrets (same project/region/repo as production)
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GCP_REGION: ${{ secrets.GCP_REGION }}
   GCP_SERVICE_NAME: ${{ secrets.STG_GCP_SERVICE_NAME }}
   GCP_ARTIFACT_REPOSITORY: ${{ secrets.GCP_ARTIFACT_REPOSITORY }}
 
-  # Backend Firebase configuration (staging Firebase project for authentication)
+  # Staging Firebase project (separate from production)
   FIREBASE_PROJECT_ID: ${{ secrets.STG_FIREBASE_PROJECT_ID }}
 
 jobs:
@@ -47,7 +46,7 @@ jobs:
 
       - name: Validate Configuration
         run: |
-          echo "🔍 Validating configuration..."
+          echo "🔍 Validating staging configuration..."
           if [ -z "${{ env.GCP_PROJECT_ID }}" ]; then
             echo "❌ ERROR: GCP_PROJECT_ID is empty!"
             exit 1
@@ -56,24 +55,27 @@ jobs:
             echo "❌ ERROR: GCP_REGION is empty!"
             exit 1
           fi
+          if [ -z "${{ env.GCP_SERVICE_NAME }}" ]; then
+            echo "❌ ERROR: STG_GCP_SERVICE_NAME is empty!"
+            exit 1
+          fi
           if [ -z "${{ env.GCP_ARTIFACT_REPOSITORY }}" ]; then
             echo "❌ ERROR: GCP_ARTIFACT_REPOSITORY is empty!"
             exit 1
           fi
-          echo "✅ Configuration validated"
+          echo "✅ Staging configuration validated"
 
       - name: Build and Push Container to Artifact Registry
         run: |
-          # Build image with Artifact Registry tag
           IMAGE_TAG=${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPOSITORY }}/${{ env.GCP_SERVICE_NAME }}:${{ github.sha }}
 
-          echo "Building image: $IMAGE_TAG"
+          echo "Building staging image: $IMAGE_TAG"
           docker build -t $IMAGE_TAG .
 
           echo "Pushing to Artifact Registry..."
           docker push $IMAGE_TAG
 
-          echo "✅ Image pushed successfully to Artifact Registry"
+          echo "✅ Staging image pushed successfully to Artifact Registry"
 
       - name: Deploy to Cloud Run from Artifact Registry
         uses: google-github-actions/deploy-cloudrun@v2
@@ -81,14 +83,12 @@ jobs:
           service: ${{ env.GCP_SERVICE_NAME }}
           image: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GCP_ARTIFACT_REPOSITORY }}/${{ env.GCP_SERVICE_NAME }}:${{ github.sha }}
           region: ${{ env.GCP_REGION }}
-          flags: '--service-account=${{ secrets.GCP_SERVICE_ACCOUNT }} --allow-unauthenticated --set-cloudsql-instances=${{ secrets.STG_CLOUD_SQL_INSTANCE }}'
+          flags: '--service-account=${{ secrets.GCP_SERVICE_ACCOUNT }} --allow-unauthenticated'
           env_vars: |
             APP_ENV=production
             GOOGLE_CLOUD_PROJECT=${{ env.GCP_PROJECT_ID }}
             FIREBASE_PROJECT_ID=${{ secrets.STG_FIREBASE_PROJECT_ID }}
-            CLOUD_SQL_INSTANCE=${{ secrets.STG_CLOUD_SQL_INSTANCE }}
-            # Note: CLOUD_SQL_INSTANCE env var is required for the app to detect Cloud SQL connection
-            # Application secrets (DB_USERNAME, DB_PASSWORD, DB_NAME) are loaded from Google Secret Manager at runtime
+            # Application secrets (STG_DJ_DB_*) are loaded from Google Secret Manager at runtime
 
   deploy-frontend:
     runs-on: ubuntu-latest

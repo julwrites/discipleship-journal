@@ -47,13 +47,12 @@ func SetupRouter(t *testing.T) (*chi.Mux, func(), string) {
 	// 3. Create a Test User in the DB
 	// We need a user to perform actions.
 	testUserUID := "test-user-uid"
-	var testUserID string
+	testUserID := "00000000-0000-0000-0000-000000000001"
 
 	// Manual insert since we have the pool
-	row := pool.QueryRow(context.Background(),
-		"INSERT INTO users (username, email, firebase_uid, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW()) RETURNING id",
-		"testuser", "test@example.com", testUserUID)
-	err := row.Scan(&testUserID)
+	_, err := pool.ExecContext(context.Background(),
+		"INSERT IGNORE INTO users (id, username, email, firebase_uid, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())",
+		testUserID, "testuser", "test@example.com", testUserUID)
 	if err != nil {
 		t.Fatalf("failed to create test user: %v", err)
 	}
@@ -64,9 +63,10 @@ func SetupRouter(t *testing.T) (*chi.Mux, func(), string) {
 
 	// Real Services using the integration DB pool
 	noteService := services.NewNoteService(pool)
+	groupService := services.NewGroupService(pool, mockNotification)
 
 	noteHandler := handlers.NewNoteHandler(pool, noteService)
-	groupHandler := handlers.NewGroupHandler(pool, mockNotification)
+	groupHandler := handlers.NewGroupHandler(groupService)
 	connectionHandler := handlers.NewConnectionHandler(pool, mockNotification)
 
 	r := chi.NewRouter()

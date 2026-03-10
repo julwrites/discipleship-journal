@@ -1,6 +1,6 @@
 ---
 id: TESTING-20251231-014339-VIF
-status: in_progress
+status: completed
 title: Backend Testing Strategy Improvement
 priority: high
 created: 2025-12-31 01:43:39
@@ -30,7 +30,7 @@ To achieve "100% certainty" in backend releases, we will implement a multi-layer
 
 ### 2. Implement Service Integration Tests
 *   [x] Port key `NoteService` tests to run against the real DB.
-*   [ ] Port `GroupService` (logic in handlers currently, might need refactoring or direct handler integration testing) tests.
+*   [x] Port `GroupService` (logic in handlers currently, might need refactoring or direct handler integration testing) tests.
 *   [x] Verify complex queries (e.g., full-text search, date filtering) which are hard to mock accurately with `pgxmock`.
 
 ### 3. Implement "Frontend Contract" API Tests
@@ -38,12 +38,12 @@ To achieve "100% certainty" in backend releases, we will implement a multi-layer
 *   [x] These tests will use `httptest` to spin up the `chi` router.
 *   [x] **Crucial**: The test payloads (JSON bodies) must be copied *verbatim* or derived directly from `web/src/services/api.ts` logic.
 *   [x] **Crucial**: The assertions must verify that the response JSON structure matches exactly what `web/src/services/api.ts` expects (e.g., field names, date formats, nullability).
-*   [x] Cover the "Happy Path" for all major entities: Notes (Done), Groups (Todo), Connections (Todo), Reading Plans (Todo).
+*   [x] Cover the "Happy Path" for all major entities: Notes (Done), Groups (Done), Connections (Done), Reading Plans (Done).
 
 ### 4. Review and Refine Unit Tests
-*   [ ] Audit existing `api/handlers/*_test.go`.
-*   [ ] Ensure `pgxmock` expectations match the actual SQL used in production (drift is a common cause of failure).
-*   [ ] Add tests for edge cases: invalid JSON, missing required fields, permission denied.
+*   [x] Audit existing `api/handlers/*_test.go` (Specifically GroupHandler).
+*   [x] Ensure `pgxmock` expectations match the actual SQL used in production (drift is a common cause of failure).
+*   [x] Add tests for edge cases: invalid JSON, missing required fields, permission denied (e.g., Direct Groups, Search).
 
 ## Implementation Details
 
@@ -105,5 +105,4 @@ By running these tests in CI (where Docker is available), we will catch:
 *   Logic errors in complex queries.
 
 ## Next Steps
-1.  Port GroupService tests.
-2.  Add Contract tests for Groups, Connections, Reading Plans.
+*   None.

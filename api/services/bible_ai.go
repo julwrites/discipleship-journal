@@ -36,7 +36,16 @@ func NewRealBibleAIClient(apiURL, apiKey, systemPromptsJSON string) *RealBibleAI
 	prompts := make(map[string]string)
 	if systemPromptsJSON != "" {
 		if err := json.Unmarshal([]byte(systemPromptsJSON), &prompts); err != nil {
-			slog.Warn("Failed to parse system prompts JSON", "error", err)
+			// If parsing failed, it might be due to unescaped newlines in the string values.
+			// Try to sanitize by replacing literal newlines with escaped newlines.
+			// This is a common issue when secrets are pastes with actual newlines.
+			sanitized := strings.ReplaceAll(systemPromptsJSON, "\n", "\\n")
+			if err2 := json.Unmarshal([]byte(sanitized), &prompts); err2 == nil {
+				slog.Info("Successfully parsed system prompts JSON after sanitizing newlines")
+			} else {
+				// Log original error if sanitization didn't help, but also log that we tried
+				slog.Warn("Failed to parse system prompts JSON", "error", err, "sanitized_error", err2)
+			}
 		}
 	}
 
@@ -223,6 +232,14 @@ func (c *RealBibleAIClient) Stream(ctx context.Context, prompt string) (<-chan s
 			select {
 			case msg, ok := <-outChan:
 				if !ok {
+					// Check if there was an error that caused the close
+					select {
+					case err, ok := <-errChan:
+						if ok {
+							slog.Error("Stream error from BibleAI", "error", err)
+						}
+					default:
+					}
 					return
 				}
 				safeOutChan <- msg
@@ -290,7 +307,9 @@ func (c *RealBibleAIClient) GetPassage(
 		slog.Warn("Bible API response missing verse field", "status", resp.Status(), "body_length", len(resp.Body()))
 		// Fallback manual check
 		var raw map[string]interface{}
-		_ = json.Unmarshal(resp.Body(), &raw)
+		if err := json.Unmarshal(resp.Body(), &raw); err != nil {
+			slog.Warn("Failed to unmarshal fallback response", "error", err)
+		}
 		if v, ok := raw["verse"].(string); ok {
 			result.Verse = v
 		} else if t, ok := raw["text"].(string); ok {
@@ -674,7 +693,7 @@ func cleanHTML(input string) string {
 	// Remove whitespace between list tags
 	// Loop to handle consecutive matches (e.g., </li> <li> <li>)
 	for {
-		cleaned := listWhitespaceRegex.ReplaceAllString(s, "$1$2")
+		cleaned := listWhitespaceRegex.ReplaceAllString(s, "${1}${2}")
 		if cleaned == s {
 			break
 		}

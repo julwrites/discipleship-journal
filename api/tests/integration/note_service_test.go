@@ -3,6 +3,7 @@ package integration
 import (
 	"context"
 	"encoding/json"
+	"github.com/google/uuid"
 	"testing"
 	"time"
 
@@ -25,7 +26,8 @@ func TestNoteService_Integration(t *testing.T) {
 	// In a real scenario we might need to insert the user into the 'users' table if referential integrity is enforced.
 	// Checking the schema...
 	// Usually `users` table exists. Let's try to insert a user first to be safe.
-	_, err := pool.Exec(ctx, "INSERT INTO users (id, firebase_uid, email, created_at, updated_at) VALUES (gen_random_uuid(), $1, 'test@example.com', NOW(), NOW()) ON CONFLICT (firebase_uid) DO NOTHING", userID)
+	newUUID := uuid.New().String()
+	_, err := pool.ExecContext(ctx, "INSERT IGNORE INTO users (id, firebase_uid, email, created_at, updated_at) VALUES (?, ?, 'test@example.com', NOW(), NOW())", newUUID, userID)
 	require.NoError(t, err)
 
 	// We need the internal UUID for the user if the service uses it.
@@ -43,7 +45,7 @@ func TestNoteService_Integration(t *testing.T) {
 
 	// Let's fetch the internal UUID for the seeded user.
 	var internalUserID string
-	err = pool.QueryRow(ctx, "SELECT id FROM users WHERE firebase_uid=$1", userID).Scan(&internalUserID)
+	err = pool.QueryRowContext(ctx, "SELECT id FROM users WHERE firebase_uid=?", userID).Scan(&internalUserID)
 	require.NoError(t, err)
 
 	t.Run("CRUD Lifecycle", func(t *testing.T) {
@@ -51,7 +53,7 @@ func TestNoteService_Integration(t *testing.T) {
 		content := json.RawMessage(`{"text": "integration content"}`)
 
 		// 1. Create
-		note, err := service.CreateNote(ctx, internalUserID, title, content)
+		note, err := service.CreateNote(ctx, internalUserID, title, content, nil)
 		require.NoError(t, err)
 		assert.NotEmpty(t, note.ID)
 		assert.Equal(t, internalUserID, note.UserID)
@@ -67,7 +69,7 @@ func TestNoteService_Integration(t *testing.T) {
 		// 3. Update
 		newTitle := "Updated Title"
 		newContent := json.RawMessage(`{"text": "updated content"}`)
-		err = service.UpdateNote(ctx, internalUserID, note.ID, newTitle, newContent)
+		err = service.UpdateNote(ctx, internalUserID, note.ID, newTitle, newContent, nil)
 		require.NoError(t, err)
 
 		updated, err := service.GetNote(ctx, internalUserID, note.ID)
@@ -87,7 +89,7 @@ func TestNoteService_Integration(t *testing.T) {
 
 		// Verify it's still in DB but with deleted_at
 		var deletedAt *time.Time
-		err = pool.QueryRow(ctx, "SELECT deleted_at FROM notes WHERE id=$1", note.ID).Scan(&deletedAt)
+		err = pool.QueryRowContext(ctx, "SELECT deleted_at FROM notes WHERE id=?", note.ID).Scan(&deletedAt)
 		require.NoError(t, err)
 		assert.NotNil(t, deletedAt)
 	})
@@ -100,15 +102,15 @@ func TestNoteService_Integration(t *testing.T) {
 
 		// Create 3 notes with different timestamps/titles
 		// Note 1: "Alpha"
-		n1, err := service.CreateNote(ctx, internalUserID, baseTitle+" Alpha", json.RawMessage(`{}`))
+		n1, err := service.CreateNote(ctx, internalUserID, baseTitle+" Alpha", json.RawMessage(`{}`), nil)
 		require.NoError(t, err)
 
 		// Note 2: "Beta"
-		n2, err := service.CreateNote(ctx, internalUserID, baseTitle+" Beta", json.RawMessage(`{}`))
+		n2, err := service.CreateNote(ctx, internalUserID, baseTitle+" Beta", json.RawMessage(`{}`), nil)
 		require.NoError(t, err)
 
 		// Note 3: "Gamma"
-		n3, err := service.CreateNote(ctx, internalUserID, baseTitle+" Gamma", json.RawMessage(`{}`))
+		n3, err := service.CreateNote(ctx, internalUserID, baseTitle+" Gamma", json.RawMessage(`{}`), nil)
 		require.NoError(t, err)
 
 		// Manually update timestamps to test date filtering and sorting
@@ -119,9 +121,9 @@ func TestNoteService_Integration(t *testing.T) {
 		t1 := time.Now().Add(-48 * time.Hour)
 		t2 := time.Now().Add(-24 * time.Hour)
 
-		_, err = pool.Exec(ctx, "UPDATE notes SET updated_at=$1 WHERE id=$2", t1, n1.ID)
+		_, err = pool.ExecContext(ctx, "UPDATE notes SET updated_at=? WHERE id=?", t1, n1.ID)
 		require.NoError(t, err)
-		_, err = pool.Exec(ctx, "UPDATE notes SET updated_at=$1 WHERE id=$2", t2, n2.ID)
+		_, err = pool.ExecContext(ctx, "UPDATE notes SET updated_at=? WHERE id=?", t2, n2.ID)
 		require.NoError(t, err)
 
 		// Test Search
@@ -204,5 +206,39 @@ func TestNoteService_Integration(t *testing.T) {
 		assert.False(t, foundN1, "N1 (48h old) should be excluded")
 		assert.True(t, foundN2, "N2 (24h old) should be included")
 		assert.True(t, foundN3, "N3 (new) should be included")
+	})
+
+	t.Run("Tags Integration", func(t *testing.T) {
+		title := "Tagged Note"
+		content := json.RawMessage(`{}`)
+		tags := []string{"integration-tag", "another-tag"}
+
+		// Create with tags
+		note, err := service.CreateNote(ctx, internalUserID, title, content, tags)
+		require.NoError(t, err)
+		assert.Len(t, note.Tags, 2)
+
+		// Verify tags are retrievable via GetUserTags
+		userTags, err := service.GetUserTags(ctx, internalUserID)
+		require.NoError(t, err)
+		assert.GreaterOrEqual(t, len(userTags), 2)
+
+		// Update tags
+		newTags := []string{"integration-tag", "updated-tag"}
+		err = service.UpdateNote(ctx, internalUserID, note.ID, title, content, newTags)
+		require.NoError(t, err)
+
+		updated, err := service.GetNote(ctx, internalUserID, note.ID)
+		require.NoError(t, err)
+		assert.Len(t, updated.Tags, 2)
+		// Check if "updated-tag" is present
+		found := false
+		for _, tag := range updated.Tags {
+			if tag.Name == "updated-tag" {
+				found = true
+				break
+			}
+		}
+		assert.True(t, found)
 	})
 }

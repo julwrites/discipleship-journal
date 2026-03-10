@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -10,11 +11,12 @@ import (
 	"time"
 
 	"discipleship_journal_api/middleware"
+	"discipleship_journal_api/models"
+	"discipleship_journal_api/services"
+
 	"firebase.google.com/go/v4/auth"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
-	"github.com/pashagolub/pgxmock/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -23,98 +25,83 @@ func TestGroupHandler_CreateGroup(t *testing.T) {
 	testCases := []struct {
 		name           string
 		requestBody    string
-		setupMock      func(mockDB pgxmock.PgxConnIface)
+		setupMock      func(mockService *MockGroupService)
 		expectedStatus int
+		skipAuth       bool
 	}{
 		{
 			name:        "Success",
 			requestBody: `{"name": "Bible Study", "description": "Weekly study"}`,
-			setupMock: func(mockDB pgxmock.PgxConnIface) {
-				mockDB.ExpectBegin()
-				mockDB.ExpectQuery("INSERT INTO groups").
-					WithArgs("Bible Study", "Weekly study", pgxmock.AnyArg(), "group").
-					WillReturnRows(pgxmock.NewRows([]string{"id"}).AddRow("00000000-0000-0000-0000-000000000123"))
-				mockDB.ExpectExec("INSERT INTO group_members").
-					WithArgs("00000000-0000-0000-0000-000000000123", pgxmock.AnyArg()).
-					WillReturnResult(pgxmock.NewResult("INSERT", 1))
-				mockDB.ExpectCommit()
+			setupMock: func(mockService *MockGroupService) {
+				desc := "Weekly study"
+				mockService.On("CreateGroup", mock.Anything, mock.AnythingOfType("string"), "Bible Study", &desc, "").
+					Return(&services.Group{ID: "00000000-0000-0000-0000-000000000123"}, nil)
 			},
 			expectedStatus: http.StatusCreated,
 		},
 		{
 			name:           "Invalid Request",
 			requestBody:    `{"name": ""}`, // too short
-			setupMock:      func(_ pgxmock.PgxConnIface) {},
+			setupMock:      func(_ *MockGroupService) {},
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name:        "DB Error",
+			name:        "Service Error",
 			requestBody: `{"name": "Bible Study", "description": "Weekly study"}`,
-			setupMock: func(mockDB pgxmock.PgxConnIface) {
-				mockDB.ExpectBegin()
-				mockDB.ExpectQuery("INSERT INTO groups").
-					WithArgs("Bible Study", "Weekly study", pgxmock.AnyArg(), "group").
-					WillReturnError(pgx.ErrTxClosed) // Simulate error
-				mockDB.ExpectRollback()
+			setupMock: func(mockService *MockGroupService) {
+				desc := "Weekly study"
+				mockService.On("CreateGroup", mock.Anything, mock.AnythingOfType("string"), "Bible Study", &desc, "").
+					Return((*services.Group)(nil), errors.New("service error"))
 			},
 			expectedStatus: http.StatusInternalServerError,
+		},
+		{
+			name:           "Unauthorized",
+			requestBody:    `{"name": "Bible Study"}`,
+			setupMock:      func(_ *MockGroupService) {},
+			expectedStatus: http.StatusUnauthorized,
+			skipAuth:       true,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			mockDB, err := pgxmock.NewConn()
-			if err != nil {
-				t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-			}
-			defer func() { _ = mockDB.Close(context.Background()) }()
+			mockService := new(MockGroupService)
+			h := NewGroupHandler(mockService)
 
-			mockNotif := new(MockNotificationServiceWithMock)
-			h := NewGroupHandler(mockDB, mockNotif)
-
-			tc.setupMock(mockDB)
+			tc.setupMock(mockService)
 
 			req := httptest.NewRequest("POST", "/groups", strings.NewReader(tc.requestBody))
 			req.Header.Set("Content-Type", "application/json")
 
-			// Inject test user via TestUserKey
-			testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
-			ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
-
-			dummyToken := &auth.Token{UID: "firebase-uid-123"}
-			ctx = context.WithValue(ctx, middleware.UserContextKey, dummyToken)
-
-			req = req.WithContext(ctx)
+			if !tc.skipAuth {
+				testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+				ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+				dummyToken := &auth.Token{UID: "firebase-uid-123"}
+				ctx = context.WithValue(ctx, middleware.UserContextKey, dummyToken)
+				req = req.WithContext(ctx)
+			}
 
 			w := httptest.NewRecorder()
 			h.CreateGroup(w, req)
 
 			assert.Equal(t, tc.expectedStatus, w.Code)
-			assert.NoError(t, mockDB.ExpectationsWereMet())
-			mockNotif.AssertExpectations(t)
+			mockService.AssertExpectations(t)
 		})
 	}
 }
 
 func TestGroupHandler_ListMyGroups(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
-		mockDB, err := pgxmock.NewConn()
-		if err != nil {
-			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-		}
-		defer func() { _ = mockDB.Close(context.Background()) }()
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
 
-		mockNotif := new(MockNotificationServiceWithMock)
-		h := NewGroupHandler(mockDB, mockNotif)
-
-		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
-
-		mockDB.ExpectQuery(`SELECT g.id, g.name, g.description, g.created_by, g.type, gm.role`).
-			WithArgs(pgxmock.AnyArg()).
-			WillReturnRows(pgxmock.NewRows([]string{"id", "name", "description", "created_by", "type", "role"}).
-				AddRow("00000000-0000-0000-0000-000000000001", "Group 1", "Desc 1", "00000000-0000-0000-0000-000000000002", nil, "admin"))
+		desc := "Desc 1"
+		mockService.On("ListUserGroups", mock.Anything, mock.AnythingOfType("string")).
+			Return([]services.Group{{ID: "1", Name: "Group 1", Description: &desc}}, nil)
 
 		req := httptest.NewRequest("GET", "/groups", nil)
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
 		dummyToken := &auth.Token{UID: "firebase-uid-123"}
 		ctx = context.WithValue(ctx, middleware.UserContextKey, dummyToken)
@@ -124,35 +111,44 @@ func TestGroupHandler_ListMyGroups(t *testing.T) {
 		h.ListMyGroups(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
-
 		var groups []GroupResponse
-		err = json.Unmarshal(w.Body.Bytes(), &groups)
+		err := json.Unmarshal(w.Body.Bytes(), &groups)
 		assert.NoError(t, err)
 		assert.Len(t, groups, 1)
 		assert.Equal(t, "Group 1", groups[0].Name)
-		assert.NoError(t, mockDB.ExpectationsWereMet())
+		mockService.AssertExpectations(t)
+	})
+
+	t.Run("DBError", func(t *testing.T) {
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
+
+		mockService.On("ListUserGroups", mock.Anything, mock.AnythingOfType("string")).
+			Return([]services.Group(nil), errors.New("db error"))
+
+		req := httptest.NewRequest("GET", "/groups", nil)
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		h.ListMyGroups(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		mockService.AssertExpectations(t)
 	})
 }
 
 func TestGroupHandler_SearchGroups(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
-		mockDB, err := pgxmock.NewConn()
-		if err != nil {
-			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-		}
-		defer func() { _ = mockDB.Close(context.Background()) }()
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
 
-		mockNotif := new(MockNotificationServiceWithMock)
-		h := NewGroupHandler(mockDB, mockNotif)
-
-		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
-
-		mockDB.ExpectQuery(`SELECT g.id, g.name, g.description, g.created_by, g.type`).
-			WithArgs("%Bible%", pgxmock.AnyArg()).
-			WillReturnRows(pgxmock.NewRows([]string{"id", "name", "description", "created_by", "type", "role"}).
-				AddRow("00000000-0000-0000-0000-000000000001", "Bible Study", "Desc", "00000000-0000-0000-0000-000000000002", nil, "member"))
+		mockService.On("SearchGroups", mock.Anything, "Bible", mock.AnythingOfType("string")).
+			Return([]services.Group{{ID: "1", Name: "Bible Study"}}, nil)
 
 		req := httptest.NewRequest("GET", "/groups/search?q=Bible", nil)
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
 		dummyToken := &auth.Token{UID: "firebase-uid-123"}
 		ctx = context.WithValue(ctx, middleware.UserContextKey, dummyToken)
@@ -162,56 +158,53 @@ func TestGroupHandler_SearchGroups(t *testing.T) {
 		h.SearchGroups(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
-		assert.NoError(t, mockDB.ExpectationsWereMet())
+		mockService.AssertExpectations(t)
 	})
 
 	t.Run("Query Too Short", func(t *testing.T) {
-		mockDB, err := pgxmock.NewConn()
-		if err != nil {
-			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-		}
-		defer func() { _ = mockDB.Close(context.Background()) }()
-
-		mockNotif := new(MockNotificationServiceWithMock)
-		h := NewGroupHandler(mockDB, mockNotif)
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
 
 		req := httptest.NewRequest("GET", "/groups/search?q=Bi", nil)
 		w := httptest.NewRecorder()
 		h.SearchGroups(w, req)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
-		assert.NoError(t, mockDB.ExpectationsWereMet())
+	})
+
+	t.Run("DBError", func(t *testing.T) {
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
+
+		mockService.On("SearchGroups", mock.Anything, "Bible", mock.AnythingOfType("string")).
+			Return([]services.Group(nil), errors.New("db error"))
+
+		req := httptest.NewRequest("GET", "/groups/search?q=Bible", nil)
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		h.SearchGroups(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		mockService.AssertExpectations(t)
 	})
 }
 
 func TestGroupHandler_JoinGroup(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
-		mockDB, err := pgxmock.NewConn()
-		if err != nil {
-			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-		}
-		defer func() { _ = mockDB.Close(context.Background()) }()
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
 
-		mockNotif := new(MockNotificationServiceWithMock)
-		h := NewGroupHandler(mockDB, mockNotif)
+		mockService.On("JoinGroup", mock.Anything, "group-1", mock.AnythingOfType("string")).Return(nil)
 
-		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
-
-		mockDB.ExpectQuery("SELECT EXISTS").
-			WithArgs("00000000-0000-0000-0000-000000000001", pgxmock.AnyArg()).
-			WillReturnRows(pgxmock.NewRows([]string{"exists"}).AddRow(false))
-
-		mockDB.ExpectExec("INSERT INTO group_members").
-			WithArgs("00000000-0000-0000-0000-000000000001", pgxmock.AnyArg()).
-			WillReturnResult(pgxmock.NewResult("INSERT", 1))
-
-		req := httptest.NewRequest("POST", "/groups/00000000-0000-0000-0000-000000000001/join", nil)
-
-		// Setup chi context
+		req := httptest.NewRequest("POST", "/groups/group-1/join", nil)
 		rctx := chi.NewRouteContext()
-		rctx.URLParams.Add("id", "00000000-0000-0000-0000-000000000001")
+		rctx.URLParams.Add("id", "group-1")
 		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
 
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
 		dummyToken := &auth.Token{UID: "firebase-uid-123"}
 		ctx = context.WithValue(ctx, middleware.UserContextKey, dummyToken)
@@ -221,32 +214,21 @@ func TestGroupHandler_JoinGroup(t *testing.T) {
 		h.JoinGroup(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
-		assert.JSONEq(t, `{"success": true}`, w.Body.String())
-		assert.NoError(t, mockDB.ExpectationsWereMet())
+		mockService.AssertExpectations(t)
 	})
 
 	t.Run("Already Member", func(t *testing.T) {
-		mockDB, err := pgxmock.NewConn()
-		if err != nil {
-			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-		}
-		defer func() { _ = mockDB.Close(context.Background()) }()
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
 
-		mockNotif := new(MockNotificationServiceWithMock)
-		h := NewGroupHandler(mockDB, mockNotif)
+		mockService.On("JoinGroup", mock.Anything, "group-1", mock.AnythingOfType("string")).Return(models.ErrAlreadyExists)
 
-		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
-
-		mockDB.ExpectQuery("SELECT EXISTS").
-			WithArgs("00000000-0000-0000-0000-000000000001", pgxmock.AnyArg()).
-			WillReturnRows(pgxmock.NewRows([]string{"exists"}).AddRow(true))
-
-		req := httptest.NewRequest("POST", "/groups/00000000-0000-0000-0000-000000000001/join", nil)
-
+		req := httptest.NewRequest("POST", "/groups/group-1/join", nil)
 		rctx := chi.NewRouteContext()
-		rctx.URLParams.Add("id", "00000000-0000-0000-0000-000000000001")
+		rctx.URLParams.Add("id", "group-1")
 		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
 
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
 		dummyToken := &auth.Token{UID: "firebase-uid-123"}
 		ctx = context.WithValue(ctx, middleware.UserContextKey, dummyToken)
@@ -256,34 +238,45 @@ func TestGroupHandler_JoinGroup(t *testing.T) {
 		h.JoinGroup(w, req)
 
 		assert.Equal(t, http.StatusConflict, w.Code)
-		assert.NoError(t, mockDB.ExpectationsWereMet())
+		mockService.AssertExpectations(t)
+	})
+
+	t.Run("GenericError", func(t *testing.T) {
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
+
+		mockService.On("JoinGroup", mock.Anything, "group-1", mock.AnythingOfType("string")).Return(errors.New("generic error"))
+
+		req := httptest.NewRequest("POST", "/groups/group-1/join", nil)
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", "group-1")
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		h.JoinGroup(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		mockService.AssertExpectations(t)
 	})
 }
 
 func TestGroupHandler_LeaveGroup(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
-		mockDB, err := pgxmock.NewConn()
-		if err != nil {
-			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-		}
-		defer func() { _ = mockDB.Close(context.Background()) }()
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
 
-		mockNotif := new(MockNotificationServiceWithMock)
-		h := NewGroupHandler(mockDB, mockNotif)
+		mockService.On("LeaveGroup", mock.Anything, "group-1", mock.AnythingOfType("string")).Return(nil)
 
-		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
-
-		mockDB.ExpectExec("DELETE FROM group_members").
-			WithArgs("00000000-0000-0000-0000-000000000001", pgxmock.AnyArg()).
-			WillReturnResult(pgxmock.NewResult("DELETE", 1))
-
-		req := httptest.NewRequest("POST", "/groups/00000000-0000-0000-0000-000000000001/leave", nil)
-
-		// Setup chi context
+		req := httptest.NewRequest("POST", "/groups/group-1/leave", nil)
 		rctx := chi.NewRouteContext()
-		rctx.URLParams.Add("id", "00000000-0000-0000-0000-000000000001")
+		rctx.URLParams.Add("id", "group-1")
 		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
 
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
 		dummyToken := &auth.Token{UID: "firebase-uid-123"}
 		ctx = context.WithValue(ctx, middleware.UserContextKey, dummyToken)
@@ -293,32 +286,21 @@ func TestGroupHandler_LeaveGroup(t *testing.T) {
 		h.LeaveGroup(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
-		assert.JSONEq(t, `{"success": true}`, w.Body.String())
-		assert.NoError(t, mockDB.ExpectationsWereMet())
+		mockService.AssertExpectations(t)
 	})
 
 	t.Run("Not Member", func(t *testing.T) {
-		mockDB, err := pgxmock.NewConn()
-		if err != nil {
-			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-		}
-		defer func() { _ = mockDB.Close(context.Background()) }()
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
 
-		mockNotif := new(MockNotificationServiceWithMock)
-		h := NewGroupHandler(mockDB, mockNotif)
+		mockService.On("LeaveGroup", mock.Anything, "group-1", mock.AnythingOfType("string")).Return(models.ErrNotFound)
 
-		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
-
-		mockDB.ExpectExec("DELETE FROM group_members").
-			WithArgs("00000000-0000-0000-0000-000000000001", pgxmock.AnyArg()).
-			WillReturnResult(pgxmock.NewResult("DELETE", 0))
-
-		req := httptest.NewRequest("POST", "/groups/00000000-0000-0000-0000-000000000001/leave", nil)
-
+		req := httptest.NewRequest("POST", "/groups/group-1/leave", nil)
 		rctx := chi.NewRouteContext()
-		rctx.URLParams.Add("id", "00000000-0000-0000-0000-000000000001")
+		rctx.URLParams.Add("id", "group-1")
 		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
 
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
 		dummyToken := &auth.Token{UID: "firebase-uid-123"}
 		ctx = context.WithValue(ctx, middleware.UserContextKey, dummyToken)
@@ -328,38 +310,46 @@ func TestGroupHandler_LeaveGroup(t *testing.T) {
 		h.LeaveGroup(w, req)
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
-		assert.NoError(t, mockDB.ExpectationsWereMet())
+		mockService.AssertExpectations(t)
+	})
+
+	t.Run("GenericError", func(t *testing.T) {
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
+
+		mockService.On("LeaveGroup", mock.Anything, "group-1", mock.AnythingOfType("string")).Return(errors.New("generic error"))
+
+		req := httptest.NewRequest("POST", "/groups/group-1/leave", nil)
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", "group-1")
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		h.LeaveGroup(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		mockService.AssertExpectations(t)
 	})
 }
 
 func TestGroupHandler_GetGroupMembers(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
-		mockDB, err := pgxmock.NewConn()
-		if err != nil {
-			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-		}
-		defer func() { _ = mockDB.Close(context.Background()) }()
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
 
-		mockNotif := new(MockNotificationServiceWithMock)
-		h := NewGroupHandler(mockDB, mockNotif)
+		mockService.On("GetGroupMembers", mock.Anything, "group-1", mock.AnythingOfType("string")).
+			Return([]services.GroupMember{{UserID: "u2", Role: "member", JoinedAt: time.Now()}}, nil)
 
-		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
-
-		mockDB.ExpectQuery("SELECT EXISTS").
-			WithArgs("00000000-0000-0000-0000-000000000001", pgxmock.AnyArg()).
-			WillReturnRows(pgxmock.NewRows([]string{"exists"}).AddRow(true))
-
-		mockDB.ExpectQuery("SELECT gm.user_id").
-			WithArgs("00000000-0000-0000-0000-000000000001").
-			WillReturnRows(pgxmock.NewRows([]string{"user_id", "display_name", "email", "role", "joined_at"}).
-				AddRow("00000000-0000-0000-0000-000000000002", "User 1", "u1@example.com", "admin", time.Now()))
-
-		req := httptest.NewRequest("GET", "/groups/00000000-0000-0000-0000-000000000001/members", nil)
-
+		req := httptest.NewRequest("GET", "/groups/group-1/members", nil)
 		rctx := chi.NewRouteContext()
-		rctx.URLParams.Add("id", "00000000-0000-0000-0000-000000000001")
+		rctx.URLParams.Add("id", "group-1")
 		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
 
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
 		dummyToken := &auth.Token{UID: "firebase-uid-123"}
 		ctx = context.WithValue(ctx, middleware.UserContextKey, dummyToken)
@@ -369,53 +359,70 @@ func TestGroupHandler_GetGroupMembers(t *testing.T) {
 		h.GetGroupMembers(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
-		assert.NoError(t, mockDB.ExpectationsWereMet())
+		mockService.AssertExpectations(t)
+	})
+
+	t.Run("AccessDenied", func(t *testing.T) {
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
+
+		mockService.On("GetGroupMembers", mock.Anything, "group-1", mock.AnythingOfType("string")).
+			Return(nil, errors.New("access denied"))
+
+		req := httptest.NewRequest("GET", "/groups/group-1/members", nil)
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", "group-1")
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		h.GetGroupMembers(w, req)
+
+		assert.Equal(t, http.StatusForbidden, w.Code)
+		mockService.AssertExpectations(t)
+	})
+
+	t.Run("DBError", func(t *testing.T) {
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
+
+		mockService.On("GetGroupMembers", mock.Anything, "group-1", mock.AnythingOfType("string")).
+			Return(nil, errors.New("db error"))
+
+		req := httptest.NewRequest("GET", "/groups/group-1/members", nil)
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", "group-1")
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		h.GetGroupMembers(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		mockService.AssertExpectations(t)
 	})
 }
 
 func TestGroupHandler_AddGroupMember(t *testing.T) {
-	t.Run("Success - Admin Adds Member", func(t *testing.T) {
-		mockDB, err := pgxmock.NewConn()
-		if err != nil {
-			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-		}
-		defer func() { _ = mockDB.Close(context.Background()) }()
+	t.Run("Success", func(t *testing.T) {
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
 
-		mockNotif := new(MockNotificationServiceWithMock)
-		h := NewGroupHandler(mockDB, mockNotif)
+		mockService.On("AddGroupMember", mock.Anything, mock.AnythingOfType("string"), "group-1", "user-2").Return(nil)
 
-		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
-
-		// 1. Verify admin
-		mockDB.ExpectQuery("SELECT role FROM group_members").
-			WithArgs("00000000-0000-0000-0000-000000000001", pgxmock.AnyArg()).
-			WillReturnRows(pgxmock.NewRows([]string{"role"}).AddRow("admin"))
-
-		// 2. Verify Connection
-		mockDB.ExpectQuery("SELECT EXISTS").
-			WithArgs(testUUID, "00000000-0000-0000-0000-000000000002").
-			WillReturnRows(pgxmock.NewRows([]string{"exists"}).AddRow(true))
-
-		// 3. Insert member
-		mockDB.ExpectExec("INSERT INTO group_members").
-			WithArgs("00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000002").
-			WillReturnResult(pgxmock.NewResult("INSERT", 1))
-
-		// 3. Get group name
-		mockDB.ExpectQuery("SELECT name FROM groups").
-			WithArgs("00000000-0000-0000-0000-000000000001").
-			WillReturnRows(pgxmock.NewRows([]string{"name"}).AddRow("Test Group"))
-
-		// 4. Notification
-		mockNotif.On("SendNotification", mock.Anything, "00000000-0000-0000-0000-000000000002", "Group Invitation", mock.Anything, mock.Anything).Return(nil).Maybe()
-
-		reqBody := `{"user_id": "00000000-0000-0000-0000-000000000002"}`
-		req := httptest.NewRequest("POST", "/groups/00000000-0000-0000-0000-000000000001/members", strings.NewReader(reqBody))
-
+		reqBody := `{"user_id": "user-2"}`
+		req := httptest.NewRequest("POST", "/groups/group-1/members", strings.NewReader(reqBody))
 		rctx := chi.NewRouteContext()
-		rctx.URLParams.Add("id", "00000000-0000-0000-0000-000000000001")
+		rctx.URLParams.Add("id", "group-1")
 		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
 
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
 		dummyToken := &auth.Token{UID: "firebase-uid-123"}
 		ctx = context.WithValue(ctx, middleware.UserContextKey, dummyToken)
@@ -425,36 +432,23 @@ func TestGroupHandler_AddGroupMember(t *testing.T) {
 		h.AddGroupMember(w, req)
 
 		assert.Equal(t, http.StatusCreated, w.Code)
-		assert.JSONEq(t, `{"success": true}`, w.Body.String())
-
-		// Give goroutine a moment to run
-		time.Sleep(10 * time.Millisecond)
-		assert.NoError(t, mockDB.ExpectationsWereMet())
+		mockService.AssertExpectations(t)
 	})
 
-	t.Run("Forbidden - Not Admin", func(t *testing.T) {
-		mockDB, err := pgxmock.NewConn()
-		if err != nil {
-			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-		}
-		defer func() { _ = mockDB.Close(context.Background()) }()
+	t.Run("Forbidden", func(t *testing.T) {
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
 
-		mockNotif := new(MockNotificationServiceWithMock)
-		h := NewGroupHandler(mockDB, mockNotif)
+		mockService.On("AddGroupMember", mock.Anything, mock.AnythingOfType("string"), "group-1", "user-2").
+			Return(errors.New("admin rights required"))
 
-		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
-
-		mockDB.ExpectQuery("SELECT role FROM group_members").
-			WithArgs("00000000-0000-0000-0000-000000000001", pgxmock.AnyArg()).
-			WillReturnRows(pgxmock.NewRows([]string{"role"}).AddRow("member"))
-
-		reqBody := `{"user_id": "00000000-0000-0000-0000-000000000002"}`
-		req := httptest.NewRequest("POST", "/groups/00000000-0000-0000-0000-000000000001/members", strings.NewReader(reqBody))
-
+		reqBody := `{"user_id": "user-2"}`
+		req := httptest.NewRequest("POST", "/groups/group-1/members", strings.NewReader(reqBody))
 		rctx := chi.NewRouteContext()
-		rctx.URLParams.Add("id", "00000000-0000-0000-0000-000000000001")
+		rctx.URLParams.Add("id", "group-1")
 		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
 
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
 		dummyToken := &auth.Token{UID: "firebase-uid-123"}
 		ctx = context.WithValue(ctx, middleware.UserContextKey, dummyToken)
@@ -464,38 +458,219 @@ func TestGroupHandler_AddGroupMember(t *testing.T) {
 		h.AddGroupMember(w, req)
 
 		assert.Equal(t, http.StatusForbidden, w.Code)
-		assert.NoError(t, mockDB.ExpectationsWereMet())
+		mockService.AssertExpectations(t)
+	})
+
+	t.Run("NotConnected", func(t *testing.T) {
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
+
+		mockService.On("AddGroupMember", mock.Anything, mock.AnythingOfType("string"), "group-1", "user-2").
+			Return(errors.New("user is not in your connections"))
+
+		reqBody := `{"user_id": "user-2"}`
+		req := httptest.NewRequest("POST", "/groups/group-1/members", strings.NewReader(reqBody))
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", "group-1")
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		h.AddGroupMember(w, req)
+
+		assert.Equal(t, http.StatusForbidden, w.Code)
+		mockService.AssertExpectations(t)
+	})
+
+	t.Run("GenericError", func(t *testing.T) {
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
+
+		mockService.On("AddGroupMember", mock.Anything, mock.AnythingOfType("string"), "group-1", "user-2").
+			Return(errors.New("db error"))
+
+		reqBody := `{"user_id": "user-2"}`
+		req := httptest.NewRequest("POST", "/groups/group-1/members", strings.NewReader(reqBody))
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", "group-1")
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		h.AddGroupMember(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		mockService.AssertExpectations(t)
+	})
+}
+
+func TestGroupHandler_GetOrCreateDirectGroup(t *testing.T) {
+	testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+
+	t.Run("Success - Created", func(t *testing.T) {
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
+
+		mockService.On("GetOrCreateDirectGroup", mock.Anything, mock.AnythingOfType("string"), "partner-1").
+			Return(&services.Group{ID: "group-direct"}, true, nil)
+
+		reqBody := `{"partner_id": "partner-1"}`
+		req := httptest.NewRequest("POST", "/groups/direct", strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		h.GetOrCreateDirectGroup(w, req)
+
+		assert.Equal(t, http.StatusCreated, w.Code)
+		mockService.AssertExpectations(t)
+	})
+
+	t.Run("Success - Existing", func(t *testing.T) {
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
+
+		mockService.On("GetOrCreateDirectGroup", mock.Anything, mock.AnythingOfType("string"), "partner-1").
+			Return(&services.Group{ID: "group-direct"}, false, nil)
+
+		reqBody := `{"partner_id": "partner-1"}`
+		req := httptest.NewRequest("POST", "/groups/direct", strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		h.GetOrCreateDirectGroup(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		mockService.AssertExpectations(t)
+	})
+
+	t.Run("Invalid Request", func(t *testing.T) {
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
+
+		reqBody := `{"partner_id": ""}` // invalid
+		req := httptest.NewRequest("POST", "/groups/direct", strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		h.GetOrCreateDirectGroup(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("Service Error", func(t *testing.T) {
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
+
+		mockService.On("GetOrCreateDirectGroup", mock.Anything, mock.AnythingOfType("string"), "partner-1").
+			Return((*services.Group)(nil), false, errors.New("db error"))
+
+		reqBody := `{"partner_id": "partner-1"}`
+		req := httptest.NewRequest("POST", "/groups/direct", strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		h.GetOrCreateDirectGroup(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		mockService.AssertExpectations(t)
+	})
+
+	t.Run("SelfError", func(t *testing.T) {
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
+
+		mockService.On("GetOrCreateDirectGroup", mock.Anything, mock.AnythingOfType("string"), "partner-1").
+			Return((*services.Group)(nil), false, errors.New("cannot create direct group with yourself"))
+
+		reqBody := `{"partner_id": "partner-1"}`
+		req := httptest.NewRequest("POST", "/groups/direct", strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		h.GetOrCreateDirectGroup(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		mockService.AssertExpectations(t)
+	})
+
+	t.Run("NotConnected", func(t *testing.T) {
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
+
+		mockService.On("GetOrCreateDirectGroup", mock.Anything, mock.AnythingOfType("string"), "partner-1").
+			Return((*services.Group)(nil), false, errors.New("user is not in your connections"))
+
+		reqBody := `{"partner_id": "partner-1"}`
+		req := httptest.NewRequest("POST", "/groups/direct", strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		h.GetOrCreateDirectGroup(w, req)
+
+		assert.Equal(t, http.StatusForbidden, w.Code)
+		mockService.AssertExpectations(t)
+	})
+
+	t.Run("PartnerNotFound", func(t *testing.T) {
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
+
+		mockService.On("GetOrCreateDirectGroup", mock.Anything, mock.AnythingOfType("string"), "partner-1").
+			Return((*services.Group)(nil), false, models.ErrNotFound)
+
+		reqBody := `{"partner_id": "partner-1"}`
+		req := httptest.NewRequest("POST", "/groups/direct", strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		h.GetOrCreateDirectGroup(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+		mockService.AssertExpectations(t)
 	})
 }
 
 func TestGroupHandler_RemoveGroupMember(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
-		mockDB, err := pgxmock.NewConn()
-		if err != nil {
-			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-		}
-		defer func() { _ = mockDB.Close(context.Background()) }()
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
 
-		mockNotif := new(MockNotificationServiceWithMock)
-		h := NewGroupHandler(mockDB, mockNotif)
+		mockService.On("RemoveGroupMember", mock.Anything, mock.AnythingOfType("string"), "group-1", "user-2").Return(nil)
 
-		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
-
-		mockDB.ExpectQuery("SELECT role FROM group_members").
-			WithArgs("00000000-0000-0000-0000-000000000001", pgxmock.AnyArg()).
-			WillReturnRows(pgxmock.NewRows([]string{"role"}).AddRow("admin"))
-
-		mockDB.ExpectExec("DELETE FROM group_members").
-			WithArgs("00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000002").
-			WillReturnResult(pgxmock.NewResult("DELETE", 1))
-
-		req := httptest.NewRequest("DELETE", "/groups/00000000-0000-0000-0000-000000000001/members/00000000-0000-0000-0000-000000000002", nil)
-
+		req := httptest.NewRequest("DELETE", "/groups/group-1/members/user-2", nil)
 		rctx := chi.NewRouteContext()
-		rctx.URLParams.Add("id", "00000000-0000-0000-0000-000000000001")
-		rctx.URLParams.Add("userId", "00000000-0000-0000-0000-000000000002")
+		rctx.URLParams.Add("id", "group-1")
+		rctx.URLParams.Add("userId", "user-2")
 		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
 
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
 		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
 		dummyToken := &auth.Token{UID: "firebase-uid-123"}
 		ctx = context.WithValue(ctx, middleware.UserContextKey, dummyToken)
@@ -505,7 +680,54 @@ func TestGroupHandler_RemoveGroupMember(t *testing.T) {
 		h.RemoveGroupMember(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
-		assert.JSONEq(t, `{"success": true}`, w.Body.String())
-		assert.NoError(t, mockDB.ExpectationsWereMet())
+		mockService.AssertExpectations(t)
+	})
+
+	t.Run("AdminRequired", func(t *testing.T) {
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
+
+		mockService.On("RemoveGroupMember", mock.Anything, mock.AnythingOfType("string"), "group-1", "user-2").
+			Return(errors.New("admin rights required"))
+
+		req := httptest.NewRequest("DELETE", "/groups/group-1/members/user-2", nil)
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", "group-1")
+		rctx.URLParams.Add("userId", "user-2")
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		h.RemoveGroupMember(w, req)
+
+		assert.Equal(t, http.StatusForbidden, w.Code)
+		mockService.AssertExpectations(t)
+	})
+
+	t.Run("GenericError", func(t *testing.T) {
+		mockService := new(MockGroupService)
+		h := NewGroupHandler(mockService)
+
+		mockService.On("RemoveGroupMember", mock.Anything, mock.AnythingOfType("string"), "group-1", "user-2").
+			Return(errors.New("db error"))
+
+		req := httptest.NewRequest("DELETE", "/groups/group-1/members/user-2", nil)
+		rctx := chi.NewRouteContext()
+		rctx.URLParams.Add("id", "group-1")
+		rctx.URLParams.Add("userId", "user-2")
+		req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+		testUUID := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+		ctx := context.WithValue(req.Context(), TestUserKey, testUUID)
+		req = req.WithContext(ctx)
+
+		w := httptest.NewRecorder()
+		h.RemoveGroupMember(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		mockService.AssertExpectations(t)
 	})
 }

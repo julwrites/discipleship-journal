@@ -23,11 +23,11 @@ vi.mock('@/components/RichTextEditor', async () => {
         run: () => void;
     };
 
-    const MockRichTextEditor = ({ initialContent, onChange, editable, onEditorReady }: { 
-        initialContent: string, 
-        onChange: (v: string) => void, 
-        editable: boolean, 
-        onEditorReady?: (e: { chain: () => MockChain }) => void 
+    const MockRichTextEditor = ({ initialContent, onChange, editable, onEditorReady }: {
+        initialContent: string,
+        onChange: (v: string) => void,
+        editable: boolean,
+        onEditorReady?: (e: { chain: () => MockChain }) => void
     }) => {
         const [content, setContent] = useState(initialContent);
         const contentRef = useRef(content);
@@ -89,10 +89,22 @@ vi.mock('@/services/api', () => ({
     syncUser: vi.fn().mockResolvedValue({ settings: { bible_version: 'ESV' } }),
     getBibleVersions: vi.fn().mockResolvedValue({ data: [] }),
     searchMemoryVerses: vi.fn().mockResolvedValue({ data: [] }),
+    getTags: vi.fn().mockResolvedValue([]),
+    getOrCreateDirectGroup: vi.fn(),
+    shareItem: vi.fn(),
+    getConnections: vi.fn().mockResolvedValue([]),
 }));
 
 // Mock scrollIntoView
 window.HTMLElement.prototype.scrollIntoView = vi.fn();
+
+// Mock useAuth
+vi.mock('@/hooks/useAuth', () => ({
+    useAuth: vi.fn().mockReturnValue({
+        user: { email: 'test@example.com' },
+        loading: false
+    })
+}));
 
 describe('NoteEditor', () => {
     beforeEach(() => {
@@ -119,7 +131,7 @@ describe('NoteEditor', () => {
         return render(<RouterProvider router={router} />);
     };
 
-    it('does NOT auto-save changes', async () => {
+    it('auto-saves changes', async () => {
         const mockGetNote = vi.mocked(api.getNote).mockResolvedValue({
             id: '123',
             title: 'Test Note',
@@ -143,7 +155,7 @@ describe('NoteEditor', () => {
 
         vi.useRealTimers();
 
-        expect(mockUpdateNote).not.toHaveBeenCalled();
+        expect(mockUpdateNote).toHaveBeenCalledWith('123', 'Test Note', 'Updated content', []);
     });
 
     it('saves manually when save button clicked', async () => {
@@ -168,7 +180,7 @@ describe('NoteEditor', () => {
         fireEvent.click(saveBtn);
 
         await waitFor(() => {
-            expect(mockUpdateNote).toHaveBeenCalledWith('123', 'Test Note', 'Updated content');
+            expect(mockUpdateNote).toHaveBeenCalledWith('123', 'Test Note', 'Updated content', []);
             expect(screen.getByText(/Saved at/i)).toBeInTheDocument();
         });
     });

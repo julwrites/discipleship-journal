@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"log/slog"
+	"strings"
 
 	"discipleship_journal_api/database"
 
@@ -12,6 +13,7 @@ import (
 type NotificationService interface {
 	RegisterDevice(ctx context.Context, userID, token, deviceType string) error
 	SendNotification(ctx context.Context, userID, title, body string, data map[string]string) error
+	SendMulticastNotification(ctx context.Context, userIDs []string, title, body string, data map[string]string) error
 }
 
 type MessagingClientInterface interface {
@@ -33,11 +35,11 @@ func NewNotificationService(db database.DBInterface, msgClient MessagingClientIn
 func (s *notificationService) RegisterDevice(ctx context.Context, userID, token, deviceType string) error {
 	query := `
 		INSERT INTO user_devices (user_id, fcm_token, device_type, last_used_at)
-		VALUES ($1, $2, $3, NOW())
-		ON CONFLICT (user_id, fcm_token)
+		VALUES (?, ?, ?, NOW())
+		ON DUPLICATE KEY UPDATE device_type = VALUES(device_type), app_version = VALUES(app_version), is_active = true, updated_at = NOW()
 		DO UPDATE SET last_used_at = NOW(), device_type = EXCLUDED.device_type
 	`
-	_, err := s.db.Exec(ctx, query, userID, token, deviceType)
+	_, err := s.db.ExecContext(ctx, query, userID, token, deviceType)
 	return err
 }
 
@@ -88,8 +90,95 @@ func (s *notificationService) SendNotification(ctx context.Context, userID, titl
 	return nil
 }
 
+func (s *notificationService) SendMulticastNotification(ctx context.Context, userIDs []string, title, body string, data map[string]string) error {
+	if len(userIDs) == 0 {
+		return nil
+	}
+
+	// 1. Get tokens for all users
+	tokens, err := s.getUsersTokens(ctx, userIDs)
+	if err != nil {
+		return err
+	}
+
+	if len(tokens) == 0 {
+		return nil
+	}
+
+	// 2. Batch tokens (FCM limit 500)
+	var firstErr error
+	for i := 0; i < len(tokens); i += 500 {
+		end := i + 500
+		if end > len(tokens) {
+			end = len(tokens)
+		}
+		batch := tokens[i:end]
+
+		message := &messaging.MulticastMessage{
+			Tokens: batch,
+			Notification: &messaging.Notification{
+				Title: title,
+				Body:  body,
+			},
+			Data: data,
+		}
+
+		br, err := s.messagingClient.SendEachForMulticast(ctx, message)
+		if err != nil {
+			slog.Error("Failed to send multicast notification batch", "error", err)
+			if firstErr == nil {
+				firstErr = err
+			}
+			continue
+		}
+
+		if br.FailureCount > 0 {
+			var failedTokens []string
+			for idx, resp := range br.Responses {
+				if !resp.Success {
+					failedTokens = append(failedTokens, batch[idx])
+					slog.Warn("Failed to send notification in multicast", "token", batch[idx], "error", resp.Error)
+				}
+			}
+			if len(failedTokens) > 0 {
+				if err := s.removeTokens(ctx, failedTokens); err != nil {
+					slog.Error("Failed to remove invalid tokens", "error", err)
+				}
+			}
+		}
+	}
+
+	return firstErr
+}
+
 func (s *notificationService) getUserTokens(ctx context.Context, userID string) ([]string, error) {
-	rows, err := s.db.Query(ctx, "SELECT fcm_token FROM user_devices WHERE user_id = $1", userID)
+	rows, err := s.db.QueryContext(ctx, "SELECT fcm_token FROM user_devices WHERE user_id = ?", userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tokens []string
+	for rows.Next() {
+		var token string
+		if err := rows.Scan(&token); err != nil {
+			return nil, err
+		}
+		tokens = append(tokens, token)
+	}
+	return tokens, rows.Err()
+}
+
+func (s *notificationService) getUsersTokens(ctx context.Context, userIDs []string) ([]string, error) {
+	if len(userIDs) == 0 {
+		return nil, nil
+	}
+	query := "SELECT fcm_token FROM user_devices WHERE user_id IN (" + strings.Repeat("?,", len(userIDs)-1) + "?)"
+	args := make([]interface{}, len(userIDs))
+	for i, id := range userIDs {
+		args[i] = id
+	}
+	rows, err := s.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -107,8 +196,28 @@ func (s *notificationService) getUserTokens(ctx context.Context, userID string) 
 }
 
 func (s *notificationService) removeInvalidTokens(ctx context.Context, userID string, tokens []string) error {
-	// Bulk delete could be better, but loop is simple for now or use ANY
-	query := "DELETE FROM user_devices WHERE user_id = $1 AND fcm_token = ANY($2)"
-	_, err := s.db.Exec(ctx, query, userID, tokens)
+	if len(tokens) == 0 {
+		return nil
+	}
+	query := "DELETE FROM user_devices WHERE user_id = ? AND fcm_token IN (" + strings.Repeat("?,", len(tokens)-1) + "?)"
+	args := make([]interface{}, len(tokens)+1)
+	args[0] = userID
+	for i, t := range tokens {
+		args[i+1] = t
+	}
+	_, err := s.db.ExecContext(ctx, query, args...)
+	return err
+}
+
+func (s *notificationService) removeTokens(ctx context.Context, tokens []string) error {
+	if len(tokens) == 0 {
+		return nil
+	}
+	query := "DELETE FROM user_devices WHERE fcm_token IN (" + strings.Repeat("?,", len(tokens)-1) + "?)"
+	args := make([]interface{}, len(tokens))
+	for i, t := range tokens {
+		args[i] = t
+	}
+	_, err := s.db.ExecContext(ctx, query, args...)
 	return err
 }

@@ -9,11 +9,11 @@ import (
 
 // BibleVersionHandler handles bible version operations.
 type BibleVersionHandler struct {
-	service *services.BibleVersionService
+	service services.BibleVersionService
 }
 
 // NewBibleVersionHandler creates a new BibleVersionHandler.
-func NewBibleVersionHandler(service *services.BibleVersionService) *BibleVersionHandler {
+func NewBibleVersionHandler(service services.BibleVersionService) *BibleVersionHandler {
 	return &BibleVersionHandler{service: service}
 }
 

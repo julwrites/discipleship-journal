@@ -5,7 +5,7 @@ title: Fix Cloud Run deployment: Container fails to start due to database connec
 priority: medium
 created: 2026-01-01 09:24:00
 category: infrastructure
-dependencies: 
+dependencies:
 type: task
 ---
 

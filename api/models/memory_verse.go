@@ -19,13 +19,14 @@ type VersePack struct {
 }
 
 type MemoryVerse struct {
-	ID          uuid.UUID `json:"id"`
-	VersePackID uuid.UUID `json:"verse_pack_id"`
-	Reference   string    `json:"reference"`
-	Title       string    `json:"title"`
-	Version     string    `json:"version"`
-	Tags        []string  `json:"tags"`
-	PackTitle   string    `json:"pack_title,omitempty"` // Populated in searches
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID            uuid.UUID `json:"id"`
+	VersePackID   uuid.UUID `json:"verse_pack_id"`
+	Reference     string    `json:"reference"`
+	Title         string    `json:"title"`
+	Version       string    `json:"version"`
+	VersionSource string    `json:"version_source,omitempty"` // "override", "user_default", "original"
+	Tags          []string  `json:"tags"`
+	PackTitle     string    `json:"pack_title,omitempty"` // Populated in searches
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }

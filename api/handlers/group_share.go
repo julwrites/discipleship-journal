@@ -7,11 +7,10 @@ import (
 	"net/http"
 	"time"
 
-	"discipleship_journal_api/middleware"
+	"database/sql"
 	"discipleship_journal_api/services"
-	"firebase.google.com/go/v4/auth"
+
 	chi "github.com/go-chi/chi/v5"
-	pgx "github.com/jackc/pgx/v5"
 )
 
 type GroupShareHandler struct {
@@ -30,17 +29,17 @@ type ShareItemRequest struct {
 }
 
 type SharedItemResponse struct {
-	ID          string                 `json:"id"`
-	GroupID     string                 `json:"group_id"`
-	NoteID      *string                `json:"note_id,omitempty"`
-	VersePackID *string                `json:"verse_pack_id,omitempty"`
-	Title       string                 `json:"title"`
-	Subtitle    string                 `json:"subtitle,omitempty"` // For Identifier or similar
-	Content     map[string]interface{} `json:"content,omitempty"`  // For Notes
-	Type        string                 `json:"type"`               // "note" or "verse_pack"
-	SharedBy    string                 `json:"shared_by"`          // User display name
-	SharedAt    string                 `json:"shared_at"`
-	Comment     string                 `json:"comment"`
+	ID          string      `json:"id"`
+	GroupID     string      `json:"group_id"`
+	NoteID      *string     `json:"note_id,omitempty"`
+	VersePackID *string     `json:"verse_pack_id,omitempty"`
+	Title       string      `json:"title"`
+	Subtitle    string      `json:"subtitle,omitempty"` // For Identifier or similar
+	Content     interface{} `json:"content,omitempty"`  // For Notes
+	Type        string      `json:"type"`               // "note" or "verse_pack"
+	SharedBy    string      `json:"shared_by"`          // User display name
+	SharedAt    string      `json:"shared_at"`
+	Comment     string      `json:"comment"`
 }
 
 // ShareItemToGroup shares a note OR verse pack to a group
@@ -56,8 +55,7 @@ func (h *GroupShareHandler) ShareItemToGroup(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	userUUID, err := GetUserUUID(r.Context(), token.UID)
+	userUUID, err := GetUserUUIDFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
 		return
@@ -65,8 +63,8 @@ func (h *GroupShareHandler) ShareItemToGroup(w http.ResponseWriter, r *http.Requ
 
 	// 1. Verify membership
 	var isMember bool
-	err = h.db.QueryRow(r.Context(),
-		"SELECT EXISTS(SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2)",
+	err = h.db.QueryRowContext(r.Context(),
+		"SELECT EXISTS(SELECT 1 FROM group_members WHERE group_id = ? AND user_id = ?)",
 		groupID, userUUID).Scan(&isMember)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
@@ -86,11 +84,11 @@ func (h *GroupShareHandler) ShareItemToGroup(w http.ResponseWriter, r *http.Requ
 		resourceID = *req.NoteID
 		// Verify ownership
 		var ownerID, title string
-		err = h.db.QueryRow(r.Context(),
-			"SELECT user_id, title FROM notes WHERE id = $1 AND deleted_at IS NULL",
+		err = h.db.QueryRowContext(r.Context(),
+			"SELECT user_id, title FROM notes WHERE id = ? AND deleted_at IS NULL",
 			resourceID).Scan(&ownerID, &title)
 		if err != nil {
-			if err == pgx.ErrNoRows {
+			if err == sql.ErrNoRows {
 				http.Error(w, "Note not found", http.StatusNotFound)
 			} else {
 				http.Error(w, "Database error", http.StatusInternalServerError)
@@ -104,12 +102,11 @@ func (h *GroupShareHandler) ShareItemToGroup(w http.ResponseWriter, r *http.Requ
 		resourceTitle = title
 
 		// Insert Share
-		_, err = h.db.Exec(r.Context(),
+		_, err = h.db.ExecContext(r.Context(),
 			`INSERT INTO group_shares (group_id, note_id, shared_by, comment)
-			 VALUES ($1, $2, $3, $4)
-			 ON CONFLICT (group_id, note_id) WHERE note_id IS NOT NULL
-			 DO UPDATE SET shared_at = NOW(), comment = $4`,
-			groupID, resourceID, userUUID, req.Comment)
+			 VALUES (?, ?, ?, ?)
+			 ON DUPLICATE KEY UPDATE shared_at = NOW(), comment = ?`,
+			groupID, resourceID, userUUID, req.Comment, req.Comment)
 	} else if req.VersePackID != nil {
 		resourceType = "verse_pack"
 		resourceID = *req.VersePackID
@@ -117,11 +114,11 @@ func (h *GroupShareHandler) ShareItemToGroup(w http.ResponseWriter, r *http.Requ
 		var ownerID *string
 		var title string
 		var isPublic bool
-		err = h.db.QueryRow(r.Context(),
-			"SELECT user_id, title, is_public FROM verse_packs WHERE id = $1",
+		err = h.db.QueryRowContext(r.Context(),
+			"SELECT user_id, title, is_public FROM verse_packs WHERE id = ?",
 			resourceID).Scan(&ownerID, &title, &isPublic)
 		if err != nil {
-			if err == pgx.ErrNoRows {
+			if err == sql.ErrNoRows {
 				http.Error(w, "Verse pack not found", http.StatusNotFound)
 			} else {
 				http.Error(w, "Database error", http.StatusInternalServerError)
@@ -148,16 +145,16 @@ func (h *GroupShareHandler) ShareItemToGroup(w http.ResponseWriter, r *http.Requ
 		// I will just perform an INSERT and ignore dupes or handle it.
 		// Better: Check if already shared.
 		var existingShareID string
-		err = h.db.QueryRow(r.Context(),
-			"SELECT id FROM group_shares WHERE group_id = $1 AND verse_pack_id = $2",
+		err = h.db.QueryRowContext(r.Context(),
+			"SELECT id FROM group_shares WHERE group_id = ? AND verse_pack_id = ?",
 			groupID, resourceID).Scan(&existingShareID)
 		if err == nil {
 			// Update comment/time
-			_, err = h.db.Exec(r.Context(), "UPDATE group_shares SET shared_at = NOW(), comment = $3 WHERE id = $1 AND group_id = $2", existingShareID, groupID, req.Comment)
+			_, err = h.db.ExecContext(r.Context(), "UPDATE group_shares SET shared_at = NOW(), comment = ? WHERE id = ? AND group_id = ?", existingShareID, groupID, req.Comment)
 		} else {
-			_, err = h.db.Exec(r.Context(),
-				"INSERT INTO group_shares (group_id, verse_pack_id, shared_by, comment) VALUES ($1, $2, $3, $4)",
-				groupID, resourceID, userUUID, req.Comment)
+			_, err = h.db.ExecContext(r.Context(),
+				"INSERT INTO group_shares (group_id, verse_pack_id, shared_by, comment) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE shared_at = NOW(), comment = ?",
+				groupID, resourceID, userUUID, req.Comment, req.Comment)
 		}
 	}
 
@@ -170,7 +167,9 @@ func (h *GroupShareHandler) ShareItemToGroup(w http.ResponseWriter, r *http.Requ
 	// Notifications
 	go h.sendNotifications(groupID, userUUID.String(), resourceTitle, resourceType, resourceID)
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(map[string]bool{"success": true})
 }
 
 func (h *GroupShareHandler) sendNotifications(groupID, sharerID, resourceTitle, resourceType, resourceID string) {
@@ -178,35 +177,42 @@ func (h *GroupShareHandler) sendNotifications(groupID, sharerID, resourceTitle, 
 	defer cancel()
 
 	var groupName string
-	if err := h.db.QueryRow(ctx, "SELECT name FROM groups WHERE id = $1", groupID).Scan(&groupName); err != nil {
+	if err := h.db.QueryRowContext(ctx, "SELECT name FROM groups WHERE id = ?", groupID).Scan(&groupName); err != nil {
 		groupName = "Group"
 	}
 
 	var sharerName string
-	if err := h.db.QueryRow(ctx, "SELECT COALESCE(username, email) FROM users WHERE id = $1", sharerID).Scan(&sharerName); err != nil {
+	if err := h.db.QueryRowContext(ctx, "SELECT COALESCE(username, email) FROM users WHERE id = ?", sharerID).Scan(&sharerName); err != nil {
 		sharerName = "Someone"
 	}
 
-	rows, err := h.db.Query(ctx, "SELECT user_id FROM group_members WHERE group_id = $1 AND user_id != $2", groupID, sharerID)
+	rows, err := h.db.QueryContext(ctx, "SELECT user_id FROM group_members WHERE group_id = ? AND user_id != ?", groupID, sharerID)
 	if err != nil {
 		return
 	}
 	defer rows.Close()
 
-	msgBody := sharerName + " shared \"" + resourceTitle + "\" in " + groupName
-
+	var memberIDs []string
 	for rows.Next() {
 		var memberID string
 		if err := rows.Scan(&memberID); err == nil {
-			err := h.notificationService.SendNotification(ctx, memberID, "New Shared Item", msgBody, map[string]string{
-				"type":        resourceType + "_share",
-				"group_id":    groupID,
-				"resource_id": resourceID,
-			})
-			if err != nil {
-				slog.Error("Failed to send notification", "user_id", memberID, "error", err)
-			}
+			memberIDs = append(memberIDs, memberID)
 		}
+	}
+
+	if len(memberIDs) == 0 {
+		return
+	}
+
+	msgBody := sharerName + " shared \"" + resourceTitle + "\" in " + groupName
+
+	err = h.notificationService.SendMulticastNotification(ctx, memberIDs, "New Shared Item", msgBody, map[string]string{
+		"type":        resourceType + "_share",
+		"group_id":    groupID,
+		"resource_id": resourceID,
+	})
+	if err != nil {
+		slog.Error("Failed to send multicast notifications", "group_id", groupID, "error", err)
 	}
 }
 
@@ -214,8 +220,7 @@ func (h *GroupShareHandler) sendNotifications(groupID, sharerID, resourceTitle, 
 func (h *GroupShareHandler) ListGroupShares(w http.ResponseWriter, r *http.Request) {
 	groupID := chi.URLParam(r, "id")
 
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	userUUID, err := GetUserUUID(r.Context(), token.UID)
+	userUUID, err := GetUserUUIDFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
 		return
@@ -223,8 +228,8 @@ func (h *GroupShareHandler) ListGroupShares(w http.ResponseWriter, r *http.Reque
 
 	// Verify membership
 	var isMember bool
-	err = h.db.QueryRow(r.Context(),
-		"SELECT EXISTS(SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2)",
+	err = h.db.QueryRowContext(r.Context(),
+		"SELECT EXISTS(SELECT 1 FROM group_members WHERE group_id = ? AND user_id = ?)",
 		groupID, userUUID).Scan(&isMember)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
@@ -245,12 +250,12 @@ func (h *GroupShareHandler) ListGroupShares(w http.ResponseWriter, r *http.Reque
 		LEFT JOIN notes n ON gs.note_id = n.id AND n.deleted_at IS NULL
 		LEFT JOIN verse_packs vp ON gs.verse_pack_id = vp.id
 		JOIN users u ON gs.shared_by = u.id
-		WHERE gs.group_id = $1
+		WHERE gs.group_id = ?
 		  AND (gs.note_id IS NULL OR n.id IS NOT NULL) -- Filter out deleted notes
 		ORDER BY gs.shared_at DESC
 	`
 
-	rows, err := h.db.Query(r.Context(), query, groupID)
+	rows, err := h.db.QueryContext(r.Context(), query, groupID)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
@@ -262,11 +267,15 @@ func (h *GroupShareHandler) ListGroupShares(w http.ResponseWriter, r *http.Reque
 		var s SharedItemResponse
 		var sharedAt time.Time
 		var subtitle *string
-		if err := rows.Scan(&s.ID, &s.GroupID, &s.NoteID, &s.VersePackID, &s.Title, &subtitle, &s.SharedBy, &sharedAt, &s.Comment, &s.Type); err != nil {
+		var comment *string
+		if err := rows.Scan(&s.ID, &s.GroupID, &s.NoteID, &s.VersePackID, &s.Title, &subtitle, &s.SharedBy, &sharedAt, &comment, &s.Type); err != nil {
 			continue
 		}
 		if subtitle != nil {
 			s.Subtitle = *subtitle
+		}
+		if comment != nil {
+			s.Comment = *comment
 		}
 		s.SharedAt = sharedAt.Format(time.RFC3339)
 		shares = append(shares, s)
@@ -283,8 +292,7 @@ func (h *GroupShareHandler) GetSharedItemDetails(w http.ResponseWriter, r *http.
 	groupID := chi.URLParam(r, "id")
 	shareID := chi.URLParam(r, "shareId")
 
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	userUUID, err := GetUserUUID(r.Context(), token.UID)
+	userUUID, err := GetUserUUIDFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
 		return
@@ -292,8 +300,8 @@ func (h *GroupShareHandler) GetSharedItemDetails(w http.ResponseWriter, r *http.
 
 	// Verify membership
 	var isMember bool
-	err = h.db.QueryRow(r.Context(),
-		"SELECT EXISTS(SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2)",
+	err = h.db.QueryRowContext(r.Context(),
+		"SELECT EXISTS(SELECT 1 FROM group_members WHERE group_id = ? AND user_id = ?)",
 		groupID, userUUID).Scan(&isMember)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
@@ -307,10 +315,11 @@ func (h *GroupShareHandler) GetSharedItemDetails(w http.ResponseWriter, r *http.
 	var s SharedItemResponse
 	var sharedAt time.Time
 	var subtitle *string
-	var content map[string]interface{}
+	var content interface{}
+	var comment *string
 
 	// Query to fetch generic details
-	err = h.db.QueryRow(r.Context(),
+	err = h.db.QueryRowContext(r.Context(),
 		`SELECT gs.id, gs.group_id, gs.note_id, gs.verse_pack_id,
 		        COALESCE(n.title, vp.title), vp.identifier, n.content,
 		        COALESCE(u.username, u.email) as display_name, gs.shared_at, gs.comment,
@@ -319,11 +328,11 @@ func (h *GroupShareHandler) GetSharedItemDetails(w http.ResponseWriter, r *http.
 		 LEFT JOIN notes n ON gs.note_id = n.id
 		 LEFT JOIN verse_packs vp ON gs.verse_pack_id = vp.id
 		 JOIN users u ON gs.shared_by = u.id
-		 WHERE gs.id = $1 AND gs.group_id = $2`, shareID, groupID).Scan(
-		&s.ID, &s.GroupID, &s.NoteID, &s.VersePackID, &s.Title, &subtitle, &content, &s.SharedBy, &sharedAt, &s.Comment, &s.Type)
+		 WHERE gs.id = ? AND gs.group_id = ?`, shareID, groupID).Scan(
+		&s.ID, &s.GroupID, &s.NoteID, &s.VersePackID, &s.Title, &subtitle, &content, &s.SharedBy, &sharedAt, &comment, &s.Type)
 
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if err == sql.ErrNoRows {
 			http.Error(w, "Shared item not found", http.StatusNotFound)
 		} else {
 			http.Error(w, "Database error", http.StatusInternalServerError)
@@ -333,6 +342,9 @@ func (h *GroupShareHandler) GetSharedItemDetails(w http.ResponseWriter, r *http.
 
 	if subtitle != nil {
 		s.Subtitle = *subtitle
+	}
+	if comment != nil {
+		s.Comment = *comment
 	}
 	s.Content = content
 	s.SharedAt = sharedAt.Format(time.RFC3339)

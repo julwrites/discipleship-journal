@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -12,6 +11,7 @@ import (
 
 	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/validation"
+
 	"firebase.google.com/go/v4/auth"
 )
 
@@ -51,16 +51,18 @@ func NewUserHandler(db DBInterface) *UserHandler {
 func (h *UserHandler) CreateOrUpdateUser(w http.ResponseWriter, r *http.Request) {
 	var uid string
 	var email string
+	var testUserID string
+	isTestMode := false
 
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		uid = token.UID
 		// Extract email from claims
 		if emailClaim, ok := token.Claims["email"].(string); ok {
 			email = emailClaim
 		}
-	} else if testUserID, ok := r.Context().Value(TestUserKey).(string); ok {
-		// Mock ID, but we need a uid for the DB query logic below if we were to support it
-		// For now just error if not authenticated properly
+	} else if val, ok := r.Context().Value(TestUserKey).(string); ok {
+		testUserID = val
+		isTestMode = true
 		if testUserID == "" {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
@@ -68,7 +70,8 @@ func (h *UserHandler) CreateOrUpdateUser(w http.ResponseWriter, r *http.Request)
 		// In test mode without firebase token, we might not have email easily unless injected
 		// Assume "test@example.com" if missing for test
 		email = "test@example.com"
-		uid = "test-firebase-uid"
+		// Generate unique firebase UID for test user
+		uid = "test-firebase-uid-" + testUserID
 	} else {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -97,10 +100,24 @@ func (h *UserHandler) CreateOrUpdateUser(w http.ResponseWriter, r *http.Request)
 	var settingsBytes []byte
 
 	// 1. Try to find user
-	err := h.db.QueryRow(r.Context(), `
-		SELECT id, firebase_uid, email, username, settings, created_at, updated_at
-		FROM users
-		WHERE firebase_uid=$1`, uid).Scan(
+	var selectQuery string
+	var selectArgs []interface{}
+
+	if isTestMode {
+		selectQuery = `
+			SELECT id, firebase_uid, email, username, settings, created_at, updated_at
+			FROM users
+			WHERE id=?`
+		selectArgs = []interface{}{testUserID}
+	} else {
+		selectQuery = `
+			SELECT id, firebase_uid, email, username, settings, created_at, updated_at
+			FROM users
+			WHERE firebase_uid=?`
+		selectArgs = []interface{}{uid}
+	}
+
+	err := h.db.QueryRowContext(r.Context(), selectQuery, selectArgs...).Scan(
 		&user.ID, &user.FirebaseUID, &user.Email, &user.Username, &settingsBytes, &user.CreatedAt, &user.UpdatedAt,
 	)
 
@@ -111,7 +128,6 @@ func (h *UserHandler) CreateOrUpdateUser(w http.ResponseWriter, r *http.Request)
 			if req.Settings != nil {
 				settingsJSON, _ = json.Marshal(req.Settings)
 			} else {
-				// Initialize with empty object
 				settingsJSON = []byte("{}")
 			}
 
@@ -120,13 +136,27 @@ func (h *UserHandler) CreateOrUpdateUser(w http.ResponseWriter, r *http.Request)
 				usernameVal = nil
 			}
 
-			err = h.db.QueryRow(r.Context(), `
-				INSERT INTO users (firebase_uid, email, username, settings)
-				VALUES ($1, $2, $3, $4)
-				RETURNING id, firebase_uid, email, username, settings, created_at, updated_at`,
-				uid, email, usernameVal, settingsJSON).Scan(
-				&user.ID, &user.FirebaseUID, &user.Email, &user.Username, &settingsBytes, &user.CreatedAt, &user.UpdatedAt,
-			)
+			var insertQuery string
+			var insertArgs []interface{}
+
+			if isTestMode {
+				insertQuery = `
+					INSERT INTO users (id, firebase_uid, email, username, settings)
+					VALUES (?, ?, ?, ?, ?)`
+				insertArgs = []interface{}{testUserID, uid, email, usernameVal, settingsJSON}
+			} else {
+				insertQuery = `
+					INSERT INTO users (firebase_uid, email, username, settings)
+					VALUES (?, ?, ?, ?)`
+				insertArgs = []interface{}{uid, email, usernameVal, settingsJSON}
+			}
+
+			_, err = h.db.ExecContext(r.Context(), insertQuery, insertArgs...)
+			if err == nil {
+				err = h.db.QueryRowContext(r.Context(), selectQuery, selectArgs...).Scan(
+					&user.ID, &user.FirebaseUID, &user.Email, &user.Username, &settingsBytes, &user.CreatedAt, &user.UpdatedAt,
+				)
+			}
 			if err != nil {
 				slog.Error("Failed to create user", "error", err)
 				http.Error(w, "Database error", http.StatusInternalServerError)
@@ -139,7 +169,6 @@ func (h *UserHandler) CreateOrUpdateUser(w http.ResponseWriter, r *http.Request)
 				}
 			}
 
-			// Respond and return immediately - no need to update
 			w.WriteHeader(http.StatusOK)
 			if err := json.NewEncoder(w).Encode(user); err != nil {
 				slog.Error("Failed to encode response", "error", err)
@@ -158,34 +187,54 @@ func (h *UserHandler) CreateOrUpdateUser(w http.ResponseWriter, r *http.Request)
 	shouldUpdate := false
 	updateQuery := "UPDATE users SET updated_at = NOW()"
 	var args []interface{}
-	argIdx := 1
 
 	if req.Username != nil {
-		updateQuery += fmt.Sprintf(", username = $%d", argIdx)
+		updateQuery += ", username = ?"
 		var val interface{} = req.Username
 		if *req.Username == "" {
 			val = nil
 		}
 		args = append(args, val)
-		argIdx++
 		shouldUpdate = true
 	}
 	if req.Settings != nil {
-		settingsJSON, _ := json.Marshal(req.Settings)
-		updateQuery += fmt.Sprintf(", settings = $%d", argIdx)
+		// Merge with existing settings
+		var currentSettings map[string]interface{}
+		if len(settingsBytes) > 0 {
+			if err := json.Unmarshal(settingsBytes, &currentSettings); err != nil {
+				slog.Error("Failed to unmarshal existing settings during update", "error", err)
+				// Fallback to empty map
+				currentSettings = make(map[string]interface{})
+			}
+		} else {
+			currentSettings = make(map[string]interface{})
+		}
+
+		for k, v := range req.Settings {
+			currentSettings[k] = v
+		}
+
+		settingsJSON, _ := json.Marshal(currentSettings)
+		updateQuery += ", settings = ?"
 		args = append(args, settingsJSON)
-		argIdx++
 		shouldUpdate = true
 	}
 
 	if shouldUpdate {
-		updateQuery += fmt.Sprintf(" WHERE firebase_uid = $%d", argIdx)
-		args = append(args, uid)
-		updateQuery += " RETURNING id, firebase_uid, email, username, settings, created_at, updated_at"
-
-		err = h.db.QueryRow(r.Context(), updateQuery, args...).Scan(
-			&user.ID, &user.FirebaseUID, &user.Email, &user.Username, &settingsBytes, &user.CreatedAt, &user.UpdatedAt,
-		)
+		// Use ID for update if test mode, or firebase_uid if production
+		if isTestMode {
+			updateQuery += " WHERE id = ?"
+			args = append(args, testUserID)
+		} else {
+			updateQuery += " WHERE firebase_uid = ?"
+			args = append(args, uid)
+		}
+		_, err := h.db.ExecContext(r.Context(), updateQuery, args...)
+		if err == nil {
+			err = h.db.QueryRowContext(r.Context(), selectQuery, selectArgs...).Scan(
+				&user.ID, &user.FirebaseUID, &user.Email, &user.Username, &settingsBytes, &user.CreatedAt, &user.UpdatedAt,
+			)
+		}
 		if err != nil {
 			slog.Error("Failed to update user", "error", err)
 			http.Error(w, "Database error", http.StatusInternalServerError)
@@ -231,21 +280,21 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var settingsBytes []byte
 
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		// Real Firebase auth - query by firebase_uid
 		uid := token.UID
-		err = h.db.QueryRow(r.Context(), `
+		err = h.db.QueryRowContext(r.Context(), `
 			SELECT id, firebase_uid, email, username, settings, created_at, updated_at
 			FROM users
-			WHERE firebase_uid=$1`, uid).Scan(
+			WHERE firebase_uid=?`, uid).Scan(
 			&user.ID, &user.FirebaseUID, &user.Email, &user.Username, &settingsBytes, &user.CreatedAt, &user.UpdatedAt,
 		)
 	} else if testUserID, ok := r.Context().Value(TestUserKey).(string); ok {
 		// Mock auth - query by internal UUID
-		err = h.db.QueryRow(r.Context(), `
+		err = h.db.QueryRowContext(r.Context(), `
 			SELECT id, firebase_uid, email, username, settings, created_at, updated_at
 			FROM users
-			WHERE id=$1`, testUserID).Scan(
+			WHERE id=?`, testUserID).Scan(
 			&user.ID, &user.FirebaseUID, &user.Email, &user.Username, &settingsBytes, &user.CreatedAt, &user.UpdatedAt,
 		)
 	} else {

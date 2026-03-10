@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  migrator:
+    build: .
+    container_name: dj_migrator
+    volumes:
+      # Mount the whole repository into /app so scripts and extracted CSVs are synced locally
+      - ../../:/app
+      # Optional: Mount your local gcloud config to avoid having to run `gcloud auth login` inside the container if you already authenticated locally.
+      - ~/.config/gcloud:/root/.config/gcloud
+    environment:
+      # We will expose the Cloud SQL Auth proxy on 127.0.0.1:5432 internally inside the container.
+      - PG_HOST=127.0.0.1
+      - PG_PORT=5432
+      # Add your database credentials below (or use a .env file locally)
+      - PG_USER=postgres
+      - PG_PASSWORD=postgres
+      - PG_DBNAME=discipleship_journal

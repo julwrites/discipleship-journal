@@ -3,11 +3,11 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
-	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/models"
 	"discipleship_journal_api/services"
-	"firebase.google.com/go/v4/auth"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
@@ -38,6 +38,91 @@ func (h *ReadingPlanHandler) GetAllPlans(w http.ResponseWriter, r *http.Request)
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(map[string]interface{}{
 		"data": plans,
+	}); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+// Unsubscribe godoc
+// @Summary      Unsubscribe from a reading plan
+// @Description  Unsubscribe the current user from a reading plan, deleting their progress
+// @Tags         reading-plans
+// @Accept       json
+// @Produce      json
+// @Param        id   path      string  true  "Plan ID"
+// @Success      204  {object}  nil
+// @Router       /api/reading-plans/{id}/subscribe [delete]
+func (h *ReadingPlanHandler) Unsubscribe(w http.ResponseWriter, r *http.Request) {
+	userID, err := h.getUserID(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	idStr := chi.URLParam(r, "id")
+	planID, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(w, "Invalid plan ID", http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.Unsubscribe(r.Context(), userID, planID)
+	if err != nil {
+		if err == models.ErrNotFound {
+			http.Error(w, "Subscription not found or not active", http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// UnmarkDayComplete godoc
+// @Summary      Unmark a day as complete
+// @Description  Unmark (undo completion) a specific day in a reading plan
+// @Tags         reading-plans
+// @Accept       json
+// @Produce      json
+// @Param        id   path      string  true  "Plan ID"
+// @Param        day_number path int true "Day Number"
+// @Success      200  {object}  map[string]bool
+// @Router       /api/my-reading-plans/{id}/progress/{day_number} [delete]
+func (h *ReadingPlanHandler) UnmarkDayComplete(w http.ResponseWriter, r *http.Request) {
+	userID, err := h.getUserID(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	idStr := chi.URLParam(r, "id")
+	planID, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(w, "Invalid plan ID", http.StatusBadRequest)
+		return
+	}
+
+	dayStr := chi.URLParam(r, "day_number")
+	dayNumber, err := strconv.Atoi(dayStr)
+	if err != nil {
+		http.Error(w, "Invalid day number", http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.UnmarkDayComplete(r.Context(), userID, planID, dayNumber)
+	if err != nil {
+		if err == models.ErrNotFound {
+			http.Error(w, "User plan not found or not active", http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(map[string]bool{
+		"success": true,
 	}); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -150,19 +235,11 @@ func (h *ReadingPlanHandler) GetPlan(w http.ResponseWriter, r *http.Request) {
 
 // Helper to get userID from context (production) or test fallback
 func (h *ReadingPlanHandler) getUserID(r *http.Request) (uuid.UUID, error) {
-	// 1. Try production path (Firebase UID in context -> DB lookup)
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
-		return GetUserUUID(r.Context(), token.UID)
+	id, err := GetUserUUIDFromContext(r.Context())
+	if err != nil {
+		return uuid.Nil, models.ErrNotFound
 	}
-
-	// 2. Try test fallback
-	if val := r.Context().Value(TestUserKey); val != nil {
-		if id, ok := val.(uuid.UUID); ok {
-			return id, nil
-		}
-	}
-
-	return uuid.Nil, models.ErrNotFound
+	return id, nil
 }
 
 // Subscribe godoc

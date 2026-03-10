@@ -1,27 +1,26 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
 	"time"
 
 	"discipleship_journal_api/middleware"
+	"discipleship_journal_api/models"
 	"discipleship_journal_api/services"
+
 	"firebase.google.com/go/v4/auth"
 	chi "github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	pgx "github.com/jackc/pgx/v5"
 )
 
 type GroupHandler struct {
-	db                  DBInterface
-	notificationService services.NotificationService
+	service services.GroupServiceInterface
 }
 
-func NewGroupHandler(db DBInterface, notificationService services.NotificationService) *GroupHandler {
-	return &GroupHandler{db: db, notificationService: notificationService}
+func NewGroupHandler(service services.GroupServiceInterface) *GroupHandler {
+	return &GroupHandler{service: service}
 }
 
 type CreateGroupRequest struct {
@@ -31,12 +30,12 @@ type CreateGroupRequest struct {
 }
 
 type GroupResponse struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	CreatedBy   string `json:"created_by"`
-	Role        string `json:"role,omitempty"` // Current user's role
-	Type        string `json:"type"`
+	ID          string  `json:"id"`
+	Name        string  `json:"name"`
+	Description *string `json:"description,omitempty"`
+	CreatedBy   string  `json:"created_by"`
+	Role        string  `json:"role,omitempty"` // Current user's role
+	Type        string  `json:"type"`
 }
 
 type GroupMemberResponse struct {
@@ -68,7 +67,7 @@ func (h *GroupHandler) CreateGroup(w http.ResponseWriter, r *http.Request) {
 
 	// If not found in test override, try standard auth
 	if userUUID == "" {
-		if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+		if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 			var id uuid.UUID
 			id, err = GetUserUUID(r.Context(), token.UID)
 			if err != nil {
@@ -82,106 +81,34 @@ func (h *GroupHandler) CreateGroup(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	tx, err := h.db.Begin(r.Context())
-	if err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		return
-	}
-	var commitSuccessful bool
-	defer func() {
-		if !commitSuccessful {
-			if err := tx.Rollback(r.Context()); err != nil && err != pgx.ErrTxClosed {
-				slog.Error("Failed to rollback transaction", "error", err)
-			}
-		}
-	}()
-
-	groupType := "group"
-	if req.Type != "" {
-		groupType = req.Type
-	}
-
-	var groupID string
-	err = tx.QueryRow(r.Context(),
-		"INSERT INTO groups (name, description, created_by, type) VALUES ($1, $2, $3, $4) RETURNING id",
-		req.Name, req.Description, userUUID, groupType).Scan(&groupID)
+	group, err := h.service.CreateGroup(r.Context(), userUUID, req.Name, &req.Description, req.Type)
 	if err != nil {
 		slog.Error("Failed to create group", "error", err)
 		http.Error(w, "Failed to create group", http.StatusInternalServerError)
 		return
 	}
 
-	// Add creator as admin
-	_, err = tx.Exec(r.Context(),
-		"INSERT INTO group_members (group_id, user_id, role) VALUES ($1, $2, 'admin')",
-		groupID, userUUID)
-	if err != nil {
-		slog.Error("Failed to add member", "error", err)
-		http.Error(w, "Failed to create group", http.StatusInternalServerError)
-		return
-	}
-
-	if err := tx.Commit(r.Context()); err != nil {
-		http.Error(w, "Transaction commit failed", http.StatusInternalServerError)
-		return
-	}
-	commitSuccessful = true
-
 	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(map[string]string{"id": groupID}); err != nil {
+	if err := json.NewEncoder(w).Encode(map[string]string{"id": group.ID}); err != nil {
 		slog.Error("Failed to encode response", "error", err)
 	}
 }
 
 // ListMyGroups lists groups the user belongs to
 func (h *GroupHandler) ListMyGroups(w http.ResponseWriter, r *http.Request) {
-	var userUUID uuid.UUID
-	var err error
-
-	// Check for test user first
-	if testUserID := r.Context().Value(TestUserKey); testUserID != nil {
-		if idStr, ok := testUserID.(string); ok {
-			userUUID, err = uuid.Parse(idStr)
-		} else if id, ok := testUserID.(uuid.UUID); ok {
-			userUUID = id
-		}
-	} else if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
-		// Regular auth flow
-		userUUID, err = GetUserUUID(r.Context(), token.UID)
-	} else {
+	userUUID, err := GetUserUUIDFromContext(r.Context())
+	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	if err != nil {
-		http.Error(w, "User not found", http.StatusInternalServerError)
-		return
-	}
+	slog.Info("ListMyGroups", "user", userUUID)
 
-	rows, err := h.db.Query(r.Context(),
-		`SELECT g.id, g.name, g.description, g.created_by, g.type, gm.role
-		 FROM groups g
-		 JOIN group_members gm ON g.id = gm.group_id
-		 WHERE gm.user_id = $1`, userUUID)
+	groups, err := h.service.ListUserGroups(r.Context(), userUUID.String())
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
-	defer rows.Close()
-
-	var groups []GroupResponse
-	for rows.Next() {
-		var g GroupResponse
-		var groupType *string
-		if err := rows.Scan(&g.ID, &g.Name, &g.Description, &g.CreatedBy, &groupType, &g.Role); err != nil {
-			continue
-		}
-		if groupType != nil {
-			g.Type = *groupType
-		} else {
-			g.Type = "group"
-		}
-		groups = append(groups, g)
-	}
+	slog.Info("ListMyGroups returning", "count", len(groups))
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(groups); err != nil {
@@ -197,39 +124,16 @@ func (h *GroupHandler) SearchGroups(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// List groups and check if current user is a member
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	userUUID, err := GetUserUUID(r.Context(), token.UID)
+	userUUID, err := GetUserUUIDFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
 		return
 	}
 
-	// Only search for standard groups, not direct messages
-	rows, err := h.db.Query(r.Context(),
-		`SELECT g.id, g.name, g.description, g.created_by, g.type,
-		 COALESCE((SELECT role FROM group_members WHERE group_id = g.id AND user_id = $2), '') as role
-		 FROM groups g
-		 WHERE g.name ILIKE $1 AND (g.type = 'group' OR g.type IS NULL) LIMIT 20`, "%"+query+"%", userUUID)
+	groups, err := h.service.SearchGroups(r.Context(), query, userUUID.String())
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
-	}
-	defer rows.Close()
-
-	var groups []GroupResponse
-	for rows.Next() {
-		var g GroupResponse
-		var groupType *string
-		if err := rows.Scan(&g.ID, &g.Name, &g.Description, &g.CreatedBy, &groupType, &g.Role); err != nil {
-			continue
-		}
-		if groupType != nil {
-			g.Type = *groupType
-		} else {
-			g.Type = "group"
-		}
-		groups = append(groups, g)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -241,32 +145,19 @@ func (h *GroupHandler) SearchGroups(w http.ResponseWriter, r *http.Request) {
 // JoinGroup allows a user to join a group
 func (h *GroupHandler) JoinGroup(w http.ResponseWriter, r *http.Request) {
 	groupID := chi.URLParam(r, "id")
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	userUUID, err := GetUserUUID(r.Context(), token.UID)
+	userUUID, err := GetUserUUIDFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
 		return
 	}
 
-	// Check if already a member
-	var exists bool
-	err = h.db.QueryRow(r.Context(),
-		"SELECT EXISTS(SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2)",
-		groupID, userUUID).Scan(&exists)
+	err = h.service.JoinGroup(r.Context(), groupID, userUUID.String())
 	if err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		return
-	}
-	if exists {
-		http.Error(w, "Already a member", http.StatusConflict)
-		return
-	}
-
-	_, err = h.db.Exec(r.Context(),
-		"INSERT INTO group_members (group_id, user_id, role) VALUES ($1, $2, 'member')",
-		groupID, userUUID)
-	if err != nil {
-		http.Error(w, "Failed to join group", http.StatusInternalServerError)
+		if err == models.ErrAlreadyExists {
+			http.Error(w, "Already a member", http.StatusConflict)
+		} else {
+			http.Error(w, "Failed to join group", http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -279,25 +170,19 @@ func (h *GroupHandler) JoinGroup(w http.ResponseWriter, r *http.Request) {
 // LeaveGroup allows a user to leave a group
 func (h *GroupHandler) LeaveGroup(w http.ResponseWriter, r *http.Request) {
 	groupID := chi.URLParam(r, "id")
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	userUUID, err := GetUserUUID(r.Context(), token.UID)
+	userUUID, err := GetUserUUIDFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
 		return
 	}
 
-	// Prevent last admin from leaving? (Optional, skipping for MVP)
-
-	result, err := h.db.Exec(r.Context(),
-		"DELETE FROM group_members WHERE group_id = $1 AND user_id = $2",
-		groupID, userUUID)
+	err = h.service.LeaveGroup(r.Context(), groupID, userUUID.String())
 	if err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		return
-	}
-
-	if result.RowsAffected() == 0 {
-		http.Error(w, "Not a member", http.StatusNotFound)
+		if err == models.ErrNotFound {
+			http.Error(w, "Not a member", http.StatusNotFound)
+		} else {
+			http.Error(w, "Database error", http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -310,54 +195,35 @@ func (h *GroupHandler) LeaveGroup(w http.ResponseWriter, r *http.Request) {
 // GetGroupMembers lists members of a group
 func (h *GroupHandler) GetGroupMembers(w http.ResponseWriter, r *http.Request) {
 	groupID := chi.URLParam(r, "id")
-
-	// Check if user is a member of the group (or group is public? Assuming public read of members for now)
-	// For privacy, maybe only members can see members. Let's enforce membership.
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	userUUID, err := GetUserUUID(r.Context(), token.UID)
+	userUUID, err := GetUserUUIDFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
 		return
 	}
 
-	var isMember bool
-	err = h.db.QueryRow(r.Context(),
-		"SELECT EXISTS(SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2)",
-		groupID, userUUID).Scan(&isMember)
+	members, err := h.service.GetGroupMembers(r.Context(), groupID, userUUID.String())
 	if err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		return
-	}
-
-	if !isMember {
-		http.Error(w, "Access denied", http.StatusForbidden)
-		return
-	}
-
-	rows, err := h.db.Query(r.Context(),
-		`SELECT gm.user_id, COALESCE(u.username, u.email), u.email, gm.role, gm.joined_at
-		 FROM group_members gm
-		 JOIN users u ON gm.user_id = u.id
-		 WHERE gm.group_id = $1`, groupID)
-	if err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		return
-	}
-	defer rows.Close()
-
-	var members []GroupMemberResponse
-	for rows.Next() {
-		var m GroupMemberResponse
-		var joinedAt time.Time
-		if err := rows.Scan(&m.UserID, &m.DisplayName, &m.Email, &m.Role, &joinedAt); err != nil {
-			continue
+		if err.Error() == "access denied" {
+			http.Error(w, "Access denied", http.StatusForbidden)
+		} else {
+			http.Error(w, "Database error", http.StatusInternalServerError)
 		}
-		m.JoinedAt = joinedAt.Format(time.RFC3339)
-		members = append(members, m)
+		return
+	}
+
+	var response []GroupMemberResponse
+	for _, m := range members {
+		response = append(response, GroupMemberResponse{
+			UserID:      m.UserID,
+			DisplayName: m.DisplayName,
+			Email:       m.Email,
+			Role:        m.Role,
+			JoinedAt:    m.JoinedAt.Format(time.RFC3339),
+		})
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(members); err != nil {
+	if err := json.NewEncoder(w).Encode(response); err != nil {
 		slog.Error("Failed to encode response", "error", err)
 	}
 }
@@ -374,80 +240,23 @@ func (h *GroupHandler) AddGroupMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	userUUID, err := GetUserUUID(r.Context(), token.UID)
+	userUUID, err := GetUserUUIDFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
 		return
 	}
 
-	// Verify admin role
-	var role string
-	err = h.db.QueryRow(r.Context(),
-		"SELECT role FROM group_members WHERE group_id = $1 AND user_id = $2",
-		groupID, userUUID).Scan(&role)
+	err = h.service.AddGroupMember(r.Context(), userUUID.String(), groupID, req.UserID)
 	if err != nil {
-		if err == pgx.ErrNoRows {
-			http.Error(w, "Access denied", http.StatusForbidden)
+		// Map errors
+		if err.Error() == "admin rights required" || err.Error() == "access denied" || err.Error() == "user is not in your connections" {
+			http.Error(w, err.Error(), http.StatusForbidden)
 		} else {
-			http.Error(w, "Database error", http.StatusInternalServerError)
+			slog.Error("Failed to add member", "error", err)
+			http.Error(w, "Failed to add member", http.StatusInternalServerError)
 		}
 		return
 	}
-
-	if role != "admin" {
-		http.Error(w, "Admin rights required", http.StatusForbidden)
-		return
-	}
-
-	// Verify connection exists between requester and target user
-	var isConnected bool
-	err = h.db.QueryRow(r.Context(),
-		`SELECT EXISTS(
-			SELECT 1 FROM connections
-			WHERE ((requester_id = $1 AND receiver_id = $2) OR (requester_id = $2 AND receiver_id = $1))
-			AND status = 'accepted'
-		)`, userUUID, req.UserID).Scan(&isConnected)
-
-	if err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		return
-	}
-
-	if !isConnected {
-		http.Error(w, "User is not in your connections", http.StatusForbidden)
-		return
-	}
-
-	// Check if user to add exists and is not already member
-	// (Assuming req.UserID is the internal UUID, we should probably check existence)
-	_, err = h.db.Exec(r.Context(),
-		"INSERT INTO group_members (group_id, user_id, role) VALUES ($1, $2, 'member') ON CONFLICT DO NOTHING",
-		groupID, req.UserID)
-	if err != nil {
-		slog.Error("Failed to add member", "error", err)
-		http.Error(w, "Failed to add member", http.StatusInternalServerError)
-		return
-	}
-
-	// Get group name synchronously
-	var groupName string
-	if err := h.db.QueryRow(r.Context(), "SELECT name FROM groups WHERE id = $1", groupID).Scan(&groupName); err != nil {
-		groupName = "a group"
-	}
-
-	// Send notification
-	go func() {
-		ctx := context.Background()
-
-		err := h.notificationService.SendNotification(ctx, req.UserID, "Group Invitation", "You have been added to "+groupName, map[string]string{
-			"type": "group_invite",
-			"id":   groupID,
-		})
-		if err != nil {
-			slog.Error("Failed to send notification", "error", err)
-		}
-	}()
 
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(map[string]bool{"success": true}); err != nil {
@@ -464,117 +273,33 @@ func (h *GroupHandler) GetOrCreateDirectGroup(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	userUUID, err := GetUserUUID(r.Context(), token.UID)
+	userUUID, err := GetUserUUIDFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
 		return
 	}
 
-	if req.PartnerID == userUUID.String() {
-		http.Error(w, "Cannot create direct group with yourself", http.StatusBadRequest)
-		return
-	}
-
-	// 1. Check if connected
-	var isConnected bool
-	err = h.db.QueryRow(r.Context(),
-		`SELECT EXISTS(
-			SELECT 1 FROM connections
-			WHERE ((requester_id = $1 AND receiver_id = $2) OR (requester_id = $2 AND receiver_id = $1))
-			AND status = 'accepted'
-		)`, userUUID, req.PartnerID).Scan(&isConnected)
+	group, created, err := h.service.GetOrCreateDirectGroup(r.Context(), userUUID.String(), req.PartnerID)
 	if err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		return
-	}
-	if !isConnected {
-		http.Error(w, "User is not in your connections", http.StatusForbidden)
-		return
-	}
-
-	// 2. Check if Direct group exists
-	var groupID string
-	// Find a group of type 'direct' where both are members.
-	// We can find groups where I am a member, then check if partner is also a member, and type is direct.
-	// OR:
-	// SELECT g.id FROM groups g
-	// JOIN group_members gm1 ON g.id = gm1.group_id AND gm1.user_id = $1
-	// JOIN group_members gm2 ON g.id = gm2.group_id AND gm2.user_id = $2
-	// WHERE g.type = 'direct' LIMIT 1
-	err = h.db.QueryRow(r.Context(), `
-		SELECT g.id FROM groups g
-		JOIN group_members gm1 ON g.id = gm1.group_id AND gm1.user_id = $1
-		JOIN group_members gm2 ON g.id = gm2.group_id AND gm2.user_id = $2
-		WHERE g.type = 'direct' LIMIT 1
-	`, userUUID, req.PartnerID).Scan(&groupID)
-
-	if err == nil {
-		// Found
-		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(map[string]string{"id": groupID}); err != nil {
-			slog.Error("Failed to encode response", "error", err)
+		if err.Error() == "cannot create direct group with yourself" {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		} else if err.Error() == "user is not in your connections" {
+			http.Error(w, err.Error(), http.StatusForbidden)
+		} else if err == models.ErrNotFound { // Partner not found
+			http.Error(w, "Partner not found", http.StatusNotFound)
+		} else {
+			slog.Error("Database error", "error", err)
+			http.Error(w, "Database error", http.StatusInternalServerError)
 		}
 		return
 	}
 
-	if err != pgx.ErrNoRows {
-		slog.Error("Database error", "error", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		return
+	if created {
+		w.WriteHeader(http.StatusCreated)
+	} else {
+		w.WriteHeader(http.StatusOK)
 	}
-
-	// 3. Create Group
-	// Fetch partner name for Group Name
-	var partnerName, partnerUsername, partnerEmail string
-	err = h.db.QueryRow(r.Context(), "SELECT COALESCE(username, email), username, email FROM users WHERE id=$1", req.PartnerID).Scan(&partnerName, &partnerUsername, &partnerEmail)
-	if err != nil {
-		http.Error(w, "Partner not found", http.StatusNotFound)
-		return
-	}
-
-	// Fetch my name
-	var myName string
-	err = h.db.QueryRow(r.Context(), "SELECT COALESCE(username, email) FROM users WHERE id=$1", userUUID).Scan(&myName)
-	if err != nil {
-		http.Error(w, "User not found", http.StatusInternalServerError)
-		return
-	}
-
-	groupName := "Direct: " + myName + " & " + partnerName
-
-	tx, err := h.db.Begin(r.Context())
-	if err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		return
-	}
-	defer func() { _ = tx.Rollback(r.Context()) }()
-
-	if err := tx.QueryRow(r.Context(),
-		"INSERT INTO groups (name, type, created_by) VALUES ($1, 'direct', $2) RETURNING id",
-		groupName, userUUID).Scan(&groupID); err != nil {
-		slog.Error("Failed to create group", "error", err)
-		http.Error(w, "Failed to create group", http.StatusInternalServerError)
-		return
-	}
-
-	// Add members
-	if _, err := tx.Exec(r.Context(), "INSERT INTO group_members (group_id, user_id, role) VALUES ($1, $2, 'admin')", groupID, userUUID); err != nil {
-		http.Error(w, "Failed to add member", http.StatusInternalServerError)
-		return
-	}
-	if _, err := tx.Exec(r.Context(), "INSERT INTO group_members (group_id, user_id, role) VALUES ($1, $2, 'admin')", groupID, req.PartnerID); err != nil {
-		http.Error(w, "Failed to add member", http.StatusInternalServerError)
-		return
-	}
-
-	if err := tx.Commit(r.Context()); err != nil {
-		http.Error(w, "Commit failed", http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(map[string]string{"id": groupID}); err != nil {
+	if err := json.NewEncoder(w).Encode(map[string]string{"id": group.ID}); err != nil {
 		slog.Error("Failed to encode response", "error", err)
 	}
 }
@@ -584,38 +309,19 @@ func (h *GroupHandler) RemoveGroupMember(w http.ResponseWriter, r *http.Request)
 	groupID := chi.URLParam(r, "id")
 	targetUserID := chi.URLParam(r, "userId")
 
-	token := r.Context().Value(middleware.UserContextKey).(*auth.Token)
-	userUUID, err := GetUserUUID(r.Context(), token.UID)
+	userUUID, err := GetUserUUIDFromContext(r.Context())
 	if err != nil {
 		http.Error(w, "User not found", http.StatusInternalServerError)
 		return
 	}
 
-	// Verify admin role
-	var role string
-	err = h.db.QueryRow(r.Context(),
-		"SELECT role FROM group_members WHERE group_id = $1 AND user_id = $2",
-		groupID, userUUID).Scan(&role)
+	err = h.service.RemoveGroupMember(r.Context(), userUUID.String(), groupID, targetUserID)
 	if err != nil {
-		http.Error(w, "Access denied", http.StatusForbidden) // Or DB error
-		return
-	}
-
-	if role != "admin" {
-		http.Error(w, "Admin rights required", http.StatusForbidden)
-		return
-	}
-
-	// Prevent removing self via this endpoint? Or allow it?
-	// Usually admins leave via LeaveGroup, but removing self is edge case.
-	// If admin removes self, who is admin?
-	// For now, let's allow removing any member.
-
-	_, err = h.db.Exec(r.Context(),
-		"DELETE FROM group_members WHERE group_id = $1 AND user_id = $2",
-		groupID, targetUserID)
-	if err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		if err.Error() == "admin rights required" || err.Error() == "access denied" {
+			http.Error(w, err.Error(), http.StatusForbidden)
+		} else {
+			http.Error(w, "Database error", http.StatusInternalServerError)
+		}
 		return
 	}
 

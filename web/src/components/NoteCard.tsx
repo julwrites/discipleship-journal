@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Trash2, Share2, Sparkles } from "lucide-react";
 
@@ -6,6 +6,7 @@ export interface Note {
   id: string;
   title: string;
   updated_at: string;
+  tags?: { id: string; name: string }[];
 }
 
 interface NoteCardProps {
@@ -16,13 +17,35 @@ interface NoteCardProps {
 }
 
 export function NoteCard({ note, onDelete, onShare, onAskAI }: NoteCardProps) {
+  const navigate = useNavigate();
+
   return (
-    <Link to={`/notes/${note.id}`} className="block group h-full">
+    <div
+        onClick={() => navigate(`/notes/${note.id}`)}
+        className="block group h-full cursor-pointer"
+        role="link"
+        tabIndex={0}
+        onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                navigate(`/notes/${note.id}`);
+            }
+        }}
+    >
       <div className="p-4 bg-card hover:bg-accent/50 text-card-foreground transition rounded-lg shadow border h-44 flex flex-col">
          {/* Main Content */}
          <div className="flex-1">
             <h3 className="font-semibold mb-2 line-clamp-2 leading-tight">{note.title || "Untitled Note"}</h3>
             <p className="text-muted-foreground text-xs mt-1">{new Date(note.updated_at).toLocaleDateString()}</p>
+            {note.tags && note.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2 overflow-hidden max-h-6">
+                    {note.tags.map(tag => (
+                        <span key={tag.id} className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-secondary text-secondary-foreground">
+                            {tag.name}
+                        </span>
+                    ))}
+                </div>
+            )}
          </div>
 
          {/* Actions Footer */}
@@ -68,6 +91,6 @@ export function NoteCard({ note, onDelete, onShare, onAskAI }: NoteCardProps) {
             </Button>
          </div>
       </div>
-    </Link>
+    </div>
   );
 }

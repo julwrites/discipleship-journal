@@ -1,11 +1,11 @@
 ---
 id: INFRASTRUCTURE-20251231-231207-BUJ
-status: pending
+status: completed
 title: Add health check endpoint
 priority: medium
 created: 2025-12-31 23:12:07
 category: infrastructure
-dependencies: 
+dependencies:
 type: task
 ---
 

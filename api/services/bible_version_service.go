@@ -12,19 +12,41 @@ import (
 	"golang.org/x/net/html"
 )
 
+// HTTPClient interface for mocking
+type HTTPClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
 // BibleVersionService handles bible version operations.
-type BibleVersionService struct {
-	db database.DBInterface
+type BibleVersionService interface {
+	GetVersions(ctx context.Context) ([]BibleVersion, error)
+	SyncVersions(ctx context.Context) error
+	ScrapeVersions(ctx context.Context) (map[string]string, error)
+}
+
+type bibleVersionService struct {
+	db         database.DBInterface
+	httpClient HTTPClient
+	scrapeURL  string
 }
 
 // NewBibleVersionService creates a new BibleVersionService.
-func NewBibleVersionService(db database.DBInterface) *BibleVersionService {
-	return &BibleVersionService{db: db}
+func NewBibleVersionService(db database.DBInterface) BibleVersionService {
+	return &bibleVersionService{
+		db:         db,
+		httpClient: &http.Client{Timeout: 30 * time.Second},
+		scrapeURL:  "https://classic.biblegateway.com/versions/",
+	}
 }
 
 // ScrapeVersions scrapes bible versions from BibleGateway.
-func (s *BibleVersionService) ScrapeVersions(ctx context.Context) (map[string]string, error) {
-	resp, err := http.Get("https://classic.biblegateway.com/versions/")
+func (s *bibleVersionService) ScrapeVersions(ctx context.Context) (map[string]string, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, s.scrapeURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := s.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch versions page: %w", err)
 	}
@@ -84,38 +106,38 @@ func (s *BibleVersionService) ScrapeVersions(ctx context.Context) (map[string]st
 }
 
 // SyncVersions syncs scraped versions to the database.
-func (s *BibleVersionService) SyncVersions(ctx context.Context) error {
+func (s *bibleVersionService) SyncVersions(ctx context.Context) error {
 	versions, err := s.ScrapeVersions(ctx)
 	if err != nil {
 		return err
 	}
 
 	// Use a transaction for bulk update
-	tx, err := s.db.Begin(ctx)
+	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer func() {
-		_ = tx.Rollback(ctx)
+		_ = tx.Rollback()
 	}()
 
 	// We'll prepare a statement or just loop exec. Loop exec is fine for < 1000 items.
 	// We use ON CONFLICT to update existing entries or insert new ones.
 	query := `
 		INSERT INTO bible_versions (name, abbreviation, updated_at)
-		VALUES ($1, $2, NOW())
-		ON CONFLICT (abbreviation) DO UPDATE
-		SET name = EXCLUDED.name, updated_at = NOW();
+		VALUES (?, ?, NOW())
+		ON DUPLICATE KEY UPDATE
+		name = VALUES(name), updated_at = NOW();
 	`
 
 	for abbr, name := range versions {
-		_, err := tx.Exec(ctx, query, name, abbr)
+		_, err := tx.ExecContext(ctx, query, name, abbr)
 		if err != nil {
 			return fmt.Errorf("failed to upsert version %s: %w", abbr, err)
 		}
 	}
 
-	if err := tx.Commit(ctx); err != nil {
+	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
@@ -132,9 +154,9 @@ type BibleVersion struct {
 }
 
 // GetVersions returns all bible versions sorted by name.
-func (s *BibleVersionService) GetVersions(ctx context.Context) ([]BibleVersion, error) {
+func (s *bibleVersionService) GetVersions(ctx context.Context) ([]BibleVersion, error) {
 	query := `SELECT id, name, abbreviation, created_at, updated_at FROM bible_versions ORDER BY name ASC`
-	rows, err := s.db.Query(ctx, query)
+	rows, err := s.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query versions: %w", err)
 	}

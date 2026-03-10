@@ -1,10 +1,21 @@
 import { useEffect, useState, useRef } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { getReadingPlan, markPlanDayComplete, getPlanProgress } from "@/services/api";
+import { getReadingPlan, markPlanDayComplete, unmarkPlanDayComplete, getPlanProgress, syncUser, unsubscribeFromPlan } from "@/services/api";
 import { toast } from "sonner";
-import { ArrowLeft, CheckCircle, Calendar } from "lucide-react";
+import { ArrowLeft, CheckCircle, Calendar, StickyNote, XCircle } from "lucide-react";
+import { BiblePassageDialog } from "@/components/BiblePassageDialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ReadingPlanDay {
     id: string;
@@ -22,9 +33,14 @@ interface ReadingPlan {
 
 export default function ReadingPlanDetail() {
     const { id } = useParams<{ id: string }>();
+    const navigate = useNavigate();
     const [plan, setPlan] = useState<ReadingPlan | null>(null);
     const [completedDays, setCompletedDays] = useState<Set<number>>(new Set());
     const [loading, setLoading] = useState(true);
+    const [selectedPassageRef, setSelectedPassageRef] = useState<string | null>(null);
+    const [userVersion, setUserVersion] = useState("ESV");
+    const [unsubscribeConfirmOpen, setUnsubscribeConfirmOpen] = useState(false);
+    const [unsubscribing, setUnsubscribing] = useState(false);
     const todayRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -43,12 +59,16 @@ export default function ReadingPlanDetail() {
     const loadData = async (planId: string) => {
         setLoading(true);
         try {
-            const [planRes, progressRes] = await Promise.all([
+            const [planRes, progressRes, userRes] = await Promise.all([
                 getReadingPlan(planId),
-                getPlanProgress(planId)
+                getPlanProgress(planId),
+                syncUser()
             ]);
             setPlan(planRes);
             setCompletedDays(new Set(progressRes.completed_days));
+            if (userRes?.settings?.bible_version) {
+                setUserVersion(userRes.settings.bible_version);
+            }
         } catch (error) {
             console.error(error);
             toast.error("Failed to load reading plan details");
@@ -59,21 +79,68 @@ export default function ReadingPlanDetail() {
 
     const handleMarkComplete = async (dayNumber: number) => {
         if (!id) return;
-        try {
-            // Optimistic update
-            const newCompleted = new Set(completedDays);
-            newCompleted.add(dayNumber);
-            setCompletedDays(newCompleted);
 
-            await markPlanDayComplete(id, dayNumber);
-            toast.success(`Day ${dayNumber} completed!`);
+        const isCompleted = completedDays.has(dayNumber);
+        const newCompleted = new Set(completedDays);
+
+        if (isCompleted) {
+            newCompleted.delete(dayNumber);
+            setCompletedDays(newCompleted); // Optimistic
+
+            try {
+                await unmarkPlanDayComplete(id, dayNumber);
+                toast.success(`Day ${dayNumber} unmarked`);
+            } catch (error) {
+                console.error(error);
+                toast.error("Failed to unmark day");
+                // Revert
+                newCompleted.add(dayNumber);
+                setCompletedDays(new Set(newCompleted));
+            }
+        } else {
+            newCompleted.add(dayNumber);
+            setCompletedDays(newCompleted); // Optimistic
+
+            try {
+                await markPlanDayComplete(id, dayNumber);
+                toast.success(`Day ${dayNumber} completed!`);
+            } catch (error) {
+                console.error(error);
+                toast.error("Failed to update progress");
+                // Revert
+                newCompleted.delete(dayNumber);
+                setCompletedDays(new Set(newCompleted));
+            }
+        }
+    };
+
+    const handleCreateNote = (day: ReadingPlanDay) => {
+        if (!plan) return;
+        navigate("/notes/new", {
+            state: {
+                title: `Bible Reading: ${day.passage}`,
+                tags: ["Bible Reading"],
+                passageRef: day.passage,
+                context: {
+                    planId: plan.id,
+                    planTitle: plan.title,
+                    dayNumber: day.day_number
+                }
+            }
+        });
+    };
+
+    const handleUnsubscribe = async () => {
+        if (!id) return;
+        setUnsubscribing(true);
+        try {
+            await unsubscribeFromPlan(id);
+            toast.success("Unsubscribed from plan");
+            navigate("/reading-plans");
         } catch (error) {
             console.error(error);
-            toast.error("Failed to update progress");
-            // Revert
-            const reverted = new Set(completedDays);
-            reverted.delete(dayNumber);
-            setCompletedDays(reverted);
+            toast.error("Failed to unsubscribe");
+            setUnsubscribing(false);
         }
     };
 
@@ -105,15 +172,21 @@ export default function ReadingPlanDetail() {
                         <h1 className="text-3xl font-bold mb-2">{plan.title}</h1>
                         <p className="text-muted-foreground">{plan.description}</p>
                     </div>
-                    {plan.plan_type === 'calendar' && (
-                        <Button
-                            variant="outline"
-                            onClick={() => todayRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-                        >
-                            <Calendar className="mr-2 h-4 w-4" />
-                            Jump to Today
+                    <div className="flex gap-2">
+                        {plan.plan_type === 'calendar' && (
+                            <Button
+                                variant="outline"
+                                onClick={() => todayRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+                            >
+                                <Calendar className="mr-2 h-4 w-4" />
+                                Jump to Today
+                            </Button>
+                        )}
+                        <Button variant="destructive" onClick={() => setUnsubscribeConfirmOpen(true)}>
+                            <XCircle className="mr-2 h-4 w-4" />
+                            Stop Plan
                         </Button>
-                    )}
+                    </div>
                 </div>
 
                 <div className="mt-4 flex items-center gap-2 text-sm font-medium">
@@ -141,24 +214,79 @@ export default function ReadingPlanDetail() {
                                                 <div className="font-medium">Day {day.day_number}</div>
                                                 {isToday && <span className="text-xs bg-primary/20 text-primary px-1.5 rounded">Today</span>}
                                             </div>
-                                            <div className="text-sm text-muted-foreground">{day.passage}</div>
+                                            <div className="flex flex-col items-start gap-1 mt-1">
+                                                {day.passage.split(';').map((p) => {
+                                                    const passageRef = p.trim();
+                                                    return (
+                                                        <button
+                                                            key={passageRef}
+                                                            className="text-sm text-muted-foreground hover:text-primary hover:underline text-left"
+                                                            onClick={() => setSelectedPassageRef(passageRef)}
+                                                        >
+                                                            {passageRef}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
                                         </div>
                                     </div>
-                                    {isCompleted ? (
-                                        <Button variant="ghost" size="icon" disabled className="text-green-600 dark:text-green-400">
-                                            <CheckCircle className="h-6 w-6" />
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => handleCreateNote(day)}
+                                            title="Create Note"
+                                        >
+                                            <StickyNote className="h-4 w-4" />
                                         </Button>
-                                    ) : (
-                                        <Button variant="outline" size="sm" onClick={() => handleMarkComplete(day.day_number)}>
-                                            Mark Complete
-                                        </Button>
-                                    )}
+                                        {isCompleted ? (
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handleMarkComplete(day.day_number)}
+                                                className="text-green-600 dark:text-green-400 hover:text-destructive hover:bg-destructive/10"
+                                                title="Unmark"
+                                            >
+                                                <CheckCircle className="h-6 w-6" />
+                                            </Button>
+                                        ) : (
+                                            <Button variant="outline" size="sm" onClick={() => handleMarkComplete(day.day_number)}>
+                                                Mark Complete
+                                            </Button>
+                                        )}
+                                    </div>
                                 </CardContent>
                             </Card>
                         </div>
                     );
                 })}
             </div>
+
+            {selectedPassageRef && (
+                <BiblePassageDialog
+                    reference={selectedPassageRef}
+                    isOpen={!!selectedPassageRef}
+                    onClose={() => setSelectedPassageRef(null)}
+                    defaultVersion={userVersion}
+                />
+            )}
+
+            <AlertDialog open={unsubscribeConfirmOpen} onOpenChange={setUnsubscribeConfirmOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Stop Reading Plan?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to stop this reading plan? Your progress will be reset if you start it again later. Your notes will be preserved.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setUnsubscribeConfirmOpen(false)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={(e) => { e.preventDefault(); handleUnsubscribe(); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            {unsubscribing ? "Stopping..." : "Stop Plan"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

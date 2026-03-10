@@ -12,7 +12,7 @@ async function getHeaders() {
           token = "mock-token";
       }
   } else {
-      token = await auth.currentUser?.getIdToken();
+      token = await auth?.currentUser?.getIdToken();
   }
 
   return {
@@ -25,10 +25,17 @@ async function getHeaders() {
 
 export interface NoteFilter {
   search?: string;
+  tag?: string;
   startDate?: Date;
   endDate?: Date;
   sortBy?: "updated_at" | "created_at" | "title";
   sortOrder?: "asc" | "desc";
+}
+
+export interface Tag {
+    id: string;
+    name: string;
+    created_at?: string;
 }
 
 export async function fetchNotes(page = 1, limit = 20, filter: NoteFilter | string = {}) {
@@ -42,6 +49,7 @@ export async function fetchNotes(page = 1, limit = 20, filter: NoteFilter | stri
       if (filter) params.append("q", filter);
   } else {
       if (filter.search) params.append("q", filter.search);
+      if (filter.tag) params.append("tag", filter.tag);
       if (filter.startDate) params.append("startDate", filter.startDate.toISOString());
 
       // Fix: Adjust endDate to be the end of the day (23:59:59.999)
@@ -60,12 +68,12 @@ export async function fetchNotes(page = 1, limit = 20, filter: NoteFilter | stri
   return res.json();
 }
 
-export async function createNote(title: string, content: string | Record<string, unknown>) {
+export async function createNote(title: string, content: string | Record<string, unknown>, tags: string[] = []) {
   const headers = await getHeaders();
   const res = await fetch(`${API_URL}/notes`, {
     method: "POST",
     headers,
-    body: JSON.stringify({ title, content }),
+    body: JSON.stringify({ title, content, tags }),
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
@@ -85,12 +93,12 @@ export async function getNote(id: string) {
     return res.json();
 }
 
-export async function updateNote(id: string, title: string, content: string | Record<string, unknown>) {
+export async function updateNote(id: string, title: string, content: string | Record<string, unknown>, tags: string[] = []) {
     const headers = await getHeaders();
     const res = await fetch(`${API_URL}/notes/${id}`, {
         method: "PUT",
         headers,
-        body: JSON.stringify({ title, content })
+        body: JSON.stringify({ title, content, tags })
     });
     if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -111,6 +119,33 @@ export async function deleteNote(id: string) {
     if (!res.ok) throw new Error("Failed to delete note");
 }
 
+export async function getTags() {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/tags`, { headers });
+    if (!res.ok) throw new Error("Failed to fetch tags");
+    return res.json();
+}
+
+export async function createTag(name: string) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/tags`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ name }),
+    });
+    if (!res.ok) throw new Error("Failed to create tag");
+    return res.json();
+}
+
+export async function deleteTag(id: string) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/tags/${id}`, {
+        method: "DELETE",
+        headers,
+    });
+    if (!res.ok) throw new Error("Failed to delete tag");
+}
+
 // --- User ---
 
 export async function syncUser() {
@@ -122,11 +157,11 @@ export async function syncUser() {
 
 export async function updateUser(data: { username?: string; bible_version?: string }) {
     const headers = await getHeaders();
-    
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const payload: any = {};
     if (data.username !== undefined) payload.username = data.username;
-    
+
     // Nest bible_version under settings to match backend UpdateUserRequest structure
     if (data.bible_version !== undefined) {
         payload.settings = { bible_version: data.bible_version };
@@ -444,6 +479,17 @@ export async function sendConnectionRequest(receiverEmailOrId: string, isId: boo
     return res.json();
 }
 
+export async function unsubscribeFromPlan(id: string) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/reading-plans/${id}/subscribe`, {
+        method: "DELETE",
+        headers,
+    });
+    if (!res.ok) {
+        throw new Error("Failed to unsubscribe from plan");
+    }
+}
+
 export async function getOrCreateDirectGroup(partnerId: string) {
     const headers = await getHeaders();
     const res = await fetch(`${API_URL}/groups/direct`, {
@@ -526,6 +572,16 @@ export async function markPlanDayComplete(planId: string, dayNumber: number) {
     return res.json();
 }
 
+export async function unmarkPlanDayComplete(planId: string, dayNumber: number) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/my-reading-plans/${planId}/progress/${dayNumber}`, {
+        method: "DELETE",
+        headers,
+    });
+    if (!res.ok) throw new Error("Failed to unmark day as complete");
+    return res.json();
+}
+
 export async function getPlanProgress(planId: string) {
     const headers = await getHeaders();
     const res = await fetch(`${API_URL}/my-reading-plans/${planId}/progress`, { headers });
@@ -551,6 +607,7 @@ export interface MemoryVerse {
     reference: string;
     title?: string;
     version: string;
+    version_source?: 'override' | 'user_default' | 'original';
     tags: string[];
     pack_title?: string;
 }
@@ -591,12 +648,12 @@ export async function createVerseInPack(packId: string, verse: Omit<MemoryVerse,
     return res.json();
 }
 
-export async function clonePack(id: string, title?: string) {
+export async function clonePack(id: string, title?: string, useUserDefault?: boolean) {
     const headers = await getHeaders();
     const res = await fetch(`${API_URL}/verse-packs/${id}/clone`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ title }),
+        body: JSON.stringify({ title, use_user_default: useUserDefault }),
     });
     if (!res.ok) throw new Error("Failed to clone pack");
     return res.json();
@@ -630,6 +687,38 @@ export async function deleteMemoryVerse(id: string) {
         headers,
     });
     if (!res.ok) throw new Error("Failed to delete verse");
+    return res.json();
+}
+
+export async function setVersePreference(verseId: string, version: string) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/memory-verses/${verseId}/preference`, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify({ version }),
+    });
+    if (!res.ok) throw new Error("Failed to set verse preference");
+    return res.json();
+}
+
+export async function setVersePreferencesBatch(verseIds: string[], version: string) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/memory-verses/preferences/batch`, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify({ verse_ids: verseIds, version }),
+    });
+    if (!res.ok) throw new Error("Failed to set verse preferences batch");
+    return res.json();
+}
+
+export async function removeVersePreference(verseId: string) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_URL}/memory-verses/${verseId}/preference`, {
+        method: "DELETE",
+        headers,
+    });
+    if (!res.ok) throw new Error("Failed to remove verse preference");
     return res.json();
 }
 

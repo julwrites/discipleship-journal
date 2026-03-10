@@ -7,6 +7,7 @@ import (
 	"discipleship_journal_api/middleware"
 	"discipleship_journal_api/models"
 	"discipleship_journal_api/services"
+
 	"firebase.google.com/go/v4/auth"
 	chi "github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -23,7 +24,7 @@ func NewMemoryVerseHandler(service services.MemoryVerseService) *MemoryVerseHand
 // GetPacks lists packs (system or user)
 func (h *MemoryVerseHandler) GetPacks(w http.ResponseWriter, r *http.Request) {
 	firebaseUID := ""
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		firebaseUID = token.UID
 	}
 
@@ -53,7 +54,7 @@ func (h *MemoryVerseHandler) GetPacks(w http.ResponseWriter, r *http.Request) {
 // CreatePack creates a new user pack
 func (h *MemoryVerseHandler) CreatePack(w http.ResponseWriter, r *http.Request) {
 	firebaseUID := ""
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		firebaseUID = token.UID
 	}
 
@@ -88,7 +89,7 @@ func (h *MemoryVerseHandler) CreatePack(w http.ResponseWriter, r *http.Request) 
 // GetPackDetails gets verses in a pack
 func (h *MemoryVerseHandler) GetPackDetails(w http.ResponseWriter, r *http.Request) {
 	firebaseUID := ""
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		firebaseUID = token.UID
 	}
 
@@ -117,7 +118,7 @@ func (h *MemoryVerseHandler) GetPackDetails(w http.ResponseWriter, r *http.Reque
 	}
 
 	// 2. Get Verses
-	verses, err := h.service.GetVerses(r.Context(), packID)
+	verses, err := h.service.GetVerses(r.Context(), packID, userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -137,7 +138,7 @@ func (h *MemoryVerseHandler) GetPackDetails(w http.ResponseWriter, r *http.Reque
 // CreateVerseInPack adds a verse to a pack
 func (h *MemoryVerseHandler) CreateVerseInPack(w http.ResponseWriter, r *http.Request) {
 	firebaseUID := ""
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		firebaseUID = token.UID
 	}
 
@@ -189,7 +190,7 @@ func (h *MemoryVerseHandler) CreateVerseInPack(w http.ResponseWriter, r *http.Re
 // ClonePack clones a pack to user library
 func (h *MemoryVerseHandler) ClonePack(w http.ResponseWriter, r *http.Request) {
 	firebaseUID := ""
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		firebaseUID = token.UID
 	}
 
@@ -207,12 +208,19 @@ func (h *MemoryVerseHandler) ClonePack(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		Title string `json:"title"`
+		Title          string `json:"title"`
+		UseUserDefault *bool  `json:"use_user_default"`
 	}
 	// Ignore error if body is empty or malformed, default values will be used
 	_ = json.NewDecoder(r.Body).Decode(&req)
 
-	pack, err := h.service.ClonePack(r.Context(), packID, userID, req.Title)
+	// Default to true (preserve existing behavior)
+	useDefault := true
+	if req.UseUserDefault != nil {
+		useDefault = *req.UseUserDefault
+	}
+
+	pack, err := h.service.ClonePack(r.Context(), packID, userID, req.Title, useDefault)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -227,7 +235,7 @@ func (h *MemoryVerseHandler) ClonePack(w http.ResponseWriter, r *http.Request) {
 
 func (h *MemoryVerseHandler) DeletePack(w http.ResponseWriter, r *http.Request) {
 	firebaseUID := ""
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		firebaseUID = token.UID
 	}
 
@@ -261,7 +269,7 @@ func (h *MemoryVerseHandler) DeletePack(w http.ResponseWriter, r *http.Request) 
 // SearchVerses (for backward compatibility and global search)
 func (h *MemoryVerseHandler) SearchVerses(w http.ResponseWriter, r *http.Request) {
 	firebaseUID := ""
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		firebaseUID = token.UID
 	}
 
@@ -288,7 +296,7 @@ func (h *MemoryVerseHandler) SearchVerses(w http.ResponseWriter, r *http.Request
 // UpdateVerse updates a verse
 func (h *MemoryVerseHandler) UpdateVerse(w http.ResponseWriter, r *http.Request) {
 	firebaseUID := ""
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		firebaseUID = token.UID
 	}
 
@@ -330,7 +338,7 @@ func (h *MemoryVerseHandler) UpdateVerse(w http.ResponseWriter, r *http.Request)
 // DeleteVerse deletes a verse
 func (h *MemoryVerseHandler) DeleteVerse(w http.ResponseWriter, r *http.Request) {
 	firebaseUID := ""
-	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok {
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
 		firebaseUID = token.UID
 	}
 
@@ -354,6 +362,118 @@ func (h *MemoryVerseHandler) DeleteVerse(w http.ResponseWriter, r *http.Request)
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(map[string]bool{"success": true})
+}
+
+// SetVersePreference sets a user-specific version for a verse
+func (h *MemoryVerseHandler) SetVersePreference(w http.ResponseWriter, r *http.Request) {
+	firebaseUID := ""
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
+		firebaseUID = token.UID
+	}
+
+	userID, err := GetUserUUID(r.Context(), firebaseUID)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	verseIDStr := chi.URLParam(r, "verseId")
+	verseID, err := uuid.Parse(verseIDStr)
+	if err != nil {
+		http.Error(w, "Invalid verse ID", http.StatusBadRequest)
+		return
+	}
+
+	var req struct {
+		Version string `json:"version"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid body", http.StatusBadRequest)
+		return
+	}
+	if req.Version == "" {
+		http.Error(w, "Version is required", http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.SetVersePreference(r.Context(), userID, verseID, req.Version)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(map[string]bool{"success": true})
+}
+
+// SetVersePreferencesBatch sets a user-specific version for multiple verses
+func (h *MemoryVerseHandler) SetVersePreferencesBatch(w http.ResponseWriter, r *http.Request) {
+	firebaseUID := ""
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
+		firebaseUID = token.UID
+	}
+
+	userID, err := GetUserUUID(r.Context(), firebaseUID)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req struct {
+		VerseIDs []uuid.UUID `json:"verse_ids"`
+		Version  string      `json:"version"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid body", http.StatusBadRequest)
+		return
+	}
+	if req.Version == "" {
+		http.Error(w, "Version is required", http.StatusBadRequest)
+		return
+	}
+	if len(req.VerseIDs) == 0 {
+		http.Error(w, "Verse IDs required", http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.SetVersePreferencesBatch(r.Context(), userID, req.VerseIDs, req.Version)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(map[string]bool{"success": true})
+}
+
+// RemoveVersePreference removes a user-specific version preference
+func (h *MemoryVerseHandler) RemoveVersePreference(w http.ResponseWriter, r *http.Request) {
+	firebaseUID := ""
+	if token, ok := r.Context().Value(middleware.UserContextKey).(*auth.Token); ok && token != nil {
+		firebaseUID = token.UID
+	}
+
+	userID, err := GetUserUUID(r.Context(), firebaseUID)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	verseIDStr := chi.URLParam(r, "verseId")
+	verseID, err := uuid.Parse(verseIDStr)
+	if err != nil {
+		http.Error(w, "Invalid verse ID", http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.RemoveVersePreference(r.Context(), userID, verseID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 

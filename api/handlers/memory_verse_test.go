@@ -3,12 +3,14 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"discipleship_journal_api/models"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -38,10 +40,21 @@ func (m *MockMemoryVerseService) GetPack(ctx context.Context, packID uuid.UUID, 
 
 func (m *MockMemoryVerseService) CreatePack(ctx context.Context, pack *models.VersePack) (*models.VersePack, error) {
 	args := m.Called(ctx, pack)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
 	return args.Get(0).(*models.VersePack), args.Error(1)
 }
 
-func (m *MockMemoryVerseService) GetVerses(ctx context.Context, packID uuid.UUID) ([]*models.MemoryVerse, error) {
+func (m *MockMemoryVerseService) GetVerses(ctx context.Context, packID uuid.UUID, userID uuid.UUID) ([]*models.MemoryVerse, error) {
+	args := m.Called(ctx, packID, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.MemoryVerse), args.Error(1)
+}
+
+func (m *MockMemoryVerseService) GetOriginalVerses(ctx context.Context, packID uuid.UUID) ([]*models.MemoryVerse, error) {
 	args := m.Called(ctx, packID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -51,11 +64,14 @@ func (m *MockMemoryVerseService) GetVerses(ctx context.Context, packID uuid.UUID
 
 func (m *MockMemoryVerseService) CreateVerse(ctx context.Context, verse *models.MemoryVerse) (*models.MemoryVerse, error) {
 	args := m.Called(ctx, verse)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
 	return args.Get(0).(*models.MemoryVerse), args.Error(1)
 }
 
-func (m *MockMemoryVerseService) ClonePack(ctx context.Context, packID uuid.UUID, userID uuid.UUID, newTitle string) (*models.VersePack, error) {
-	args := m.Called(ctx, packID, userID, newTitle)
+func (m *MockMemoryVerseService) ClonePack(ctx context.Context, packID uuid.UUID, userID uuid.UUID, newTitle string, useUserDefault bool) (*models.VersePack, error) {
+	args := m.Called(ctx, packID, userID, newTitle, useUserDefault)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -82,6 +98,21 @@ func (m *MockMemoryVerseService) UpdateVerse(ctx context.Context, verse *models.
 
 func (m *MockMemoryVerseService) DeleteVerse(ctx context.Context, verseID uuid.UUID, userID uuid.UUID) error {
 	args := m.Called(ctx, verseID, userID)
+	return args.Error(0)
+}
+
+func (m *MockMemoryVerseService) SetVersePreference(ctx context.Context, userID, verseID uuid.UUID, version string) error {
+	args := m.Called(ctx, userID, verseID, version)
+	return args.Error(0)
+}
+
+func (m *MockMemoryVerseService) SetVersePreferencesBatch(ctx context.Context, userID uuid.UUID, verseIDs []uuid.UUID, version string) error {
+	args := m.Called(ctx, userID, verseIDs, version)
+	return args.Error(0)
+}
+
+func (m *MockMemoryVerseService) RemoveVersePreference(ctx context.Context, userID, verseID uuid.UUID) error {
+	args := m.Called(ctx, userID, verseID)
 	return args.Error(0)
 }
 
@@ -210,6 +241,62 @@ func TestMemoryVerseHandler_UpdateVerse(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 }
 
+func TestMemoryVerseHandler_SetVersePreferencesBatch(t *testing.T) {
+	mockService := new(MockMemoryVerseService)
+	handler := NewMemoryVerseHandler(mockService)
+
+	userID := uuid.New()
+	verseID1 := uuid.New()
+	verseID2 := uuid.New()
+	verseIDs := []uuid.UUID{verseID1, verseID2}
+	ctx := context.WithValue(context.Background(), TestUserKey, userID.String())
+
+	payload := fmt.Sprintf(`{"verse_ids": ["%s", "%s"], "version": "ESV"}`, verseID1, verseID2)
+	req := httptest.NewRequest("PUT", "/api/memory-verses/preferences/batch", strings.NewReader(payload))
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	mockService.On("SetVersePreferencesBatch", mock.Anything, userID, verseIDs, "ESV").Return(nil)
+
+	handler.SetVersePreferencesBatch(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestMemoryVerseHandler_ClonePack(t *testing.T) {
+	mockService := new(MockMemoryVerseService)
+	handler := NewMemoryVerseHandler(mockService)
+
+	userID := uuid.New()
+	packID := uuid.New()
+	ctx := context.WithValue(context.Background(), TestUserKey, userID.String())
+
+	r := chi.NewRouter()
+	r.Post("/api/verse-packs/{id}/clone", handler.ClonePack)
+
+	// Case 1: Default behavior (true)
+	payload := `{"title": "Cloned Pack"}`
+	req := httptest.NewRequest("POST", "/api/verse-packs/"+packID.String()+"/clone", strings.NewReader(payload))
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	mockService.On("ClonePack", mock.Anything, packID, userID, "Cloned Pack", true).Return(&models.VersePack{ID: uuid.New()}, nil)
+
+	r.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusCreated, w.Code)
+
+	// Case 2: Explicit false
+	payload2 := `{"title": "Cloned Pack 2", "use_user_default": false}`
+	req2 := httptest.NewRequest("POST", "/api/verse-packs/"+packID.String()+"/clone", strings.NewReader(payload2))
+	req2 = req2.WithContext(ctx)
+	w2 := httptest.NewRecorder()
+
+	mockService.On("ClonePack", mock.Anything, packID, userID, "Cloned Pack 2", false).Return(&models.VersePack{ID: uuid.New()}, nil)
+
+	r.ServeHTTP(w2, req2)
+	assert.Equal(t, http.StatusCreated, w2.Code)
+}
+
 func TestMemoryVerseHandler_DeleteVerse(t *testing.T) {
 	mockService := new(MockMemoryVerseService)
 	handler := NewMemoryVerseHandler(mockService)
@@ -230,4 +317,85 @@ func TestMemoryVerseHandler_DeleteVerse(t *testing.T) {
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestMemoryVerseHandler_SetVersePreference(t *testing.T) {
+	mockService := new(MockMemoryVerseService)
+	handler := NewMemoryVerseHandler(mockService)
+
+	userID := uuid.New()
+	verseID := uuid.New()
+	ctx := context.WithValue(context.Background(), TestUserKey, userID.String())
+
+	r := chi.NewRouter()
+	r.Put("/api/memory-verses/{verseId}/preference", handler.SetVersePreference)
+
+	payload := `{"version": "NIV"}`
+	req := httptest.NewRequest("PUT", "/api/memory-verses/"+verseID.String()+"/preference", strings.NewReader(payload))
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	mockService.On("SetVersePreference", mock.Anything, userID, verseID, "NIV").Return(nil)
+
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestMemoryVerseHandler_RemoveVersePreference(t *testing.T) {
+	mockService := new(MockMemoryVerseService)
+	handler := NewMemoryVerseHandler(mockService)
+
+	userID := uuid.New()
+	verseID := uuid.New()
+	ctx := context.WithValue(context.Background(), TestUserKey, userID.String())
+
+	r := chi.NewRouter()
+	r.Delete("/api/memory-verses/{verseId}/preference", handler.RemoveVersePreference)
+
+	req := httptest.NewRequest("DELETE", "/api/memory-verses/"+verseID.String()+"/preference", nil)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	mockService.On("RemoveVersePreference", mock.Anything, userID, verseID).Return(nil)
+
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestMemoryVerseHandler_GetPacks_Unauthorized(t *testing.T) {
+	mockService := new(MockMemoryVerseService)
+	handler := NewMemoryVerseHandler(mockService)
+	req := httptest.NewRequest("GET", "/api/verse-packs", nil)
+	w := httptest.NewRecorder()
+	handler.GetPacks(w, req)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestMemoryVerseHandler_CreatePack_Unauthorized(t *testing.T) {
+	mockService := new(MockMemoryVerseService)
+	handler := NewMemoryVerseHandler(mockService)
+	req := httptest.NewRequest("POST", "/api/verse-packs", strings.NewReader("{}"))
+	w := httptest.NewRecorder()
+	handler.CreatePack(w, req)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestMemoryVerseHandler_ClonePack_Unauthorized(t *testing.T) {
+	mockService := new(MockMemoryVerseService)
+	handler := NewMemoryVerseHandler(mockService)
+	req := httptest.NewRequest("POST", "/api/verse-packs/1/clone", strings.NewReader("{}"))
+	w := httptest.NewRecorder()
+	handler.ClonePack(w, req)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestMemoryVerseHandler_CreateVerseInPack_Unauthorized(t *testing.T) {
+	mockService := new(MockMemoryVerseService)
+	handler := NewMemoryVerseHandler(mockService)
+	req := httptest.NewRequest("POST", "/api/verse-packs/1/verses", strings.NewReader("{}"))
+	w := httptest.NewRecorder()
+	handler.CreateVerseInPack(w, req)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }

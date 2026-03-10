@@ -86,8 +86,7 @@ jobs:
             APP_ENV=production
             GOOGLE_CLOUD_PROJECT=${{ env.GCP_PROJECT_ID }}
             FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
-            # Note: CLOUD_SQL_INSTANCE env var is required for the app to detect Cloud SQL connection
-            # Application secrets (DB_USERNAME, DB_PASSWORD, DB_NAME) are loaded from Google Secret Manager at runtime
+            # Application secrets (PROD_DJ_DB_*) are loaded from Google Secret Manager at runtime
 
   deploy-frontend:
     runs-on: ubuntu-latest
