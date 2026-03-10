@@ -4,6 +4,7 @@ discipleship_journal_api/database/db.go:83:				Close				100.0%
 discipleship_journal_api/database/migrate.go:18:			RunMigrations			40.0%
 discipleship_journal_api/database/migrate.go:78:			applyMigrations			0.0%
 discipleship_journal_api/database/migrate.go:151:			isMigrationConflictError	100.0%
+discipleship_journal_api/docs/docs.go:979:				init				0.0%
 discipleship_journal_api/handlers/admin.go:16:				NewAdminHandler			100.0%
 discipleship_journal_api/handlers/admin.go:29:				SyncBibleVersions		85.7%
 discipleship_journal_api/handlers/bible.go:15:				NewBibleHandler			100.0%
@@ -98,6 +99,7 @@ discipleship_journal_api/middleware/auth.go:23:				NewAuthMiddlewareFromClient	1
 discipleship_journal_api/middleware/auth.go:27:				NewAuthMiddleware		75.0%
 discipleship_journal_api/middleware/auth.go:41:				VerifyToken			100.0%
 discipleship_journal_api/middleware/logging.go:12:			RequestLogger			100.0%
+discipleship_journal_api/models/reading_plan.go:31:			Validate			100.0%
 discipleship_journal_api/services/bible_ai.go:35:			NewRealBibleAIClient		100.0%
 discipleship_journal_api/services/bible_ai.go:115:			Name				100.0%
 discipleship_journal_api/services/bible_ai.go:120:			Query				90.0%
@@ -201,4 +203,6 @@ discipleship_journal_api/services/template_service.go:138:		UpdateTemplate			91.
 discipleship_journal_api/services/template_service.go:166:		DeleteTemplate			87.5%
 discipleship_journal_api/services/template_service.go:179:		CloneTemplate			80.0%
 discipleship_journal_api/services/template_service.go:202:		GenerateContent			91.2%
+discipleship_journal_api/validation/validator.go:12:			init				83.3%
+discipleship_journal_api/validation/validator.go:25:			ValidateStruct			100.0%
 total:									(statements)			89.5%
