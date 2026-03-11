@@ -197,1769 +197,1769 @@ INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags) VALUES (
     VALUES ('cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', 'DEP 242 Pack 1 - Assurance of Salvation', 'DEP-242-Pack-1-Assurance-of-Salvation', 'DEP 242 Pack 1 - Assurance of Salvation', true)
     ;
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', '2 Corinthians 13:5', 'ESV', '["\u2014 Unless", "See Whether", "Christ Jesus", "Test", "Realize", "Faith"]');
+    VALUES ('6a79ae7b-088b-4e1c-bcdb-74f54bb29c5c', 'cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', '2 Corinthians 13:5', 'ESV', '["\u2014 Unless", "See Whether", "Christ Jesus", "Test", "Realize", "Faith"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', '1 John 5:11-12', 'ESV', '["Whoever", "Testimony", "Son", "Life", "God"]');
+    VALUES ('b7792db7-6d88-4960-a86b-a46c91eb3ba4', 'cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', '1 John 5:11-12', 'ESV', '["Whoever", "Testimony", "Son", "Life", "God"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', '1 John 5:13', 'ESV', '["May Know", "Eternal Life", "Write", "Things", "Son", "Name"]');
+    VALUES ('d26c48b9-a869-408c-8247-71c6e243d0cf', 'cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', '1 John 5:13', 'ESV', '["May Know", "Eternal Life", "Write", "Things", "Son", "Name"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', 'John 6:47', 'ESV', '["Eternal Life", "Truly", "Tell", "One", "Believes"]');
+    VALUES ('aad76609-3237-4f24-bae7-2f9487c313c8', 'cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', 'John 6:47', 'ESV', '["Eternal Life", "Truly", "Tell", "One", "Believes"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', 'Ephesians 1:7', 'ESV', '["Sins", "Riches", "Redemption", "Grace", "God", "Forgiveness"]');
+    VALUES ('e50821a2-e3eb-4dc3-b425-149da435c3d0', 'cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', 'Ephesians 1:7', 'ESV', '["Sins", "Riches", "Redemption", "Grace", "God", "Forgiveness"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', 'Romans 8:1', 'ESV', '["Christ Jesus", "Therefore", "Condemnation"]');
+    VALUES ('bfea1ee5-6264-46ca-acfc-515e41664877', 'cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', 'Romans 8:1', 'ESV', '["Christ Jesus", "Therefore", "Condemnation"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', 'Romans 3:24', 'ESV', '["Justified Freely", "Christ Jesus", "Redemption", "Grace", "Came"]');
+    VALUES ('13c6bcc1-a93d-4c4a-ad51-faff59c26212', 'cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', 'Romans 3:24', 'ESV', '["Justified Freely", "Christ Jesus", "Redemption", "Grace", "Came"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', 'Romans 5:1', 'ESV', '["Lord Jesus Christ", "Therefore", "Since", "Peace", "Justified", "God"]');
+    VALUES ('7d4524cc-c9e6-46c7-a935-35d82d64b08e', 'cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', 'Romans 5:1', 'ESV', '["Lord Jesus Christ", "Therefore", "Since", "Peace", "Justified", "God"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', '1 Peter 1:3', 'ESV', '["Lord Jesus Christ", "Jesus Christ", "Living Hope", "Great Mercy", "Resurrection", "Praise"]');
+    VALUES ('c1e77676-85d3-460d-acd3-dc3996f1b190', 'cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', '1 Peter 1:3', 'ESV', '["Lord Jesus Christ", "Jesus Christ", "Living Hope", "Great Mercy", "Resurrection", "Praise"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', 'Titus 3:5', 'ESV', '["Saved Us", "Righteous Things", "Holy Spirit", "Washing", "Renewal", "Rebirth"]');
+    VALUES ('7759dda3-9b9d-4467-93cb-1c64a0497af8', 'cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', 'Titus 3:5', 'ESV', '["Saved Us", "Righteous Things", "Holy Spirit", "Washing", "Renewal", "Rebirth"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', 'Galatians 3:26', 'ESV', '["Christ Jesus", "God", "Faith", "Children"]');
+    VALUES ('b4c86a6f-21e5-4c4c-bc80-fb4d1009b576', 'cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', 'Galatians 3:26', 'ESV', '["Christ Jesus", "God", "Faith", "Children"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', 'Romans 8:14', 'ESV', '["Spirit", "Led", "God", "Children"]');
+    VALUES ('2685fda4-a96b-406d-a4bc-51a4ff3463d2', 'cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', 'Romans 8:14', 'ESV', '["Spirit", "Led", "God", "Children"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', 'Romans 8:9', 'ESV', '["God Lives", "Spirit", "Realm", "Indeed", "However", "Flesh"]');
+    VALUES ('d239ef99-0c02-4ccd-8398-9d554c2d6271', 'cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', 'Romans 8:9', 'ESV', '["God Lives", "Spirit", "Realm", "Indeed", "However", "Flesh"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', 'John 14:16-17', 'ESV', '["World Cannot Accept", "Neither Sees", "Forever \u2014", "Another Advocate", "Truth", "Spirit"]');
+    VALUES ('02df97b2-2ab4-4c71-9c43-6fbcbd8d4fd3', 'cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', 'John 14:16-17', 'ESV', '["World Cannot Accept", "Neither Sees", "Forever \u2014", "Another Advocate", "Truth", "Spirit"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', 'John 10:28-29', 'ESV', '["Shall Never Perish", "Eternal Life", "Snatch", "One", "Hand", "Greater"]');
+    VALUES ('1b34b804-bd94-4e17-9e96-da8bfa816509', 'cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', 'John 10:28-29', 'ESV', '["Shall Never Perish", "Eternal Life", "Snatch", "One", "Hand", "Greater"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', 'Romans 8:39', 'ESV', '["Separate Us", "Neither Height", "Christ Jesus", "Anything Else", "Love", "Lord"]');
+    VALUES ('9375cff6-d8d0-444f-ae87-bf761183f7a9', 'cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', 'Romans 8:39', 'ESV', '["Separate Us", "Neither Height", "Christ Jesus", "Anything Else", "Love", "Lord"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', '1 Peter 1:23', 'ESV', '["Perishable Seed", "Enduring Word", "Living", "Imperishable", "God", "Born"]');
+    VALUES ('acaa9782-7f80-470d-aa81-3155a115576c', 'cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', '1 Peter 1:23', 'ESV', '["Perishable Seed", "Enduring Word", "Living", "Imperishable", "God", "Born"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', 'Ephesians 1:13', 'ESV', '["Promised Holy Spirit", "Truth", "Seal", "Salvation", "Message", "Marked"]');
+    VALUES ('9f315138-915f-49c5-888e-6bbf2b89ddb5', 'cbaa13d3-b9f9-40e0-b1ad-3f26c45f9407', 'Ephesians 1:13', 'ESV', '["Promised Holy Spirit", "Truth", "Seal", "Salvation", "Message", "Marked"]');
 -- Pack: DEP 242 Pack 2 - Quiet Time
     INSERT INTO verse_packs (id, title, identifier, description, is_public)
     VALUES ('56997b70-cd68-4341-b99a-0979cde072bb', 'DEP 242 Pack 2 - Quiet Time', 'DEP-242-Pack-2-Quiet-Time', 'DEP 242 Pack 2 - Quiet Time', true)
     ;
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('56997b70-cd68-4341-b99a-0979cde072bb', '1 Corinthians 1:9', 'ESV', '["Jesus Christ", "Son", "Lord", "God", "Fellowship", "Faithful"]');
+    VALUES ('3f1f0d19-551b-4057-bfef-19c3f42f5373', '56997b70-cd68-4341-b99a-0979cde072bb', '1 Corinthians 1:9', 'ESV', '["Jesus Christ", "Son", "Lord", "God", "Fellowship", "Faithful"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('56997b70-cd68-4341-b99a-0979cde072bb', 'Isaiah 30:18', 'ESV', '["Lord Longs", "Lord", "Yet", "Wait", "Therefore", "Show"]');
+    VALUES ('70d7acd5-0bc1-4b7a-ba6c-d202431fdf2f', '56997b70-cd68-4341-b99a-0979cde072bb', 'Isaiah 30:18', 'ESV', '["Lord Longs", "Lord", "Yet", "Wait", "Therefore", "Show"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('56997b70-cd68-4341-b99a-0979cde072bb', 'Isaiah 55:6', 'ESV', '["Seek", "Near", "May", "Lord", "Found", "Call"]');
+    VALUES ('fe68bf49-7bec-4e51-a5dd-fa31fa658a38', '56997b70-cd68-4341-b99a-0979cde072bb', 'Isaiah 55:6', 'ESV', '["Seek", "Near", "May", "Lord", "Found", "Call"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 27:8', 'ESV', '["Heart Says", "Face ", "Face", "Seek", "Lord"]');
+    VALUES ('e62e7412-a556-42cc-817c-1e3d4d8a2737', '56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 27:8', 'ESV', '["Heart Says", "Face ", "Face", "Seek", "Lord"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('56997b70-cd68-4341-b99a-0979cde072bb', 'John 15:5', 'ESV', '["Bear Much Fruit", "Vine", "Remain", "Nothing", "Branches", "Apart"]');
+    VALUES ('9ca219af-db1a-48bb-a0e0-e5725e3e1b7b', '56997b70-cd68-4341-b99a-0979cde072bb', 'John 15:5', 'ESV', '["Bear Much Fruit", "Vine", "Remain", "Nothing", "Branches", "Apart"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 34:10', 'ESV', '["Lord Lack", "Good Thing", "Seek", "Hungry"]');
+    VALUES ('f35432be-56d3-4989-a75c-c959c1e358f4', '56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 34:10', 'ESV', '["Lord Lack", "Good Thing", "Seek", "Hungry"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('56997b70-cd68-4341-b99a-0979cde072bb', 'Habakkuk 2:1', 'ESV', '["Watch", "Station", "Stand", "See", "Say", "Ramparts"]');
+    VALUES ('0655c311-33b2-468d-a312-8705d6738093', '56997b70-cd68-4341-b99a-0979cde072bb', 'Habakkuk 2:1', 'ESV', '["Watch", "Station", "Stand", "See", "Say", "Ramparts"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 143:8, 10', 'ESV', '["Good Spirit Lead", "Unfailing Love", "Morning Bring", "Level Ground", "Word", "Way"]');
+    VALUES ('8cdfac13-b6df-4a64-87a4-c4c2d74c9cd8', '56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 143:8, 10', 'ESV', '["Good Spirit Lead", "Unfailing Love", "Morning Bring", "Level Ground", "Word", "Way"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('56997b70-cd68-4341-b99a-0979cde072bb', 'Hebrews 12:2', 'ESV', '["Right Hand", "Joy Set", "Throne", "Shame", "Scorning", "Sat"]');
+    VALUES ('7cd69267-1954-4b44-b625-ce8734cf17f2', '56997b70-cd68-4341-b99a-0979cde072bb', 'Hebrews 12:2', 'ESV', '["Right Hand", "Joy Set", "Throne", "Shame", "Scorning", "Sat"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 42:11', 'ESV', '["Yet Praise", "Disturbed Within", "Soul", "Savior", "Put", "Hope"]');
+    VALUES ('398d3904-2346-407a-a8ec-0c32bba20dc8', '56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 42:11', 'ESV', '["Yet Praise", "Disturbed Within", "Soul", "Savior", "Put", "Hope"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 42:1', 'ESV', '["Soul Pants", "Deer Pants", "Water", "Streams", "God"]');
+    VALUES ('7cfa33cd-88bb-46ac-98dd-5abf60827b4d', '56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 42:1', 'ESV', '["Soul Pants", "Deer Pants", "Water", "Streams", "God"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 130:5-6', 'ESV', '["Watchmen Wait", "Wait", "Word", "Whole", "Waits", "Put"]');
+    VALUES ('dad6fb66-cf67-46bf-a6d2-f88ee955aa38', '56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 130:5-6', 'ESV', '["Watchmen Wait", "Wait", "Word", "Whole", "Waits", "Put"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 55:22', 'ESV', '["Never Let", "Sustain", "Shaken", "Righteous", "Lord", "Cast"]');
+    VALUES ('17c8ee30-e434-4e36-95be-cecfbe39a124', '56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 55:22', 'ESV', '["Never Let", "Sustain", "Shaken", "Righteous", "Lord", "Cast"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 68:19', 'ESV', '["Daily Bears", "Savior", "Praise", "Lord", "God", "Burdens"]');
+    VALUES ('8faaf90a-2a2d-443e-a1e2-410e8b0e5b1b', '56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 68:19', 'ESV', '["Daily Bears", "Savior", "Praise", "Lord", "God", "Burdens"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 91:9-10', 'ESV', '["Refuge ", "Come Near", "Tent", "Say", "Overtake", "Make"]');
+    VALUES ('2d8544b4-6b1b-4fdb-ba4c-36240d323e01', '56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 91:9-10', 'ESV', '["Refuge ", "Come Near", "Tent", "Say", "Overtake", "Make"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('56997b70-cd68-4341-b99a-0979cde072bb', 'Matthew 11:28-29', 'ESV', '["Yoke Upon", "Find Rest", "Rest", "Weary", "Take", "Souls"]');
+    VALUES ('f94648b9-a120-4007-82b5-c519b981a4cb', '56997b70-cd68-4341-b99a-0979cde072bb', 'Matthew 11:28-29', 'ESV', '["Yoke Upon", "Find Rest", "Rest", "Weary", "Take", "Souls"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 119:147-148', 'ESV', '["Eyes Stay Open", "May Meditate", "Word", "Watches", "Rise", "Put"]');
+    VALUES ('37b425c1-cf99-4191-a58d-d60336107629', '56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 119:147-148', 'ESV', '["Eyes Stay Open", "May Meditate", "Word", "Watches", "Rise", "Put"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 5:3', 'ESV', '["Wait Expectantly", "Voice", "Requests", "Morning", "Lord", "Lay"]');
+    VALUES ('60206aa1-6d86-4213-b18d-44cab8e0add7', '56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 5:3', 'ESV', '["Wait Expectantly", "Voice", "Requests", "Morning", "Lord", "Lay"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 95:6', 'ESV', '["Let Us Kneel", "Let Us Bow", "Worship", "Maker", "Lord", "Come"]');
+    VALUES ('8fb9e3c5-af03-4f3f-a434-80f8122bab4e', '56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 95:6', 'ESV', '["Let Us Kneel", "Let Us Bow", "Worship", "Maker", "Lord", "Come"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('56997b70-cd68-4341-b99a-0979cde072bb', 'Hebrews 13:15', 'ESV', '["Praise \u2014", "Openly Profess", "Therefore", "Sacrifice", "Name", "Lips"]');
+    VALUES ('0f52cea3-6d4f-42ca-bcb7-198ab53e60a3', '56997b70-cd68-4341-b99a-0979cde072bb', 'Hebrews 13:15', 'ESV', '["Praise \u2014", "Openly Profess", "Therefore", "Sacrifice", "Name", "Lips"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 90:14', 'ESV', '["Unfailing Love", "Satisfy Us", "May Sing", "Morning", "Joy", "Glad"]');
+    VALUES ('12e6fb6f-1e45-409b-9f18-f2e94f8adc9d', '56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 90:14', 'ESV', '["Unfailing Love", "Satisfy Us", "May Sing", "Morning", "Joy", "Glad"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 107:9', 'ESV', '["Good Things", "Thirsty", "Satisfies", "Hungry", "Fills"]');
+    VALUES ('cd2fd34f-508c-483e-bf57-b8b84f746194', '56997b70-cd68-4341-b99a-0979cde072bb', 'Psalm 107:9', 'ESV', '["Good Things", "Thirsty", "Satisfies", "Hungry", "Fills"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('56997b70-cd68-4341-b99a-0979cde072bb', 'Mark 1:35', 'ESV', '["Still Dark", "Solitary Place", "Jesus Got", "Went", "Prayed", "Morning"]');
+    VALUES ('d29bcaa7-9844-451a-bbe0-273cf8201216', '56997b70-cd68-4341-b99a-0979cde072bb', 'Mark 1:35', 'ESV', '["Still Dark", "Solitary Place", "Jesus Got", "Went", "Prayed", "Morning"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('56997b70-cd68-4341-b99a-0979cde072bb', 'Exodus 33:11', 'ESV', '["Lord Would Speak", "Moses Would Return", "One Speaks", "Moses Face", "Face", "Tent"]');
+    VALUES ('c43363b8-e091-484d-8b7c-a9bab2dbec82', '56997b70-cd68-4341-b99a-0979cde072bb', 'Exodus 33:11', 'ESV', '["Lord Would Speak", "Moses Would Return", "One Speaks", "Moses Face", "Face", "Tent"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('56997b70-cd68-4341-b99a-0979cde072bb', 'Daniel 6:10', 'ESV', '["Went Home", "Upstairs Room", "Three Times", "Giving Thanks", "Daniel Learned", "Published"]');
+    VALUES ('a8e14798-e094-4e7b-ba94-c0dd219dae1d', '56997b70-cd68-4341-b99a-0979cde072bb', 'Daniel 6:10', 'ESV', '["Went Home", "Upstairs Room", "Three Times", "Giving Thanks", "Daniel Learned", "Published"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('56997b70-cd68-4341-b99a-0979cde072bb', 'Mark 4:34', 'ESV', '["Without Using", "Say Anything", "Explained Everything", "Parable", "Disciples", "Alone"]');
+    VALUES ('c891c086-4b67-4e33-a32a-3fc1837a688f', '56997b70-cd68-4341-b99a-0979cde072bb', 'Mark 4:34', 'ESV', '["Without Using", "Say Anything", "Explained Everything", "Parable", "Disciples", "Alone"]');
 -- Pack: DEP 242 Pack 3 - The Word
     INSERT INTO verse_packs (id, title, identifier, description, is_public)
     VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'DEP 242 Pack 3 - The Word', 'DEP-242-Pack-3-The-Word', 'DEP 242 Pack 3 - The Word', true)
     ;
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', '2 Timothy 3:16', 'ESV', '["Useful", "Training", "Teaching", "Scripture", "Righteousness", "Rebuking"]');
+    VALUES ('a68e5ad1-8e8e-4c9d-a770-4e634849e0ab', 'e442c5f3-d202-4201-aca2-d0ffb427619e', '2 Timothy 3:16', 'ESV', '["Useful", "Training", "Teaching", "Scripture", "Righteousness", "Rebuking"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', '2 Peter 1:21', 'ESV', '["Prophecy Never", "Holy Spirit", "Carried Along", "Though Human", "Human", "Spoke"]');
+    VALUES ('6392abcb-5b53-46d2-ab9e-a9a62d5dd7e7', 'e442c5f3-d202-4201-aca2-d0ffb427619e', '2 Peter 1:21', 'ESV', '["Prophecy Never", "Holy Spirit", "Carried Along", "Though Human", "Human", "Spoke"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'Matthew 24:35', 'ESV', '["Never Pass Away", "Pass Away", "Words", "Heaven", "Earth"]');
+    VALUES ('3670dcf0-ae07-4a65-8873-148b04c44f1e', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'Matthew 24:35', 'ESV', '["Never Pass Away", "Pass Away", "Words", "Heaven", "Earth"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', '1 Peter 1:24-25', 'ESV', '["Grass Withers", "Like Grass", "Flowers Fall", "Like", "Flowers", "Word"]');
+    VALUES ('e0ad4e51-9c0c-4c6e-8aef-2a8ca444d813', 'e442c5f3-d202-4201-aca2-d0ffb427619e', '1 Peter 1:24-25', 'ESV', '["Grass Withers", "Like Grass", "Flowers Fall", "Like", "Flowers", "Word"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'John 17:17', 'ESV', '["Word", "Truth", "Sanctify"]');
+    VALUES ('132f5d8f-c84c-4637-8827-0e09e2059a54', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'John 17:17', 'ESV', '["Word", "Truth", "Sanctify"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', '2 Samuel 7:28', 'ESV', '["Sovereign Lord", "Good Things", "Trustworthy", "Servant", "Promised", "God"]');
+    VALUES ('9076086f-ac18-4f2c-aed3-36e26d90cbee', 'e442c5f3-d202-4201-aca2-d0ffb427619e', '2 Samuel 7:28', 'ESV', '["Sovereign Lord", "Good Things", "Trustworthy", "Servant", "Promised", "God"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'Jeremiah 23:29', 'ESV', '["Rock", "Pieces", "Lord", "Like", "Hammer", "Breaks"]');
+    VALUES ('c5f6221e-9576-4343-aa9e-f55b3121db19', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'Jeremiah 23:29', 'ESV', '["Rock", "Pieces", "Lord", "Like", "Hammer", "Breaks"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', '2 Timothy 2:9', 'ESV', '["Suffering Even", "Chained Like", "Chained", "Word", "Point", "God"]');
+    VALUES ('d9af7e0e-d69b-4301-a93f-d8dff5888520', 'e442c5f3-d202-4201-aca2-d0ffb427619e', '2 Timothy 2:9', 'ESV', '["Suffering Even", "Chained Like", "Chained", "Word", "Point", "God"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'Matthew 4:4', 'ESV', '["Man Shall", "Jesus Answered", "God ", "Every Word", "Bread Alone", "Written"]');
+    VALUES ('b7c01f75-13d6-46ea-81a3-71685e302848', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'Matthew 4:4', 'ESV', '["Man Shall", "Jesus Answered", "God ", "Every Word", "Bread Alone", "Written"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'Luke 24:27', 'ESV', '["Scriptures Concerning", "Said", "Prophets", "Moses", "Explained", "Beginning"]');
+    VALUES ('2e0c8245-99da-4f3a-ba90-020b0d385008', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'Luke 24:27', 'ESV', '["Scriptures Concerning", "Said", "Prophets", "Moses", "Explained", "Beginning"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', '1 Peter 1:23', 'ESV', '["Perishable Seed", "Enduring Word", "Living", "Imperishable", "God", "Born"]');
+    VALUES ('cc0e29b8-adbe-4c4a-9b7d-b0bde2fd41bf', 'e442c5f3-d202-4201-aca2-d0ffb427619e', '1 Peter 1:23', 'ESV', '["Perishable Seed", "Enduring Word", "Living", "Imperishable", "God", "Born"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'James 1:18', 'ESV', '["Give Us Birth", "Word", "Truth", "Might", "Kind", "Firstfruits"]');
+    VALUES ('d7023d7c-92ee-40f4-b563-065bafcc8755', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'James 1:18', 'ESV', '["Give Us Birth", "Word", "Truth", "Might", "Kind", "Firstfruits"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', '1 Peter 2:2', 'ESV', '["Like Newborn Babies", "May Grow", "Salvation"]');
+    VALUES ('01f3e2b8-1165-4dcf-ad8d-049357d94f95', 'e442c5f3-d202-4201-aca2-d0ffb427619e', '1 Peter 2:2', 'ESV', '["Like Newborn Babies", "May Grow", "Salvation"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'Acts 20:32', 'ESV', '["Inheritance Among", "Word", "Sanctified", "Grace", "God", "Give"]');
+    VALUES ('98ae72b7-e447-45e6-af40-a5f075749a0b', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'Acts 20:32', 'ESV', '["Inheritance Among", "Word", "Sanctified", "Grace", "God", "Give"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'Psalm 119:105', 'ESV', '["Word", "Path", "Light", "Lamp", "Feet"]');
+    VALUES ('da9210e8-ad7f-4f51-abc9-7f5c9526681d', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'Psalm 119:105', 'ESV', '["Word", "Path", "Light", "Lamp", "Feet"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'Proverbs 6:22-23', 'ESV', '["Way", "Watch", "Walk", "Teaching", "Speak", "Sleep"]');
+    VALUES ('f39f21e4-7397-4d9b-95ae-bdf44c6109ef', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'Proverbs 6:22-23', 'ESV', '["Way", "Watch", "Walk", "Teaching", "Speak", "Sleep"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'Psalm 107:20', 'ESV', '["Word", "Sent", "Rescued", "Healed", "Grave"]');
+    VALUES ('7688e831-21e0-42ff-9b05-eb93d84b6267', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'Psalm 107:20', 'ESV', '["Word", "Sent", "Rescued", "Healed", "Grave"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'Matthew 8:8', 'ESV', '["Centurion Replied", "Word", "Servant", "Say", "Roof", "Lord"]');
+    VALUES ('9c51e536-de9d-499f-b86f-fd91885944d9', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'Matthew 8:8', 'ESV', '["Centurion Replied", "Word", "Servant", "Say", "Roof", "Lord"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'Jeremiah 15:16', 'ESV', '["Lord God Almighty", "Words Came", "Name", "Joy", "Heart", "Delight"]');
+    VALUES ('fc66d948-8140-4814-910c-28f7e1d0db0b', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'Jeremiah 15:16', 'ESV', '["Lord God Almighty", "Words Came", "Name", "Joy", "Heart", "Delight"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'Psalm 119:111', 'ESV', '["Heritage Forever", "Statutes", "Joy", "Heart"]');
+    VALUES ('604eab99-ee3a-4212-9af6-e2684e90cb7a', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'Psalm 119:111', 'ESV', '["Heritage Forever", "Statutes", "Joy", "Heart"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'Ephesians 6:17', 'ESV', '["Word", "Take", "Sword", "Spirit", "Salvation", "Helmet"]');
+    VALUES ('da613b72-894d-4eb7-8629-590c29743e84', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'Ephesians 6:17', 'ESV', '["Word", "Take", "Sword", "Spirit", "Salvation", "Helmet"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'Hebrews 4:12', 'ESV', '["Penetrates Even", "Edged Sword", "Dividing Soul", "Word", "Thoughts", "Spirit"]');
+    VALUES ('0c0f9229-4a8b-4a14-bd29-9174a4e7266a', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'Hebrews 4:12', 'ESV', '["Penetrates Even", "Edged Sword", "Dividing Soul", "Word", "Thoughts", "Spirit"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'Acts 17:11', 'ESV', '["Scriptures Every Day", "Paul Said", "Noble Character", "Great Eagerness", "Berean Jews", "true"]');
+    VALUES ('e488f081-2d93-4cbd-a962-99e070f972e6', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'Acts 17:11', 'ESV', '["Scriptures Every Day", "Paul Said", "Noble Character", "Great Eagerness", "Berean Jews", "true"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'Psalm 119:97', 'ESV', '["Day Long", "Meditate", "Love", "Law"]');
+    VALUES ('14cba80a-7e0b-49da-94b3-86cc8d5f6c96', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'Psalm 119:97', 'ESV', '["Day Long", "Meditate", "Love", "Law"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'Ezra 7:10', 'ESV', '["Teaching", "Study", "Observance", "Lord", "Laws", "Law"]');
+    VALUES ('7f8aa363-ed73-4468-aee9-627919f96481', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'Ezra 7:10', 'ESV', '["Teaching", "Study", "Observance", "Lord", "Laws", "Law"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'Job 23:12', 'ESV', '["Daily Bread", "Words", "Treasured", "Mouth", "Lips", "Departed"]');
+    VALUES ('ad5c54c3-0bcd-4deb-8999-f82db2112950', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'Job 23:12', 'ESV', '["Daily Bread", "Words", "Treasured", "Mouth", "Lips", "Departed"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'Luke 5:5-6', 'ESV', '["Worked Hard", "Simon Answered", "Nets Began", "Nets ", "Large Number", "Caught Anything"]');
+    VALUES ('c0759a25-f105-41cf-9bf1-e39ef8b0a39c', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'Luke 5:5-6', 'ESV', '["Worked Hard", "Simon Answered", "Nets Began", "Nets ", "Large Number", "Caught Anything"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'Romans 10:17', 'ESV', '["Faith Comes", "Word", "Message", "Hearing", "Heard", "Consequently"]');
+    VALUES ('e5e1971a-5fa1-488a-8fac-1103cf0fd78c', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'Romans 10:17', 'ESV', '["Faith Comes", "Word", "Message", "Hearing", "Heard", "Consequently"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'Luke 11:28', 'ESV', '["Blessed Rather", "Word", "Replied", "Obey", "Hear", "God"]');
+    VALUES ('6b004e18-2b01-4e8c-aab5-689e1acc8532', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'Luke 11:28', 'ESV', '["Blessed Rather", "Word", "Replied", "Obey", "Hear", "God"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'Revelation 1:3', 'ESV', '["Reads Aloud", "Written", "Words", "Time", "Take", "Prophecy"]');
+    VALUES ('3307fa1a-7f14-4c6f-9c0a-90446741459c', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'Revelation 1:3', 'ESV', '["Reads Aloud", "Written", "Words", "Time", "Take", "Prophecy"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'Deuteronomy 17:19', 'ESV', '["May Learn", "Follow Carefully", "Words", "Revere", "Read", "Lord"]');
+    VALUES ('5533b872-55a3-4167-9205-9312237b8f84', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'Deuteronomy 17:19', 'ESV', '["May Learn", "Follow Carefully", "Words", "Revere", "Read", "Lord"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'Acts 17:11', 'ESV', '["Scriptures Every Day", "Paul Said", "Noble Character", "Great Eagerness", "Berean Jews", "true"]');
+    VALUES ('6b9c9521-37ea-4dfd-a5ae-142526149d24', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'Acts 17:11', 'ESV', '["Scriptures Every Day", "Paul Said", "Noble Character", "Great Eagerness", "Berean Jews", "true"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', '2 Timothy 2:15', 'ESV', '["One Approved", "Correctly Handles", "Worker", "Word", "Truth", "Present"]');
+    VALUES ('45aa03d8-a9b3-4074-8239-e152eaf7b0fb', 'e442c5f3-d202-4201-aca2-d0ffb427619e', '2 Timothy 2:15', 'ESV', '["One Approved", "Correctly Handles", "Worker", "Word", "Truth", "Present"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'Deuteronomy 6:6', 'ESV', '["Today", "Hearts", "Give", "Commandments"]');
+    VALUES ('1eaa2033-624b-4a83-b7a7-1ae2422cfaff', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'Deuteronomy 6:6', 'ESV', '["Today", "Hearts", "Give", "Commandments"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'Proverbs 7:1-3', 'ESV', '["Commands Within", "Commands", "Write", "Words", "Teachings", "Tablet"]');
+    VALUES ('b77d256c-5a01-4bba-9dfd-2e52af795076', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'Proverbs 7:1-3', 'ESV', '["Commands Within", "Commands", "Write", "Words", "Teachings", "Tablet"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'Psalm 1:1-2', 'ESV', '["Whose Delight", "Sinners Take", "Law Day", "Law", "Wicked", "Way"]');
+    VALUES ('75e54aab-4d4f-4054-9ba3-b308b7e7a28c', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'Psalm 1:1-2', 'ESV', '["Whose Delight", "Sinners Take", "Law Day", "Law", "Wicked", "Way"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e442c5f3-d202-4201-aca2-d0ffb427619e', 'Joshua 1:8', 'ESV', '["Law Always", "Everything Written", "Successful", "Prosperous", "Night", "Meditate"]');
+    VALUES ('3923203a-efbf-4376-9801-1de9be1e8fca', 'e442c5f3-d202-4201-aca2-d0ffb427619e', 'Joshua 1:8', 'ESV', '["Law Always", "Everything Written", "Successful", "Prosperous", "Night", "Meditate"]');
 -- Pack: 180 Series 2 - Growing in Love
     INSERT INTO verse_packs (id, title, identifier, description, is_public)
     VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', '180 Series 2 - Growing in Love', '180-Series-2-Growing-in-Love', '180 Series 2 - Growing in Love', true)
     ;
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Ephesians 4:15', 'ESV', '["Mature Body", "Every Respect", "Truth", "Speaking", "Love", "Instead"]');
+    VALUES ('a56413b5-5809-4fdf-be09-683cd19d1c15', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Ephesians 4:15', 'ESV', '["Mature Body", "Every Respect", "Truth", "Speaking", "Love", "Instead"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Colossians 3:9', 'ESV', '["Old Self", "Taken", "Since", "Practices", "Lie"]');
+    VALUES ('fbaec2a6-b1a2-4016-a4cd-c25e3734d2f0', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Colossians 3:9', 'ESV', '["Old Self", "Taken", "Since", "Practices", "Lie"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Proverbs 17:9', 'ESV', '["Whoever Repeats", "Offense", "Whoever", "Would", "Foster", "Love"]');
+    VALUES ('eb64cb09-e29c-4b2d-b422-0ce3bd66c920', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Proverbs 17:9', 'ESV', '["Whoever Repeats", "Offense", "Whoever", "Would", "Foster", "Love"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Proverbs 11:13', 'ESV', '["Trustworthy Person Keeps", "Gossip Betrays", "Secret", "Confidence"]');
+    VALUES ('dd7ca743-2e8c-49c3-99a4-78abd1ea34a0', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Proverbs 11:13', 'ESV', '["Trustworthy Person Keeps", "Gossip Betrays", "Secret", "Confidence"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Colossians 4:4-6', 'ESV', '["Act Toward Outsiders", "May Proclaim", "May Know", "Every Opportunity", "Answer Everyone", "Always Full"]');
+    VALUES ('a46b4ff9-3dd4-4eac-ab1e-6220baa7c3ad', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Colossians 4:4-6', 'ESV', '["Act Toward Outsiders", "May Proclaim", "May Know", "Every Opportunity", "Answer Everyone", "Always Full"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Proverbs 15:1', 'ESV', '["Harsh Word Stirs", "Anger", "Gentle", "Answer", "Turns", "Away"]');
+    VALUES ('1da32776-371e-41ce-8f76-6fe197834575', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Proverbs 15:1', 'ESV', '["Harsh Word Stirs", "Anger", "Gentle", "Answer", "Turns", "Away"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'James 5:16', 'ESV', '["Therefore Confess", "Righteous Person", "Sins", "Prayer", "Pray", "Powerful"]');
+    VALUES ('f1fefb33-0c7c-4b12-8772-ccbb528b3e09', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'James 5:16', 'ESV', '["Therefore Confess", "Righteous Person", "Sins", "Prayer", "Pray", "Powerful"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Matthew 5:23-24', 'ESV', '["First Go", "Therefore", "Something", "Sister", "Remember", "Reconciled"]');
+    VALUES ('04e483f3-9b90-4cc1-8aad-c88c7e637e53', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Matthew 5:23-24', 'ESV', '["First Go", "Therefore", "Something", "Sister", "Remember", "Reconciled"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'James 1:19', 'ESV', '["Take Note", "Dear Brothers", "Become Angry", "Speak", "Slow", "Sisters"]');
+    VALUES ('a1216cb1-8c2b-4874-a089-be4997bfe437', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'James 1:19', 'ESV', '["Take Note", "Dear Brothers", "Become Angry", "Speak", "Slow", "Sisters"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Proverbs 18:13', 'ESV', '["Listening \u2014", "Shame", "Folly", "Answer"]');
+    VALUES ('b03925a0-6429-435a-9e1a-6796b6c737e6', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Proverbs 18:13', 'ESV', '["Listening \u2014", "Shame", "Folly", "Answer"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Proverbs 9:8-9', 'ESV', '["Wiser Still", "Rebuke Mockers", "Rebuke", "Wise", "Teach", "Righteous"]');
+    VALUES ('d8175724-9d71-48c3-b201-b8c0b3e67a69', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Proverbs 9:8-9', 'ESV', '["Wiser Still", "Rebuke Mockers", "Rebuke", "Wise", "Teach", "Righteous"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Matthew 18:15', 'ESV', '["Sister Sins", "Two", "Point", "Listen", "Fault", "Brother"]');
+    VALUES ('96f2b423-8ba6-43a1-9b28-922a7cb34cc3', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Matthew 18:15', 'ESV', '["Sister Sins", "Two", "Point", "Listen", "Fault", "Brother"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Ephesians 4:32', 'ESV', '["Christ God Forgave", "One Another", "Kind", "Forgiving", "Compassionate"]');
+    VALUES ('5a7bf782-3682-4d1f-8339-ac86240b1b1a', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Ephesians 4:32', 'ESV', '["Christ God Forgave", "One Another", "Kind", "Forgiving", "Compassionate"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Colossians 3:13', 'ESV', '["Forgive One Another", "Lord Forgave", "Forgive", "Someone", "Grievance", "Bear"]');
+    VALUES ('853fc76b-6277-4557-8954-7139a58eee31', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Colossians 3:13', 'ESV', '["Forgive One Another", "Lord Forgave", "Forgive", "Someone", "Grievance", "Bear"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Ephesians 4:2', 'ESV', '["One Another", "Completely Humble", "Patient", "Love", "Gentle", "Bearing"]');
+    VALUES ('05aea43d-6106-4eee-886b-8e160cf80bb2', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Ephesians 4:2', 'ESV', '["One Another", "Completely Humble", "Patient", "Love", "Gentle", "Bearing"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', '2 Timothy 2:24-25', 'ESV', '["Repentance Leading", "Gently Instructed", "Servant Must", "Opponents Must", "Must", "Truth"]');
+    VALUES ('e58c8ea6-6daf-4c36-8e61-36b917803ef6', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', '2 Timothy 2:24-25', 'ESV', '["Repentance Leading", "Gently Instructed", "Servant Must", "Opponents Must", "Must", "Truth"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Ephesians 4:26', 'ESV', '["Sun Go", "Still Angry", "Sin ", "Let", "Anger"]');
+    VALUES ('d14c88bb-8477-4abc-b048-abeaa0d854fe', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Ephesians 4:26', 'ESV', '["Sun Go", "Still Angry", "Sin ", "Let", "Anger"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Colossians 3:8', 'ESV', '["Must Also Rid", "Filthy Language", "Things", "Slander", "Rage", "Malice"]');
+    VALUES ('1bcf186c-4a32-4537-a4c7-a3ec0fd9b8c5', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Colossians 3:8', 'ESV', '["Must Also Rid", "Filthy Language", "Things", "Slander", "Rage", "Malice"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Hebrews 12:15', 'ESV', '["One Falls Short", "Bitter Root Grows", "Defile Many", "Cause Trouble", "See", "Grace"]');
+    VALUES ('97dd6c92-2d26-489e-94c0-23d8155c199f', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Hebrews 12:15', 'ESV', '["One Falls Short", "Bitter Root Grows", "Defile Many", "Cause Trouble", "See", "Grace"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Ephesians 4:31', 'ESV', '["Get Rid", "Every Form", "Slander", "Rage", "Malice", "Brawling"]');
+    VALUES ('0e45ac3e-0862-4ca4-a8c9-13b95716fddb', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Ephesians 4:31', 'ESV', '["Get Rid", "Every Form", "Slander", "Rage", "Malice", "Brawling"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', '1 Peter 2:20-21', 'ESV', '["Christ Suffered", "Wrong", "Suffer", "Steps", "Receive", "Leaving"]');
+    VALUES ('384ccfaf-1815-4a52-9025-81b949d9d873', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', '1 Peter 2:20-21', 'ESV', '["Christ Suffered", "Wrong", "Suffer", "Steps", "Receive", "Leaving"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Romans 12:19', 'ESV', '["Repay ,\\" Says", "Take Revenge", "Leave Room", "Dear Friends", "Written", "Wrath"]');
+    VALUES ('5825e097-367e-4563-9e65-9d1707c3a599', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Romans 12:19', 'ESV', '["Repay ,\\" Says", "Take Revenge", "Leave Room", "Dear Friends", "Written", "Wrath"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Proverbs 27:4', 'ESV', '["Fury Overwhelming", "Stand", "Jealousy", "Cruel", "Anger"]');
+    VALUES ('a026f49c-5852-40ed-9a3c-81bbae897d74', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Proverbs 27:4', 'ESV', '["Fury Overwhelming", "Stand", "Jealousy", "Cruel", "Anger"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'James 3:16', 'ESV', '["Every Evil Practice", "Selfish Ambition", "Find Disorder", "Envy"]');
+    VALUES ('e01a1b3b-6478-4f36-93cd-110060d6884e', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'James 3:16', 'ESV', '["Every Evil Practice", "Selfish Ambition", "Find Disorder", "Envy"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Romans 15:5-6', 'ESV', '["Lord Jesus Christ", "Christ Jesus", "One Voice", "One Mind", "Mind Toward", "Gives Endurance"]');
+    VALUES ('b6379aa9-16d6-41e5-942c-a5cc734680da', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Romans 15:5-6', 'ESV', '["Lord Jesus Christ", "Christ Jesus", "One Voice", "One Mind", "Mind Toward", "Gives Endurance"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', '1 Corinthians 1:10', 'ESV', '["Lord Jesus Christ", "Perfectly United", "One Another", "Divisions Among", "Thought", "Sisters"]');
+    VALUES ('7eb52d0d-265d-42d0-a939-6931deb55b80', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', '1 Corinthians 1:10', 'ESV', '["Lord Jesus Christ", "Perfectly United", "One Another", "Divisions Among", "Thought", "Sisters"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Matthew 20:26-27', 'ESV', '["Become Great Among", "Whoever Wants", "Slave \u2014", "First Must", "Must", "Servant"]');
+    VALUES ('8b40e968-da25-4db1-a50f-643167ce8327', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Matthew 20:26-27', 'ESV', '["Become Great Among", "Whoever Wants", "Slave \u2014", "First Must", "Must", "Servant"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Galatians 5:13', 'ESV', '["Use", "Sisters", "Rather", "Love", "Indulge", "Freedom"]');
+    VALUES ('e66477d6-eee1-41a2-b0ed-9d28b2d37f88', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Galatians 5:13', 'ESV', '["Use", "Sisters", "Rather", "Love", "Indulge", "Freedom"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Romans 15:2', 'ESV', '["Please", "Neighbors", "Good", "Build"]');
+    VALUES ('be60858f-2441-44bd-b5d2-b48ac887481d', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Romans 15:2', 'ESV', '["Please", "Neighbors", "Good", "Build"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Philippians 2:3-4', 'ESV', '["Humility Value Others", "Vain Conceit", "Selfish Ambition", "Others", "Rather", "Nothing"]');
+    VALUES ('a9582908-dde5-419d-a4fa-a7abf7f3921c', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Philippians 2:3-4', 'ESV', '["Humility Value Others", "Vain Conceit", "Selfish Ambition", "Others", "Rather", "Nothing"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', '1 Thessalonians 5:11', 'ESV', '["Fact", "Build", "Therefore", "Encourage", "Another", "Each"]');
+    VALUES ('43a86c25-032f-4e3f-88df-6180c1caa303', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', '1 Thessalonians 5:11', 'ESV', '["Fact", "Build", "Therefore", "Encourage", "Another", "Each"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Ecclesiastes 4:9-10', 'ESV', '["Pity Anyone", "Good Return", "Two", "One", "Labor", "Help"]');
+    VALUES ('aa49af08-ebf3-4f96-bd92-c346e630fc00', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Ecclesiastes 4:9-10', 'ESV', '["Pity Anyone", "Good Return", "Two", "One", "Labor", "Help"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Matthew 9:36', 'ESV', '["Like Sheep Without", "Shepherd", "Saw", "Helpless", "Harassed", "Crowds"]');
+    VALUES ('c444d34f-eb44-48f0-a1e8-eaa34f95808f', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Matthew 9:36', 'ESV', '["Like Sheep Without", "Shepherd", "Saw", "Helpless", "Harassed", "Crowds"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Romans 12:15', 'ESV', '["Rejoice", "Mourn", "With", "Those"]');
+    VALUES ('33be95fc-deea-4e07-a04a-2b5e75aada91', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Romans 12:15', 'ESV', '["Rejoice", "Mourn", "With", "Those"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'James 3:17', 'ESV', '["Good Fruit", "Wisdom", "Submissive", "Sincere", "Pure", "Peace"]');
+    VALUES ('362e0e25-bbeb-4670-b9f8-c5b0c620a279', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'James 3:17', 'ESV', '["Good Fruit", "Wisdom", "Submissive", "Sincere", "Pure", "Peace"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Galatians 6:1', 'ESV', '["Person Gently", "Also May", "Watch", "Tempted", "Spirit", "Someone"]');
+    VALUES ('f5eb18c7-b821-4ec9-bdcf-f8f392530cf7', 'c7c197f1-6526-40bb-bc4f-8c932ee0546b', 'Galatians 6:1', 'ESV', '["Person Gently", "Also May", "Watch", "Tempted", "Spirit", "Someone"]');
 -- Pack: 180 Series 1 - Getting to Know God
     INSERT INTO verse_packs (id, title, identifier, description, is_public)
     VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', '180 Series 1 - Getting to Know God', '180-Series-1-Getting-to-Know-God', '180 Series 1 - Getting to Know God', true)
     ;
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'John 1:1,14', 'ESV', '["Dwelling Among Us", "Word Became Flesh", "Word", "Truth", "Son", "Seen"]');
+    VALUES ('dc048fd9-f777-4060-8282-5d67a87c5c05', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'John 1:1,14', 'ESV', '["Dwelling Among Us", "Word Became Flesh", "Word", "Truth", "Son", "Seen"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Hebrews 1:8', 'ESV', '["Throne", "Son", "Scepter", "Says", "Last", "Kingdom"]');
+    VALUES ('b6cdd8e5-9d00-496a-ac47-bedec1f6819a', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Hebrews 1:8', 'ESV', '["Throne", "Son", "Scepter", "Says", "Last", "Kingdom"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Hebrews 4:15', 'ESV', '["\u2014 Yet", "High Priest", "Every Way", "Weaknesses", "Unable", "Tempted"]');
+    VALUES ('6b2d2112-59e1-4f7b-82f7-068e74419cb0', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Hebrews 4:15', 'ESV', '["\u2014 Yet", "High Priest", "Every Way", "Weaknesses", "Unable", "Tempted"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Luke 2:52', 'ESV', '["Jesus Grew", "Wisdom", "Stature", "Man", "God", "Favor"]');
+    VALUES ('35d13db0-bd8c-457b-831d-e1c11f59079a', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Luke 2:52', 'ESV', '["Jesus Grew", "Wisdom", "Stature", "Man", "God", "Favor"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 Corinthians 15:3-4', 'ESV', '["Third Day According", "Sins According", "First Importance", "Christ Died", "Scriptures", "Received"]');
+    VALUES ('d54ec326-8794-4923-9da7-5e8fd6309f58', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 Corinthians 15:3-4', 'ESV', '["Third Day According", "Sins According", "First Importance", "Christ Died", "Scriptures", "Received"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 Corinthians 15:20', 'ESV', '["Fallen Asleep", "Raised", "Indeed", "Firstfruits", "Dead", "Christ"]');
+    VALUES ('ce201021-84f9-41e4-8547-82fa68738196', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 Corinthians 15:20', 'ESV', '["Fallen Asleep", "Raised", "Indeed", "Firstfruits", "Dead", "Christ"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'John 1:18', 'ESV', '["Ever Seen God", "Closest Relationship", "God", "Son", "One", "Made"]');
+    VALUES ('f07277ea-a35f-40c4-adf9-ffc7cc4f9a0e', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'John 1:18', 'ESV', '["Ever Seen God", "Closest Relationship", "God", "Son", "One", "Made"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Hebrews 1:3', 'ESV', '["Right Hand", "Provided Purification", "Powerful Word", "Exact Representation", "Things", "Sustaining"]');
+    VALUES ('cfd9fde9-47c1-4380-8b21-b0fe7a06bb9f', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Hebrews 1:3', 'ESV', '["Right Hand", "Provided Purification", "Powerful Word", "Exact Representation", "Things", "Sustaining"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Luke 19:10', 'ESV', '["Man Came", "Lost ", "Son", "Seek", "Save"]');
+    VALUES ('3f2fb6b9-fe3a-4267-9653-de996f1a331b', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Luke 19:10', 'ESV', '["Man Came", "Lost ", "Son", "Seek", "Save"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 Peter 1:18-19', 'ESV', '["Lamb Without Blemish", "Precious Blood", "Perishable Things", "Life Handed", "Empty Way", "Silver"]');
+    VALUES ('9b36dd7e-88a4-45eb-87dd-3633ee4f1b01', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 Peter 1:18-19', 'ESV', '["Lamb Without Blemish", "Precious Blood", "Perishable Things", "Life Handed", "Empty Way", "Silver"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 Thessalonians 4:16-17', 'ESV', '["Trumpet Call", "Still Alive", "Rise First", "Loud Command", "Lord Forever", "Lord"]');
+    VALUES ('8528d238-d69f-49f3-9d1d-3977b82173e2', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 Thessalonians 4:16-17', 'ESV', '["Trumpet Call", "Still Alive", "Rise First", "Loud Command", "Lord Forever", "Lord"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 John 3:2-3', 'ESV', '["Made Known", "Dear Friends", "Christ Appears", "Shall See", "Shall", "Yet"]');
+    VALUES ('0b38ec56-6e10-48f8-8d72-b7878d81c648', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 John 3:2-3', 'ESV', '["Made Known", "Dear Friends", "Christ Appears", "Shall See", "Shall", "Yet"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'John 16:13-14', 'ESV', '["Make Known", "Yet", "Truth", "Tell", "Spirit", "Speak"]');
+    VALUES ('cac57fc9-66bf-4f0b-bbe5-d3f019b16f93', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'John 16:13-14', 'ESV', '["Make Known", "Yet", "Truth", "Tell", "Spirit", "Speak"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 Corinthians 12:3', 'ESV', '["Lord ,\\" Except", "Cursed ", "God Says", "Holy Spirit", "Spirit", "Want"]');
+    VALUES ('ce84f5ca-52db-43cb-aa1a-324d7a936a0b', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 Corinthians 12:3', 'ESV', '["Lord ,\\" Except", "Cursed ", "God Says", "Holy Spirit", "Spirit", "Want"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Romans 8:9', 'ESV', '["God Lives", "Spirit", "Realm", "Indeed", "However", "Flesh"]');
+    VALUES ('8ec03000-026d-455e-a1c7-37c2391e3e4f', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Romans 8:9', 'ESV', '["God Lives", "Spirit", "Realm", "Indeed", "However", "Flesh"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Galatians 4:6', 'ESV', '["God Sent", "Father ", "Spirit", "Sons", "Son", "Hearts"]');
+    VALUES ('63aac63b-ef46-4d96-ad24-62501d1eb16f', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Galatians 4:6', 'ESV', '["God Sent", "Father ", "Spirit", "Sons", "Son", "Hearts"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Ephesians 5:18', 'ESV', '["Get Drunk", "Wine", "Spirit", "Leads", "Instead", "Filled"]');
+    VALUES ('c9804d02-5554-40ec-90bb-c4b9d5fb83ad', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Ephesians 5:18', 'ESV', '["Get Drunk", "Wine", "Spirit", "Leads", "Instead", "Filled"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Galatians 5:16', 'ESV', '["Walk", "Spirit", "Say", "Gratify", "Flesh", "Desires"]');
+    VALUES ('0114f5c6-d1ab-4bfb-8eee-9002f088154b', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Galatians 5:16', 'ESV', '["Walk", "Spirit", "Say", "Gratify", "Flesh", "Desires"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 Corinthians 2:9-10', 'ESV', '["Human Mind", "Conceived \\"\u2014", "Deep Things", "Spirit Searches", "Things God", "Things"]');
+    VALUES ('5e5fabfd-0bff-478f-af9a-e2872aa23405', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 Corinthians 2:9-10', 'ESV', '["Human Mind", "Conceived \\"\u2014", "Deep Things", "Spirit Searches", "Things God", "Things"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'John 14:26', 'ESV', '["Holy Spirit", "Things", "Teach", "Send", "Said", "Remind"]');
+    VALUES ('e427562d-fe61-4e66-8064-69e507d704a7', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'John 14:26', 'ESV', '["Holy Spirit", "Things", "Teach", "Send", "Said", "Remind"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 Corinthians 2:4-5', 'ESV', '["Persuasive Words", "Human Wisdom", "Faith Might", "Wise", "Spirit", "Rest"]');
+    VALUES ('93517474-3130-474e-8485-e1e222e6a7ab', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 Corinthians 2:4-5', 'ESV', '["Persuasive Words", "Human Wisdom", "Faith Might", "Wise", "Spirit", "Rest"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 Thessalonians 1:5', 'ESV', '["Lived Among", "Holy Spirit", "Gospel Came", "Deep Conviction", "Words", "Simply"]');
+    VALUES ('146b60e2-a60c-4dc4-923a-acfc09dee8aa', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 Thessalonians 1:5', 'ESV', '["Lived Among", "Holy Spirit", "Gospel Came", "Deep Conviction", "Words", "Simply"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 Corinthians 12:11', 'ESV', '["Work", "Spirit", "One", "Distributes", "Determines"]');
+    VALUES ('1066abcd-1d92-4745-9989-a851cf0ff392', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 Corinthians 12:11', 'ESV', '["Work", "Spirit", "One", "Distributes", "Determines"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 Corinthians 12:4-6', 'ESV', '["Spirit Distributes", "Different Kinds", "Working", "Work", "Service", "Lord"]');
+    VALUES ('4751216e-e9fe-4e38-9820-19ec7565cd50', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 Corinthians 12:4-6', 'ESV', '["Spirit Distributes", "Different Kinds", "Working", "Work", "Service", "Lord"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Jeremiah 32:17', 'ESV', '["Sovereign Lord", "Outstretched Arm", "Great Power", "Nothing", "Made", "Heavens"]');
+    VALUES ('eae891af-c548-425b-8e0e-12c587a84d1b', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Jeremiah 32:17', 'ESV', '["Sovereign Lord", "Outstretched Arm", "Great Power", "Nothing", "Made", "Heavens"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Romans 11:33', 'ESV', '["Paths Beyond Tracing", "Wisdom", "Unsearchable", "Riches", "Knowledge", "Judgments"]');
+    VALUES ('27b2fcb6-25d5-467f-8002-62d5323ca678', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Romans 11:33', 'ESV', '["Paths Beyond Tracing", "Wisdom", "Unsearchable", "Riches", "Knowledge", "Judgments"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Jeremiah 23:24', 'ESV', '["Secret Places", "Fill Heaven", "Cannot See", "Earth ", "Lord", "Hide"]');
+    VALUES ('e4150a33-d1e7-4018-b510-fc87ccc278db', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Jeremiah 23:24', 'ESV', '["Secret Places", "Fill Heaven", "Cannot See", "Earth ", "Lord", "Hide"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', '2 Corinthians 9:8', 'ESV', '["Every Good Work", "Times", "Things", "Need", "God", "Bless"]');
+    VALUES ('8dc1adc2-9b51-4d90-859f-5aaffdbd71db', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', '2 Corinthians 9:8', 'ESV', '["Every Good Work", "Times", "Things", "Need", "God", "Bless"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 Chronicles 29:11-13', 'ESV', '["Honor Come", "Glorious Name", "Give Strength", "Strength", "Give", "Wealth"]');
+    VALUES ('76514650-c57b-4ba4-8666-33d238a9f65e', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 Chronicles 29:11-13', 'ESV', '["Honor Come", "Glorious Name", "Give Strength", "Strength", "Give", "Wealth"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', '2 Thessalonians 3:3', 'ESV', '["Evil One", "Strengthen", "Protect", "Lord", "Faithful"]');
+    VALUES ('da99b62f-206c-4068-af8c-05092ae6286d', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', '2 Thessalonians 3:3', 'ESV', '["Evil One", "Strengthen", "Protect", "Lord", "Faithful"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'John 4:24', 'ESV', '["Worshipers Must Worship", "Truth ", "Spirit", "God"]');
+    VALUES ('ec21ba5c-282e-4c33-9f0a-5ae79cab7ff4', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'John 4:24', 'ESV', '["Worshipers Must Worship", "Truth ", "Spirit", "God"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 Peter 1:15-16', 'ESV', '["Holy ", "Holy", "Written", "Called"]');
+    VALUES ('61f2e3f5-6f27-4423-b156-a2d3929d26e5', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 Peter 1:15-16', 'ESV', '["Holy ", "Holy", "Written", "Called"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Psalm 145:3', 'ESV', '["Worthy", "Praise", "One", "Lord", "Greatness", "Great"]');
+    VALUES ('faf4b8ac-257f-43f6-b098-911320bbb020', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Psalm 145:3', 'ESV', '["Worthy", "Praise", "One", "Lord", "Greatness", "Great"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 John 4:10', 'ESV', '["Loved Us", "Loved God", "Atoning Sacrifice", "Son", "Sins", "Sent"]');
+    VALUES ('d342a74a-9865-44bd-9c32-4cebaf18e6e1', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', '1 John 4:10', 'ESV', '["Loved Us", "Loved God", "Atoning Sacrifice", "Son", "Sins", "Sent"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Psalm 86:15', 'ESV', '["Gracious God", "Slow", "Love", "Lord", "Faithfulness", "Compassionate"]');
+    VALUES ('c7308501-26de-4f5e-8176-c96b64ad48e3', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Psalm 86:15', 'ESV', '["Gracious God", "Slow", "Love", "Lord", "Faithfulness", "Compassionate"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Romans 8:28', 'ESV', '["Things God Works", "Called According", "Purpose", "Love", "Know", "Good"]');
+    VALUES ('c37f1a6d-6070-4ef7-b6c3-fa31e5191db2', 'bf99e038-1f50-4b26-8b70-24b99d23b5d1', 'Romans 8:28', 'ESV', '["Things God Works", "Called According", "Purpose", "Love", "Know", "Good"]');
 -- Pack: 180 Series 3 - Growing in Faith
     INSERT INTO verse_packs (id, title, identifier, description, is_public)
     VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', '180 Series 3 - Growing in Faith', '180-Series-3-Growing-in-Faith', '180 Series 3 - Growing in Faith', true)
     ;
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', '2 Peter 1:3-4', 'ESV', '["Given Us Everything", "Given Us", "Called Us", "World Caused", "Precious Promises", "May Participate"]');
+    VALUES ('fcb62e0c-f891-4c05-9c69-9ebc0e326022', 'a9a3bd33-79a1-4932-abae-d769e80a938b', '2 Peter 1:3-4', 'ESV', '["Given Us Everything", "Given Us", "Called Us", "World Caused", "Precious Promises", "May Participate"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', '2 Corinthians 1:20', 'ESV', '["Many Promises God", "God", "Yes", "Spoken", "Matter", "Made"]');
+    VALUES ('2ba7f915-c8c0-4d6e-960f-45cf0d8f97aa', 'a9a3bd33-79a1-4932-abae-d769e80a938b', '2 Corinthians 1:20', 'ESV', '["Many Promises God", "God", "Yes", "Spoken", "Matter", "Made"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', '2 Corinthians 1:3-4', 'ESV', '["Lord Jesus Christ", "Comforts Us", "Troubles", "Trouble", "Receive", "Praise"]');
+    VALUES ('b1405d88-733e-4967-a592-6f01ac3cac7b', 'a9a3bd33-79a1-4932-abae-d769e80a938b', '2 Corinthians 1:3-4', 'ESV', '["Lord Jesus Christ", "Comforts Us", "Troubles", "Trouble", "Receive", "Praise"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', '1 Corinthians 3:7-8', 'ESV', '["Makes Things Grow", "Rewarded According", "One Purpose", "One", "Waters", "Plants"]');
+    VALUES ('a1054500-e65b-4312-a982-9764ecc00b6d', 'a9a3bd33-79a1-4932-abae-d769e80a938b', '1 Corinthians 3:7-8', 'ESV', '["Makes Things Grow", "Rewarded According", "One Purpose", "One", "Waters", "Plants"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', 'Psalm 1:2-3', 'ESV', '["Wither \u2014 Whatever", "Whose Leaf", "Whose Delight", "Tree Planted", "Law Day", "Law"]');
+    VALUES ('f44d8bf3-f6ff-4f4d-8aa0-b5f91c754faf', 'a9a3bd33-79a1-4932-abae-d769e80a938b', 'Psalm 1:2-3', 'ESV', '["Wither \u2014 Whatever", "Whose Leaf", "Whose Delight", "Tree Planted", "Law Day", "Law"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', '2 Peter 1:8', 'ESV', '["Lord Jesus Christ", "Increasing Measure", "Unproductive", "Qualities", "Possess", "Knowledge"]');
+    VALUES ('96879168-1e74-4e99-9a79-6000276409f3', 'a9a3bd33-79a1-4932-abae-d769e80a938b', '2 Peter 1:8', 'ESV', '["Lord Jesus Christ", "Increasing Measure", "Unproductive", "Qualities", "Possess", "Knowledge"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', '1 Peter 5:10', 'ESV', '["Eternal Glory", "Suffered", "Strong", "Steadfast", "Restore", "Make"]');
+    VALUES ('4f11b400-9235-4de0-97f4-3cf9ed616c43', 'a9a3bd33-79a1-4932-abae-d769e80a938b', '1 Peter 5:10', 'ESV', '["Eternal Glory", "Suffered", "Strong", "Steadfast", "Restore", "Make"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', '2 Corinthians 12:9', 'ESV', '["Power May Rest", "Weakness ", "Made Perfect", "Power", "Weaknesses", "Therefore"]');
+    VALUES ('8b135367-6802-4a9c-9fae-e014cc25ab9d', 'a9a3bd33-79a1-4932-abae-d769e80a938b', '2 Corinthians 12:9', 'ESV', '["Power May Rest", "Weakness ", "Made Perfect", "Power", "Weaknesses", "Therefore"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', 'Ephesians 1:3', 'ESV', '["Every Spiritual Blessing", "Lord Jesus Christ", "Heavenly Realms", "Blessed Us", "Christ", "Praise"]');
+    VALUES ('ad98e614-08d3-45ab-bfba-b0edd8b2e44b', 'a9a3bd33-79a1-4932-abae-d769e80a938b', 'Ephesians 1:3', 'ESV', '["Every Spiritual Blessing", "Lord Jesus Christ", "Heavenly Realms", "Blessed Us", "Christ", "Praise"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', 'Psalm 37:4-5', 'ESV', '["Take Delight", "Way", "Trust", "Lord", "Heart", "Give"]');
+    VALUES ('40f0d366-2f79-46fc-89cc-585492f3f848', 'a9a3bd33-79a1-4932-abae-d769e80a938b', 'Psalm 37:4-5', 'ESV', '["Take Delight", "Way", "Trust", "Lord", "Heart", "Give"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', '1 John 2:1-2', 'ESV', '["Whole World", "Righteous One", "Dear Children", "Atoning Sacrifice", "Write", "Sins"]');
+    VALUES ('2fadb532-6f27-4605-aa4a-2048f6fa9e1a', 'a9a3bd33-79a1-4932-abae-d769e80a938b', '1 John 2:1-2', 'ESV', '["Whole World", "Righteous One", "Dear Children", "Atoning Sacrifice", "Write", "Sins"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', 'Psalm 103:12', 'ESV', '["West", "Transgressions", "Removed", "Far", "East"]');
+    VALUES ('20eb7333-2940-428f-a9fe-3be9a3bba6ac', 'a9a3bd33-79a1-4932-abae-d769e80a938b', 'Psalm 103:12', 'ESV', '["West", "Transgressions", "Removed", "Far", "East"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', 'Hebrews 4:12', 'ESV', '["Penetrates Even", "Edged Sword", "Dividing Soul", "Word", "Thoughts", "Spirit"]');
+    VALUES ('272b401b-e740-44de-9ea1-29e67eaa0102', 'a9a3bd33-79a1-4932-abae-d769e80a938b', 'Hebrews 4:12', 'ESV', '["Penetrates Even", "Edged Sword", "Dividing Soul", "Word", "Thoughts", "Spirit"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', 'Isaiah 55:10-11', 'ESV', '["Yields Seed", "Without Watering", "Snow Come", "Word", "Sower", "Sent"]');
+    VALUES ('55bf367c-9658-4bf5-938b-23b494a53238', 'a9a3bd33-79a1-4932-abae-d769e80a938b', 'Isaiah 55:10-11', 'ESV', '["Yields Seed", "Without Watering", "Snow Come", "Word", "Sower", "Sent"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', '2 Peter 1:20-21', 'ESV', '["Scripture Came", "Must Understand", "Holy Spirit", "Carried Along", "Though Human", "Prophecy Never"]');
+    VALUES ('09c70ae1-7a6f-4d6f-b5c6-5b00292808dd', 'a9a3bd33-79a1-4932-abae-d769e80a938b', '2 Peter 1:20-21', 'ESV', '["Scripture Came", "Must Understand", "Holy Spirit", "Carried Along", "Though Human", "Prophecy Never"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', '1 Thessalonians 2:13', 'ESV', '["Human Word", "Word", "Work", "Received", "Indeed", "Heard"]');
+    VALUES ('399b7b71-074f-4c9f-b3cc-9d64ded8659b', 'a9a3bd33-79a1-4932-abae-d769e80a938b', '1 Thessalonians 2:13', 'ESV', '["Human Word", "Word", "Work", "Received", "Indeed", "Heard"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', 'Jeremiah 15:16', 'ESV', '["Lord God Almighty", "Words Came", "Name", "Joy", "Heart", "Delight"]');
+    VALUES ('e22a13cd-29b9-4b31-afc5-63a5ce0ff346', 'a9a3bd33-79a1-4932-abae-d769e80a938b', 'Jeremiah 15:16', 'ESV', '["Lord God Almighty", "Words Came", "Name", "Joy", "Heart", "Delight"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', 'Job 23:12', 'ESV', '["Daily Bread", "Words", "Treasured", "Mouth", "Lips", "Departed"]');
+    VALUES ('39e7e8af-84fb-4c88-b07a-765af8ac451f', 'a9a3bd33-79a1-4932-abae-d769e80a938b', 'Job 23:12', 'ESV', '["Daily Bread", "Words", "Treasured", "Mouth", "Lips", "Departed"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', 'Acts 17:11', 'ESV', '["Scriptures Every Day", "Paul Said", "Noble Character", "Great Eagerness", "Berean Jews", "true"]');
+    VALUES ('b64489d0-f2b6-4b91-92c0-1a4a2c4ce55a', 'a9a3bd33-79a1-4932-abae-d769e80a938b', 'Acts 17:11', 'ESV', '["Scriptures Every Day", "Paul Said", "Noble Character", "Great Eagerness", "Berean Jews", "true"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', 'John 5:39-40', 'ESV', '["Scriptures Diligently", "Eternal Life", "Scriptures", "Life", "Yet", "Think"]');
+    VALUES ('1f9a798b-cbe7-4a21-b4ec-522608b8d743', 'a9a3bd33-79a1-4932-abae-d769e80a938b', 'John 5:39-40', 'ESV', '["Scriptures Diligently", "Eternal Life", "Scriptures", "Life", "Yet", "Think"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', 'John 8:31-32', 'ESV', '["Jesus Said", "Free ", "Truth", "Teaching", "Set", "Really"]');
+    VALUES ('998f5b98-b0c4-4217-bf05-3676927e954d', 'a9a3bd33-79a1-4932-abae-d769e80a938b', 'John 8:31-32', 'ESV', '["Jesus Said", "Free ", "Truth", "Teaching", "Set", "Really"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', 'Matthew 4:4', 'ESV', '["Man Shall", "Jesus Answered", "God ", "Every Word", "Bread Alone", "Written"]');
+    VALUES ('678f3571-6a04-4642-86ed-392d201882e8', 'a9a3bd33-79a1-4932-abae-d769e80a938b', 'Matthew 4:4', 'ESV', '["Man Shall", "Jesus Answered", "God ", "Every Word", "Bread Alone", "Written"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', 'Matthew 24:35', 'ESV', '["Never Pass Away", "Pass Away", "Words", "Heaven", "Earth"]');
+    VALUES ('34528186-6a72-4c51-9e24-4a75498be6be', 'a9a3bd33-79a1-4932-abae-d769e80a938b', 'Matthew 24:35', 'ESV', '["Never Pass Away", "Pass Away", "Words", "Heaven", "Earth"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', 'John 17:17', 'ESV', '["Word", "Truth", "Sanctify"]');
+    VALUES ('24f003cd-9ea2-45bd-88db-a8c026255bc8', 'a9a3bd33-79a1-4932-abae-d769e80a938b', 'John 17:17', 'ESV', '["Word", "Truth", "Sanctify"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', '1 Peter 1:6-7', 'ESV', '["Suffer Grief", "Proven Genuineness", "Jesus Christ", "Greatly Rejoice", "Greater Worth", "Faith \u2014"]');
+    VALUES ('f4d6962a-8cdc-44db-8c83-84007c166c32', 'a9a3bd33-79a1-4932-abae-d769e80a938b', '1 Peter 1:6-7', 'ESV', '["Suffer Grief", "Proven Genuineness", "Jesus Christ", "Greatly Rejoice", "Greater Worth", "Faith \u2014"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', 'James 1:2-4', 'ESV', '["Let Perseverance Finish", "Faith Produces Perseverance", "Pure Joy", "Many Kinds", "Lacking Anything", "Face Trials"]');
+    VALUES ('23fc602a-6e74-447a-82e0-88d1dc7e4e9b', 'a9a3bd33-79a1-4932-abae-d769e80a938b', 'James 1:2-4', 'ESV', '["Let Perseverance Finish", "Faith Produces Perseverance", "Pure Joy", "Many Kinds", "Lacking Anything", "Face Trials"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', 'Hebrews 4:2', 'ESV', '["Good News Proclaimed", "Value", "Share", "Obeyed", "Message", "Heard"]');
+    VALUES ('49cde56c-54ea-4876-851e-1911aa50f6ca', 'a9a3bd33-79a1-4932-abae-d769e80a938b', 'Hebrews 4:2', 'ESV', '["Good News Proclaimed", "Value", "Share", "Obeyed", "Message", "Heard"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', 'Hebrews 10:38', 'ESV', '["Shrinks Back ", "Righteous One", "One", "Take", "Pleasure", "Live"]');
+    VALUES ('bc273605-1053-444e-b7cf-1310ccd8b380', 'a9a3bd33-79a1-4932-abae-d769e80a938b', 'Hebrews 10:38', 'ESV', '["Shrinks Back ", "Righteous One", "One", "Take", "Pleasure", "Live"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', 'Ephesians 6:16', 'ESV', '["Flaming Arrows", "Evil One", "Take", "Shield", "Faith", "Extinguish"]');
+    VALUES ('69768a3d-3c82-4d99-921a-bbf94b47a63f', 'a9a3bd33-79a1-4932-abae-d769e80a938b', 'Ephesians 6:16', 'ESV', '["Flaming Arrows", "Evil One", "Take", "Shield", "Faith", "Extinguish"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', '1 Timothy 6:11-12', 'ESV', '["Take Hold", "Pursue Righteousness", "Many Witnesses", "Good Confession", "Eternal Life", "Good Fight"]');
+    VALUES ('474699d8-af21-4b6c-8dca-fe820aa975e0', 'a9a3bd33-79a1-4932-abae-d769e80a938b', '1 Timothy 6:11-12', 'ESV', '["Take Hold", "Pursue Righteousness", "Many Witnesses", "Good Confession", "Eternal Life", "Good Fight"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', 'Hebrews 11:1', 'ESV', '["See", "Hope", "Faith", "Confidence", "Assurance"]');
+    VALUES ('277d28f3-adf4-42e1-a5be-ab2b8421938b', 'a9a3bd33-79a1-4932-abae-d769e80a938b', 'Hebrews 11:1', 'ESV', '["See", "Hope", "Faith", "Confidence", "Assurance"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', 'Romans 10:17', 'ESV', '["Faith Comes", "Word", "Message", "Hearing", "Heard", "Consequently"]');
+    VALUES ('169184af-be10-46cd-a294-6518b0956c18', 'a9a3bd33-79a1-4932-abae-d769e80a938b', 'Romans 10:17', 'ESV', '["Faith Comes", "Word", "Message", "Hearing", "Heard", "Consequently"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', 'Hebrews 6:12', 'ESV', '["Patience Inherit", "Become Lazy", "Want", "Promised", "Imitate", "Faith"]');
+    VALUES ('cea4eff7-0c96-4fe5-aeee-60bc7602649c', 'a9a3bd33-79a1-4932-abae-d769e80a938b', 'Hebrews 6:12', 'ESV', '["Patience Inherit", "Become Lazy", "Want", "Promised", "Imitate", "Faith"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', 'James 2:17', 'ESV', '["Way", "Faith", "Dead", "Action", "Accompanied"]');
+    VALUES ('2bcb7d9f-0056-45e7-9a55-c8a603560852', 'a9a3bd33-79a1-4932-abae-d769e80a938b', 'James 2:17', 'ESV', '["Way", "Faith", "Dead", "Action", "Accompanied"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', 'Galatians 2:16', 'ESV', '["Jesus Christ", "Christ Jesus", "Christ", "Works", "Put", "Person"]');
+    VALUES ('15c7543a-dd22-44b9-9674-70884d7404db', 'a9a3bd33-79a1-4932-abae-d769e80a938b', 'Galatians 2:16', 'ESV', '["Jesus Christ", "Christ Jesus", "Christ", "Works", "Put", "Person"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('a9a3bd33-79a1-4932-abae-d769e80a938b', 'Romans 5:1', 'ESV', '["Lord Jesus Christ", "Therefore", "Since", "Peace", "Justified", "God"]');
+    VALUES ('0e3d661b-4440-4834-8ea3-932fc39d5e5f', 'a9a3bd33-79a1-4932-abae-d769e80a938b', 'Romans 5:1', 'ESV', '["Lord Jesus Christ", "Therefore", "Since", "Peace", "Justified", "God"]');
 -- Pack: DEP 242 - Pack 4
     INSERT INTO verse_packs (id, title, identifier, description, is_public)
     VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', 'DEP 242 - Pack 4', 'DEP-242-Pack-4', 'DEP 242 - Pack 4', true)
     ;
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', '1 Thessalonians 5:17 ', 'ESV', '["Pray Continually", "Pray", "Continually"]');
+    VALUES ('9f21e475-4f28-4c48-b652-1cd5f5ac4de8', '5289c836-6e2d-49f4-9402-2a7578e13720', '1 Thessalonians 5:17 ', 'ESV', '["Pray Continually", "Pray", "Continually"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', 'Colossians 4:2', 'ESV', '["Watchful", "Thankful", "Prayer", "Devote"]');
+    VALUES ('90022eea-88c3-43a3-bfe0-b88c3a3e3494', '5289c836-6e2d-49f4-9402-2a7578e13720', 'Colossians 4:2', 'ESV', '["Watchful", "Thankful", "Prayer", "Devote"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', '1 Peter 4:7', 'ESV', '["Sober Mind", "May Pray", "Things", "Therefore", "Near", "End"]');
+    VALUES ('3d197c61-c564-4b23-b475-1bf18f6c6cf7', '5289c836-6e2d-49f4-9402-2a7578e13720', '1 Peter 4:7', 'ESV', '["Sober Mind", "May Pray", "Things", "Therefore", "Near", "End"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', '1 Timothy 2:1-2', 'ESV', '["May Live Peaceful", "Quiet Lives", "People \u2014", "Urge", "Thanksgiving", "Prayers"]');
+    VALUES ('ebbc8f1a-0440-46d1-9032-ae4f5f340afd', '5289c836-6e2d-49f4-9402-2a7578e13720', '1 Timothy 2:1-2', 'ESV', '["May Live Peaceful", "Quiet Lives", "People \u2014", "Urge", "Thanksgiving", "Prayers"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', 'John 14:13-14', 'ESV', '["Father May", "May Ask", "Ask", "Whatever", "Son", "Name"]');
+    VALUES ('20fb7959-3c9d-4ee0-8ed5-c0161982cf93', '5289c836-6e2d-49f4-9402-2a7578e13720', 'John 14:13-14', 'ESV', '["Father May", "May Ask", "Ask", "Whatever", "Son", "Name"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', 'Ephesians 3:20', 'ESV', '["Work Within Us", "Power", "Immeasurably", "Imagine", "Ask", "According"]');
+    VALUES ('a5488c48-ea90-440f-9f59-5d460cd67099', '5289c836-6e2d-49f4-9402-2a7578e13720', 'Ephesians 3:20', 'ESV', '["Work Within Us", "Power", "Immeasurably", "Imagine", "Ask", "According"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', 'Jeremiah 33:3', 'ESV', '["Unsearchable Things", "Know ", "Tell", "Great", "Call", "Answer"]');
+    VALUES ('a2f7a200-1c7d-4c86-9f5c-d88f3296086d', '5289c836-6e2d-49f4-9402-2a7578e13720', 'Jeremiah 33:3', 'ESV', '["Unsearchable Things", "Know ", "Tell", "Great", "Call", "Answer"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', 'James 1:5', 'ESV', '["Without Finding Fault", "Lacks Wisdom", "Gives Generously", "Ask God", "Given"]');
+    VALUES ('7e71f857-4cb9-4a53-8373-a4088f086a3f', '5289c836-6e2d-49f4-9402-2a7578e13720', 'James 1:5', 'ESV', '["Without Finding Fault", "Lacks Wisdom", "Gives Generously", "Ask God", "Given"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', 'Psalm 34:4', 'ESV', '["Sought", "Lord", "Fears", "Delivered", "Answered"]');
+    VALUES ('b016c5c3-8f46-4017-b939-e7a14c867b50', '5289c836-6e2d-49f4-9402-2a7578e13720', 'Psalm 34:4', 'ESV', '["Sought", "Lord", "Fears", "Delivered", "Answered"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', 'Psalm 50:15', 'ESV', '["Trouble", "Honor", "Deliver", "Day", "Call"]');
+    VALUES ('0d0d38e5-803e-4c76-9b14-5d90bac20c76', '5289c836-6e2d-49f4-9402-2a7578e13720', 'Psalm 50:15', 'ESV', '["Trouble", "Honor", "Deliver", "Day", "Call"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', 'Acts 4:31', 'ESV', '["Holy Spirit", "God Boldly", "Word", "Spoke", "Shaken", "Prayed"]');
+    VALUES ('54d4b67e-9bc6-4a75-abeb-d60d8b7257e9', '5289c836-6e2d-49f4-9402-2a7578e13720', 'Acts 4:31', 'ESV', '["Holy Spirit", "God Boldly", "Word", "Spoke", "Shaken", "Prayed"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', 'Colossians 4:3', 'ESV', '["God May Open", "May Proclaim", "Pray", "Mystery", "Message", "Door"]');
+    VALUES ('4bb35a4e-0045-4130-ad38-17c1b8f2b64c', '5289c836-6e2d-49f4-9402-2a7578e13720', 'Colossians 4:3', 'ESV', '["God May Open", "May Proclaim", "Pray", "Mystery", "Message", "Door"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', 'John 16:24', 'ESV', '["Receive", "Name", "Joy", "Complete", "Asked", "Ask"]');
+    VALUES ('935ebdae-4d07-4b3e-8f23-6236039e0c21', '5289c836-6e2d-49f4-9402-2a7578e13720', 'John 16:24', 'ESV', '["Receive", "Name", "Joy", "Complete", "Asked", "Ask"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', 'Matthew 21:22', 'ESV', '["Receive Whatever", "Prayer ", "Believe", "Ask"]');
+    VALUES ('2abe9f50-2291-411a-be77-83f292625eef', '5289c836-6e2d-49f4-9402-2a7578e13720', 'Matthew 21:22', 'ESV', '["Receive Whatever", "Prayer ", "Believe", "Ask"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', 'Ephesians 6:18', 'ESV', '["Always Keep", "Spirit", "Requests", "Praying", "Prayers", "Pray"]');
+    VALUES ('cc4459bc-82a7-4a25-893d-2302353a0f9a', '5289c836-6e2d-49f4-9402-2a7578e13720', 'Ephesians 6:18', 'ESV', '["Always Keep", "Spirit", "Requests", "Praying", "Prayers", "Pray"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', '1 John 5:14-15', 'ESV', '["Ask Anything According", "Ask \u2014", "Hears Us", "Approaching God", "Know", "Confidence"]');
+    VALUES ('2d638648-abe2-480f-900c-2863e72c1abf', '5289c836-6e2d-49f4-9402-2a7578e13720', '1 John 5:14-15', 'ESV', '["Ask Anything According", "Ask \u2014", "Hears Us", "Approaching God", "Know", "Confidence"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', 'Psalm 66:18', 'ESV', '["Lord Would", "Cherished Sin", "Listened", "Heart"]');
+    VALUES ('175ed566-3358-4fa3-9934-42f50f35084e', '5289c836-6e2d-49f4-9402-2a7578e13720', 'Psalm 66:18', 'ESV', '["Lord Would", "Cherished Sin", "Listened", "Heart"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', '1 John 3:22', 'ESV', '["Receive", "Pleases", "Keep", "Commands", "Ask", "Anything"]');
+    VALUES ('3168f0e3-6bbf-434e-b519-dfb9e9d572d9', '5289c836-6e2d-49f4-9402-2a7578e13720', '1 John 3:22', 'ESV', '["Receive", "Pleases", "Keep", "Commands", "Ask", "Anything"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', 'Matthew 18:19', 'ESV', '["Earth Agree", "Two", "Truly", "Tell", "Heaven", "Father"]');
+    VALUES ('6895cee6-11c2-4505-9b69-f8d3490bf856', '5289c836-6e2d-49f4-9402-2a7578e13720', 'Matthew 18:19', 'ESV', '["Earth Agree", "Two", "Truly", "Tell", "Heaven", "Father"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', 'Matthew 7:7-8', 'ESV', '["Seeks Finds", "Asks Receives", "Seek", "Opened", "One", "Knocks"]');
+    VALUES ('7452ae66-a812-438d-9ed4-a3c72e228c89', '5289c836-6e2d-49f4-9402-2a7578e13720', 'Matthew 7:7-8', 'ESV', '["Seeks Finds", "Asks Receives", "Seek", "Opened", "One", "Knocks"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', 'Jeremiah 29:12-13', 'ESV', '["Seek", "Pray", "Listen", "Heart", "Find", "Come"]');
+    VALUES ('f0e80663-2b00-4829-8082-a66b442fd1d6', '5289c836-6e2d-49f4-9402-2a7578e13720', 'Jeremiah 29:12-13', 'ESV', '["Seek", "Pray", "Listen", "Heart", "Find", "Come"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', 'Nehemiah 1:8-9', 'ESV', '["Servant Moses", "Name ", "Farthest Horizon", "Exiled People", "Unfaithful", "Scatter"]');
+    VALUES ('3048d7ec-4a38-4dae-b186-9c5ea7c0df7f', '5289c836-6e2d-49f4-9402-2a7578e13720', 'Nehemiah 1:8-9', 'ESV', '["Servant Moses", "Name ", "Farthest Horizon", "Exiled People", "Unfaithful", "Scatter"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', 'Daniel 6:10', 'ESV', '["Went Home", "Upstairs Room", "Three Times", "Giving Thanks", "Daniel Learned", "Published"]');
+    VALUES ('fd4a1706-838f-42a9-b0cf-5ef1d2a4a9a0', '5289c836-6e2d-49f4-9402-2a7578e13720', 'Daniel 6:10', 'ESV', '["Went Home", "Upstairs Room", "Three Times", "Giving Thanks", "Daniel Learned", "Published"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', 'Luke 5:15-16', 'ESV', '["Jesus Often Withdrew", "People Came", "Lonely Places", "Yet", "Spread", "Sicknesses"]');
+    VALUES ('66d0a667-663c-40f3-bfac-81d5df54497b', '5289c836-6e2d-49f4-9402-2a7578e13720', 'Luke 5:15-16', 'ESV', '["Jesus Often Withdrew", "People Came", "Lonely Places", "Yet", "Spread", "Sicknesses"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', 'Luke 6:12', 'ESV', '["Days Jesus Went", "Night Praying", "Spent", "Pray", "One", "Mountainside"]');
+    VALUES ('b89c988d-f86f-4fea-8931-22b1b89af43a', '5289c836-6e2d-49f4-9402-2a7578e13720', 'Luke 6:12', 'ESV', '["Days Jesus Went", "Night Praying", "Spent", "Pray", "One", "Mountainside"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', 'James 5:17-18', 'ESV', '["Heavens Gave Rain", "Half Years", "Earth Produced", "Prayed Earnestly", "Rain", "Prayed"]');
+    VALUES ('596d013c-7f55-4a62-9131-c3260e555fee', '5289c836-6e2d-49f4-9402-2a7578e13720', 'James 5:17-18', 'ESV', '["Heavens Gave Rain", "Half Years", "Earth Produced", "Prayed Earnestly", "Rain", "Prayed"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', 'Acts 16:25', 'ESV', '["Singing Hymns", "Midnight Paul", "Silas", "Prisoners", "Praying", "Listening"]');
+    VALUES ('bddaccdf-334f-413c-82f7-c3f8e167f6b7', '5289c836-6e2d-49f4-9402-2a7578e13720', 'Acts 16:25', 'ESV', '["Singing Hymns", "Midnight Paul", "Silas", "Prisoners", "Praying", "Listening"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', '1 Chronicles 29:11-13', 'ESV', '["Honor Come", "Glorious Name", "Give Strength", "Strength", "Give", "Wealth"]');
+    VALUES ('2dba3b05-86db-4760-8db9-26ed2866e556', '5289c836-6e2d-49f4-9402-2a7578e13720', '1 Chronicles 29:11-13', 'ESV', '["Honor Come", "Glorious Name", "Give Strength", "Strength", "Give", "Wealth"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', '1 Timothy 2:1-2', 'ESV', '["May Live Peaceful", "Quiet Lives", "People \u2014", "Urge", "Thanksgiving", "Prayers"]');
+    VALUES ('a819947c-c998-44d1-96a2-89b5ac3bdf9b', '5289c836-6e2d-49f4-9402-2a7578e13720', '1 Timothy 2:1-2', 'ESV', '["May Live Peaceful", "Quiet Lives", "People \u2014", "Urge", "Thanksgiving", "Prayers"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', '1 Thessalonians 5:18', 'ESV', '["Give Thanks", "Christ Jesus", "God", "Circumstances"]');
+    VALUES ('90f27a04-3d02-4072-ae5c-0f455a2325b8', '5289c836-6e2d-49f4-9402-2a7578e13720', '1 Thessalonians 5:18', 'ESV', '["Give Thanks", "Christ Jesus", "God", "Circumstances"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', '1 John 1:9', 'ESV', '["Purify Us", "Forgive Us", "Unrighteousness", "Sins", "Faithful", "Confess"]');
+    VALUES ('adc4b69e-8bac-4f73-ad2a-309d25fc6979', '5289c836-6e2d-49f4-9402-2a7578e13720', '1 John 1:9', 'ESV', '["Purify Us", "Forgive Us", "Unrighteousness", "Sins", "Faithful", "Confess"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('5289c836-6e2d-49f4-9402-2a7578e13720', 'Philippians 4:6-7', 'ESV', '["Every Situation", "Christ Jesus", "Understanding", "Transcends", "Thanksgiving", "Requests"]');
+    VALUES ('574d46a9-bfa4-44a4-b236-a608d4e07cf4', '5289c836-6e2d-49f4-9402-2a7578e13720', 'Philippians 4:6-7', 'ESV', '["Every Situation", "Christ Jesus", "Understanding", "Transcends", "Thanksgiving", "Requests"]');
 -- Pack: DEP 242 Pack 5 - Fellowship
     INSERT INTO verse_packs (id, title, identifier, description, is_public)
     VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', 'DEP 242 Pack 5 - Fellowship', 'DEP-242-Pack-5-Fellowship', 'DEP 242 Pack 5 - Fellowship', true)
     ;
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', 'Ephesians 2:13', 'ESV', '["Far Away", "Brought Near", "Christ Jesus", "Christ", "Blood"]');
+    VALUES ('052352ed-81de-4500-9aa2-a3c86d201621', '771e1037-5a84-4196-b92b-d5cef6917856', 'Ephesians 2:13', 'ESV', '["Far Away", "Brought Near", "Christ Jesus", "Christ", "Blood"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', 'Colossians 1:20', 'ESV', '["Making Peace", "Whether Things", "Things", "Shed", "Reconcile", "Heaven"]');
+    VALUES ('ba2c4e21-cfe5-4a98-8b6e-e6650bfa9aff', '771e1037-5a84-4196-b92b-d5cef6917856', 'Colossians 1:20', 'ESV', '["Making Peace", "Whether Things", "Things", "Shed", "Reconcile", "Heaven"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', '1 John 1:3', 'ESV', '["Jesus Christ", "Also May", "Son", "Seen", "Proclaim", "Heard"]');
+    VALUES ('c3a4539b-af60-42f8-a14f-c909f779d57c', '771e1037-5a84-4196-b92b-d5cef6917856', '1 John 1:3', 'ESV', '["Jesus Christ", "Also May", "Son", "Seen", "Proclaim", "Heard"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', '2 Corinthians 13:14', 'ESV', '["Lord Jesus Christ", "Holy Spirit", "May", "Love", "Grace", "God"]');
+    VALUES ('7e36994e-57a2-43ea-a607-2526c1ac3112', '771e1037-5a84-4196-b92b-d5cef6917856', '2 Corinthians 13:14', 'ESV', '["Lord Jesus Christ", "Holy Spirit", "May", "Love", "Grace", "God"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', 'Matthew 18:20', 'ESV', '["Three Gather", "Two", "Name"]');
+    VALUES ('8a2bc1fb-8f5c-46a7-8b40-f7d5a3965b0a', '771e1037-5a84-4196-b92b-d5cef6917856', 'Matthew 18:20', 'ESV', '["Three Gather", "Two", "Name"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', 'Psalm 133:1-3', 'ESV', '["People Live Together", "Even Life Forevermore", "Mount Zion", "Lord Bestows", "Unity", "Running"]');
+    VALUES ('381f03e2-a4ed-4d37-bea2-12456b29b88b', '771e1037-5a84-4196-b92b-d5cef6917856', 'Psalm 133:1-3', 'ESV', '["People Live Together", "Even Life Forevermore", "Mount Zion", "Lord Bestows", "Unity", "Running"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', 'Hebrews 3:13', 'ESV', '["Today ", "Sin", "None", "May", "Long", "Hardened"]');
+    VALUES ('dfc0f4d7-16f3-48f5-856f-e0db2c48545b', '771e1037-5a84-4196-b92b-d5cef6917856', 'Hebrews 3:13', 'ESV', '["Today ", "Sin", "None", "May", "Long", "Hardened"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', 'Ecclesiastes 4:9-10', 'ESV', '["Pity Anyone", "Good Return", "Two", "One", "Labor", "Help"]');
+    VALUES ('fc314710-c3d4-49fc-8ec2-57080ca2b292', '771e1037-5a84-4196-b92b-d5cef6917856', 'Ecclesiastes 4:9-10', 'ESV', '["Pity Anyone", "Good Return", "Two", "One", "Labor", "Help"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', '2 Timothy 2:22', 'ESV', '["Pursue Righteousness", "Pure Heart", "Evil Desires", "Youth", "Peace", "Love"]');
+    VALUES ('13654bd7-ee0b-4d4c-9b9b-873f1b9a2744', '771e1037-5a84-4196-b92b-d5cef6917856', '2 Timothy 2:22', 'ESV', '["Pursue Righteousness", "Pure Heart", "Evil Desires", "Youth", "Peace", "Love"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', 'Proverbs 27:17,19', 'ESV', '["Iron Sharpens Iron", "Water Reflects", "Life Reflects", "One", "Heart", "Face"]');
+    VALUES ('1c524676-bee0-4525-8a22-f5974e5c0458', '771e1037-5a84-4196-b92b-d5cef6917856', 'Proverbs 27:17,19', 'ESV', '["Iron Sharpens Iron", "Water Reflects", "Life Reflects", "One", "Heart", "Face"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', 'Proverbs 13:20', 'ESV', '["Fools Suffers Harm", "Become Wise", "Wise", "Walk", "Companion"]');
+    VALUES ('6a389bb5-0d99-41af-984a-8bfacb44b0bc', '771e1037-5a84-4196-b92b-d5cef6917856', 'Proverbs 13:20', 'ESV', '["Fools Suffers Harm", "Become Wise", "Wise", "Walk", "Companion"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', 'Ephesians 4:13', 'ESV', '["Whole Measure", "Reach Unity", "Become Mature", "Son", "Knowledge", "God"]');
+    VALUES ('fe4a018f-237d-495a-9b56-0c88a871b359', '771e1037-5a84-4196-b92b-d5cef6917856', 'Ephesians 4:13', 'ESV', '["Whole Measure", "Reach Unity", "Become Mature", "Son", "Knowledge", "God"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', 'Acts 2:42,47', 'ESV', '["Praising God", "Number Daily", "Lord Added", "Teaching", "Saved", "Prayer"]');
+    VALUES ('9d6853d4-972a-4e39-b86a-08d208a312ee', '771e1037-5a84-4196-b92b-d5cef6917856', 'Acts 2:42,47', 'ESV', '["Praising God", "Number Daily", "Lord Added", "Teaching", "Saved", "Prayer"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', 'Philippians 1:5,27', 'ESV', '["Whatever Happens", "Striving Together", "Stand Firm", "Manner Worthy", "First Day", "One Spirit"]');
+    VALUES ('0fbafb0e-8af5-4dbf-b010-ed178ad72936', '771e1037-5a84-4196-b92b-d5cef6917856', 'Philippians 1:5,27', 'ESV', '["Whatever Happens", "Striving Together", "Stand Firm", "Manner Worthy", "First Day", "One Spirit"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', 'Hebrews 10:24-25', 'ESV', '["Let Us Consider", "Toward Love", "Meeting Together", "Good Deeds", "Day Approaching", "See"]');
+    VALUES ('675734ca-000f-4edf-89cd-b11d4d8703ec', '771e1037-5a84-4196-b92b-d5cef6917856', 'Hebrews 10:24-25', 'ESV', '["Let Us Consider", "Toward Love", "Meeting Together", "Good Deeds", "Day Approaching", "See"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', '2 Corinthians 8:3-4', 'ESV', '["Urgently Pleaded", "Even Beyond", "Testify", "Sharing", "Service", "Privilege"]');
+    VALUES ('d7d8678f-c569-4910-957e-8ab2582394ea', '771e1037-5a84-4196-b92b-d5cef6917856', '2 Corinthians 8:3-4', 'ESV', '["Urgently Pleaded", "Even Beyond", "Testify", "Sharing", "Service", "Privilege"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', '1 Peter 4:13', 'ESV', '["Rejoice Inasmuch", "Sufferings", "Revealed", "Participate", "Overjoyed", "May"]');
+    VALUES ('0fb6db35-e398-4c2b-b063-031fc83c2c90', '771e1037-5a84-4196-b92b-d5cef6917856', '1 Peter 4:13', 'ESV', '["Rejoice Inasmuch", "Sufferings", "Revealed", "Participate", "Overjoyed", "May"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', 'Galatians 6:2', 'ESV', '["Way", "Law", "Fulfill", "Christ", "Carry", "Burdens"]');
+    VALUES ('2c3cd7dd-911e-4723-9b55-4ddda0e4dcdf', '771e1037-5a84-4196-b92b-d5cef6917856', 'Galatians 6:2', 'ESV', '["Way", "Law", "Fulfill", "Christ", "Carry", "Burdens"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', 'Philippians 2:1-2', 'ESV', '["Joy Complete", "Common Sharing", "One Mind", "One", "United", "Therefore"]');
+    VALUES ('433d887d-caaf-4d7f-9a98-fb04d47e3a01', '771e1037-5a84-4196-b92b-d5cef6917856', 'Philippians 2:1-2', 'ESV', '["Joy Complete", "Common Sharing", "One Mind", "One", "United", "Therefore"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', 'Philippians 2:3-4', 'ESV', '["Humility Value Others", "Vain Conceit", "Selfish Ambition", "Others", "Rather", "Nothing"]');
+    VALUES ('672f75cf-f61a-4667-b8c5-b21290700fc0', '771e1037-5a84-4196-b92b-d5cef6917856', 'Philippians 2:3-4', 'ESV', '["Humility Value Others", "Vain Conceit", "Selfish Ambition", "Others", "Rather", "Nothing"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', '2 Corinthians 6:12-13', 'ESV', '["Fair Exchange \u2014", "Hearts Also", "Withholding", "Speak", "Affection"]');
+    VALUES ('b60592fd-ff4e-47fd-8c47-59e46f05c45f', '771e1037-5a84-4196-b92b-d5cef6917856', '2 Corinthians 6:12-13', 'ESV', '["Fair Exchange \u2014", "Hearts Also", "Withholding", "Speak", "Affection"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', 'Ephesians 5:21', 'ESV', '["One Another", "Submit", "Reverence", "Christ"]');
+    VALUES ('363225c3-545a-4c85-ae0a-27e94e22f6d5', '771e1037-5a84-4196-b92b-d5cef6917856', 'Ephesians 5:21', 'ESV', '["One Another", "Submit", "Reverence", "Christ"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', 'Mark 9:34-35', 'ESV', '["Kept Quiet", "Jesus Called", "First Must", "Way", "Wants", "Twelve"]');
+    VALUES ('e5e11a7e-7a4e-4354-aa8c-f4ebc7f8a9aa', '771e1037-5a84-4196-b92b-d5cef6917856', 'Mark 9:34-35', 'ESV', '["Kept Quiet", "Jesus Called", "First Must", "Way", "Wants", "Twelve"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', 'Hebrews 12:15', 'ESV', '["One Falls Short", "Bitter Root Grows", "Defile Many", "Cause Trouble", "See", "Grace"]');
+    VALUES ('6df292af-c5eb-48ab-996c-05b4107ebfa6', '771e1037-5a84-4196-b92b-d5cef6917856', 'Hebrews 12:15', 'ESV', '["One Falls Short", "Bitter Root Grows", "Defile Many", "Cause Trouble", "See", "Grace"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', 'Ephesians 5:11', 'ESV', '["Rather Expose", "Fruitless Deeds", "Nothing", "Darkness"]');
+    VALUES ('cae68f08-9d64-4bfe-b257-f18929f14ce3', '771e1037-5a84-4196-b92b-d5cef6917856', 'Ephesians 5:11', 'ESV', '["Rather Expose", "Fruitless Deeds", "Nothing", "Darkness"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', '2 Timothy 2:4', 'ESV', '["Soldier Gets Entangled", "Rather Tries", "One Serving", "Commanding Officer", "Civilian Affairs", "Please"]');
+    VALUES ('fbac16ad-3840-4f5c-beeb-74b6832c2f53', '771e1037-5a84-4196-b92b-d5cef6917856', '2 Timothy 2:4', 'ESV', '["Soldier Gets Entangled", "Rather Tries", "One Serving", "Commanding Officer", "Civilian Affairs", "Please"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', 'Matthew 5:23-24', 'ESV', '["First Go", "Therefore", "Something", "Sister", "Remember", "Reconciled"]');
+    VALUES ('128e7fa7-69d4-437b-ab8e-9ff2a788eb66', '771e1037-5a84-4196-b92b-d5cef6917856', 'Matthew 5:23-24', 'ESV', '["First Go", "Therefore", "Something", "Sister", "Remember", "Reconciled"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', 'Matthew 18:15', 'ESV', '["Sister Sins", "Two", "Point", "Listen", "Fault", "Brother"]');
+    VALUES ('89a7a15c-fa2c-4c83-af87-a2314b993d56', '771e1037-5a84-4196-b92b-d5cef6917856', 'Matthew 18:15', 'ESV', '["Sister Sins", "Two", "Point", "Listen", "Fault", "Brother"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', '1 John 1:9', 'ESV', '["Purify Us", "Forgive Us", "Unrighteousness", "Sins", "Faithful", "Confess"]');
+    VALUES ('b54d0735-0887-4d2a-8857-070039a33dbb', '771e1037-5a84-4196-b92b-d5cef6917856', '1 John 1:9', 'ESV', '["Purify Us", "Forgive Us", "Unrighteousness", "Sins", "Faithful", "Confess"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('771e1037-5a84-4196-b92b-d5cef6917856', 'Proverbs 28:13', 'ESV', '["Whoever Conceals", "Finds Mercy", "Sins", "Renounces", "Prosper", "One"]');
+    VALUES ('68596bee-ee9c-49b1-9e13-3ce177cbe41f', '771e1037-5a84-4196-b92b-d5cef6917856', 'Proverbs 28:13', 'ESV', '["Whoever Conceals", "Finds Mercy", "Sins", "Renounces", "Prosper", "One"]');
 -- Pack: DEP 242 Pack 6 - Witnessing
     INSERT INTO verse_packs (id, title, identifier, description, is_public)
     VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'DEP 242 Pack 6 - Witnessing', 'DEP-242-Pack-6-Witnessing', 'DEP 242 Pack 6 - Witnessing', true)
     ;
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Acts 1:8', 'ESV', '["Holy Spirit Comes", "Receive Power", "Earth ", "Witnesses", "Samaria", "Judea"]');
+    VALUES ('981defeb-bbf2-4ace-80f2-c36273e2ff59', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Acts 1:8', 'ESV', '["Holy Spirit Comes", "Receive Power", "Earth ", "Witnesses", "Samaria", "Judea"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', '2 Corinthians 5:18-19', 'ESV', '["Counting People", "Reconciled Us", "Gave Us", "World", "Sins", "Reconciling"]');
+    VALUES ('2e853d25-831f-407c-9b44-ae9e8005f1e3', '7378996d-b050-4731-a7ae-5d58c3ac667a', '2 Corinthians 5:18-19', 'ESV', '["Counting People", "Reconciled Us", "Gave Us", "World", "Sins", "Reconciling"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', '2 Timothy 4:1-2', 'ESV', '["Great Patience", "Encourage \u2014", "Christ Jesus", "Careful Instruction", "Word", "View"]');
+    VALUES ('6032b89c-c62c-4f35-915d-a1ed5df29e7d', '7378996d-b050-4731-a7ae-5d58c3ac667a', '2 Timothy 4:1-2', 'ESV', '["Great Patience", "Encourage \u2014", "Christ Jesus", "Careful Instruction", "Word", "View"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Luke 19:10', 'ESV', '["Man Came", "Lost ", "Son", "Seek", "Save"]');
+    VALUES ('8ddfda03-3762-4ac6-8c7d-572a77aa741d', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Luke 19:10', 'ESV', '["Man Came", "Lost ", "Son", "Seek", "Save"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', '1 Thessalonians 2:4', 'ESV', '["Please People", "Trying", "Tests", "Speak", "Hearts", "Gospel"]');
+    VALUES ('a8f93751-9536-4656-845e-c3bec1df984b', '7378996d-b050-4731-a7ae-5d58c3ac667a', '1 Thessalonians 2:4', 'ESV', '["Please People", "Trying", "Tests", "Speak", "Hearts", "Gospel"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', '1 Corinthians 9:16', 'ESV', '["Cannot Boast", "Woe", "Since", "Preach", "Gospel", "Compelled"]');
+    VALUES ('40f553b6-3114-4d93-a691-599753e2edc8', '7378996d-b050-4731-a7ae-5d58c3ac667a', '1 Corinthians 9:16', 'ESV', '["Cannot Boast", "Woe", "Since", "Preach", "Gospel", "Compelled"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Romans 10:14', 'ESV', '["One", "Heard", "Call", "Believed", "Believe"]');
+    VALUES ('1836c820-240a-42db-a17e-723b4702c4f9', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Romans 10:14', 'ESV', '["One", "Heard", "Call", "Believed", "Believe"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', '1 Timothy 2:3-4', 'ESV', '["Pleases God", "Wants", "Truth", "Savior", "Saved", "People"]');
+    VALUES ('ca97936b-8ef1-4e6a-97ed-8ba23f45c3df', '7378996d-b050-4731-a7ae-5d58c3ac667a', '1 Timothy 2:3-4', 'ESV', '["Pleases God", "Wants", "Truth", "Savior", "Saved", "People"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Jonah 4:10-11', 'ESV', '["Twenty Thousand People", "Right Hand", "Lord Said", "Left \u2014", "Great City", "Cannot Tell"]');
+    VALUES ('ab55b55c-075d-4e1b-b016-09ad88bfede7', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Jonah 4:10-11', 'ESV', '["Twenty Thousand People", "Right Hand", "Lord Said", "Left \u2014", "Great City", "Cannot Tell"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Luke 15:7', 'ESV', '["Nine Righteous Persons", "One Sinner", "Way", "Tell", "Repents", "Repent"]');
+    VALUES ('a6f7745f-9935-48fb-b11b-b4689cacaa92', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Luke 15:7', 'ESV', '["Nine Righteous Persons", "One Sinner", "Way", "Tell", "Repents", "Repent"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', '1 John 1:3', 'ESV', '["Jesus Christ", "Also May", "Son", "Seen", "Proclaim", "Heard"]');
+    VALUES ('d9ebd2c2-a9b0-4b38-af56-4fe10289e591', '7378996d-b050-4731-a7ae-5d58c3ac667a', '1 John 1:3', 'ESV', '["Jesus Christ", "Also May", "Son", "Seen", "Proclaim", "Heard"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Daniel 12:3', 'ESV', '["Lead Many", "Shine Like", "Like", "Wise", "Stars", "Righteousness"]');
+    VALUES ('6edaf460-b121-485d-a910-317c6bd5df02', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Daniel 12:3', 'ESV', '["Lead Many", "Shine Like", "Like", "Wise", "Stars", "Righteousness"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Matthew 4:19', 'ESV', '[" Jesus Said", "People ", "Send", "Follow", "Fish", "Come"]');
+    VALUES ('5e0d8c8b-daaa-4f23-9981-3aa7c2b27582', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Matthew 4:19', 'ESV', '[" Jesus Said", "People ", "Send", "Follow", "Fish", "Come"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Philippians 2:15-16', 'ESV', '["May Become Blameless", "God Without Fault", "Crooked Generation ", "Shine Among", "Like Stars", "Hold Firmly"]');
+    VALUES ('7980ef55-698d-4fb2-a0d0-ba4f3c9fc3d1', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Philippians 2:15-16', 'ESV', '["May Become Blameless", "God Without Fault", "Crooked Generation ", "Shine Among", "Like Stars", "Hold Firmly"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Ephesians 6:19', 'ESV', '["Fearlessly Make Known", "Words May", "Pray Also", "Whenever", "Speak", "Mystery"]');
+    VALUES ('abac0786-8b13-4eeb-92e9-b83ccddbe167', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Ephesians 6:19', 'ESV', '["Fearlessly Make Known", "Words May", "Pray Also", "Whenever", "Speak", "Mystery"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', '1 Peter 3:15', 'ESV', '["Hearts Revere Christ", "Respect", "Reason", "Prepared", "Lord", "Hope"]');
+    VALUES ('7431d64d-a9a3-4096-9de8-fd75302d77b5', '7378996d-b050-4731-a7ae-5d58c3ac667a', '1 Peter 3:15', 'ESV', '["Hearts Revere Christ", "Respect", "Reason", "Prepared", "Lord", "Hope"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'John 4:39', 'ESV', '["Town Believed", "Woman", "Told", "Testimony", "Samaritans", "Many"]');
+    VALUES ('8858f997-c258-4d42-9553-471fd9e9c4b1', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'John 4:39', 'ESV', '["Town Believed", "Woman", "Told", "Testimony", "Samaritans", "Many"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Hebrews 4:12', 'ESV', '["Penetrates Even", "Edged Sword", "Dividing Soul", "Word", "Thoughts", "Spirit"]');
+    VALUES ('d693ed4e-73eb-498d-8296-2b6f6c386d13', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Hebrews 4:12', 'ESV', '["Penetrates Even", "Edged Sword", "Dividing Soul", "Word", "Thoughts", "Spirit"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Isaiah 55:11', 'ESV', '["Word", "Sent", "Return", "Purpose", "Mouth", "Goes"]');
+    VALUES ('3b51d078-4b23-4322-9a1a-7b6d70c8170b', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Isaiah 55:11', 'ESV', '["Word", "Sent", "Return", "Purpose", "Mouth", "Goes"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', '1 Corinthians 1:23-24', 'ESV', '["Preach Christ Crucified", "Stumbling Block", "Christ", "Wisdom", "Power", "Jews"]');
+    VALUES ('a3191f7f-1292-4363-a786-7138aa82b6c8', '7378996d-b050-4731-a7ae-5d58c3ac667a', '1 Corinthians 1:23-24', 'ESV', '["Preach Christ Crucified", "Stumbling Block", "Christ", "Wisdom", "Power", "Jews"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', '1 Thessalonians 1:5', 'ESV', '["Lived Among", "Holy Spirit", "Gospel Came", "Deep Conviction", "Words", "Simply"]');
+    VALUES ('5d5b619b-8b85-4792-bfac-6e4f6ac8aaee', '7378996d-b050-4731-a7ae-5d58c3ac667a', '1 Thessalonians 1:5', 'ESV', '["Lived Among", "Holy Spirit", "Gospel Came", "Deep Conviction", "Words", "Simply"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Romans 10:9-10', 'ESV', '["Lord ", "God Raised", "Saved", "Profess", "Mouth", "Justified"]');
+    VALUES ('32aba41f-75a6-437d-8411-2018c287f97a', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Romans 10:9-10', 'ESV', '["Lord ", "God Raised", "Saved", "Profess", "Mouth", "Justified"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', '2 Corinthians 6:2', 'ESV', '["Time", "Tell", "Says", "Salvation", "Helped", "Heard"]');
+    VALUES ('49c5804d-e171-44f7-b336-c979943a66da', '7378996d-b050-4731-a7ae-5d58c3ac667a', '2 Corinthians 6:2', 'ESV', '["Time", "Tell", "Says", "Salvation", "Helped", "Heard"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', '2 Corinthians 13:5', 'ESV', '["\u2014 Unless", "See Whether", "Christ Jesus", "Test", "Realize", "Faith"]');
+    VALUES ('1269998a-546c-428e-a33c-671832277913', '7378996d-b050-4731-a7ae-5d58c3ac667a', '2 Corinthians 13:5', 'ESV', '["\u2014 Unless", "See Whether", "Christ Jesus", "Test", "Realize", "Faith"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Acts 17:2-3', 'ESV', '["Three Sabbath Days", "Paul Went", "Messiah ", "Messiah", "Synagogue", "Suffer"]');
+    VALUES ('586a3a91-6528-4306-808c-a5b6d48c1cac', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Acts 17:2-3', 'ESV', '["Three Sabbath Days", "Paul Went", "Messiah ", "Messiah", "Synagogue", "Suffer"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Acts 20:24', 'ESV', '["Life Worth Nothing", "Lord Jesus", "Good News", "Testifying", "Task", "Race"]');
+    VALUES ('b116bf43-c89c-4f28-96ec-60af3aebc36e', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Acts 20:24', 'ESV', '["Life Worth Nothing", "Lord Jesus", "Good News", "Testifying", "Task", "Race"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Acts 8:29-30', 'ESV', '["Man Reading Isaiah", "Spirit Told Philip", "Reading ", "Philip Ran", "Philip Asked", "Stay Near"]');
+    VALUES ('2393dbec-1c2b-4e83-9a8b-9bd796c245fe', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Acts 8:29-30', 'ESV', '["Man Reading Isaiah", "Spirit Told Philip", "Reading ", "Philip Ran", "Philip Asked", "Stay Near"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Acts 4:20', 'ESV', '["Cannot Help Speaking", "Heard ", "Seen"]');
+    VALUES ('bd1f342c-8b9a-440b-8bb2-89ff211c3038', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Acts 4:20', 'ESV', '["Cannot Help Speaking", "Heard ", "Seen"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Genesis 1:27', 'ESV', '["God Created Mankind", "God", "Created", "Male", "Image", "Female"]');
+    VALUES ('83554da5-a165-430d-8dbd-0f49824f4600', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Genesis 1:27', 'ESV', '["God Created Mankind", "God", "Created", "Male", "Image", "Female"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Isaiah 59:1-2', 'ESV', '["Surely", "Sins", "Short", "Separated", "Save", "Lord"]');
+    VALUES ('9a529d9c-102f-496a-a4c3-1e72329ea025', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Isaiah 59:1-2', 'ESV', '["Surely", "Sins", "Short", "Separated", "Save", "Lord"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Romans 5:12', 'ESV', '["Way Death Came", "Sinned \u2014", "One Man", "Sin Entered", "Death", "Sin"]');
+    VALUES ('2237c7f4-f149-4712-a5d6-f5b1c8755082', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Romans 5:12', 'ESV', '["Way Death Came", "Sinned \u2014", "One Man", "Sin Entered", "Death", "Sin"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Romans 3:23', 'ESV', '["Fall Short", "Sinned", "God", "Glory"]');
+    VALUES ('26e9f16e-b27a-4f80-971b-8b0189705784', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Romans 3:23', 'ESV', '["Fall Short", "Sinned", "God", "Glory"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Hebrews 9:27', 'ESV', '["Face Judgment", "People", "Die", "Destined"]');
+    VALUES ('1090fa7d-7a34-4d3c-bd7f-f840d8bca1e9', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Hebrews 9:27', 'ESV', '["Face Judgment", "People", "Die", "Destined"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', '2 Thessalonians 1:8-9', 'ESV', '["Know God", "Everlasting Destruction", "Lord Jesus", "Lord", "Shut", "Punished"]');
+    VALUES ('2e2125fb-58e2-4854-ba76-e97a5ccb7e5b', '7378996d-b050-4731-a7ae-5d58c3ac667a', '2 Thessalonians 1:8-9', 'ESV', '["Know God", "Everlasting Destruction", "Lord Jesus", "Lord", "Shut", "Punished"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Romans 6:23', 'ESV', '["Eternal Life", "Christ Jesus", "Wages", "Sin", "Lord", "God"]');
+    VALUES ('c3ea12f0-a20d-468b-bc86-13fde845c087', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Romans 6:23', 'ESV', '["Eternal Life", "Christ Jesus", "Wages", "Sin", "Lord", "God"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Revelation 21:8', 'ESV', '["Second Death ", "Practice Magic Arts", "Sexually Immoral", "Liars \u2014", "Fiery Lake", "Burning Sulfur"]');
+    VALUES ('90d093fe-a6a7-4952-900b-0a0b3245731d', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Revelation 21:8', 'ESV', '["Second Death ", "Practice Magic Arts", "Sexually Immoral", "Liars \u2014", "Fiery Lake", "Burning Sulfur"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Ephesians 2:8-9', 'ESV', '["God \u2014", "Faith \u2014", "Works", "Saved", "One", "Grace"]');
+    VALUES ('4735a47a-0cdb-4894-b7c8-e84b465a91cc', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Ephesians 2:8-9', 'ESV', '["God \u2014", "Faith \u2014", "Works", "Saved", "One", "Grace"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Galatians 2:21', 'ESV', '["Set Aside", "Righteousness Could", "Nothing ", "Christ Died", "Law", "Grace"]');
+    VALUES ('c5e30a52-bbd1-4ffd-b7ed-990c7af12bad', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Galatians 2:21', 'ESV', '["Set Aside", "Righteousness Could", "Nothing ", "Christ Died", "Law", "Grace"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Acts 4:12', 'ESV', '["Saved ", "One Else", "Heaven Given", "Salvation", "Name", "Must"]');
+    VALUES ('521596c3-9a86-4339-bbbc-be6d79cd1e66', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Acts 4:12', 'ESV', '["Saved ", "One Else", "Heaven Given", "Salvation", "Name", "Must"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', '1 Peter 1:18', 'ESV', '["Perishable Things", "Life Handed", "Empty Way", "Silver", "Redeemed", "Know"]');
+    VALUES ('0aa444ab-60ff-44aa-833e-069550ecfb30', '7378996d-b050-4731-a7ae-5d58c3ac667a', '1 Peter 1:18', 'ESV', '["Perishable Things", "Life Handed", "Empty Way", "Silver", "Redeemed", "Know"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', '1 Corinthians 1:22-23', 'ESV', '["Preach Christ Crucified", "Jews Demand Signs", "Stumbling Block", "Greeks Look", "Jews", "Wisdom"]');
+    VALUES ('0d92c266-1bb5-4cd0-9dd0-43407261471e', '7378996d-b050-4731-a7ae-5d58c3ac667a', '1 Corinthians 1:22-23', 'ESV', '["Preach Christ Crucified", "Jews Demand Signs", "Stumbling Block", "Greeks Look", "Jews", "Wisdom"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', '1 Corinthians 1:21', 'ESV', '["World", "Wisdom", "Since", "Save", "Preached", "Pleased"]');
+    VALUES ('a26f2315-32eb-49f7-a8db-56819af53258', '7378996d-b050-4731-a7ae-5d58c3ac667a', '1 Corinthians 1:21', 'ESV', '["World", "Wisdom", "Since", "Save", "Preached", "Pleased"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Colossians 2:8', 'ESV', '["Elemental Spiritual Forces", "World Rather", "One Takes", "Human Tradition", "Deceptive Philosophy", "See"]');
+    VALUES ('64d3789d-030d-48ca-945a-777efd7c1ed3', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Colossians 2:8', 'ESV', '["Elemental Spiritual Forces", "World Rather", "One Takes", "Human Tradition", "Deceptive Philosophy", "See"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'John 1:13', 'ESV', '["Natural Descent", "Human Decision", "Children Born", "Born", "Husband", "God"]');
+    VALUES ('20d691d6-11b0-44f0-818c-b0017cf68b9f', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'John 1:13', 'ESV', '["Natural Descent", "Human Decision", "Children Born", "Born", "Husband", "God"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'John 3:6-7', 'ESV', '["Spirit Gives Birth", "Flesh Gives Birth", "Spirit", "Flesh", "Surprised", "Saying"]');
+    VALUES ('ba7a3917-77aa-4e9c-9be8-c8bc7a2954b4', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'John 3:6-7', 'ESV', '["Spirit Gives Birth", "Flesh Gives Birth", "Spirit", "Flesh", "Surprised", "Saying"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'John 6:63', 'ESV', '["Spirit Gives Life", "Flesh Counts", "Spirit", "Life", "Words", "Spoken"]');
+    VALUES ('269a1ce7-ae19-4a39-9e22-d700efbf30de', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'John 6:63', 'ESV', '["Spirit Gives Life", "Flesh Counts", "Spirit", "Life", "Words", "Spoken"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', '1 Peter 3:18', 'ESV', '["Christ Also Suffered", "Made Alive", "Unrighteous", "Spirit", "Sins", "Righteous"]');
+    VALUES ('032aafae-805f-441b-ab6f-ead6482b1b73', '7378996d-b050-4731-a7ae-5d58c3ac667a', '1 Peter 3:18', 'ESV', '["Christ Also Suffered", "Made Alive", "Unrighteous", "Spirit", "Sins", "Righteous"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'John 3:16', 'ESV', '["Whoever Believes", "Eternal Life", "World", "Son", "Shall", "Perish"]');
+    VALUES ('e9e71ef4-2081-45f9-bdfa-4b14e15c1a4a', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'John 3:16', 'ESV', '["Whoever Believes", "Eternal Life", "World", "Son", "Shall", "Perish"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Romans 5:8', 'ESV', '["Still Sinners", "God Demonstrates", "Christ Died", "Love"]');
+    VALUES ('f963df88-5bc3-4203-bec7-5828784ad324', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Romans 5:8', 'ESV', '["Still Sinners", "God Demonstrates", "Christ Died", "Love"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', '1 Corinthians 15:3-4', 'ESV', '["Third Day According", "Sins According", "First Importance", "Christ Died", "Scriptures", "Received"]');
+    VALUES ('55b12ba4-c442-4620-8975-989f060e66fa', '7378996d-b050-4731-a7ae-5d58c3ac667a', '1 Corinthians 15:3-4', 'ESV', '["Third Day According", "Sins According", "First Importance", "Christ Died", "Scriptures", "Received"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Colossians 2:13', 'ESV', '["God Made", "Forgave Us", "Uncircumcision", "Sins", "Flesh", "Dead"]');
+    VALUES ('6d579ea8-8387-4108-b674-1a6c4f349bdb', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Colossians 2:13', 'ESV', '["God Made", "Forgave Us", "Uncircumcision", "Sins", "Flesh", "Dead"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'John 5:24', 'ESV', '["Whoever Hears", "Eternal Life", "Life", "Word", "Truly", "Tell"]');
+    VALUES ('23c51e9a-237f-4cdf-b3b8-7988fc9a5997', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'John 5:24', 'ESV', '["Whoever Hears", "Eternal Life", "Life", "Word", "Truly", "Tell"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'John 1:12', 'ESV', '["God \u2014", "Become Children", "Yet", "Right", "Receive", "Name"]');
+    VALUES ('e3356f37-9778-4ca4-b9f5-054c02f71382', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'John 1:12', 'ESV', '["God \u2014", "Become Children", "Yet", "Right", "Receive", "Name"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Revelation 3:20', 'ESV', '["Anyone Hears", "Voice", "Stand", "Person", "Opens", "Knock"]');
+    VALUES ('b7470469-1c0f-4f96-87c6-246aa727f7f7', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Revelation 3:20', 'ESV', '["Anyone Hears", "Voice", "Stand", "Person", "Opens", "Knock"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('7378996d-b050-4731-a7ae-5d58c3ac667a', 'Romans 10:9-10', 'ESV', '["Lord ", "God Raised", "Saved", "Profess", "Mouth", "Justified"]');
+    VALUES ('e37e4600-9006-4f3e-b6cd-2a34bf07dbf8', '7378996d-b050-4731-a7ae-5d58c3ac667a', 'Romans 10:9-10', 'ESV', '["Lord ", "God Raised", "Saved", "Profess", "Mouth", "Justified"]');
 -- Pack: 180 Series 4 - Walking in Victory
     INSERT INTO verse_packs (id, title, identifier, description, is_public)
     VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', '180 Series 4 - Walking in Victory', '180-Series-4-Walking-in-Victory', '180 Series 4 - Walking in Victory', true)
     ;
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', '1 Corinthians 15:57', 'ESV', '["Lord Jesus Christ", "Gives Us", "Victory", "Thanks", "God"]');
+    VALUES ('34b69741-eaa8-43d9-814a-f05b73fcaba3', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', '1 Corinthians 15:57', 'ESV', '["Lord Jesus Christ", "Gives Us", "Victory", "Thanks", "God"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', '2 Corinthians 2:14', 'ESV', '["Always Leads Us", "Uses Us", "Triumphal Procession", "Thanks", "Spread", "Knowledge"]');
+    VALUES ('12ff1db4-6429-4f84-89d0-32c2015a09f5', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', '2 Corinthians 2:14', 'ESV', '["Always Leads Us", "Uses Us", "Triumphal Procession", "Thanks", "Spread", "Knowledge"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', '2 Corinthians 10:4-5', 'ESV', '["Every Pretension", "Divine Power", "Demolish Strongholds", "Demolish Arguments", "World", "Weapons"]');
+    VALUES ('0956c3f9-22c4-4743-a426-f283d02c4f11', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', '2 Corinthians 10:4-5', 'ESV', '["Every Pretension", "Divine Power", "Demolish Strongholds", "Demolish Arguments", "World", "Weapons"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Ephesians 6:10-11', 'ESV', '["Mighty Power", "Full Armor", "Take", "Strong", "Stand", "Schemes"]');
+    VALUES ('98a653d5-e798-481a-9d5a-a88c167bad00', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Ephesians 6:10-11', 'ESV', '["Mighty Power", "Full Armor", "Take", "Strong", "Stand", "Schemes"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Revelation 12:11', 'ESV', '["Word", "Triumphed", "Testimony", "Shrink", "Much", "Love"]');
+    VALUES ('d051a8ed-88b3-46b2-8767-57ce675b9abc', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Revelation 12:11', 'ESV', '["Word", "Triumphed", "Testimony", "Shrink", "Much", "Love"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'James 4:7-8', 'ESV', '["Come Near", "Wash", "Submit", "Sinners", "Resist", "Purify"]');
+    VALUES ('04f782ec-43fc-4e61-b80c-602dd644c084', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'James 4:7-8', 'ESV', '["Come Near", "Wash", "Submit", "Sinners", "Resist", "Purify"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Romans 8:5-6', 'ESV', '["Minds Set", "Mind Governed", "Spirit Desires", "Live According", "Flesh Desires", "Spirit"]');
+    VALUES ('7bc04042-dfbc-4d44-83c7-9aa03d30cfdd', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Romans 8:5-6', 'ESV', '["Minds Set", "Mind Governed", "Spirit Desires", "Live According", "Flesh Desires", "Spirit"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Romans 13:14', 'ESV', '["Lord Jesus Christ", "Think", "Rather", "Gratify", "Flesh", "Desires"]');
+    VALUES ('afd3de80-808b-4328-ba6f-9b1b4b113e33', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Romans 13:14', 'ESV', '["Lord Jesus Christ", "Think", "Rather", "Gratify", "Flesh", "Desires"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', '1 John 4:4', 'ESV', '["Dear Children", "World", "Overcome", "One", "Greater", "God"]');
+    VALUES ('1d9aa28f-4afe-43a7-a15b-e4d9311f0ffc', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', '1 John 4:4', 'ESV', '["Dear Children", "World", "Overcome", "One", "Greater", "God"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', '1 John 5:4-5', 'ESV', '["Everyone Born", "God Overcomes", "Overcomes", "God", "World", "Victory"]');
+    VALUES ('88c9c861-c73d-4c0e-81ce-14de26ccba47', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', '1 John 5:4-5', 'ESV', '["Everyone Born", "God Overcomes", "Overcomes", "God", "World", "Victory"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Psalm 37:31', 'ESV', '["Slip", "Law", "Hearts", "God", "Feet"]');
+    VALUES ('37f92af5-9777-4bbc-95a5-e57e7de9c463', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Psalm 37:31', 'ESV', '["Slip", "Law", "Hearts", "God", "Feet"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Romans 6:12-13', 'ESV', '["Let Sin Reign", "Offer Every Part", "Rather Offer", "Mortal Body", "Evil Desires", "Sin"]');
+    VALUES ('41f01de1-2136-4b90-a18d-3299388facc7', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Romans 6:12-13', 'ESV', '["Let Sin Reign", "Offer Every Part", "Rather Offer", "Mortal Body", "Evil Desires", "Sin"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Philippians 4:8', 'ESV', '["Praiseworthy \u2014 Think", "Admirable \u2014", "Whatever", "true", "Things", "Sisters"]');
+    VALUES ('6acd0237-62a5-4297-a10c-5bd7ac1fb26f', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Philippians 4:8', 'ESV', '["Praiseworthy \u2014 Think", "Admirable \u2014", "Whatever", "true", "Things", "Sisters"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Titus 1:15', 'ESV', '["Things", "Pure", "Nothing", "Minds", "Fact", "Corrupted"]');
+    VALUES ('ed8a9422-fa82-485a-93d1-627a89196d2e', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Titus 1:15', 'ESV', '["Things", "Pure", "Nothing", "Minds", "Fact", "Corrupted"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Luke 6:45', 'ESV', '["Mouth Speaks", "Good Stored", "Evil Stored", "Heart", "Full"]');
+    VALUES ('71462b40-3ec4-4caf-a8b5-4baeae94975a', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Luke 6:45', 'ESV', '["Mouth Speaks", "Good Stored", "Evil Stored", "Heart", "Full"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Proverbs 4:23', 'ESV', '["Heart", "Guard", "Flows", "Everything", "Else"]');
+    VALUES ('df0da27e-d6ea-407b-82f3-fa77cc7750c2', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Proverbs 4:23', 'ESV', '["Heart", "Guard", "Flows", "Everything", "Else"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Matthew 6:22', 'ESV', '["Whole Body", "Body", "Light", "Lamp", "Healthy", "Full"]');
+    VALUES ('98131461-d7f0-43b6-9269-32338299f748', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Matthew 6:22', 'ESV', '["Whole Body", "Body", "Light", "Lamp", "Healthy", "Full"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Matthew 5:28', 'ESV', '["Already Committed Adultery", "Woman Lustfully", "Tell", "Looks", "Heart", "Anyone"]');
+    VALUES ('d155c230-c7ae-45c6-9468-8e461b5648ea', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Matthew 5:28', 'ESV', '["Already Committed Adultery", "Woman Lustfully", "Tell", "Looks", "Heart", "Anyone"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', '1 Thessalonians 4:3', 'ESV', '["Avoid Sexual Immorality", "Sanctified", "God"]');
+    VALUES ('1c4b77ce-3118-4d59-8f19-9848677f1338', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', '1 Thessalonians 4:3', 'ESV', '["Avoid Sexual Immorality", "Sanctified", "God"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', '1 Corinthians 6:13', 'ESV', '["Sexual Immorality", "Stomach", "Say", "Meant", "Lord", "However"]');
+    VALUES ('fb1f9716-3aab-41fb-abba-a7dc6f84299b', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', '1 Corinthians 6:13', 'ESV', '["Sexual Immorality", "Stomach", "Say", "Meant", "Lord", "However"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Ephesians 4:29', 'ESV', '["Unwholesome Talk Come", "May Benefit", "Building Others", "Needs", "Mouths", "Listen"]');
+    VALUES ('a1a2c31e-e383-426d-8dfd-af41d670b992', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Ephesians 4:29', 'ESV', '["Unwholesome Talk Come", "May Benefit", "Building Others", "Needs", "Mouths", "Listen"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Matthew 12:36-37', 'ESV', '["Every Empty Word", "Give Account", "Condemned ", "Words", "Tell", "Spoken"]');
+    VALUES ('09bc4fd4-79f2-4120-bc0d-a36558769c4d', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Matthew 12:36-37', 'ESV', '["Every Empty Word", "Give Account", "Condemned ", "Words", "Tell", "Spoken"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', '1 Thessalonians 5:22', 'ESV', '["Reject Every Kind", "Evil", "Reject", "Every", "Kind"]');
+    VALUES ('728fc012-467b-4403-9176-515287001221', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', '1 Thessalonians 5:22', 'ESV', '["Reject Every Kind", "Evil", "Reject", "Every", "Kind"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', '1 Timothy 5:1-2', 'ESV', '["Treat Younger Men", "Older Man Harshly", "Younger Women", "Older Women", "Absolute Purity", "Sisters"]');
+    VALUES ('25a85570-b165-4753-99e4-5effc7eb7fee', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', '1 Timothy 5:1-2', 'ESV', '["Treat Younger Men", "Older Man Harshly", "Younger Women", "Older Women", "Absolute Purity", "Sisters"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Matthew 21:22', 'ESV', '["Receive Whatever", "Prayer ", "Believe", "Ask"]');
+    VALUES ('bd0c218f-d9cb-4f6f-bed6-f416ed4d69e1', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Matthew 21:22', 'ESV', '["Receive Whatever", "Prayer ", "Believe", "Ask"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Matthew 7:7-8', 'ESV', '["Seeks Finds", "Asks Receives", "Seek", "Opened", "One", "Knocks"]');
+    VALUES ('3304ddf5-745d-481a-aad7-29ead6d4f91b', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Matthew 7:7-8', 'ESV', '["Seeks Finds", "Asks Receives", "Seek", "Opened", "One", "Knocks"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Matthew 6:6', 'ESV', '["Unseen", "Sees", "Secret", "Room", "Reward", "Pray"]');
+    VALUES ('92fad9eb-746a-48c5-916c-ac65798f6ed1', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Matthew 6:6', 'ESV', '["Unseen", "Sees", "Secret", "Room", "Reward", "Pray"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Mark 1:35', 'ESV', '["Still Dark", "Solitary Place", "Jesus Got", "Went", "Prayed", "Morning"]');
+    VALUES ('0bff52bb-7719-433e-89fc-58921f4bfa8e', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Mark 1:35', 'ESV', '["Still Dark", "Solitary Place", "Jesus Got", "Went", "Prayed", "Morning"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Jeremiah 33:3', 'ESV', '["Unsearchable Things", "Know ", "Tell", "Great", "Call", "Answer"]');
+    VALUES ('287f9b86-637e-4a5f-888c-44414788c818', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Jeremiah 33:3', 'ESV', '["Unsearchable Things", "Know ", "Tell", "Great", "Call", "Answer"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Ephesians 3:20', 'ESV', '["Work Within Us", "Power", "Immeasurably", "Imagine", "Ask", "According"]');
+    VALUES ('8d4e2c5e-baf1-4a11-a854-e324995e11b7', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Ephesians 3:20', 'ESV', '["Work Within Us", "Power", "Immeasurably", "Imagine", "Ask", "According"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', '1 John 5:14-15', 'ESV', '["Ask Anything According", "Ask \u2014", "Hears Us", "Approaching God", "Know", "Confidence"]');
+    VALUES ('46374949-d752-4abf-8837-0facd5444ece', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', '1 John 5:14-15', 'ESV', '["Ask Anything According", "Ask \u2014", "Hears Us", "Approaching God", "Know", "Confidence"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', '1 Thessalonians 5:17-18', 'ESV', '["Pray Continually", "Give Thanks", "Christ Jesus", "God", "Circumstances"]');
+    VALUES ('64d95834-8652-4261-94f6-7b28326055df', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', '1 Thessalonians 5:17-18', 'ESV', '["Pray Continually", "Give Thanks", "Christ Jesus", "God", "Circumstances"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', '1 Samuel 12:23', 'ESV', '["Way", "Teach", "Sin", "Right", "Pray", "Lord"]');
+    VALUES ('24c4225a-5270-4cf6-bbe1-05814b367d87', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', '1 Samuel 12:23', 'ESV', '["Way", "Teach", "Sin", "Right", "Pray", "Lord"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Matthew 9:37-38', 'ESV', '["Harvest Field ", "Harvest", "Workers", "Therefore", "Send", "Said"]');
+    VALUES ('27f7db6a-e564-4928-a3c9-294f29b33d7c', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Matthew 9:37-38', 'ESV', '["Harvest Field ", "Harvest", "Workers", "Therefore", "Send", "Said"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Hebrews 13:15', 'ESV', '["Praise \u2014", "Openly Profess", "Therefore", "Sacrifice", "Name", "Lips"]');
+    VALUES ('bf144d14-4a7b-4963-8b58-4956f5025b1d', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Hebrews 13:15', 'ESV', '["Praise \u2014", "Openly Profess", "Therefore", "Sacrifice", "Name", "Lips"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Psalm 146:1-2', 'ESV', '["Sing Praise", "Praise", "Soul", "Lord", "Long", "Live"]');
+    VALUES ('c3031ade-637b-4e19-ae19-796b7e2c67ea', 'e49fc3c4-e8ec-4908-a971-03338a4b06f2', 'Psalm 146:1-2', 'ESV', '["Sing Praise", "Praise", "Soul", "Lord", "Long", "Live"]');
 -- Pack: 180 Series 5 - Sharing Christ with Others
     INSERT INTO verse_packs (id, title, identifier, description, is_public)
     VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', '180 Series 5 - Sharing Christ with Others', '180-Series-5-Sharing-Christ-with-Others', '180 Series 5 - Sharing Christ with Others', true)
     ;
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', 'Colossians 1:27-28', 'ESV', '["Make Known Among", "Teaching Everyone", "Glorious Riches", "Wisdom", "Proclaim", "One"]');
+    VALUES ('04350c89-54a6-42f6-a7ea-e47527958757', '6e1bda60-a39b-4cee-a710-7ada496515c4', 'Colossians 1:27-28', 'ESV', '["Make Known Among", "Teaching Everyone", "Glorious Riches", "Wisdom", "Proclaim", "One"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', '2 Corinthians 5:19-20', 'ESV', '["Counting People", "Though God", "Therefore Christ", "God", "Christ", "World"]');
+    VALUES ('841fe434-00ef-4719-b115-5bf50516a63a', '6e1bda60-a39b-4cee-a710-7ada496515c4', '2 Corinthians 5:19-20', 'ESV', '["Counting People", "Though God", "Therefore Christ", "God", "Christ", "World"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', '1 Thessalonians 2:4', 'ESV', '["Please People", "Trying", "Tests", "Speak", "Hearts", "Gospel"]');
+    VALUES ('0737e5d6-8bb6-474e-b11b-b16e4ceeec6c', '6e1bda60-a39b-4cee-a710-7ada496515c4', '1 Thessalonians 2:4', 'ESV', '["Please People", "Trying", "Tests", "Speak", "Hearts", "Gospel"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', '1 Corinthians 9:19', 'ESV', '["Win", "Though", "Slave", "Possible", "One", "Many"]');
+    VALUES ('caf86ef8-0eb4-4f40-a031-b092357774ed', '6e1bda60-a39b-4cee-a710-7ada496515c4', '1 Corinthians 9:19', 'ESV', '["Win", "Though", "Slave", "Possible", "One", "Many"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', 'John 4:35', 'ESV', '["Still Four Months", "Harvest ", "Harvest", "Tell", "Saying", "Ripe"]');
+    VALUES ('ff365e16-e589-4118-928a-fc603ab2d7cb', '6e1bda60-a39b-4cee-a710-7ada496515c4', 'John 4:35', 'ESV', '["Still Four Months", "Harvest ", "Harvest", "Tell", "Saying", "Ripe"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', '1 Thessalonians 2:8', 'ESV', '["Well", "Share", "Much", "Loved", "Lives", "Gospel"]');
+    VALUES ('91c594a7-701f-402d-a7b1-8849265e070c', '6e1bda60-a39b-4cee-a710-7ada496515c4', '1 Thessalonians 2:8', 'ESV', '["Well", "Share", "Much", "Loved", "Lives", "Gospel"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', 'Romans 3:10-12', 'ESV', '["Together Become Worthless", "Even One ", "Even One", "Turned Away", "Seeks God", "One Righteous"]');
+    VALUES ('ae49a350-4b2e-4eee-b38e-a3fb214b1ebd', '6e1bda60-a39b-4cee-a710-7ada496515c4', 'Romans 3:10-12', 'ESV', '["Together Become Worthless", "Even One ", "Even One", "Turned Away", "Seeks God", "One Righteous"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', '2 Thessalonians 1:8-9', 'ESV', '["Know God", "Everlasting Destruction", "Lord Jesus", "Lord", "Shut", "Punished"]');
+    VALUES ('4d66a387-b264-4e86-ad86-036346411547', '6e1bda60-a39b-4cee-a710-7ada496515c4', '2 Thessalonians 1:8-9', 'ESV', '["Know God", "Everlasting Destruction", "Lord Jesus", "Lord", "Shut", "Punished"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', '1 Peter 2:24', 'ESV', '["Might Die", "Healed ", "Wounds", "Sins", "Righteousness", "Live"]');
+    VALUES ('822470cc-8ad8-4993-b315-67c7ff41c5c5', '6e1bda60-a39b-4cee-a710-7ada496515c4', '1 Peter 2:24', 'ESV', '["Might Die", "Healed ", "Wounds", "Sins", "Righteousness", "Live"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', '2 Timothy 1:9', 'ESV', '["Holy Life \u2014", "Saved Us", "Given Us", "Christ Jesus", "Called Us", "Time"]');
+    VALUES ('1524ef16-82d7-4fea-9929-912b51b296a8', '6e1bda60-a39b-4cee-a710-7ada496515c4', '2 Timothy 1:9', 'ESV', '["Holy Life \u2014", "Saved Us", "Given Us", "Christ Jesus", "Called Us", "Time"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', 'Romans 10:9-10', 'ESV', '["Lord ", "God Raised", "Saved", "Profess", "Mouth", "Justified"]');
+    VALUES ('4c86ba20-cb49-4d1f-99fb-81328b5140e2', '6e1bda60-a39b-4cee-a710-7ada496515c4', 'Romans 10:9-10', 'ESV', '["Lord ", "God Raised", "Saved", "Profess", "Mouth", "Justified"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', 'John 10:28-29', 'ESV', '["Shall Never Perish", "Eternal Life", "Snatch", "One", "Hand", "Greater"]');
+    VALUES ('6efe9ca3-b957-46a0-b3aa-726515f49a1c', '6e1bda60-a39b-4cee-a710-7ada496515c4', 'John 10:28-29', 'ESV', '["Shall Never Perish", "Eternal Life", "Snatch", "One", "Hand", "Greater"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', 'Proverbs 21:2', 'ESV', '["Person May Think", "Lord Weighs", "Ways", "Right", "Heart"]');
+    VALUES ('56ffb3f0-2c1b-470e-82b3-c322e4570b3e', '6e1bda60-a39b-4cee-a710-7ada496515c4', 'Proverbs 21:2', 'ESV', '["Person May Think", "Lord Weighs", "Ways", "Right", "Heart"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', 'Mark 8:36', 'ESV', '["Yet Forfeit", "Whole World", "Soul", "Someone", "Good", "Gain"]');
+    VALUES ('80b4a4e0-9aaa-4b3b-82e6-00c83cedbfbc', '6e1bda60-a39b-4cee-a710-7ada496515c4', 'Mark 8:36', 'ESV', '["Yet Forfeit", "Whole World", "Soul", "Someone", "Good", "Gain"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', 'John 7:17', 'ESV', '["Teaching Comes", "Whether", "Speak", "God", "Find", "Chooses"]');
+    VALUES ('6a7fa9bd-eec2-4110-9f40-fe9b6e15e448', '6e1bda60-a39b-4cee-a710-7ada496515c4', 'John 7:17', 'ESV', '["Teaching Comes", "Whether", "Speak", "God", "Find", "Chooses"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', 'Luke 5:31-32', 'ESV', '["Repentance ", "Jesus Answered", "Sinners", "Sick", "Righteous", "Need"]');
+    VALUES ('e271300f-bf72-40c9-be5a-9c9910dfe51d', '6e1bda60-a39b-4cee-a710-7ada496515c4', 'Luke 5:31-32', 'ESV', '["Repentance ", "Jesus Answered", "Sinners", "Sick", "Righteous", "Need"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', 'John 5:44', 'ESV', '["One Another", "Believe Since", "Accept Glory", "Glory", "Seek", "God"]');
+    VALUES ('be27ada0-c390-4f43-959d-662ad0802ac7', '6e1bda60-a39b-4cee-a710-7ada496515c4', 'John 5:44', 'ESV', '["One Another", "Believe Since", "Accept Glory", "Glory", "Seek", "God"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', 'Hebrews 7:25', 'ESV', '["Save Completely", "Always Lives", "Therefore", "Intercede", "God", "Come"]');
+    VALUES ('1a4141dc-e40c-4247-9798-216f47f7a9e3', '6e1bda60-a39b-4cee-a710-7ada496515c4', 'Hebrews 7:25', 'ESV', '["Save Completely", "Always Lives", "Therefore", "Intercede", "God", "Come"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', 'Proverbs 27:1', 'ESV', '["Day May Bring", "Tomorrow", "Know", "Boast"]');
+    VALUES ('92d31c07-c102-468a-9ae4-570e94ed19bb', '6e1bda60-a39b-4cee-a710-7ada496515c4', 'Proverbs 27:1', 'ESV', '["Day May Bring", "Tomorrow", "Know", "Boast"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', 'Romans 14:12', 'ESV', '["God", "Give", "Account"]');
+    VALUES ('da15b743-a9c4-484a-acb0-658d0504284a', '6e1bda60-a39b-4cee-a710-7ada496515c4', 'Romans 14:12', 'ESV', '["God", "Give", "Account"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', 'John 5:39', 'ESV', '["Eternal Life", "Scriptures Diligently", "Scriptures", "Think", "Testify", "Study"]');
+    VALUES ('8b17f482-3246-4cd1-981a-8af0944363c9', '6e1bda60-a39b-4cee-a710-7ada496515c4', 'John 5:39', 'ESV', '["Eternal Life", "Scriptures Diligently", "Scriptures", "Think", "Testify", "Study"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', 'Proverbs 14:12', 'ESV', '["Way", "Right", "Leads", "End", "Death", "Appears"]');
+    VALUES ('3d5ccc89-b848-48f9-9e95-73e6b23d6a4c', '6e1bda60-a39b-4cee-a710-7ada496515c4', 'Proverbs 14:12', 'ESV', '["Way", "Right", "Leads", "End", "Death", "Appears"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', 'Matthew 25:41', 'ESV', '["Eternal Fire Prepared", "Say", "Left", "Devil", "Depart", "Cursed"]');
+    VALUES ('5a160ec9-f565-462d-8ec4-fe9b2b3254f7', '6e1bda60-a39b-4cee-a710-7ada496515c4', 'Matthew 25:41', 'ESV', '["Eternal Fire Prepared", "Say", "Left", "Devil", "Depart", "Cursed"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', 'Romans 1:20', 'ESV', '["Invisible Qualities \u2014", "Divine Nature \u2014", "World God", "Without Excuse", "Eternal Power", "Clearly Seen"]');
+    VALUES ('fd54432d-e89d-4e8e-b201-0e4fd2f19aa8', '6e1bda60-a39b-4cee-a710-7ada496515c4', 'Romans 1:20', 'ESV', '["Invisible Qualities \u2014", "Divine Nature \u2014", "World God", "Without Excuse", "Eternal Power", "Clearly Seen"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', '1 Peter 1:18-19', 'ESV', '["Lamb Without Blemish", "Precious Blood", "Perishable Things", "Life Handed", "Empty Way", "Silver"]');
+    VALUES ('2acb596a-f4ca-422c-aa0f-546574b32ed7', '6e1bda60-a39b-4cee-a710-7ada496515c4', '1 Peter 1:18-19', 'ESV', '["Lamb Without Blemish", "Precious Blood", "Perishable Things", "Life Handed", "Empty Way", "Silver"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', '2 Corinthians 5:18', 'ESV', '["Reconciled Us", "Gave Us", "Reconciliation", "Ministry", "God", "Christ"]');
+    VALUES ('84b0a01f-3763-41ed-8b08-c3e91ffa47f2', '6e1bda60-a39b-4cee-a710-7ada496515c4', '2 Corinthians 5:18', 'ESV', '["Reconciled Us", "Gave Us", "Reconciliation", "Ministry", "God", "Christ"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', 'Ephesians 1:7', 'ESV', '["Sins", "Riches", "Redemption", "Grace", "God", "Forgiveness"]');
+    VALUES ('f108107f-45db-408d-9286-d118ddb3c7f4', '6e1bda60-a39b-4cee-a710-7ada496515c4', 'Ephesians 1:7', 'ESV', '["Sins", "Riches", "Redemption", "Grace", "God", "Forgiveness"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', 'Romans 6:14-15', 'ESV', '["Sin Shall", "Sin", "Shall", "Means", "Master", "Longer"]');
+    VALUES ('3e6e028f-6d6c-4c5b-ac09-81ab879fe16d', '6e1bda60-a39b-4cee-a710-7ada496515c4', 'Romans 6:14-15', 'ESV', '["Sin Shall", "Sin", "Shall", "Means", "Master", "Longer"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', 'Galatians 3:26', 'ESV', '["Christ Jesus", "God", "Faith", "Children"]');
+    VALUES ('edaac7d4-8955-4c62-8338-a3f1d13dc494', '6e1bda60-a39b-4cee-a710-7ada496515c4', 'Galatians 3:26', 'ESV', '["Christ Jesus", "God", "Faith", "Children"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', '1 Peter 2:9', 'ESV', '["Wonderful Light", "Special Possession", "Royal Priesthood", "May Declare", "Holy Nation", "Chosen People"]');
+    VALUES ('c7a236c6-162f-4252-ae05-afeb23575c40', '6e1bda60-a39b-4cee-a710-7ada496515c4', '1 Peter 2:9', 'ESV', '["Wonderful Light", "Special Possession", "Royal Priesthood", "May Declare", "Holy Nation", "Chosen People"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', '2 Corinthians 5:21', 'ESV', '["Might Become", "God Made", "God", "Sin", "Righteousness"]');
+    VALUES ('f7694e0d-0372-4f04-bf78-5db3296764a0', '6e1bda60-a39b-4cee-a710-7ada496515c4', '2 Corinthians 5:21', 'ESV', '["Might Become", "God Made", "God", "Sin", "Righteousness"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', '1 Corinthians 1:30', 'ESV', '["Us Wisdom", "God \u2014", "Christ Jesus", "Righteousness", "Redemption", "Holiness"]');
+    VALUES ('ccc79aa8-da06-4ba5-95d8-77bc1848c2b4', '6e1bda60-a39b-4cee-a710-7ada496515c4', '1 Corinthians 1:30', 'ESV', '["Us Wisdom", "God \u2014", "Christ Jesus", "Righteousness", "Redemption", "Holiness"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', 'Hebrews 10:14', 'ESV', '["Made Perfect Forever", "Made Holy", "One Sacrifice"]');
+    VALUES ('a5d1ad6e-5264-427e-a898-74c63624a44a', '6e1bda60-a39b-4cee-a710-7ada496515c4', 'Hebrews 10:14', 'ESV', '["Made Perfect Forever", "Made Holy", "One Sacrifice"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', 'Romans 3:24', 'ESV', '["Justified Freely", "Christ Jesus", "Redemption", "Grace", "Came"]');
+    VALUES ('5cabcb30-f4af-48ca-a787-6a7494a72588', '6e1bda60-a39b-4cee-a710-7ada496515c4', 'Romans 3:24', 'ESV', '["Justified Freely", "Christ Jesus", "Redemption", "Grace", "Came"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', 'Philippians 3:20', 'ESV', '["Lord Jesus Christ", "Eagerly Await", "Savior", "Heaven", "Citizenship"]');
+    VALUES ('9c13f9f3-0430-42ca-b1a0-9fab80919157', '6e1bda60-a39b-4cee-a710-7ada496515c4', 'Philippians 3:20', 'ESV', '["Lord Jesus Christ", "Eagerly Await", "Savior", "Heaven", "Citizenship"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('6e1bda60-a39b-4cee-a710-7ada496515c4', 'Colossians 2:9-10', 'ESV', '["Every Power", "Deity Lives", "Bodily Form", "Head", "Fullness", "Christ"]');
+    VALUES ('081a79cb-c7d9-41b1-88a7-5c829e9c7f93', '6e1bda60-a39b-4cee-a710-7ada496515c4', 'Colossians 2:9-10', 'ESV', '["Every Power", "Deity Lives", "Bodily Form", "Head", "Fullness", "Christ"]');
 -- Pack: DEP 242 Pack 7 - The Lordship of Christ
     INSERT INTO verse_packs (id, title, identifier, description, is_public)
     VALUES ('05343fd0-85e2-484c-bec6-27e2dbba321f', 'DEP 242 Pack 7 - The Lordship of Christ', 'DEP-242-Pack-7-The-Lordship-of-Christ', 'DEP 242 Pack 7 - The Lordship of Christ', true)
     ;
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('05343fd0-85e2-484c-bec6-27e2dbba321f', 'John 1:2-3', 'ESV', '["Without", "Things", "Nothing", "Made", "God", "Beginning"]');
+    VALUES ('eb0fad7c-95fa-4115-aff5-baab14f1f6a4', '05343fd0-85e2-484c-bec6-27e2dbba321f', 'John 1:2-3', 'ESV', '["Without", "Things", "Nothing", "Made", "God", "Beginning"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('05343fd0-85e2-484c-bec6-27e2dbba321f', 'Colossians 1:16-17', 'ESV', '["Things Hold Together", "Whether Thrones", "Things", "Visible", "Rulers", "Powers"]');
+    VALUES ('5927792a-39e8-4f8f-9b8b-5836fa2efe3b', '05343fd0-85e2-484c-bec6-27e2dbba321f', 'Colossians 1:16-17', 'ESV', '["Things Hold Together", "Whether Thrones", "Things", "Visible", "Rulers", "Powers"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('05343fd0-85e2-484c-bec6-27e2dbba321f', 'Colossians 1:18', 'ESV', '["Supremacy", "Might", "Head", "Firstborn", "Everything", "Dead"]');
+    VALUES ('4f94f737-6d50-45fd-aa16-5cecee18d863', '05343fd0-85e2-484c-bec6-27e2dbba321f', 'Colossians 1:18', 'ESV', '["Supremacy", "Might", "Head", "Firstborn", "Everything", "Dead"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('05343fd0-85e2-484c-bec6-27e2dbba321f', 'Ephesians 1:21', 'ESV', '["Present Age", "Every Name", "Rule", "Power", "One", "Invoked"]');
+    VALUES ('d7ac744a-3a55-46c2-b663-ed72c5d28b88', '05343fd0-85e2-484c-bec6-27e2dbba321f', 'Ephesians 1:21', 'ESV', '["Present Age", "Every Name", "Rule", "Power", "One", "Invoked"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('05343fd0-85e2-484c-bec6-27e2dbba321f', 'Philippians 2:10-11', 'ESV', '["Every Tongue Acknowledge", "Jesus Every Knee", "Jesus Christ", "Name", "Lord", "Heaven"]');
+    VALUES ('50d04d02-2d01-4fea-8a05-b0bd6afa3830', '05343fd0-85e2-484c-bec6-27e2dbba321f', 'Philippians 2:10-11', 'ESV', '["Every Tongue Acknowledge", "Jesus Every Knee", "Jesus Christ", "Name", "Lord", "Heaven"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('05343fd0-85e2-484c-bec6-27e2dbba321f', 'Romans 14:9', 'ESV', '["Christ Died", "Returned", "Reason", "Might", "Lord", "Living"]');
+    VALUES ('931d2eb4-48e1-4fc2-b7ec-4c4dbc0e45db', '05343fd0-85e2-484c-bec6-27e2dbba321f', 'Romans 14:9', 'ESV', '["Christ Died", "Returned", "Reason", "Might", "Lord", "Living"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('05343fd0-85e2-484c-bec6-27e2dbba321f', '1 Corinthians 6:19-20', 'ESV', '["Therefore Honor God", "Holy Spirit", "God", "Temples", "Received", "Price"]');
+    VALUES ('73c06946-e76e-4173-966e-a184c5ef727a', '05343fd0-85e2-484c-bec6-27e2dbba321f', '1 Corinthians 6:19-20', 'ESV', '["Therefore Honor God", "Holy Spirit", "God", "Temples", "Received", "Price"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('05343fd0-85e2-484c-bec6-27e2dbba321f', '2 Corinthians 5:15', 'ESV', '["Longer Live", "Live", "Raised", "Died"]');
+    VALUES ('bbd46db2-8cd9-4a4f-9b32-1412d6b91dde', '05343fd0-85e2-484c-bec6-27e2dbba321f', '2 Corinthians 5:15', 'ESV', '["Longer Live", "Live", "Raised", "Died"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('05343fd0-85e2-484c-bec6-27e2dbba321f', 'Matthew 6:33', 'ESV', '["Seek First", "Well", "Things", "Righteousness", "Kingdom", "Given"]');
+    VALUES ('87e1b26e-c695-4491-b260-6726554dc5bf', '05343fd0-85e2-484c-bec6-27e2dbba321f', 'Matthew 6:33', 'ESV', '["Seek First", "Well", "Things", "Righteousness", "Kingdom", "Given"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('05343fd0-85e2-484c-bec6-27e2dbba321f', 'Mark 10:29-30', 'ESV', '["Come Eternal Life", " Jesus Replied", "Fields \u2014 Along", "Persecutions \u2014", "Left Home", "Hundred Times"]');
+    VALUES ('4b9ff64f-3159-4b07-b035-349a99f76856', '05343fd0-85e2-484c-bec6-27e2dbba321f', 'Mark 10:29-30', 'ESV', '["Come Eternal Life", " Jesus Replied", "Fields \u2014 Along", "Persecutions \u2014", "Left Home", "Hundred Times"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('05343fd0-85e2-484c-bec6-27e2dbba321f', 'Genesis 22:16-17', 'ESV', '["Take Possession", "Surely Bless", "Withheld", "Swear", "Stars", "Son"]');
+    VALUES ('84b016bc-c450-495b-b9c0-65d1342cd406', '05343fd0-85e2-484c-bec6-27e2dbba321f', 'Genesis 22:16-17', 'ESV', '["Take Possession", "Surely Bless", "Withheld", "Swear", "Stars", "Son"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('05343fd0-85e2-484c-bec6-27e2dbba321f', '1 Chronicles 28:9', 'ESV', '["Understands Every Desire", "Every Thought", "Willing Mind", "Wholehearted Devotion", "Son Solomon", "Serve"]');
+    VALUES ('4eac7f85-61ce-4afa-857a-a3dc5c0955b4', '05343fd0-85e2-484c-bec6-27e2dbba321f', '1 Chronicles 28:9', 'ESV', '["Understands Every Desire", "Every Thought", "Willing Mind", "Wholehearted Devotion", "Son Solomon", "Serve"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('05343fd0-85e2-484c-bec6-27e2dbba321f', '2 Chronicles 16:9', 'ESV', '["Lord Range Throughout", "Whose Hearts", "War ", "Fully Committed", "Foolish Thing", "Strengthen"]');
+    VALUES ('31e7b4e7-7c69-41a8-9729-5bc34b5c3d90', '05343fd0-85e2-484c-bec6-27e2dbba321f', '2 Chronicles 16:9', 'ESV', '["Lord Range Throughout", "Whose Hearts", "War ", "Fully Committed", "Foolish Thing", "Strengthen"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('05343fd0-85e2-484c-bec6-27e2dbba321f', 'Psalm 91:14', 'ESV', '[" Says", "Rescue", "Protect", "Name", "Loves", "Lord"]');
+    VALUES ('5d39b79d-c060-46f6-a2d7-c2120934bbb6', '05343fd0-85e2-484c-bec6-27e2dbba321f', 'Psalm 91:14', 'ESV', '[" Says", "Rescue", "Protect", "Name", "Loves", "Lord"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('05343fd0-85e2-484c-bec6-27e2dbba321f', '1 Samuel 2:30', 'ESV', '["Family Would Minister", "Forever ", "Lord Declares", "Lord", "Declares", "Therefore"]');
+    VALUES ('8cfc84e6-2037-493e-91cf-08790c33e309', '05343fd0-85e2-484c-bec6-27e2dbba321f', '1 Samuel 2:30', 'ESV', '["Family Would Minister", "Forever ", "Lord Declares", "Lord", "Declares", "Therefore"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('05343fd0-85e2-484c-bec6-27e2dbba321f', 'Luke 9:23', 'ESV', '["Disciple Must Deny", "Whoever Wants", "Cross Daily", "Take", "Said", "Follow"]');
+    VALUES ('703079cb-84c8-4b1b-a005-57fbea20f609', '05343fd0-85e2-484c-bec6-27e2dbba321f', 'Luke 9:23', 'ESV', '["Disciple Must Deny", "Whoever Wants", "Cross Daily", "Take", "Said", "Follow"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('05343fd0-85e2-484c-bec6-27e2dbba321f', 'Proverbs 16:7', 'ESV', '["Lord Takes Pleasure", "Make Peace", "Way", "Enemies", "Causes", "Anyone"]');
+    VALUES ('8f0697da-ff7f-4aa4-8fd6-393e99c7b8c9', '05343fd0-85e2-484c-bec6-27e2dbba321f', 'Proverbs 16:7', 'ESV', '["Lord Takes Pleasure", "Make Peace", "Way", "Enemies", "Causes", "Anyone"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('05343fd0-85e2-484c-bec6-27e2dbba321f', 'Proverbs 3:5-6', 'ESV', '["Ways Submit", "Paths Straight", "Understanding", "Trust", "Make", "Lord"]');
+    VALUES ('12ce970f-f39a-400b-9b48-c8368f4f27ed', '05343fd0-85e2-484c-bec6-27e2dbba321f', 'Proverbs 3:5-6', 'ESV', '["Ways Submit", "Paths Straight", "Understanding", "Trust", "Make", "Lord"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('05343fd0-85e2-484c-bec6-27e2dbba321f', 'Ephesians 4:22-24', 'ESV', '["true Righteousness", "Old Self", "New Self", "Made New", "Like God", "Former Way"]');
+    VALUES ('a2ebffab-214c-4fd9-99fd-e075f09eb332', '05343fd0-85e2-484c-bec6-27e2dbba321f', 'Ephesians 4:22-24', 'ESV', '["true Righteousness", "Old Self", "New Self", "Made New", "Like God", "Former Way"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('05343fd0-85e2-484c-bec6-27e2dbba321f', '2 Timothy 2:22', 'ESV', '["Pursue Righteousness", "Pure Heart", "Evil Desires", "Youth", "Peace", "Love"]');
+    VALUES ('5e8f9ae6-b9eb-4db2-947d-5418e5456e48', '05343fd0-85e2-484c-bec6-27e2dbba321f', '2 Timothy 2:22', 'ESV', '["Pursue Righteousness", "Pure Heart", "Evil Desires", "Youth", "Peace", "Love"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('05343fd0-85e2-484c-bec6-27e2dbba321f', '1 Timothy 6:7-9', 'ESV', '["Get Rich Fall", "Take Nothing", "Plunge People", "Many Foolish", "Harmful Desires", "Brought Nothing"]');
+    VALUES ('24186e53-f93c-4ec7-940d-92b335c64022', '05343fd0-85e2-484c-bec6-27e2dbba321f', '1 Timothy 6:7-9', 'ESV', '["Get Rich Fall", "Take Nothing", "Plunge People", "Many Foolish", "Harmful Desires", "Brought Nothing"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('05343fd0-85e2-484c-bec6-27e2dbba321f', 'Ephesians 5:15-16', 'ESV', '["Live \u2014", "Every Opportunity", "Wise", "Unwise", "Making", "Evil"]');
+    VALUES ('4c9aae3d-f9a6-4ec3-b447-9cab97dac525', '05343fd0-85e2-484c-bec6-27e2dbba321f', 'Ephesians 5:15-16', 'ESV', '["Live \u2014", "Every Opportunity", "Wise", "Unwise", "Making", "Evil"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('05343fd0-85e2-484c-bec6-27e2dbba321f', 'Mark 1:20', 'ESV', '["Without Delay", "Hired Men", "Father Zebedee", "Left", "Followed", "Called"]');
+    VALUES ('18a03ef9-c3e0-4cfe-894c-ab29fcc07601', '05343fd0-85e2-484c-bec6-27e2dbba321f', 'Mark 1:20', 'ESV', '["Without Delay", "Hired Men", "Father Zebedee", "Left", "Followed", "Called"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('05343fd0-85e2-484c-bec6-27e2dbba321f', 'Philippians 1:20', 'ESV', '["Sufficient Courage", "Eagerly Expect", "Always Christ", "Whether", "Way", "Life"]');
+    VALUES ('89f40e84-98d6-4ca9-88a1-0bc0525d077e', '05343fd0-85e2-484c-bec6-27e2dbba321f', 'Philippians 1:20', 'ESV', '["Sufficient Courage", "Eagerly Expect", "Always Christ", "Whether", "Way", "Life"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('05343fd0-85e2-484c-bec6-27e2dbba321f', 'Philippians 2:21-22', 'ESV', '["Jesus Christ", "Everyone Looks", "Work", "Timothy", "Son", "Served"]');
+    VALUES ('cc24e8ea-f705-464b-a298-fe9fe024c047', '05343fd0-85e2-484c-bec6-27e2dbba321f', 'Philippians 2:21-22', 'ESV', '["Jesus Christ", "Everyone Looks", "Work", "Timothy", "Son", "Served"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('05343fd0-85e2-484c-bec6-27e2dbba321f', 'Hebrews 11:36-38', 'ESV', '["Mistreated \u2014", "Faced Jeers", "Even Chains", "Worthy", "World", "Went"]');
+    VALUES ('e12ce762-7122-47f8-be73-17459421b790', '05343fd0-85e2-484c-bec6-27e2dbba321f', 'Hebrews 11:36-38', 'ESV', '["Mistreated \u2014", "Faced Jeers", "Even Chains", "Worthy", "World", "Went"]');
 -- Pack: DEP 242 Pack 8 - World Vision
     INSERT INTO verse_packs (id, title, identifier, description, is_public)
     VALUES ('69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'DEP 242 Pack 8 - World Vision', 'DEP-242-Pack-8-World-Vision', 'DEP 242 Pack 8 - World Vision', true)
     ;
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Genesis 12:2-3', 'ESV', '["Whoever Curses", "Name Great", "Great Nation", "Peoples", "Make", "Earth"]');
+    VALUES ('8ee200c3-5b6a-4200-acec-1fddbd04c2a7', '69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Genesis 12:2-3', 'ESV', '["Whoever Curses", "Name Great", "Great Nation", "Peoples", "Make", "Earth"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Isaiah 49:6', 'ESV', '["Salvation May Reach", "Earth ", "Bring Back", "Also Make", "Tribes", "Thing"]');
+    VALUES ('5eee31f4-34a3-4525-94a8-f49cf3184b31', '69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Isaiah 49:6', 'ESV', '["Salvation May Reach", "Earth ", "Bring Back", "Also Make", "Tribes", "Thing"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Matthew 28:19-20', 'ESV', '["Therefore Go", "Obey Everything", "Make Disciples", "Holy Spirit", "Age ", "Teaching"]');
+    VALUES ('09f855a9-8bb9-441d-acdb-35f09b60d70a', '69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Matthew 28:19-20', 'ESV', '["Therefore Go", "Obey Everything", "Make Disciples", "Holy Spirit", "Age ", "Teaching"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Acts 1:8', 'ESV', '["Holy Spirit Comes", "Receive Power", "Earth ", "Witnesses", "Samaria", "Judea"]');
+    VALUES ('955443fa-620a-4a5a-bbfa-bec636265df3', '69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Acts 1:8', 'ESV', '["Holy Spirit Comes", "Receive Power", "Earth ", "Witnesses", "Samaria", "Judea"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Isaiah 6:8', 'ESV', '["Us ", "Lord Saying", "Voice", "Shall", "Send", "Said"]');
+    VALUES ('2d854ba3-62f1-4062-b61e-196ff6ebbbec', '69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Isaiah 6:8', 'ESV', '["Us ", "Lord Saying", "Voice", "Shall", "Send", "Said"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Romans 15:16', 'ESV', '["Gentiles Might Become", "Priestly Duty", "Offering Acceptable", "Holy Spirit", "Christ Jesus", "Gentiles"]');
+    VALUES ('11f622ae-c226-45fb-a260-d8df97608205', '69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Romans 15:16', 'ESV', '["Gentiles Might Become", "Priestly Duty", "Offering Acceptable", "Holy Spirit", "Christ Jesus", "Gentiles"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Psalm 2:8', 'ESV', '["Possession", "Nations", "Make", "Inheritance", "Ends", "Earth"]');
+    VALUES ('5442e1e6-3ab8-451a-89fd-72acb7e8b749', '69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Psalm 2:8', 'ESV', '["Possession", "Nations", "Make", "Inheritance", "Ends", "Earth"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Psalm 57:5', 'ESV', '["Let", "Heavens", "God", "Glory", "Exalted", "Earth"]');
+    VALUES ('fd93ae68-16d4-4041-a391-63396957affe', '69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Psalm 57:5', 'ESV', '["Let", "Heavens", "God", "Glory", "Exalted", "Earth"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Titus 1:2-3', 'ESV', '["Preaching Entrusted", "Eternal Life", "Appointed Season", "Time", "Savior", "Promised"]');
+    VALUES ('58bdcd15-4dab-4bff-9e67-9996a6fa6494', '69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Titus 1:2-3', 'ESV', '["Preaching Entrusted", "Eternal Life", "Appointed Season", "Time", "Savior", "Promised"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', '2 Timothy 4:17', 'ESV', '["Gentiles Might Hear", "Message Might", "Lord Stood", "Fully Proclaimed", "Strength", "Side"]');
+    VALUES ('5d8237fc-c7bd-427e-8f18-82cc4159e082', '69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', '2 Timothy 4:17', 'ESV', '["Gentiles Might Hear", "Message Might", "Lord Stood", "Fully Proclaimed", "Strength", "Side"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Colossians 1:28-29', 'ESV', '["Teaching Everyone", "Strenuously Contend", "Powerfully Works", "Energy Christ", "Christ", "Wisdom"]');
+    VALUES ('1c76265d-5eae-417b-b559-6c1d0797dcbe', '69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Colossians 1:28-29', 'ESV', '["Teaching Everyone", "Strenuously Contend", "Powerfully Works", "Energy Christ", "Christ", "Wisdom"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Philippians 1:9-11', 'ESV', '["Love May Abound", "Jesus Christ \u2014", "May", "Christ", "Righteousness", "Pure"]');
+    VALUES ('906c018e-1fa0-4eeb-9beb-a17ce355efb0', '69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Philippians 1:9-11', 'ESV', '["Love May Abound", "Jesus Christ \u2014", "May", "Christ", "Righteousness", "Pure"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', '2 Timothy 2:2', 'ESV', '["Many Witnesses Entrust", "Teach Others", "Reliable People", "Things", "Say", "Qualified"]');
+    VALUES ('166a3fac-c012-47d9-87d4-fad57a4e5dd4', '69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', '2 Timothy 2:2', 'ESV', '["Many Witnesses Entrust", "Teach Others", "Reliable People", "Things", "Say", "Qualified"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Isaiah 60:22', 'ESV', '["Swiftly ", "Mighty Nation", "Time", "Thousand", "Smallest", "Lord"]');
+    VALUES ('74597516-dade-41ce-90b2-deb70277fd08', '69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Isaiah 60:22', 'ESV', '["Swiftly ", "Mighty Nation", "Time", "Thousand", "Smallest", "Lord"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Hebrews 12:1', 'ESV', '["Let Us Throw", "Let Us Run", "Race Marked", "Great Cloud", "Easily Entangles", "Witnesses"]');
+    VALUES ('0d3de448-7fba-40a0-9cea-add5f77f3bbc', '69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Hebrews 12:1', 'ESV', '["Let Us Throw", "Let Us Run", "Race Marked", "Great Cloud", "Easily Entangles", "Witnesses"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', '2 Chronicles 16:9', 'ESV', '["Lord Range Throughout", "Whose Hearts", "War ", "Fully Committed", "Foolish Thing", "Strengthen"]');
+    VALUES ('b1ccf52a-cf81-40c5-948d-bb7d53293472', '69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', '2 Chronicles 16:9', 'ESV', '["Lord Range Throughout", "Whose Hearts", "War ", "Fully Committed", "Foolish Thing", "Strengthen"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Habakkuk 2:14', 'ESV', '["Waters Cover", "Sea", "Lord", "Knowledge", "Glory", "Filled"]');
+    VALUES ('6806fd1f-12ea-48d7-82c8-685baddf3194', '69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Habakkuk 2:14', 'ESV', '["Waters Cover", "Sea", "Lord", "Knowledge", "Glory", "Filled"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Malachi 1:11', 'ESV', '["Every Place Incense", "Nations ,\\" Says", "Sun Rises", "Pure Offerings", "Lord Almighty", "Great Among"]');
+    VALUES ('1a5e8fdf-d175-4c9e-bcc7-0bf6bb52261a', '69388e4b-3ff0-4641-a1a9-b14bd1eb1b95', 'Malachi 1:11', 'ESV', '["Every Place Incense", "Nations ,\\" Says", "Sun Rises", "Pure Offerings", "Lord Almighty", "Great Among"]');
 -- Pack: Promises Pack
     INSERT INTO verse_packs (id, title, identifier, description, is_public)
     VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Promises Pack', 'Promises-Pack', 'Promises Pack', true)
     ;
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Isaiah 33:22', 'ESV', '["Save Us", "Lord", "Lawgiver", "King", "Judge"]');
+    VALUES ('31372a05-c8fe-4cb1-a991-70737c73fbce', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Isaiah 33:22', 'ESV', '["Save Us", "Lord", "Lawgiver", "King", "Judge"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Hebrews 9:28', 'ESV', '["Take Away", "Second Time", "Bring Salvation", "Bear Sin", "Waiting", "Sins"]');
+    VALUES ('e1f5550b-5c6f-4fa4-9b76-e8eaf5dd6523', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Hebrews 9:28', 'ESV', '["Take Away", "Second Time", "Bring Salvation", "Bear Sin", "Waiting", "Sins"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Hebrews 10:37', 'ESV', '["Delay ", "Little", "Coming", "Come"]');
+    VALUES ('cc66d308-441d-4176-a09c-7c6dc0e5294d', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Hebrews 10:37', 'ESV', '["Delay ", "Little", "Coming", "Come"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Revelation 22:12', 'ESV', '["Person According", "Coming Soon", "Reward", "Look", "Give", "Done"]');
+    VALUES ('58495d61-7fa8-4989-a1ca-ccf1312d92d3', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Revelation 22:12', 'ESV', '["Person According", "Coming Soon", "Reward", "Look", "Give", "Done"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Luke 11:13', 'ESV', '["Give Good Gifts", "Heaven Give", "Holy Spirit", "Though", "Much", "Know"]');
+    VALUES ('2915bd80-f34b-483b-990e-35f6c7b465c5', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Luke 11:13', 'ESV', '["Give Good Gifts", "Heaven Give", "Holy Spirit", "Though", "Much", "Know"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'John 15:26', 'ESV', '["Father \u2014", "Advocate Comes", "Truth", "Testify", "Spirit", "Send"]');
+    VALUES ('2ef1b3b0-2bd3-4836-b623-d9ab5d81ca52', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'John 15:26', 'ESV', '["Father \u2014", "Advocate Comes", "Truth", "Testify", "Spirit", "Send"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Psalm 32:8', 'ESV', '["Loving Eye", "Way", "Teach", "Instruct", "Counsel"]');
+    VALUES ('9bcc6704-ed6f-4c4a-9444-70698b81fd9c', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Psalm 32:8', 'ESV', '["Loving Eye", "Way", "Teach", "Instruct", "Counsel"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Isaiah 48:17', 'ESV', '["Lord Says \u2014", "Holy One", "Lord", "Way", "Teaches", "Redeemer"]');
+    VALUES ('8b40e9d1-fed0-404b-8115-7b6c95d7af11', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Isaiah 48:17', 'ESV', '["Lord Says \u2014", "Holy One", "Lord", "Way", "Teaches", "Redeemer"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Matthew 7:7', 'ESV', '["Seek", "Opened", "Knock", "Given", "Find", "Door"]');
+    VALUES ('785a25e1-b4ef-42d0-ad9a-e66b207381a8', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Matthew 7:7', 'ESV', '["Seek", "Opened", "Knock", "Given", "Find", "Door"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'John 14:13-14', 'ESV', '["Father May", "May Ask", "Ask", "Whatever", "Son", "Name"]');
+    VALUES ('a295115c-580a-4e51-a955-662e544d4c8e', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'John 14:13-14', 'ESV', '["Father May", "May Ask", "Ask", "Whatever", "Son", "Name"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Psalm 103:2-3', 'ESV', '["Benefits \u2014", "Soul", "Sins", "Praise", "Lord", "Heals"]');
+    VALUES ('61718650-52da-45d0-9766-7b751a214997', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Psalm 103:2-3', 'ESV', '["Benefits \u2014", "Soul", "Sins", "Praise", "Lord", "Heals"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Matthew 6:14', 'ESV', '["Heavenly Father", "Also Forgive", "Forgive", "Sin", "People"]');
+    VALUES ('d273cd55-6737-41be-a6a7-b2666e3db33f', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Matthew 6:14', 'ESV', '["Heavenly Father", "Also Forgive", "Forgive", "Sin", "People"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Matthew 21:22', 'ESV', '["Receive Whatever", "Prayer ", "Believe", "Ask"]');
+    VALUES ('3ef128fa-90f3-4093-a430-a43aa9d5c7d0', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Matthew 21:22', 'ESV', '["Receive Whatever", "Prayer ", "Believe", "Ask"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Luke 17:5-6', 'ESV', '["Sea ", "Mustard Seed", "Mulberry Tree", "Apostles Said", "Faith ", "Faith"]');
+    VALUES ('d4a83653-d248-4379-b759-70ce3be11837', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Luke 17:5-6', 'ESV', '["Sea ", "Mustard Seed", "Mulberry Tree", "Apostles Said", "Faith ", "Faith"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'John 14:23', 'ESV', '["Jesus Replied", "Teaching", "Obey", "Make", "Loves", "Love"]');
+    VALUES ('413d6d4b-9f0e-4d2d-9719-5f609a217d9c', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'John 14:23', 'ESV', '["Jesus Replied", "Teaching", "Obey", "Make", "Loves", "Love"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'John 15:10', 'ESV', '["Remain", "Love", "Kept", "Keep", "Father", "Commands"]');
+    VALUES ('810925d3-8223-4efe-af4a-73134d4ad570', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'John 15:10', 'ESV', '["Remain", "Love", "Kept", "Keep", "Father", "Commands"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Psalm 112:5', 'ESV', '["Lend Freely", "Justice", "Good", "Generous", "Conduct", "Come"]');
+    VALUES ('092c9dfc-4019-4469-aaa6-63db1ab3f38b', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Psalm 112:5', 'ESV', '["Lend Freely", "Justice", "Good", "Generous", "Conduct", "Come"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Hebrews 6:10', 'ESV', '["Work", "Unjust", "Shown", "People", "Love", "Helped"]');
+    VALUES ('1ca1946c-bb76-49c4-85de-c2c85086e9a8', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Hebrews 6:10', 'ESV', '["Work", "Unjust", "Shown", "People", "Love", "Helped"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Psalm 121:7', 'ESV', '["Harm \u2014", "Watch", "Lord", "Life", "Keep"]');
+    VALUES ('ffaaf3b8-ffe2-43b4-b859-d8c7605562b0', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Psalm 121:7', 'ESV', '["Harm \u2014", "Watch", "Lord", "Life", "Keep"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Isaiah 46:4', 'ESV', '["Old Age", "Gray Hairs", "Sustain", "Rescue", "Made", "Even"]');
+    VALUES ('bb072daa-1336-4841-a6c9-5bc601029c68', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Isaiah 46:4', 'ESV', '["Old Age", "Gray Hairs", "Sustain", "Rescue", "Made", "Even"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Psalm 91:1', 'ESV', '["Whoever Dwells", "Shelter", "Shadow", "Rest", "High", "Almighty"]');
+    VALUES ('b8d4aac3-1643-41ec-8808-7ebde9652ed8', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Psalm 91:1', 'ESV', '["Whoever Dwells", "Shelter", "Shadow", "Rest", "High", "Almighty"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Romans 8:38-39', 'ESV', '["Separate Us", "Christ Jesus", "Anything Else", "Neither Height", "Neither Death", "Neither Angels"]');
+    VALUES ('a29d58e3-8505-45b9-afd9-090b2c6e20b7', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Romans 8:38-39', 'ESV', '["Separate Us", "Christ Jesus", "Anything Else", "Neither Height", "Neither Death", "Neither Angels"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Isaiah 40:31', 'ESV', '["Wings Like Eagles", "Grow Weary", "Walk", "Strength", "Soar", "Run"]');
+    VALUES ('baae8536-4604-4b46-bac5-5409848d9a1d', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Isaiah 40:31', 'ESV', '["Wings Like Eagles", "Grow Weary", "Walk", "Strength", "Soar", "Run"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', '2 Thessalonians 3:3', 'ESV', '["Evil One", "Strengthen", "Protect", "Lord", "Faithful"]');
+    VALUES ('59eb2336-04ea-44c5-9bea-8da4daa5a9ba', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', '2 Thessalonians 3:3', 'ESV', '["Evil One", "Strengthen", "Protect", "Lord", "Faithful"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'John 14:27', 'ESV', '["World Gives", "Troubled", "Peace", "Let", "Leave", "Hearts"]');
+    VALUES ('1fcc1049-43f9-40f8-899c-da25cd96fad9', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'John 14:27', 'ESV', '["World Gives", "Troubled", "Peace", "Let", "Leave", "Hearts"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'John 16:33', 'ESV', '["Take Heart", "World ", "World", "Trouble", "Told", "Things"]');
+    VALUES ('7e064f1b-2c0e-42df-880a-ee5724ef9fb9', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'John 16:33', 'ESV', '["Take Heart", "World ", "World", "Trouble", "Told", "Things"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Matthew 16:25', 'ESV', '["Whoever Wants", "Whoever Loses", "Save", "Lose", "Life", "Find"]');
+    VALUES ('3693b50f-e84b-4210-8ca6-92953b06c740', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Matthew 16:25', 'ESV', '["Whoever Wants", "Whoever Loses", "Save", "Lose", "Life", "Find"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'James 4:10', 'ESV', '["Lord", "Lift", "Humble"]');
+    VALUES ('a2c66d52-b6cf-4c15-9aec-b4d9864627fe', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'James 4:10', 'ESV', '["Lord", "Lift", "Humble"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Psalm 138:8', 'ESV', '["Endures Forever \u2014", "Works", "Vindicate", "Love", "Lord", "Hands"]');
+    VALUES ('ae16e212-830f-47d1-ad04-6658a5ab2bb3', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Psalm 138:8', 'ESV', '["Endures Forever \u2014", "Works", "Vindicate", "Love", "Lord", "Hands"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Zechariah 14:9', 'ESV', '["Whole Earth", "One Lord", "Lord", "Name", "King", "Day"]');
+    VALUES ('1397d1c8-b6d6-4ca6-ac11-0daf8647b9d1', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Zechariah 14:9', 'ESV', '["Whole Earth", "One Lord", "Lord", "Name", "King", "Day"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'John 8:31-32', 'ESV', '["Jesus Said", "Free ", "Truth", "Teaching", "Set", "Really"]');
+    VALUES ('e0ee1428-1280-4992-a7cf-78bc057744fb', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'John 8:31-32', 'ESV', '["Jesus Said", "Free ", "Truth", "Teaching", "Set", "Really"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'John 16:13', 'ESV', '["Yet", "Truth", "Tell", "Spirit", "Speak", "Hears"]');
+    VALUES ('8bde9959-7359-4b66-b162-dc9ae9025fec', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'John 16:13', 'ESV', '["Yet", "Truth", "Tell", "Spirit", "Speak", "Hears"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Jeremiah 17:7-8', 'ESV', '["Bear Fruit ", "Whose Confidence", "Tree Planted", "Never Fails", "Heat Comes", "Always Green"]');
+    VALUES ('332fafa2-6415-48f6-8924-423d30d5f197', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Jeremiah 17:7-8', 'ESV', '["Bear Fruit ", "Whose Confidence", "Tree Planted", "Never Fails", "Heat Comes", "Always Green"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', '2 Peter 1:8', 'ESV', '["Lord Jesus Christ", "Increasing Measure", "Unproductive", "Qualities", "Possess", "Knowledge"]');
+    VALUES ('560fdb2d-5670-4162-b67f-a47ad17e74c8', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', '2 Peter 1:8', 'ESV', '["Lord Jesus Christ", "Increasing Measure", "Unproductive", "Qualities", "Possess", "Knowledge"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Matthew 11:28', 'ESV', '["Weary", "Rest", "Give", "Come", "Burdened"]');
+    VALUES ('377d0c75-6c2e-4626-8ea3-8eeaef22cdcd', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Matthew 11:28', 'ESV', '["Weary", "Rest", "Give", "Come", "Burdened"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Revelation 21:3-4', 'ESV', '["Wipe Every Tear", "Passed Away ", "Throne Saying", "Old Order", "Loud Voice", "Dwelling Place"]');
+    VALUES ('36cd2a35-8b62-4057-aede-0729f805b6b8', 'ef99eebe-00eb-4421-bf4b-7cedfa06575a', 'Revelation 21:3-4', 'ESV', '["Wipe Every Tear", "Passed Away ", "Throne Saying", "Old Order", "Loud Voice", "Dwelling Place"]');
 -- Pack: Self-Respect Pack
     INSERT INTO verse_packs (id, title, identifier, description, is_public)
     VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Self-Respect Pack', 'Self-Respect-Pack', 'Self-Respect Pack', true)
     ;
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Psalm 149:4', 'ESV', '["Lord Takes Delight", "Victory", "People", "Humble", "Crowns"]');
+    VALUES ('3410605a-b6f4-483c-955b-52a1e23ea9f4', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'Psalm 149:4', 'ESV', '["Lord Takes Delight", "Victory", "People", "Humble", "Crowns"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Luke 12:6-7', 'ESV', '["Five Sparrows Sold", "Many Sparrows", "Two Pennies", "Yet", "Worth", "One"]');
+    VALUES ('06028737-2041-4e6d-bdf7-f8c0afd30bca', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'Luke 12:6-7', 'ESV', '["Five Sparrows Sold", "Many Sparrows", "Two Pennies", "Yet", "Worth", "One"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Luke 12:24', 'ESV', '["Yet God Feeds", "Valuable", "Storeroom", "Sow", "Reap", "Ravens"]');
+    VALUES ('239567a5-1184-4084-9fb7-d3562968e790', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'Luke 12:24', 'ESV', '["Yet God Feeds", "Valuable", "Storeroom", "Sow", "Reap", "Ravens"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Romans 8:16', 'ESV', '["Testifies", "Spirit", "God", "Children"]');
+    VALUES ('6e84ae60-7dbc-4dd3-86e9-97e219571393', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'Romans 8:16', 'ESV', '["Testifies", "Spirit", "God", "Children"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', '1 Corinthians 6:19-20', 'ESV', '["Therefore Honor God", "Holy Spirit", "God", "Temples", "Received", "Price"]');
+    VALUES ('470e0943-998d-4485-b5d8-e084b82dfef2', '0c0fd384-cbcc-4066-8973-9fe340b67005', '1 Corinthians 6:19-20', 'ESV', '["Therefore Honor God", "Holy Spirit", "God", "Temples", "Received", "Price"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Ephesians 2:10', 'ESV', '["Good Works", "Christ Jesus", "God Prepared", "God", "Handiwork", "Created"]');
+    VALUES ('a785c676-9e16-4e33-8086-45e19b0e0fa2', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'Ephesians 2:10', 'ESV', '["Good Works", "Christ Jesus", "God Prepared", "God", "Handiwork", "Created"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'John 10:14', 'ESV', '["Good Shepherd", "Sheep Know", "Sheep", "Know"]');
+    VALUES ('918762dc-65a3-4774-ad27-b6ffad902c6c', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'John 10:14', 'ESV', '["Good Shepherd", "Sheep Know", "Sheep", "Know"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Romans 14:8', 'ESV', '["Whether", "Lord", "Live", "Die", "Belong"]');
+    VALUES ('127bc815-a2f8-430b-886d-a5a66499b645', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'Romans 14:8', 'ESV', '["Whether", "Lord", "Live", "Die", "Belong"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', '2 Corinthians 5:15', 'ESV', '["Longer Live", "Live", "Raised", "Died"]');
+    VALUES ('aaf6d4c7-0622-4bc0-a997-0cf6d424d759', '0c0fd384-cbcc-4066-8973-9fe340b67005', '2 Corinthians 5:15', 'ESV', '["Longer Live", "Live", "Raised", "Died"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', '2 Corinthians 10:17-18', 'ESV', '["Lord ", "Boasts Boast", "Lord Commends", "Commends", "One", "Let"]');
+    VALUES ('6f81d66a-aff8-46c9-9501-4e9bde776ffb', '0c0fd384-cbcc-4066-8973-9fe340b67005', '2 Corinthians 10:17-18', 'ESV', '["Lord ", "Boasts Boast", "Lord Commends", "Commends", "One", "Let"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Philippians 1:21', 'ESV', '["Live", "Gain", "Die", "Christ"]');
+    VALUES ('b7ddd9e6-86ac-4a5c-b1dc-3a6400831d15', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'Philippians 1:21', 'ESV', '["Live", "Gain", "Die", "Christ"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', '2 Timothy 3:12', 'ESV', '["Godly Life", "Christ Jesus", "Wants", "Persecuted", "Live", "Fact"]');
+    VALUES ('18d18ec5-4935-4faf-8e6a-66e922554e81', '0c0fd384-cbcc-4066-8973-9fe340b67005', '2 Timothy 3:12', 'ESV', '["Godly Life", "Christ Jesus", "Wants", "Persecuted", "Live", "Fact"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Psalm 16:8', 'ESV', '["Right Hand", "Eyes Always", "Shaken", "Lord", "Keep"]');
+    VALUES ('1a39fb00-1dfb-4a67-b2cc-128adf45b2c7', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'Psalm 16:8', 'ESV', '["Right Hand", "Eyes Always", "Shaken", "Lord", "Keep"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Psalm 42:8', 'ESV', '["Lord Directs", "Song", "Prayer", "Night", "Love", "Life"]');
+    VALUES ('4e0facfb-6e72-4ab5-b4ab-f30a593a5813', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'Psalm 42:8', 'ESV', '["Lord Directs", "Song", "Prayer", "Night", "Love", "Life"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Psalm 63:7-8', 'ESV', '["Right Hand Upholds", "Wings", "Sing", "Shadow", "Help", "Cling"]');
+    VALUES ('167ed301-d71c-4d6d-a13f-8a172e14fba8', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'Psalm 63:7-8', 'ESV', '["Right Hand Upholds", "Wings", "Sing", "Shadow", "Help", "Cling"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Psalm 73:25', 'ESV', '["Desire Besides", "Nothing", "Heaven", "Earth"]');
+    VALUES ('94c0009c-0df3-4a4c-9634-086c38183cad', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'Psalm 73:25', 'ESV', '["Desire Besides", "Nothing", "Heaven", "Earth"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Psalm 94:18-19', 'ESV', '["Unfailing Love", "Slipping ", "Great Within", "Consolation Brought", "Supported", "Said"]');
+    VALUES ('0447ca13-246d-4ba3-9d24-f08a56e732ce', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'Psalm 94:18-19', 'ESV', '["Unfailing Love", "Slipping ", "Great Within", "Consolation Brought", "Supported", "Said"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Psalm 116:1-2', 'ESV', '["Voice", "Turned", "Mercy", "Love", "Lord", "Long"]');
+    VALUES ('2a5ab6ca-df70-4e23-88b0-aa0c2f8794dd', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'Psalm 116:1-2', 'ESV', '["Voice", "Turned", "Mercy", "Love", "Lord", "Long"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'John 17:22', 'ESV', '["One \u2014", "One", "May", "Glory", "Given", "Gave"]');
+    VALUES ('9206b61a-81b8-4343-bb6b-e6e165d94acb', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'John 17:22', 'ESV', '["One \u2014", "One", "May", "Glory", "Given", "Gave"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Romans 12:4-5', 'ESV', '["Form One Body", "One Body", "Though Many", "Member Belongs", "Many Members", "Members"]');
+    VALUES ('9457ffc3-1e88-4313-a8ef-1c2c83566163', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'Romans 12:4-5', 'ESV', '["Form One Body", "One Body", "Though Many", "Member Belongs", "Many Members", "Members"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Romans 15:5-6', 'ESV', '["Lord Jesus Christ", "Christ Jesus", "One Voice", "One Mind", "Mind Toward", "Gives Endurance"]');
+    VALUES ('8cf62542-3b10-45e5-9105-cad1b4b2739d', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'Romans 15:5-6', 'ESV', '["Lord Jesus Christ", "Christ Jesus", "One Voice", "One Mind", "Mind Toward", "Gives Endurance"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', '1 Corinthians 12:26', 'ESV', '["Every Part Suffers", "Every Part Rejoices", "One Part Suffers", "One Part", "Honored"]');
+    VALUES ('06d8feb2-d0d8-4b22-b612-e6d8a45700c6', '0c0fd384-cbcc-4066-8973-9fe340b67005', '1 Corinthians 12:26', 'ESV', '["Every Part Suffers", "Every Part Rejoices", "One Part Suffers", "One Part", "Honored"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Galatians 3:28', 'ESV', '["Neither Slave", "Neither Jew", "Christ Jesus", "One", "Male", "Gentile"]');
+    VALUES ('f03c63dc-54bc-4753-b254-5385a2434365', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'Galatians 3:28', 'ESV', '["Neither Slave", "Neither Jew", "Christ Jesus", "One", "Male", "Gentile"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Ephesians 2:19', 'ESV', '["Longer Foreigners", "Fellow Citizens", "Also Members", "Strangers", "People", "Household"]');
+    VALUES ('3b37ff1e-af30-4bfb-af4b-6120f613d8c7', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'Ephesians 2:19', 'ESV', '["Longer Foreigners", "Fellow Citizens", "Also Members", "Strangers", "People", "Household"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Psalm 18:35-36', 'ESV', '["Right Hand Sustains", "Give Way", "Broad Path", "Saving Help", "Help", "Shield"]');
+    VALUES ('ff2d467a-0414-48f0-aed7-55081d602897', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'Psalm 18:35-36', 'ESV', '["Right Hand Sustains", "Give Way", "Broad Path", "Saving Help", "Help", "Shield"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Psalm 56:4', 'ESV', '["Whose Word", "Praise \u2014", "Mere Mortals", "Trust", "God", "Afraid"]');
+    VALUES ('744e2c2b-2ab3-48a9-a2f6-5242e5bcb294', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'Psalm 56:4', 'ESV', '["Whose Word", "Praise \u2014", "Mere Mortals", "Trust", "God", "Afraid"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Psalm 57:2', 'ESV', '["Vindicates", "High", "God", "Cry"]');
+    VALUES ('dc41ba97-7acb-4b4d-b5b1-37d101519ca0', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'Psalm 57:2', 'ESV', '["Vindicates", "High", "God", "Cry"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Habakkuk 3:19', 'ESV', '["Stringed Instruments", "Sovereign Lord", "Feet Like", "Feet", "Tread", "Strength"]');
+    VALUES ('b8d173d7-c16c-498f-9ab5-d432140fa454', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'Habakkuk 3:19', 'ESV', '["Stringed Instruments", "Sovereign Lord", "Feet Like", "Feet", "Tread", "Strength"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', '2 Corinthians 3:5', 'ESV', '["Competence Comes", "Claim Anything", "God", "Competent"]');
+    VALUES ('72ef5f15-cf55-45f8-9168-64f15b8331f2', '0c0fd384-cbcc-4066-8973-9fe340b67005', '2 Corinthians 3:5', 'ESV', '["Competence Comes", "Claim Anything", "God", "Competent"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', '2 Timothy 1:7', 'ESV', '["Make Us Timid", "Gives Us Power", "Self", "Love", "Discipline"]');
+    VALUES ('326fd2cc-59bf-43d8-bb00-7d19051b5245', '0c0fd384-cbcc-4066-8973-9fe340b67005', '2 Timothy 1:7', 'ESV', '["Make Us Timid", "Gives Us Power", "Self", "Love", "Discipline"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Romans 12:3', 'ESV', '["Sober Judgment", "Grace Given", "Faith God", "Every One", "Rather Think", "Think"]');
+    VALUES ('c6f4e27d-8482-4bfd-b771-36ef925c4873', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'Romans 12:3', 'ESV', '["Sober Judgment", "Grace Given", "Faith God", "Every One", "Rather Think", "Think"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Romans 15:7', 'ESV', '["Accept One Another", "Christ Accepted", "Bring Praise", "Order", "God"]');
+    VALUES ('dae7e964-5ce1-456e-8984-f38c9d1372e7', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'Romans 15:7', 'ESV', '["Accept One Another", "Christ Accepted", "Bring Praise", "Order", "God"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Galatians 6:2', 'ESV', '["Way", "Law", "Fulfill", "Christ", "Carry", "Burdens"]');
+    VALUES ('94ca4992-f831-4fc8-9565-66b9f7ef3a2f', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'Galatians 6:2', 'ESV', '["Way", "Law", "Fulfill", "Christ", "Carry", "Burdens"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Ephesians 4:25', 'ESV', '["Speak Truthfully", "One Body", "Must Put", "Therefore", "Neighbor", "Members"]');
+    VALUES ('036111e6-81d3-42d4-b2c9-92ba5ad0c82e', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'Ephesians 4:25', 'ESV', '["Speak Truthfully", "One Body", "Must Put", "Therefore", "Neighbor", "Members"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Philippians 4:4', 'ESV', '["Lord Always", "Say", "Rejoice"]');
+    VALUES ('8a28b2b6-24ab-4bdf-a3b9-a52d256466fd', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'Philippians 4:4', 'ESV', '["Lord Always", "Say", "Rejoice"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('0c0fd384-cbcc-4066-8973-9fe340b67005', 'Colossians 3:15', 'ESV', '["One Body", "Christ Rule", "Thankful", "Since", "Peace", "Members"]');
+    VALUES ('90069c3e-dea1-47c8-9bf8-d3aeb750400c', '0c0fd384-cbcc-4066-8973-9fe340b67005', 'Colossians 3:15', 'ESV', '["One Body", "Christ Rule", "Thankful", "Since", "Peace", "Members"]');
 -- Pack: God's Word
     INSERT INTO verse_packs (id, title, identifier, description, is_public)
     VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'God''s Word', 'God-s-Word', 'God''s Word', true)
     ;
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Matthew 24:35', 'ESV', '["Never Pass Away", "Pass Away", "Words", "Heaven", "Earth"]');
+    VALUES ('8551d998-ac8e-42f1-aaaa-193b3ed6a84c', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Matthew 24:35', 'ESV', '["Never Pass Away", "Pass Away", "Words", "Heaven", "Earth"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', '1 Peter 1:24-25', 'ESV', '["Grass Withers", "Like Grass", "Flowers Fall", "Like", "Flowers", "Word"]');
+    VALUES ('cada048e-6d45-4f86-8014-2558a4c309b7', 'e4880621-612f-4de2-b21e-bb212b8ce833', '1 Peter 1:24-25', 'ESV', '["Grass Withers", "Like Grass", "Flowers Fall", "Like", "Flowers", "Word"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 138:2', 'ESV', '["Unfailing Love", "Solemn Decree", "Holy Temple", "Toward", "Surpasses", "Praise"]');
+    VALUES ('692873ef-f5ee-4c0e-a6ee-36617900c974', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 138:2', 'ESV', '["Unfailing Love", "Solemn Decree", "Holy Temple", "Toward", "Surpasses", "Praise"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'John 17:17', 'ESV', '["Word", "Truth", "Sanctify"]');
+    VALUES ('1b052e7f-141b-4e44-9c13-497432aa5f43', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'John 17:17', 'ESV', '["Word", "Truth", "Sanctify"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Jeremiah 23:29', 'ESV', '["Rock", "Pieces", "Lord", "Like", "Hammer", "Breaks"]');
+    VALUES ('8ece1c7d-c8f9-4c7a-b78d-4976d16e848d', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Jeremiah 23:29', 'ESV', '["Rock", "Pieces", "Lord", "Like", "Hammer", "Breaks"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Hebrews 4:12', 'ESV', '["Penetrates Even", "Edged Sword", "Dividing Soul", "Word", "Thoughts", "Spirit"]');
+    VALUES ('1deb5073-293d-4247-a369-3398d65102cd', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Hebrews 4:12', 'ESV', '["Penetrates Even", "Edged Sword", "Dividing Soul", "Word", "Thoughts", "Spirit"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Luke 24:27', 'ESV', '["Scriptures Concerning", "Said", "Prophets", "Moses", "Explained", "Beginning"]');
+    VALUES ('2cd3b1b1-08d1-40c2-9326-96edd5a7d5ad', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Luke 24:27', 'ESV', '["Scriptures Concerning", "Said", "Prophets", "Moses", "Explained", "Beginning"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'John 5:46-47', 'ESV', '["Say ", "Believed Moses", "Would Believe", "Believe", "Wrote", "Since"]');
+    VALUES ('766f550a-1405-4b71-bd9a-6b87a2f205d4', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'John 5:46-47', 'ESV', '["Say ", "Believed Moses", "Would Believe", "Believe", "Wrote", "Since"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Matthew 4:4', 'ESV', '["Man Shall", "Jesus Answered", "God ", "Every Word", "Bread Alone", "Written"]');
+    VALUES ('182d1911-0ab1-4f2b-b7d2-0166edec98d3', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Matthew 4:4', 'ESV', '["Man Shall", "Jesus Answered", "God ", "Every Word", "Bread Alone", "Written"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Acts 20:32', 'ESV', '["Inheritance Among", "Word", "Sanctified", "Grace", "God", "Give"]');
+    VALUES ('7f09ed98-756f-4cee-9fa1-ccc650c31c32', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Acts 20:32', 'ESV', '["Inheritance Among", "Word", "Sanctified", "Grace", "God", "Give"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 33:4', 'ESV', '["Word", "true", "Right", "Lord", "Faithful"]');
+    VALUES ('da4352e3-5698-4836-b12d-249391bd428c', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 33:4', 'ESV', '["Word", "true", "Right", "Lord", "Faithful"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'James 1:21', 'ESV', '["Word Planted", "Moral Filth", "Humbly Accept", "Get Rid", "Therefore", "Save"]');
+    VALUES ('0949f530-580d-4eb6-9c43-90992ade5560', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'James 1:21', 'ESV', '["Word Planted", "Moral Filth", "Humbly Accept", "Get Rid", "Therefore", "Save"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Ezra 7:10', 'ESV', '["Teaching", "Study", "Observance", "Lord", "Laws", "Law"]');
+    VALUES ('dd618153-f707-4c58-8010-4c472b121a09', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Ezra 7:10', 'ESV', '["Teaching", "Study", "Observance", "Lord", "Laws", "Law"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Jeremiah 15:16', 'ESV', '["Lord God Almighty", "Words Came", "Name", "Joy", "Heart", "Delight"]');
+    VALUES ('10d07b82-1920-4b6e-bbb1-b407271048a0', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Jeremiah 15:16', 'ESV', '["Lord God Almighty", "Words Came", "Name", "Joy", "Heart", "Delight"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:7', 'ESV', '["Upright Heart", "Righteous Laws", "Praise", "Learn"]');
+    VALUES ('fd9e9a18-2256-43d0-9cf7-b9a832abce62', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:7', 'ESV', '["Upright Heart", "Righteous Laws", "Praise", "Learn"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:14', 'ESV', '["One Rejoices", "Great Riches", "Statutes", "Rejoice", "Following"]');
+    VALUES ('dd3775d4-08d9-4c42-8924-4361798792cb', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:14', 'ESV', '["One Rejoices", "Great Riches", "Statutes", "Rejoice", "Following"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:18', 'ESV', '["Open", "Law", "Eyes"]');
+    VALUES ('d8f6aee6-d2b7-4df3-9e70-447bb2408bbb', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:18', 'ESV', '["Open", "Law", "Eyes"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:30', 'ESV', '["Way", "Set", "Laws", "Heart", "Faithfulness", "Chosen"]');
+    VALUES ('543851af-476c-4f5d-bfa1-026f8e1a50e7', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:30', 'ESV', '["Way", "Set", "Laws", "Heart", "Faithfulness", "Chosen"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:34', 'ESV', '["May Keep", "Understanding", "Obey", "Law", "Heart", "Give"]');
+    VALUES ('2b71e84a-7778-4dd2-834f-fb50fb0b594d', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:34', 'ESV', '["May Keep", "Understanding", "Obey", "Law", "Heart", "Give"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:45', 'ESV', '["Walk", "Sought", "Precepts", "Freedom"]');
+    VALUES ('17adbdba-d272-49e0-8edd-971d37f1383b', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:45', 'ESV', '["Walk", "Sought", "Precepts", "Freedom"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:56', 'ESV', '["Precepts", "Practice", "Obey"]');
+    VALUES ('a8522cdf-fd26-4150-b620-5710682a153d', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:56', 'ESV', '["Precepts", "Practice", "Obey"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:60', 'ESV', '["Obey", "Hasten", "Delay", "Commands"]');
+    VALUES ('70033941-c70a-480d-83c6-821416d533d1', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:60', 'ESV', '["Obey", "Hasten", "Delay", "Commands"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:71', 'ESV', '["Might Learn", "Good", "Decrees", "Afflicted"]');
+    VALUES ('1bd22631-607c-4590-a7dc-29669b75b03b', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:71', 'ESV', '["Might Learn", "Good", "Decrees", "Afflicted"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:80', 'ESV', '["Wholeheartedly Follow", "Shame", "Put", "May", "Decrees"]');
+    VALUES ('50c8967c-2cdf-4ea1-ba87-5f508450cf89', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:80', 'ESV', '["Wholeheartedly Follow", "Shame", "Put", "May", "Decrees"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:81', 'ESV', '["Soul Faints", "Word", "Salvation", "Put", "Longing", "Hope"]');
+    VALUES ('46979a96-264d-40f8-b76d-3343b015e2ed', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:81', 'ESV', '["Soul Faints", "Word", "Salvation", "Put", "Longing", "Hope"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:93', 'ESV', '["Never Forget", "Preserved", "Precepts", "Life"]');
+    VALUES ('c44b8c2f-f1bc-4b32-a60d-24f10b696754', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:93', 'ESV', '["Never Forget", "Preserved", "Precepts", "Life"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:97', 'ESV', '["Day Long", "Meditate", "Love", "Law"]');
+    VALUES ('c351e1b7-8652-40fb-8c7d-4dc68be28065', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:97', 'ESV', '["Day Long", "Meditate", "Love", "Law"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:105', 'ESV', '["Word", "Path", "Light", "Lamp", "Feet"]');
+    VALUES ('a7ad3b7d-d393-4d49-add4-e2a9cce25ff9', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:105', 'ESV', '["Word", "Path", "Light", "Lamp", "Feet"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:114', 'ESV', '["Word", "Shield", "Refuge", "Put", "Hope"]');
+    VALUES ('27f5bc01-1e33-4567-b691-eec74ccaab93', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:114', 'ESV', '["Word", "Shield", "Refuge", "Put", "Hope"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:125', 'ESV', '["May Understand", "Statutes", "Servant", "Give", "Discernment"]');
+    VALUES ('d5995013-874c-4c79-a059-0ef7a25b6806', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:125', 'ESV', '["May Understand", "Statutes", "Servant", "Give", "Discernment"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:130', 'ESV', '["Words Gives Light", "Gives Understanding", "Unfolding", "Simple"]');
+    VALUES ('5d0f93c1-5fe3-4eee-b1c3-bd39676b446f', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:130', 'ESV', '["Words Gives Light", "Gives Understanding", "Unfolding", "Simple"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:143', 'ESV', '["Commands Give", "Come Upon", "Trouble", "Distress", "Delight"]');
+    VALUES ('f2655b34-01ba-4242-ba9a-9039a93ee371', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:143', 'ESV', '["Commands Give", "Come Upon", "Trouble", "Distress", "Delight"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:148', 'ESV', '["Eyes Stay Open", "May Meditate", "Watches", "Promises", "Night"]');
+    VALUES ('abb64d7a-aa37-4fa5-a2e9-0d893c41b2f3', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:148', 'ESV', '["Eyes Stay Open", "May Meditate", "Watches", "Promises", "Night"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:160', 'ESV', '["Righteous Laws", "Words", "true", "Eternal"]');
+    VALUES ('7e70e2e3-9da8-4507-adf9-5984622495e4', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:160', 'ESV', '["Righteous Laws", "Words", "true", "Eternal"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:165', 'ESV', '["Great Peace", "Stumble", "Nothing", "Make", "Love", "Law"]');
+    VALUES ('595f3016-9366-4f8d-bfab-a6ac1cd5f150', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:165', 'ESV', '["Great Peace", "Stumble", "Nothing", "Make", "Love", "Law"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:173', 'ESV', '["Ready", "Precepts", "May", "Help", "Hand", "Chosen"]');
+    VALUES ('d233c46c-e179-4ce9-8dc3-9bac835c630d', 'e4880621-612f-4de2-b21e-bb212b8ce833', 'Psalm 119:173', 'ESV', '["Ready", "Precepts", "May", "Help", "Hand", "Chosen"]');
 -- Pack: Established For Growth
     INSERT INTO verse_packs (id, title, identifier, description, is_public)
     VALUES ('569dd6f8-f240-4123-8423-e8fd4c9c1068', 'Established For Growth', 'Established-For-Growth', 'Established For Growth', true)
     ;
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('569dd6f8-f240-4123-8423-e8fd4c9c1068', 'Romans 6:23', 'ESV', '["Eternal Life", "Christ Jesus", "Wages", "Sin", "Lord", "God"]');
+    VALUES ('84913f82-de8a-4dc1-8925-4308b4a50643', '569dd6f8-f240-4123-8423-e8fd4c9c1068', 'Romans 6:23', 'ESV', '["Eternal Life", "Christ Jesus", "Wages", "Sin", "Lord", "God"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('569dd6f8-f240-4123-8423-e8fd4c9c1068', 'Hebrews 11:6', 'ESV', '["Without Faith", "Please God", "Must Believe", "Earnestly Seek", "Rewards", "Impossible"]');
+    VALUES ('9a02f082-a800-4f13-8e36-4ba3cea54a42', '569dd6f8-f240-4123-8423-e8fd4c9c1068', 'Hebrews 11:6', 'ESV', '["Without Faith", "Please God", "Must Believe", "Earnestly Seek", "Rewards", "Impossible"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('569dd6f8-f240-4123-8423-e8fd4c9c1068', '2 Timothy 3:16-17', 'ESV', '["Every Good Work", "Thoroughly Equipped", "God May", "God", "Useful", "Training"]');
+    VALUES ('fbd9d66d-c936-4742-916c-a66b5105d176', '569dd6f8-f240-4123-8423-e8fd4c9c1068', '2 Timothy 3:16-17', 'ESV', '["Every Good Work", "Thoroughly Equipped", "God May", "God", "Useful", "Training"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('569dd6f8-f240-4123-8423-e8fd4c9c1068', 'John 10:28-29', 'ESV', '["Shall Never Perish", "Eternal Life", "Snatch", "One", "Hand", "Greater"]');
+    VALUES ('2cbc3a4e-ffed-4d21-94c4-bb91dd76efd7', '569dd6f8-f240-4123-8423-e8fd4c9c1068', 'John 10:28-29', 'ESV', '["Shall Never Perish", "Eternal Life", "Snatch", "One", "Hand", "Greater"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('569dd6f8-f240-4123-8423-e8fd4c9c1068', 'Galatians 2:20', 'ESV', '["Longer Live", "Christ Lives", "Live", "Christ", "Son", "Loved"]');
+    VALUES ('548d7dec-d574-4cc8-a3aa-67891e59b4cc', '569dd6f8-f240-4123-8423-e8fd4c9c1068', 'Galatians 2:20', 'ESV', '["Longer Live", "Christ Lives", "Live", "Christ", "Son", "Loved"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('569dd6f8-f240-4123-8423-e8fd4c9c1068', 'Galatians 5:25', 'ESV', '["Let Us Keep", "Step", "Spirit", "Since", "Live"]');
+    VALUES ('872bd232-3264-4dd2-91bf-bb1d67068ee3', '569dd6f8-f240-4123-8423-e8fd4c9c1068', 'Galatians 5:25', 'ESV', '["Let Us Keep", "Step", "Spirit", "Since", "Live"]');
 -- Pack: Walking in Victory
     INSERT INTO verse_packs (id, title, identifier, description, is_public)
     VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', 'Walking in Victory', 'Walking-in-Victory', 'Walking in Victory', true)
     ;
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', '1 Corinthians 15:57', 'ESV', '["Lord Jesus Christ", "Gives Us", "Victory", "Thanks", "God"]');
+    VALUES ('1de290a1-fada-4316-bdac-affe140c8d1b', '522afad4-6748-4cf6-86c3-bc86219f6139', '1 Corinthians 15:57', 'ESV', '["Lord Jesus Christ", "Gives Us", "Victory", "Thanks", "God"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', '2 Corinthians 2:14', 'ESV', '["Always Leads Us", "Uses Us", "Triumphal Procession", "Thanks", "Spread", "Knowledge"]');
+    VALUES ('961c87a5-0d3f-44bd-b640-3eed261bd3ce', '522afad4-6748-4cf6-86c3-bc86219f6139', '2 Corinthians 2:14', 'ESV', '["Always Leads Us", "Uses Us", "Triumphal Procession", "Thanks", "Spread", "Knowledge"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', '2 Corinthians 10:4-5', 'ESV', '["Every Pretension", "Divine Power", "Demolish Strongholds", "Demolish Arguments", "World", "Weapons"]');
+    VALUES ('bd7b658b-d7e0-4970-ad9f-71cd568f6804', '522afad4-6748-4cf6-86c3-bc86219f6139', '2 Corinthians 10:4-5', 'ESV', '["Every Pretension", "Divine Power", "Demolish Strongholds", "Demolish Arguments", "World", "Weapons"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', 'Ephesians 6:10,11', 'ESV', '["Mighty Power", "Full Armor", "Take", "Strong", "Stand", "Schemes"]');
+    VALUES ('c13968a9-9b98-4628-ac8f-4c6c02c416d2', '522afad4-6748-4cf6-86c3-bc86219f6139', 'Ephesians 6:10,11', 'ESV', '["Mighty Power", "Full Armor", "Take", "Strong", "Stand", "Schemes"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', 'Revelation 12:11', 'ESV', '["Word", "Triumphed", "Testimony", "Shrink", "Much", "Love"]');
+    VALUES ('89e919ff-d360-4f66-aab2-8639836480e2', '522afad4-6748-4cf6-86c3-bc86219f6139', 'Revelation 12:11', 'ESV', '["Word", "Triumphed", "Testimony", "Shrink", "Much", "Love"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', 'James 4:7-8', 'ESV', '["Come Near", "Wash", "Submit", "Sinners", "Resist", "Purify"]');
+    VALUES ('40b16bb8-6578-4378-9cf7-223ae90048ba', '522afad4-6748-4cf6-86c3-bc86219f6139', 'James 4:7-8', 'ESV', '["Come Near", "Wash", "Submit", "Sinners", "Resist", "Purify"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', 'Romans 8:5-6', 'ESV', '["Minds Set", "Mind Governed", "Spirit Desires", "Live According", "Flesh Desires", "Spirit"]');
+    VALUES ('109cd41e-9c62-4267-be75-8e50e66f1fb5', '522afad4-6748-4cf6-86c3-bc86219f6139', 'Romans 8:5-6', 'ESV', '["Minds Set", "Mind Governed", "Spirit Desires", "Live According", "Flesh Desires", "Spirit"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', 'Romans 13:14', 'ESV', '["Lord Jesus Christ", "Think", "Rather", "Gratify", "Flesh", "Desires"]');
+    VALUES ('ccae9e98-1b5d-44a8-a7bc-773ecec81ad7', '522afad4-6748-4cf6-86c3-bc86219f6139', 'Romans 13:14', 'ESV', '["Lord Jesus Christ", "Think", "Rather", "Gratify", "Flesh", "Desires"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', '1 John 4:4', 'ESV', '["Dear Children", "World", "Overcome", "One", "Greater", "God"]');
+    VALUES ('fd678f51-aff8-4fa5-aac1-17c7a4ec2876', '522afad4-6748-4cf6-86c3-bc86219f6139', '1 John 4:4', 'ESV', '["Dear Children", "World", "Overcome", "One", "Greater", "God"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', '1 John 5:4-5', 'ESV', '["Everyone Born", "God Overcomes", "Overcomes", "God", "World", "Victory"]');
+    VALUES ('b510a631-81e8-4d16-8003-da1900b1e5b4', '522afad4-6748-4cf6-86c3-bc86219f6139', '1 John 5:4-5', 'ESV', '["Everyone Born", "God Overcomes", "Overcomes", "God", "World", "Victory"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', 'Psalm 37:31', 'ESV', '["Slip", "Law", "Hearts", "God", "Feet"]');
+    VALUES ('791c63ec-3745-4af8-aa80-8904cd6a442f', '522afad4-6748-4cf6-86c3-bc86219f6139', 'Psalm 37:31', 'ESV', '["Slip", "Law", "Hearts", "God", "Feet"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', 'Romans 6:12-13', 'ESV', '["Let Sin Reign", "Offer Every Part", "Rather Offer", "Mortal Body", "Evil Desires", "Sin"]');
+    VALUES ('528e5ac3-ba76-4904-9a68-f819c2cde607', '522afad4-6748-4cf6-86c3-bc86219f6139', 'Romans 6:12-13', 'ESV', '["Let Sin Reign", "Offer Every Part", "Rather Offer", "Mortal Body", "Evil Desires", "Sin"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', 'Philippians 4:8', 'ESV', '["Praiseworthy \u2014 Think", "Admirable \u2014", "Whatever", "true", "Things", "Sisters"]');
+    VALUES ('83d02cf4-95e4-4a33-bfaa-5e6b95ebd35c', '522afad4-6748-4cf6-86c3-bc86219f6139', 'Philippians 4:8', 'ESV', '["Praiseworthy \u2014 Think", "Admirable \u2014", "Whatever", "true", "Things", "Sisters"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', 'Titus 1:15', 'ESV', '["Things", "Pure", "Nothing", "Minds", "Fact", "Corrupted"]');
+    VALUES ('eb6ee51e-0168-47c9-9c03-e2a2652ddcac', '522afad4-6748-4cf6-86c3-bc86219f6139', 'Titus 1:15', 'ESV', '["Things", "Pure", "Nothing", "Minds", "Fact", "Corrupted"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', 'Luke 6:45', 'ESV', '["Mouth Speaks", "Good Stored", "Evil Stored", "Heart", "Full"]');
+    VALUES ('9aeaead3-3cdc-4c14-a37e-4c7702a8bddc', '522afad4-6748-4cf6-86c3-bc86219f6139', 'Luke 6:45', 'ESV', '["Mouth Speaks", "Good Stored", "Evil Stored", "Heart", "Full"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', 'Proverbs 4:23', 'ESV', '["Heart", "Guard", "Flows", "Everything", "Else"]');
+    VALUES ('79fe813e-3861-4f3e-bc7f-17640c291318', '522afad4-6748-4cf6-86c3-bc86219f6139', 'Proverbs 4:23', 'ESV', '["Heart", "Guard", "Flows", "Everything", "Else"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', 'Matthew 6:22', 'ESV', '["Whole Body", "Body", "Light", "Lamp", "Healthy", "Full"]');
+    VALUES ('f7d46e0e-8c48-4840-9a1a-38930165890b', '522afad4-6748-4cf6-86c3-bc86219f6139', 'Matthew 6:22', 'ESV', '["Whole Body", "Body", "Light", "Lamp", "Healthy", "Full"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', 'Matthew 5:28', 'ESV', '["Already Committed Adultery", "Woman Lustfully", "Tell", "Looks", "Heart", "Anyone"]');
+    VALUES ('8a0d05bf-90bc-4d33-ba0c-0b1f6c39ebe1', '522afad4-6748-4cf6-86c3-bc86219f6139', 'Matthew 5:28', 'ESV', '["Already Committed Adultery", "Woman Lustfully", "Tell", "Looks", "Heart", "Anyone"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', '1 Thessalonians 4:3', 'ESV', '["Avoid Sexual Immorality", "Sanctified", "God"]');
+    VALUES ('da58d540-cecd-4242-a62b-9477050d895d', '522afad4-6748-4cf6-86c3-bc86219f6139', '1 Thessalonians 4:3', 'ESV', '["Avoid Sexual Immorality", "Sanctified", "God"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', '1 Corinthians 6:13', 'ESV', '["Sexual Immorality", "Stomach", "Say", "Meant", "Lord", "However"]');
+    VALUES ('41351063-494f-4e0c-8e10-c3c31d46a4d8', '522afad4-6748-4cf6-86c3-bc86219f6139', '1 Corinthians 6:13', 'ESV', '["Sexual Immorality", "Stomach", "Say", "Meant", "Lord", "However"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', 'Ephesians 4:29', 'ESV', '["Unwholesome Talk Come", "May Benefit", "Building Others", "Needs", "Mouths", "Listen"]');
+    VALUES ('2cf00eea-3393-47e2-9898-ef2fd3a7f60e', '522afad4-6748-4cf6-86c3-bc86219f6139', 'Ephesians 4:29', 'ESV', '["Unwholesome Talk Come", "May Benefit", "Building Others", "Needs", "Mouths", "Listen"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', 'Matthew 12:36-37', 'ESV', '["Every Empty Word", "Give Account", "Condemned ", "Words", "Tell", "Spoken"]');
+    VALUES ('ef5cc678-e821-4aa8-8ee5-90e7e14ee314', '522afad4-6748-4cf6-86c3-bc86219f6139', 'Matthew 12:36-37', 'ESV', '["Every Empty Word", "Give Account", "Condemned ", "Words", "Tell", "Spoken"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', '1 Thessalonians 5:22', 'ESV', '["Reject Every Kind", "Evil", "Reject", "Every", "Kind"]');
+    VALUES ('cda5aeed-e7df-4803-b23a-c8aa6ba237b4', '522afad4-6748-4cf6-86c3-bc86219f6139', '1 Thessalonians 5:22', 'ESV', '["Reject Every Kind", "Evil", "Reject", "Every", "Kind"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', '1 Timothy 5:1-2', 'ESV', '["Treat Younger Men", "Older Man Harshly", "Younger Women", "Older Women", "Absolute Purity", "Sisters"]');
+    VALUES ('cd3094c6-99b2-46ef-a118-3a91d8c745ec', '522afad4-6748-4cf6-86c3-bc86219f6139', '1 Timothy 5:1-2', 'ESV', '["Treat Younger Men", "Older Man Harshly", "Younger Women", "Older Women", "Absolute Purity", "Sisters"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', 'Matthew 21:22', 'ESV', '["Receive Whatever", "Prayer ", "Believe", "Ask"]');
+    VALUES ('ff371a17-3b8b-4d53-bda6-4873dc28f395', '522afad4-6748-4cf6-86c3-bc86219f6139', 'Matthew 21:22', 'ESV', '["Receive Whatever", "Prayer ", "Believe", "Ask"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', 'Matthew 7:7-8', 'ESV', '["Seeks Finds", "Asks Receives", "Seek", "Opened", "One", "Knocks"]');
+    VALUES ('be2ddd25-8828-44e4-8fc3-4d1ddd355e55', '522afad4-6748-4cf6-86c3-bc86219f6139', 'Matthew 7:7-8', 'ESV', '["Seeks Finds", "Asks Receives", "Seek", "Opened", "One", "Knocks"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', 'Matthew 6:6', 'ESV', '["Unseen", "Sees", "Secret", "Room", "Reward", "Pray"]');
+    VALUES ('4a337347-fe87-46d6-982e-afde900ea8a5', '522afad4-6748-4cf6-86c3-bc86219f6139', 'Matthew 6:6', 'ESV', '["Unseen", "Sees", "Secret", "Room", "Reward", "Pray"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', 'Mark 1:35', 'ESV', '["Still Dark", "Solitary Place", "Jesus Got", "Went", "Prayed", "Morning"]');
+    VALUES ('303b0022-c72f-4b2b-87e8-a3d892c40225', '522afad4-6748-4cf6-86c3-bc86219f6139', 'Mark 1:35', 'ESV', '["Still Dark", "Solitary Place", "Jesus Got", "Went", "Prayed", "Morning"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', 'Jeremiah 33:3', 'ESV', '["Unsearchable Things", "Know ", "Tell", "Great", "Call", "Answer"]');
+    VALUES ('5e9aa8b8-2197-4bc7-9304-c3dd142aeca6', '522afad4-6748-4cf6-86c3-bc86219f6139', 'Jeremiah 33:3', 'ESV', '["Unsearchable Things", "Know ", "Tell", "Great", "Call", "Answer"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', 'Ephesians 3:20', 'ESV', '["Work Within Us", "Power", "Immeasurably", "Imagine", "Ask", "According"]');
+    VALUES ('cc3f25bd-0e77-4294-ac2b-97b43d8320fb', '522afad4-6748-4cf6-86c3-bc86219f6139', 'Ephesians 3:20', 'ESV', '["Work Within Us", "Power", "Immeasurably", "Imagine", "Ask", "According"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', '1 John 5:14-15', 'ESV', '["Ask Anything According", "Ask \u2014", "Hears Us", "Approaching God", "Know", "Confidence"]');
+    VALUES ('0ded5e75-4e84-4bcd-8a47-1375651a9660', '522afad4-6748-4cf6-86c3-bc86219f6139', '1 John 5:14-15', 'ESV', '["Ask Anything According", "Ask \u2014", "Hears Us", "Approaching God", "Know", "Confidence"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', '1 Thessalonians 5:17,18', 'ESV', '["Pray Continually", "Give Thanks", "Christ Jesus", "God", "Circumstances"]');
+    VALUES ('96fc8d6f-3d35-4525-bfd6-85c9b7c0e4ad', '522afad4-6748-4cf6-86c3-bc86219f6139', '1 Thessalonians 5:17,18', 'ESV', '["Pray Continually", "Give Thanks", "Christ Jesus", "God", "Circumstances"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', '1 Samuel 12:23', 'ESV', '["Way", "Teach", "Sin", "Right", "Pray", "Lord"]');
+    VALUES ('26bf5192-d1d8-4390-9448-d3872ce16b83', '522afad4-6748-4cf6-86c3-bc86219f6139', '1 Samuel 12:23', 'ESV', '["Way", "Teach", "Sin", "Right", "Pray", "Lord"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', 'Matthew 9:37-38', 'ESV', '["Harvest Field ", "Harvest", "Workers", "Therefore", "Send", "Said"]');
+    VALUES ('ba3871b9-3279-4eb5-86b0-f52ee976be2f', '522afad4-6748-4cf6-86c3-bc86219f6139', 'Matthew 9:37-38', 'ESV', '["Harvest Field ", "Harvest", "Workers", "Therefore", "Send", "Said"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', 'Hebrews 13:15', 'ESV', '["Praise \u2014", "Openly Profess", "Therefore", "Sacrifice", "Name", "Lips"]');
+    VALUES ('fa10c6e2-8000-4fe9-8e02-ed3eca6aa2cf', '522afad4-6748-4cf6-86c3-bc86219f6139', 'Hebrews 13:15', 'ESV', '["Praise \u2014", "Openly Profess", "Therefore", "Sacrifice", "Name", "Lips"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('522afad4-6748-4cf6-86c3-bc86219f6139', 'Psalm 146:1-2', 'ESV', '["Sing Praise", "Praise", "Soul", "Lord", "Long", "Live"]');
+    VALUES ('3b1a9d73-b524-41da-9b0b-c57c69251aae', '522afad4-6748-4cf6-86c3-bc86219f6139', 'Psalm 146:1-2', 'ESV', '["Sing Praise", "Praise", "Soul", "Lord", "Long", "Live"]');
 -- Pack: Empowered For Multiplication
     INSERT INTO verse_packs (id, title, identifier, description, is_public)
     VALUES ('207a7e62-9368-4d4d-adc0-0ca73e4ff7ea', 'Empowered For Multiplication', 'Empowered-For-Multiplication', 'Empowered For Multiplication', true)
     ;
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('207a7e62-9368-4d4d-adc0-0ca73e4ff7ea', '1 Peter 3:15', 'ESV', '["Hearts Revere Christ", "Respect", "Reason", "Prepared", "Lord", "Hope"]');
+    VALUES ('090b94fb-9fdd-46d7-ac6a-73ff67e41378', '207a7e62-9368-4d4d-adc0-0ca73e4ff7ea', '1 Peter 3:15', 'ESV', '["Hearts Revere Christ", "Respect", "Reason", "Prepared", "Lord", "Hope"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('207a7e62-9368-4d4d-adc0-0ca73e4ff7ea', '1 Peter 4:10', 'ESV', '["Use Whatever Gift", "Various Forms", "Serve Others", "Faithful Stewards", "Received", "Grace"]');
+    VALUES ('b05dc384-029c-47c9-bf98-59a2653c744d', '207a7e62-9368-4d4d-adc0-0ca73e4ff7ea', '1 Peter 4:10', 'ESV', '["Use Whatever Gift", "Various Forms", "Serve Others", "Faithful Stewards", "Received", "Grace"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('207a7e62-9368-4d4d-adc0-0ca73e4ff7ea', 'Proverbs 3:5-6', 'ESV', '["Ways Submit", "Paths Straight", "Understanding", "Trust", "Make", "Lord"]');
+    VALUES ('99e22cb0-863c-4130-bdac-fdfc0bcd1ffc', '207a7e62-9368-4d4d-adc0-0ca73e4ff7ea', 'Proverbs 3:5-6', 'ESV', '["Ways Submit", "Paths Straight", "Understanding", "Trust", "Make", "Lord"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('207a7e62-9368-4d4d-adc0-0ca73e4ff7ea', 'Psalm 24:1', 'ESV', '["World", "Lord", "Live", "Everything", "Earth"]');
+    VALUES ('22b979f0-957f-4901-8a98-786384ddfa10', '207a7e62-9368-4d4d-adc0-0ca73e4ff7ea', 'Psalm 24:1', 'ESV', '["World", "Lord", "Live", "Everything", "Earth"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('207a7e62-9368-4d4d-adc0-0ca73e4ff7ea', '2 Timothy 4:7-8', 'ESV', '["Righteous Judge", "Good Fight", "Day \u2014", "Store", "Righteousness", "Race"]');
+    VALUES ('4804adfe-028f-4b91-805b-89da0212ee34', '207a7e62-9368-4d4d-adc0-0ca73e4ff7ea', '2 Timothy 4:7-8', 'ESV', '["Righteous Judge", "Good Fight", "Day \u2014", "Store", "Righteousness", "Race"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('207a7e62-9368-4d4d-adc0-0ca73e4ff7ea', 'Hebrews 12:2-3', 'ESV', '["Right Hand", "Lose Heart", "Joy Set", "Grow Weary", "Throne", "Sinners"]');
+    VALUES ('0938cbe7-6dc3-46a8-acfa-4cdf7a39ea10', '207a7e62-9368-4d4d-adc0-0ca73e4ff7ea', 'Hebrews 12:2-3', 'ESV', '["Right Hand", "Lose Heart", "Joy Set", "Grow Weary", "Throne", "Sinners"]');
 -- Pack: Equipped For Ministry
     INSERT INTO verse_packs (id, title, identifier, description, is_public)
     VALUES ('fb189933-ab37-439b-8383-ba16faa24892', 'Equipped For Ministry', 'Equipped-For-Ministry', 'Equipped For Ministry', true)
     ;
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('fb189933-ab37-439b-8383-ba16faa24892', 'Psalm 145:3-4', 'ESV', '["One Generation Commends", "Mighty Acts", "One", "Worthy", "Works", "Tell"]');
+    VALUES ('c7b47297-d51f-43b8-8572-83eb63aea760', 'fb189933-ab37-439b-8383-ba16faa24892', 'Psalm 145:3-4', 'ESV', '["One Generation Commends", "Mighty Acts", "One", "Worthy", "Works", "Tell"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('fb189933-ab37-439b-8383-ba16faa24892', 'Hebrews 10:10', 'ESV', '["Made Holy", "Jesus Christ", "Sacrifice", "Body"]');
+    VALUES ('0ec9aeae-03c1-4f6f-85ca-e1286d1500cb', 'fb189933-ab37-439b-8383-ba16faa24892', 'Hebrews 10:10', 'ESV', '["Made Holy", "Jesus Christ", "Sacrifice", "Body"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('fb189933-ab37-439b-8383-ba16faa24892', 'Hebrews 4:12', 'ESV', '["Penetrates Even", "Edged Sword", "Dividing Soul", "Word", "Thoughts", "Spirit"]');
+    VALUES ('365b7552-f4f9-4524-81cd-9a9b2391abbf', 'fb189933-ab37-439b-8383-ba16faa24892', 'Hebrews 4:12', 'ESV', '["Penetrates Even", "Edged Sword", "Dividing Soul", "Word", "Thoughts", "Spirit"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('fb189933-ab37-439b-8383-ba16faa24892', 'Philippians 4:6-7', 'ESV', '["Every Situation", "Christ Jesus", "Understanding", "Transcends", "Thanksgiving", "Requests"]');
+    VALUES ('18cc71a3-ed16-495d-9272-ed4b87a32ca8', 'fb189933-ab37-439b-8383-ba16faa24892', 'Philippians 4:6-7', 'ESV', '["Every Situation", "Christ Jesus", "Understanding", "Transcends", "Thanksgiving", "Requests"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('fb189933-ab37-439b-8383-ba16faa24892', 'Ephesians 4:32', 'ESV', '["Christ God Forgave", "One Another", "Kind", "Forgiving", "Compassionate"]');
+    VALUES ('36b350ca-629c-4ec4-ba36-946fc90a661c', 'fb189933-ab37-439b-8383-ba16faa24892', 'Ephesians 4:32', 'ESV', '["Christ God Forgave", "One Another", "Kind", "Forgiving", "Compassionate"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('fb189933-ab37-439b-8383-ba16faa24892', '2 Timothy 2:2', 'ESV', '["Many Witnesses Entrust", "Teach Others", "Reliable People", "Things", "Say", "Qualified"]');
+    VALUES ('3ebfd0ce-0079-4fce-8bf6-b6ff24659bc7', 'fb189933-ab37-439b-8383-ba16faa24892', '2 Timothy 2:2', 'ESV', '["Many Witnesses Entrust", "Teach Others", "Reliable People", "Things", "Say", "Qualified"]');
 -- Pack: Hide His word in your heart
     INSERT INTO verse_packs (id, title, identifier, description, is_public)
     VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Hide His word in your heart', 'Hide-His-word-in-your-heart', 'Hide His word in your heart', true)
     ;
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Romans 8:37', 'ESV', '["Loved Us", "Things", "Conquerors"]');
+    VALUES ('84b0af07-95ce-4e71-ba11-616a0d744cce', 'c5b5907d-0121-40be-820b-025765502e88', 'Romans 8:37', 'ESV', '["Loved Us", "Things", "Conquerors"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Romans 8:28', 'ESV', '["Things God Works", "Called According", "Purpose", "Love", "Know", "Good"]');
+    VALUES ('49cc877b-f01e-4f33-ac51-fd67c40faf4b', 'c5b5907d-0121-40be-820b-025765502e88', 'Romans 8:28', 'ESV', '["Things God Works", "Called According", "Purpose", "Love", "Know", "Good"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Romans 8:32', 'ESV', '["Graciously Give Us", "Things", "Spare", "Son", "Gave", "Also"]');
+    VALUES ('037a823e-37c3-401f-8e06-2b4fd62705dd', 'c5b5907d-0121-40be-820b-025765502e88', 'Romans 8:32', 'ESV', '["Graciously Give Us", "Things", "Spare", "Son", "Gave", "Also"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Romans 8:26', 'ESV', '["Spirit Helps Us", "Wordless Groans", "Spirit", "Weakness", "Way", "Pray"]');
+    VALUES ('c283bebf-3f35-43c3-9ec9-05f1c37e9d30', 'c5b5907d-0121-40be-820b-025765502e88', 'Romans 8:26', 'ESV', '["Spirit Helps Us", "Wordless Groans", "Spirit", "Weakness", "Way", "Pray"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Romans 8:15', 'ESV', '["Father ", "Received Brought", "Received", "Spirit", "Sonship", "Slaves"]');
+    VALUES ('4f5dafdd-10e3-4b7b-9c9c-f776ea6b0c9b', 'c5b5907d-0121-40be-820b-025765502e88', 'Romans 8:15', 'ESV', '["Father ", "Received Brought", "Received", "Spirit", "Sonship", "Slaves"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Romans 8:1-2', 'ESV', '["Gives Life", "Christ Jesus", "Therefore", "Spirit", "Sin", "Set"]');
+    VALUES ('2f3aa91e-96d6-4dbc-b805-75c464afc5ed', 'c5b5907d-0121-40be-820b-025765502e88', 'Romans 8:1-2', 'ESV', '["Gives Life", "Christ Jesus", "Therefore", "Spirit", "Sin", "Set"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Romans 3:23', 'ESV', '["Fall Short", "Sinned", "God", "Glory"]');
+    VALUES ('938ed68c-0acf-4893-a961-488f44d5b0a9', 'c5b5907d-0121-40be-820b-025765502e88', 'Romans 3:23', 'ESV', '["Fall Short", "Sinned", "God", "Glory"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Romans 6:23', 'ESV', '["Eternal Life", "Christ Jesus", "Wages", "Sin", "Lord", "God"]');
+    VALUES ('4d8b1fb3-c4ac-4df8-bd33-dc87ea719fe1', 'c5b5907d-0121-40be-820b-025765502e88', 'Romans 6:23', 'ESV', '["Eternal Life", "Christ Jesus", "Wages", "Sin", "Lord", "God"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Romans 1:16', 'ESV', '["Brings Salvation", "Power", "Jew", "Gospel", "God", "Gentile"]');
+    VALUES ('1dc4c7b2-040e-41fc-855c-a6ade19b07cf', 'c5b5907d-0121-40be-820b-025765502e88', 'Romans 1:16', 'ESV', '["Brings Salvation", "Power", "Jew", "Gospel", "God", "Gentile"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Romans 5:3-5', 'ESV', '["Suffering Produces Perseverance", "Holy Spirit", "Also Glory", "Put Us", "Perseverance", "Sufferings"]');
+    VALUES ('4fb2a16c-ad06-49d3-973e-4b3494ff4a51', 'c5b5907d-0121-40be-820b-025765502e88', 'Romans 5:3-5', 'ESV', '["Suffering Produces Perseverance", "Holy Spirit", "Also Glory", "Put Us", "Perseverance", "Sufferings"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Romans 5:8', 'ESV', '["Still Sinners", "God Demonstrates", "Christ Died", "Love"]');
+    VALUES ('967eaf4b-cb70-433c-9ded-09d2264f4d82', 'c5b5907d-0121-40be-820b-025765502e88', 'Romans 5:8', 'ESV', '["Still Sinners", "God Demonstrates", "Christ Died", "Love"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Philippians 3:12-14', 'ESV', '["Taken Hold", "Take Hold", "One Thing", "Christ Jesus", "Already Obtained", "Already Arrived"]');
+    VALUES ('c14b21c1-fc8a-4ba2-b2b5-ae6c3b1b43e7', 'c5b5907d-0121-40be-820b-025765502e88', 'Philippians 3:12-14', 'ESV', '["Taken Hold", "Take Hold", "One Thing", "Christ Jesus", "Already Obtained", "Already Arrived"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Hebrews 4:14-16', 'ESV', '["May Receive Mercy", "Great High Priest", "High Priest", "\u2014 Yet", "Let Us", "Help Us"]');
+    VALUES ('8cf8abf5-8f1a-4e91-9c57-8297fc1f41de', 'c5b5907d-0121-40be-820b-025765502e88', 'Hebrews 4:14-16', 'ESV', '["May Receive Mercy", "Great High Priest", "High Priest", "\u2014 Yet", "Let Us", "Help Us"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Hebrews 12:1-3', 'ESV', '["Let Us Throw", "Let Us Run", "Right Hand", "Race Marked", "Lose Heart", "Joy Set"]');
+    VALUES ('780374e1-62e3-49be-bd00-85876ffa08e0', 'c5b5907d-0121-40be-820b-025765502e88', 'Hebrews 12:1-3', 'ESV', '["Let Us Throw", "Let Us Run", "Right Hand", "Race Marked", "Lose Heart", "Joy Set"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', '1 John 4:10', 'ESV', '["Loved Us", "Loved God", "Atoning Sacrifice", "Son", "Sins", "Sent"]');
+    VALUES ('0b6112fb-1f41-47b4-9f68-47285a9117ae', 'c5b5907d-0121-40be-820b-025765502e88', '1 John 4:10', 'ESV', '["Loved Us", "Loved God", "Atoning Sacrifice", "Son", "Sins", "Sent"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'John 15:5', 'ESV', '["Bear Much Fruit", "Vine", "Remain", "Nothing", "Branches", "Apart"]');
+    VALUES ('5c4ae9b0-8739-4308-b7fc-5d3a4ce9538c', 'c5b5907d-0121-40be-820b-025765502e88', 'John 15:5', 'ESV', '["Bear Much Fruit", "Vine", "Remain", "Nothing", "Branches", "Apart"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'John 16:33', 'ESV', '["Take Heart", "World ", "World", "Trouble", "Told", "Things"]');
+    VALUES ('30f45121-b810-482e-948e-79415559cfbe', 'c5b5907d-0121-40be-820b-025765502e88', 'John 16:33', 'ESV', '["Take Heart", "World ", "World", "Trouble", "Told", "Things"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Matthew 6:33', 'ESV', '["Seek First", "Well", "Things", "Righteousness", "Kingdom", "Given"]');
+    VALUES ('58101754-e591-4439-947c-c3fe687d1d44', 'c5b5907d-0121-40be-820b-025765502e88', 'Matthew 6:33', 'ESV', '["Seek First", "Well", "Things", "Righteousness", "Kingdom", "Given"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'John 8:12', 'ESV', '["Whoever Follows", "Never Walk", "Life ", "Jesus Spoke", "World", "Said"]');
+    VALUES ('5f84c16a-4711-4c6c-a56a-f0eabeb31cc8', 'c5b5907d-0121-40be-820b-025765502e88', 'John 8:12', 'ESV', '["Whoever Follows", "Never Walk", "Life ", "Jesus Spoke", "World", "Said"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'John 4:23', 'ESV', '["true Worshipers", "Father Seeks", "Worshipers", "Father", "Yet", "Worship"]');
+    VALUES ('a9fd1792-114b-4ef5-928e-87003515fd83', 'c5b5907d-0121-40be-820b-025765502e88', 'John 4:23', 'ESV', '["true Worshipers", "Father Seeks", "Worshipers", "Father", "Yet", "Worship"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'John 14:27', 'ESV', '["World Gives", "Troubled", "Peace", "Let", "Leave", "Hearts"]');
+    VALUES ('c863bba2-f333-4e95-9228-5c9527993690', 'c5b5907d-0121-40be-820b-025765502e88', 'John 14:27', 'ESV', '["World Gives", "Troubled", "Peace", "Let", "Leave", "Hearts"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'John 1:14', 'ESV', '["Word Became Flesh", "Dwelling Among Us", "Truth", "Son", "Seen", "One"]');
+    VALUES ('9db917ea-f311-4696-8e02-1006a7c8e7da', 'c5b5907d-0121-40be-820b-025765502e88', 'John 1:14', 'ESV', '["Word Became Flesh", "Dwelling Among Us", "Truth", "Son", "Seen", "One"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Genesis 1:27', 'ESV', '["God Created Mankind", "God", "Created", "Male", "Image", "Female"]');
+    VALUES ('60b9d4e0-3553-44dd-a830-915f506fe3d3', 'c5b5907d-0121-40be-820b-025765502e88', 'Genesis 1:27', 'ESV', '["God Created Mankind", "God", "Created", "Male", "Image", "Female"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Luke 19:10', 'ESV', '["Man Came", "Lost ", "Son", "Seek", "Save"]');
+    VALUES ('973bc364-d94e-46c5-a2ae-33fadefe3373', 'c5b5907d-0121-40be-820b-025765502e88', 'Luke 19:10', 'ESV', '["Man Came", "Lost ", "Son", "Seek", "Save"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Ephesians 6:2-3', 'ESV', '["May Go Well", "Promise \u2014", "Mother \\"\u2014", "First Commandment", "Earth ", "Honor"]');
+    VALUES ('dedbfda6-2e02-4ba4-8581-dc829b99fdb9', 'c5b5907d-0121-40be-820b-025765502e88', 'Ephesians 6:2-3', 'ESV', '["May Go Well", "Promise \u2014", "Mother \\"\u2014", "First Commandment", "Earth ", "Honor"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Proverbs 1:7', 'ESV', '["Fools Despise Wisdom", "Lord", "Knowledge", "Instruction", "Fear", "Beginning"]');
+    VALUES ('cff6e402-a2c3-463f-bf69-cadb1cb17954', 'c5b5907d-0121-40be-820b-025765502e88', 'Proverbs 1:7', 'ESV', '["Fools Despise Wisdom", "Lord", "Knowledge", "Instruction", "Fear", "Beginning"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Lamentations 3:22-23', 'ESV', '["New Every Morning", "Compassions Never Fail", "Great Love", "Great", "Lord", "Faithfulness"]');
+    VALUES ('cfc77057-6a7f-4a0c-a7de-ae0c48ad65f3', 'c5b5907d-0121-40be-820b-025765502e88', 'Lamentations 3:22-23', 'ESV', '["New Every Morning", "Compassions Never Fail", "Great Love", "Great", "Lord", "Faithfulness"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Luke 12:6-7', 'ESV', '["Five Sparrows Sold", "Many Sparrows", "Two Pennies", "Yet", "Worth", "One"]');
+    VALUES ('5ff2f2c4-3604-42e6-87b4-4a8e1cf5abaa', 'c5b5907d-0121-40be-820b-025765502e88', 'Luke 12:6-7', 'ESV', '["Five Sparrows Sold", "Many Sparrows", "Two Pennies", "Yet", "Worth", "One"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Luke 12:34', 'ESV', '["Treasure", "Heart", "Also"]');
+    VALUES ('3ff3a384-69d1-4a06-8dea-4b83bcdd8a41', 'c5b5907d-0121-40be-820b-025765502e88', 'Luke 12:34', 'ESV', '["Treasure", "Heart", "Also"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Psalm 90:14', 'ESV', '["Unfailing Love", "Satisfy Us", "May Sing", "Morning", "Joy", "Glad"]');
+    VALUES ('d94afb07-bbaf-4811-9bd9-e11b9711be1a', 'c5b5907d-0121-40be-820b-025765502e88', 'Psalm 90:14', 'ESV', '["Unfailing Love", "Satisfy Us", "May Sing", "Morning", "Joy", "Glad"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', '1 Corinthians 13:4', 'ESV', '["Proud", "Patient", "Love", "Kind", "Envy", "Boast"]');
+    VALUES ('187a60ab-4bdc-4c3a-ab44-9c6ed8b2b269', 'c5b5907d-0121-40be-820b-025765502e88', '1 Corinthians 13:4', 'ESV', '["Proud", "Patient", "Love", "Kind", "Envy", "Boast"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'James 1:2-3', 'ESV', '["Faith Produces Perseverance", "Pure Joy", "Many Kinds", "Face Trials", "Whenever", "Testing"]');
+    VALUES ('dad36612-54d0-4bcc-88b9-a959c3dc464c', 'c5b5907d-0121-40be-820b-025765502e88', 'James 1:2-3', 'ESV', '["Faith Produces Perseverance", "Pure Joy", "Many Kinds", "Face Trials", "Whenever", "Testing"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Matthew 5:16', 'ESV', '["May See", "Light Shine", "Good Deeds", "Way", "Others", "Let"]');
+    VALUES ('6011284c-ad24-4453-aa9a-2f956c33d6c9', 'c5b5907d-0121-40be-820b-025765502e88', 'Matthew 5:16', 'ESV', '["May See", "Light Shine", "Good Deeds", "Way", "Others", "Let"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Matthew 28:19-20', 'ESV', '["Therefore Go", "Obey Everything", "Make Disciples", "Holy Spirit", "Age ", "Teaching"]');
+    VALUES ('40688bcf-a462-4685-892a-cf7317cdd366', 'c5b5907d-0121-40be-820b-025765502e88', 'Matthew 28:19-20', 'ESV', '["Therefore Go", "Obey Everything", "Make Disciples", "Holy Spirit", "Age ", "Teaching"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', '1 John 3:18', 'ESV', '["Let Us", "Dear Children", "Words", "Truth", "Speech", "Love"]');
+    VALUES ('11a2b3d5-8a09-47aa-a73d-a14e89d1283c', 'c5b5907d-0121-40be-820b-025765502e88', '1 John 3:18', 'ESV', '["Let Us", "Dear Children", "Words", "Truth", "Speech", "Love"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Proverbs 4:23', 'ESV', '["Heart", "Guard", "Flows", "Everything", "Else"]');
+    VALUES ('fd4f5bfb-e9bc-4e23-93e2-c061736d3ed3', 'c5b5907d-0121-40be-820b-025765502e88', 'Proverbs 4:23', 'ESV', '["Heart", "Guard", "Flows", "Everything", "Else"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', '1 Peter 1:16', 'ESV', '["Holy ", "Holy", "Written"]');
+    VALUES ('c3295e1b-8eff-4f1f-857b-30d312f935cc', 'c5b5907d-0121-40be-820b-025765502e88', '1 Peter 1:16', 'ESV', '["Holy ", "Holy", "Written"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', '1 Peter 5:7', 'ESV', '["Cast", "Cares", "Anxiety"]');
+    VALUES ('b8ee18a7-cc73-4a7c-b5af-bdd43b279608', 'c5b5907d-0121-40be-820b-025765502e88', '1 Peter 5:7', 'ESV', '["Cast", "Cares", "Anxiety"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'John 1:4', 'ESV', '["Mankind", "Light", "Life"]');
+    VALUES ('894b85f1-8a37-429c-9c57-8a53bc29493f', 'c5b5907d-0121-40be-820b-025765502e88', 'John 1:4', 'ESV', '["Mankind", "Light", "Life"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Psalm 46:10', 'ESV', '["Earth ", "Exalted Among", "Exalted", "Still", "Says", "Nations"]');
+    VALUES ('9dea268d-2980-49d9-8e2d-a31e5fd39849', 'c5b5907d-0121-40be-820b-025765502e88', 'Psalm 46:10', 'ESV', '["Earth ", "Exalted Among", "Exalted", "Still", "Says", "Nations"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Matthew 16:26', 'ESV', '["Yet Forfeit", "Whole World", "Anyone Give", "Soul", "Someone", "Good"]');
+    VALUES ('64c9b57a-e161-4b86-a43a-0e4143ad7b0b', 'c5b5907d-0121-40be-820b-025765502e88', 'Matthew 16:26', 'ESV', '["Yet Forfeit", "Whole World", "Anyone Give", "Soul", "Someone", "Good"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Psalm 119:18', 'ESV', '["Open", "Law", "Eyes"]');
+    VALUES ('1e190c69-337a-4ba1-93b0-5c476b96a689', 'c5b5907d-0121-40be-820b-025765502e88', 'Psalm 119:18', 'ESV', '["Open", "Law", "Eyes"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Psalm 139:14', 'ESV', '["Wonderfully Made", "Full Well", "Works", "Wonderful", "Praise", "Know"]');
+    VALUES ('cbe7bb79-c8f2-40bd-98ce-b28c65237dcc', 'c5b5907d-0121-40be-820b-025765502e88', 'Psalm 139:14', 'ESV', '["Wonderfully Made", "Full Well", "Works", "Wonderful", "Praise", "Know"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', '2 Timothy 2:13', 'ESV', '["Remains Faithful", "Cannot Disown", "Faithless"]');
+    VALUES ('e53d62e6-c566-4f33-a9b2-cd8141b16555', 'c5b5907d-0121-40be-820b-025765502e88', '2 Timothy 2:13', 'ESV', '["Remains Faithful", "Cannot Disown", "Faithless"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Proverbs 19:21', 'ESV', '["Purpose", "Prevails", "Plans", "Person", "Many", "Lord"]');
+    VALUES ('c4ee32df-d592-4b25-acb3-c764c035f78b', 'c5b5907d-0121-40be-820b-025765502e88', 'Proverbs 19:21', 'ESV', '["Purpose", "Prevails", "Plans", "Person", "Many", "Lord"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Psalm 46:1', 'ESV', '["Present Help", "Trouble", "Strength", "Refuge", "God", "Ever"]');
+    VALUES ('2b154cde-31f2-4827-bd19-808cfb48a2f8', 'c5b5907d-0121-40be-820b-025765502e88', 'Psalm 46:1', 'ESV', '["Present Help", "Trouble", "Strength", "Refuge", "God", "Ever"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Psalm 100:1-5', 'ESV', '["Love Endures Forever", "Made Us", "Joyful Songs", "Give Thanks", "Faithfulness Continues", "Worship"]');
+    VALUES ('8ed5801d-3542-4e1a-9ec9-7808267715db', 'c5b5907d-0121-40be-820b-025765502e88', 'Psalm 100:1-5', 'ESV', '["Love Endures Forever", "Made Us", "Joyful Songs", "Give Thanks", "Faithfulness Continues", "Worship"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Habakkuk 3:17-19', 'ESV', '["Olive Crop Fails", "Stringed Instruments", "Fig Tree", "Fields Produce", "Sovereign Lord", "Feet Like"]');
+    VALUES ('d4e1ce5f-456e-4d73-9d0f-0093e3eaf61b', 'c5b5907d-0121-40be-820b-025765502e88', 'Habakkuk 3:17-19', 'ESV', '["Olive Crop Fails", "Stringed Instruments", "Fig Tree", "Fields Produce", "Sovereign Lord", "Feet Like"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Nehemiah 9:6', 'ESV', '["Starry Host", "Heaven Worship", "Give Life", "Highest Heavens", "Heavens", "Seas"]');
+    VALUES ('533010a0-0e92-45a2-9656-4d148940dfc7', 'c5b5907d-0121-40be-820b-025765502e88', 'Nehemiah 9:6', 'ESV', '["Starry Host", "Heaven Worship", "Give Life", "Highest Heavens", "Heavens", "Seas"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Psalm 16:2', 'ESV', '["Good Thing ", "Say", "Lord", "Apart"]');
+    VALUES ('d5c5b236-bb29-42d4-a9aa-0c99d5ed427e', 'c5b5907d-0121-40be-820b-025765502e88', 'Psalm 16:2', 'ESV', '["Good Thing ", "Say", "Lord", "Apart"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Ephesians 3:20-21', 'ESV', '["Work Within Us", "Christ Jesus Throughout", "Power", "Immeasurably", "Imagine", "Glory"]');
+    VALUES ('06e16b20-9ab5-4cba-9560-9d9db2d19e4c', 'c5b5907d-0121-40be-820b-025765502e88', 'Ephesians 3:20-21', 'ESV', '["Work Within Us", "Christ Jesus Throughout", "Power", "Immeasurably", "Imagine", "Glory"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Psalm 42:11', 'ESV', '["Yet Praise", "Disturbed Within", "Soul", "Savior", "Put", "Hope"]');
+    VALUES ('5310b808-13d2-4542-a1ad-81ffe10aad0b', 'c5b5907d-0121-40be-820b-025765502e88', 'Psalm 42:11', 'ESV', '["Yet Praise", "Disturbed Within", "Soul", "Savior", "Put", "Hope"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Psalm 139:1-18', 'ESV', '["Would Outnumber", "Unformed Body", "Shine Like", "Secret Place", "Sand \u2014", "Full Well"]');
+    VALUES ('4a44d6c9-f102-4297-9baa-ed1663e88a8d', 'c5b5907d-0121-40be-820b-025765502e88', 'Psalm 139:1-18', 'ESV', '["Would Outnumber", "Unformed Body", "Shine Like", "Secret Place", "Sand \u2014", "Full Well"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', '1 Peter 2:9', 'ESV', '["Wonderful Light", "Special Possession", "Royal Priesthood", "May Declare", "Holy Nation", "Chosen People"]');
+    VALUES ('76bae974-40a9-47c7-b6fc-94add4619a7e', 'c5b5907d-0121-40be-820b-025765502e88', '1 Peter 2:9', 'ESV', '["Wonderful Light", "Special Possession", "Royal Priesthood", "May Declare", "Holy Nation", "Chosen People"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', '1 Peter 3:3-4', 'ESV', '["Quiet Spirit", "Outward Adornment", "Inner Self", "Great Worth", "Gold Jewelry", "Fine Clothes"]');
+    VALUES ('f3e65cb9-33cf-4cb5-9ba2-f43bd6f89d5d', 'c5b5907d-0121-40be-820b-025765502e88', '1 Peter 3:3-4', 'ESV', '["Quiet Spirit", "Outward Adornment", "Inner Self", "Great Worth", "Gold Jewelry", "Fine Clothes"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Colossians 2:6-7', 'ESV', '["Received Christ Jesus", "Thankfulness", "Taught", "Strengthened", "Rooted", "Overflowing"]');
+    VALUES ('288ccf47-fdcd-4dec-b2fa-b70290e705d2', 'c5b5907d-0121-40be-820b-025765502e88', 'Colossians 2:6-7', 'ESV', '["Received Christ Jesus", "Thankfulness", "Taught", "Strengthened", "Rooted", "Overflowing"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', '1 Peter 1:22', 'ESV', '["Sincere Love", "Truth", "Purified", "Obeying", "Heart"]');
+    VALUES ('37724e85-b254-45e0-b23e-61539fb259c9', 'c5b5907d-0121-40be-820b-025765502e88', '1 Peter 1:22', 'ESV', '["Sincere Love", "Truth", "Purified", "Obeying", "Heart"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Colossians 3:13', 'ESV', '["Forgive One Another", "Lord Forgave", "Forgive", "Someone", "Grievance", "Bear"]');
+    VALUES ('8391342d-26e3-4ab3-ab49-af28116c29f1', 'c5b5907d-0121-40be-820b-025765502e88', 'Colossians 3:13', 'ESV', '["Forgive One Another", "Lord Forgave", "Forgive", "Someone", "Grievance", "Bear"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', '1 Peter 3:15', 'ESV', '["Hearts Revere Christ", "Respect", "Reason", "Prepared", "Lord", "Hope"]');
+    VALUES ('e9a0cb1b-d92a-4c32-b0d4-106e0bd7bee6', 'c5b5907d-0121-40be-820b-025765502e88', '1 Peter 3:15', 'ESV', '["Hearts Revere Christ", "Respect", "Reason", "Prepared", "Lord", "Hope"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', '1 Peter 4:10-11', 'ESV', '["Use Whatever Gift", "Things God May", "Strength God Provides", "Various Forms", "Serve Others", "Jesus Christ"]');
+    VALUES ('eb7639a2-7046-4cea-947c-0fc9d9149a89', 'c5b5907d-0121-40be-820b-025765502e88', '1 Peter 4:10-11', 'ESV', '["Use Whatever Gift", "Things God May", "Strength God Provides", "Various Forms", "Serve Others", "Jesus Christ"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Psalm 1:1-3', 'ESV', '["Wither \u2014 Whatever", "Whose Leaf", "Whose Delight", "Tree Planted", "Sinners Take", "Law Day"]');
+    VALUES ('337605ec-c9ca-45a9-9bf9-196de0d80128', 'c5b5907d-0121-40be-820b-025765502e88', 'Psalm 1:1-3', 'ESV', '["Wither \u2014 Whatever", "Whose Leaf", "Whose Delight", "Tree Planted", "Sinners Take", "Law Day"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Psalm 112:7', 'ESV', '["Bad News", "Trusting", "Steadfast", "Lord", "Hearts", "Fear"]');
+    VALUES ('4143a84b-2e0b-49cb-83a3-a669727199c1', 'c5b5907d-0121-40be-820b-025765502e88', 'Psalm 112:7', 'ESV', '["Bad News", "Trusting", "Steadfast", "Lord", "Hearts", "Fear"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Hebrews 10:23', 'ESV', '["Promised", "Profess", "Hope", "Faithful"]');
+    VALUES ('d5064f8c-4120-471f-81eb-2dbb7ec96366', 'c5b5907d-0121-40be-820b-025765502e88', 'Hebrews 10:23', 'ESV', '["Promised", "Profess", "Hope", "Faithful"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'James 1:17', 'ESV', '["Perfect Gift", "Heavenly Lights", "Every Good", "Father", "Coming"]');
+    VALUES ('ee7ebcb1-56f4-4445-8f59-78ddceeaf2f6', 'c5b5907d-0121-40be-820b-025765502e88', 'James 1:17', 'ESV', '["Perfect Gift", "Heavenly Lights", "Every Good", "Father", "Coming"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', '1 Peter 5:10', 'ESV', '["Eternal Glory", "Suffered", "Strong", "Steadfast", "Restore", "Make"]');
+    VALUES ('39571187-30bd-4293-8011-c1bc64091b9f', 'c5b5907d-0121-40be-820b-025765502e88', '1 Peter 5:10', 'ESV', '["Eternal Glory", "Suffered", "Strong", "Steadfast", "Restore", "Make"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Proverbs 3:7-8', 'ESV', '["Shun Evil", "Bring Health", "Wise", "Nourishment", "Lord", "Fear"]');
+    VALUES ('0eca9311-c4ec-4755-b16f-1d983234315a', 'c5b5907d-0121-40be-820b-025765502e88', 'Proverbs 3:7-8', 'ESV', '["Shun Evil", "Bring Health", "Wise", "Nourishment", "Lord", "Fear"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Romans 8:28', 'ESV', '["Things God Works", "Called According", "Purpose", "Love", "Know", "Good"]');
+    VALUES ('298b4274-b45c-49c8-9067-68ab99abf9fd', 'c5b5907d-0121-40be-820b-025765502e88', 'Romans 8:28', 'ESV', '["Things God Works", "Called According", "Purpose", "Love", "Know", "Good"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Isaiah 43:4', 'ESV', '["Give People", "Since", "Sight", "Precious", "Nations", "Love"]');
+    VALUES ('32fcabc0-5aa7-4253-bff3-4b2f824c46e7', 'c5b5907d-0121-40be-820b-025765502e88', 'Isaiah 43:4', 'ESV', '["Give People", "Since", "Sight", "Precious", "Nations", "Love"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Psalm 27:13', 'ESV', '["Remain Confident", "See", "Lord", "Living", "Land", "Goodness"]');
+    VALUES ('481e258f-14c1-4880-9b31-0683bb256225', 'c5b5907d-0121-40be-820b-025765502e88', 'Psalm 27:13', 'ESV', '["Remain Confident", "See", "Lord", "Living", "Land", "Goodness"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Jeremiah 2:13', 'ESV', '["Committed Two Sins", "Cannot Hold Water", "Living Water", "Broken Cisterns", "Cisterns", "Spring"]');
+    VALUES ('e8114dd5-a146-432d-95ef-5555ae8293c0', 'c5b5907d-0121-40be-820b-025765502e88', 'Jeremiah 2:13', 'ESV', '["Committed Two Sins", "Cannot Hold Water", "Living Water", "Broken Cisterns", "Cisterns", "Spring"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', '1 Timothy 1:15', 'ESV', '["Save Sinners \u2014", "Deserves Full Acceptance", "Christ Jesus Came", "Trustworthy Saying", "Worst", "World"]');
+    VALUES ('cbfd2d02-3261-4843-b107-881f5dab8f54', 'c5b5907d-0121-40be-820b-025765502e88', '1 Timothy 1:15', 'ESV', '["Save Sinners \u2014", "Deserves Full Acceptance", "Christ Jesus Came", "Trustworthy Saying", "Worst", "World"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Psalm 143:8', 'ESV', '["Unfailing Love", "Morning Bring", "Word", "Way", "Trust", "Show"]');
+    VALUES ('ee43c9bb-cad0-410d-9a10-ef85a68cc4b9', 'c5b5907d-0121-40be-820b-025765502e88', 'Psalm 143:8', 'ESV', '["Unfailing Love", "Morning Bring", "Word", "Way", "Trust", "Show"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', '2 Corinthians 10:5', 'ESV', '["Every Pretension", "Demolish Arguments", "Sets", "Obedient", "Make", "Knowledge"]');
+    VALUES ('d0b819ab-e496-4627-9b50-2da8852522a7', 'c5b5907d-0121-40be-820b-025765502e88', '2 Corinthians 10:5', 'ESV', '["Every Pretension", "Demolish Arguments", "Sets", "Obedient", "Make", "Knowledge"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Psalm 119:18', 'ESV', '["Open", "Law", "Eyes"]');
+    VALUES ('e037519f-d4e2-427b-81e6-70b613580a39', 'c5b5907d-0121-40be-820b-025765502e88', 'Psalm 119:18', 'ESV', '["Open", "Law", "Eyes"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Hebrews 4:12', 'ESV', '["Penetrates Even", "Edged Sword", "Dividing Soul", "Word", "Thoughts", "Spirit"]');
+    VALUES ('103a9fd1-3eb0-4491-b43e-bf2855049bc7', 'c5b5907d-0121-40be-820b-025765502e88', 'Hebrews 4:12', 'ESV', '["Penetrates Even", "Edged Sword", "Dividing Soul", "Word", "Thoughts", "Spirit"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('c5b5907d-0121-40be-820b-025765502e88', 'Psalm 119:105', 'ESV', '["Word", "Path", "Light", "Lamp", "Feet"]');
+    VALUES ('4bb9f642-2658-48af-b22d-a6bc79316071', 'c5b5907d-0121-40be-820b-025765502e88', 'Psalm 119:105', 'ESV', '["Word", "Path", "Light", "Lamp", "Feet"]');
 -- Pack: Come Follow Me - Answering the Call
     INSERT INTO verse_packs (id, title, identifier, description, is_public)
     VALUES ('09ad7302-8904-4044-8594-23d07579887a', 'Come Follow Me - Answering the Call', 'Come-Follow-Me-Answering-the-Call', 'Come Follow Me - Answering the Call', true)
     ;
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('09ad7302-8904-4044-8594-23d07579887a', 'Matthew 4:19', 'ESV', '[" Jesus Said", "People ", "Send", "Follow", "Fish", "Come"]');
+    VALUES ('2f684d43-8031-45e6-b32b-361125fb2d84', '09ad7302-8904-4044-8594-23d07579887a', 'Matthew 4:19', 'ESV', '[" Jesus Said", "People ", "Send", "Follow", "Fish", "Come"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('09ad7302-8904-4044-8594-23d07579887a', 'Matthew 11:28-30', 'ESV', '["Light ", "Yoke Upon", "Find Rest", "Yoke", "Rest", "Weary"]');
+    VALUES ('d2ead2f3-0bab-4c60-84c6-f6eb41728582', '09ad7302-8904-4044-8594-23d07579887a', 'Matthew 11:28-30', 'ESV', '["Light ", "Yoke Upon", "Find Rest", "Yoke", "Rest", "Weary"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('09ad7302-8904-4044-8594-23d07579887a', '2 Corinthians 3:18', 'ESV', '["Unveiled Faces Contemplate", "Increasing Glory", "Glory", "Transformed", "Spirit", "Lord"]');
+    VALUES ('2b5d4e0b-3367-4888-b8e9-e531c29b166c', '09ad7302-8904-4044-8594-23d07579887a', '2 Corinthians 3:18', 'ESV', '["Unveiled Faces Contemplate", "Increasing Glory", "Glory", "Transformed", "Spirit", "Lord"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('09ad7302-8904-4044-8594-23d07579887a', 'John 14:6', 'ESV', '["One Comes", "Jesus Answered", "Father Except", "Way", "Truth", "Life"]');
+    VALUES ('63eee764-218b-457f-805a-9eed6b2db1ad', '09ad7302-8904-4044-8594-23d07579887a', 'John 14:6', 'ESV', '["One Comes", "Jesus Answered", "Father Except", "Way", "Truth", "Life"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('09ad7302-8904-4044-8594-23d07579887a', 'John 15:5', 'ESV', '["Bear Much Fruit", "Vine", "Remain", "Nothing", "Branches", "Apart"]');
+    VALUES ('8e951c6a-473a-42d4-9efd-2ec8a737148e', '09ad7302-8904-4044-8594-23d07579887a', 'John 15:5', 'ESV', '["Bear Much Fruit", "Vine", "Remain", "Nothing", "Branches", "Apart"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('09ad7302-8904-4044-8594-23d07579887a', 'John 6:68-69', 'ESV', '["Simon Peter Answered", "Holy One", "God ", "Eternal Life", "Words", "Shall"]');
+    VALUES ('19372266-6e1b-4fc7-9345-69ae3903079c', '09ad7302-8904-4044-8594-23d07579887a', 'John 6:68-69', 'ESV', '["Simon Peter Answered", "Holy One", "God ", "Eternal Life", "Words", "Shall"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('09ad7302-8904-4044-8594-23d07579887a', 'Matthew 10:37-38', 'ESV', '["Worthy", "Whoever", "Take", "Son", "Mother", "Loves"]');
+    VALUES ('b1665644-11b3-4f92-8619-b0e9830559a8', '09ad7302-8904-4044-8594-23d07579887a', 'Matthew 10:37-38', 'ESV', '["Worthy", "Whoever", "Take", "Son", "Mother", "Loves"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('09ad7302-8904-4044-8594-23d07579887a', 'Luke 9:23', 'ESV', '["Disciple Must Deny", "Whoever Wants", "Cross Daily", "Take", "Said", "Follow"]');
+    VALUES ('18fe3e2b-3d02-4cc7-9479-6286d9082f7c', '09ad7302-8904-4044-8594-23d07579887a', 'Luke 9:23', 'ESV', '["Disciple Must Deny", "Whoever Wants", "Cross Daily", "Take", "Said", "Follow"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('09ad7302-8904-4044-8594-23d07579887a', 'Luke 14:33', 'ESV', '["Way", "Give", "Everything", "Disciples", "Cannot"]');
+    VALUES ('8b6f21fc-a42e-417c-b7b1-fdd36aac873b', '09ad7302-8904-4044-8594-23d07579887a', 'Luke 14:33', 'ESV', '["Way", "Give", "Everything", "Disciples", "Cannot"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('09ad7302-8904-4044-8594-23d07579887a', 'Luke 9:62', 'ESV', '["Looks Back", "Jesus Replied", "God ", "Service", "Puts", "Plow"]');
+    VALUES ('bda59430-730f-48ab-b21b-6ba72ac7d21f', '09ad7302-8904-4044-8594-23d07579887a', 'Luke 9:62', 'ESV', '["Looks Back", "Jesus Replied", "God ", "Service", "Puts", "Plow"]');
 -- Pack: Disciple-making
     INSERT INTO verse_packs (id, title, identifier, description, is_public)
     VALUES ('77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'Disciple-making', 'Disciple-making', 'Disciple-making', true)
     ;
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'John 15:16', 'ESV', '["Might Go", "Last \u2014", "Whatever", "Name", "Give", "Father"]');
+    VALUES ('25442a3f-63fa-49b9-ad5e-4649efb66685', '77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'John 15:16', 'ESV', '["Might Go", "Last \u2014", "Whatever", "Name", "Give", "Father"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('77aeb691-8a15-4d3a-89db-df2da3ec7b81', '2 Corinthians 5:14-15', 'ESV', '["Love Compels Us", "One Died", "Longer Live", "Live", "Died", "Therefore"]');
+    VALUES ('80393065-5eff-4742-91ef-741c90145119', '77aeb691-8a15-4d3a-89db-df2da3ec7b81', '2 Corinthians 5:14-15', 'ESV', '["Love Compels Us", "One Died", "Longer Live", "Live", "Died", "Therefore"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'Ephesians 4:12-13', 'ESV', '["Whole Measure", "Reach Unity", "Become Mature", "Christ May", "Christ", "Works"]');
+    VALUES ('c532e3c0-77ff-4b75-8990-9f9a5e8004be', '77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'Ephesians 4:12-13', 'ESV', '["Whole Measure", "Reach Unity", "Become Mature", "Christ May", "Christ", "Works"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'Colossians 1:28', 'ESV', '["Teaching Everyone", "Wisdom", "Proclaim", "One", "Christ", "Admonishing"]');
+    VALUES ('fee7cc6a-4561-4a31-ace2-0b2de9b45ce5', '77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'Colossians 1:28', 'ESV', '["Teaching Everyone", "Wisdom", "Proclaim", "One", "Christ", "Admonishing"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('77aeb691-8a15-4d3a-89db-df2da3ec7b81', '2 Timothy 2:2', 'ESV', '["Many Witnesses Entrust", "Teach Others", "Reliable People", "Things", "Say", "Qualified"]');
+    VALUES ('3cc37753-89c1-45ba-b02a-6a4b3e9ef438', '77aeb691-8a15-4d3a-89db-df2da3ec7b81', '2 Timothy 2:2', 'ESV', '["Many Witnesses Entrust", "Teach Others", "Reliable People", "Things", "Say", "Qualified"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('77aeb691-8a15-4d3a-89db-df2da3ec7b81', '1 Thessalonians 2:8', 'ESV', '["Well", "Share", "Much", "Loved", "Lives", "Gospel"]');
+    VALUES ('111ed64c-c9a4-4c74-93ac-acaacc5513a0', '77aeb691-8a15-4d3a-89db-df2da3ec7b81', '1 Thessalonians 2:8', 'ESV', '["Well", "Share", "Much", "Loved", "Lives", "Gospel"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('77aeb691-8a15-4d3a-89db-df2da3ec7b81', '1 Timothy 4:12', 'ESV', '["Let Anyone Look", "Young", "Speech", "Set", "Purity", "Love"]');
+    VALUES ('f971d6c6-5c80-494c-970a-e2896271f912', '77aeb691-8a15-4d3a-89db-df2da3ec7b81', '1 Timothy 4:12', 'ESV', '["Let Anyone Look", "Young", "Speech", "Set", "Purity", "Love"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'Psalm 78:72', 'ESV', '["Skillful Hands", "David Shepherded", "Led", "Integrity", "Heart"]');
+    VALUES ('8e7b5001-52f2-4413-9127-6d0c4aa24bbb', '77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'Psalm 78:72', 'ESV', '["Skillful Hands", "David Shepherded", "Led", "Integrity", "Heart"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('77aeb691-8a15-4d3a-89db-df2da3ec7b81', '1 Thessalonians 3:10', 'ESV', '["May See", "Supply", "Pray", "Night", "Lacking", "Faith"]');
+    VALUES ('97e78b32-df7e-4999-9dad-221858d9fba3', '77aeb691-8a15-4d3a-89db-df2da3ec7b81', '1 Thessalonians 3:10', 'ESV', '["May See", "Supply", "Pray", "Night", "Lacking", "Faith"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'Ezra 7:10', 'ESV', '["Teaching", "Study", "Observance", "Lord", "Laws", "Law"]');
+    VALUES ('a1a8aebd-4e71-4280-b723-ebcfd44122a8', '77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'Ezra 7:10', 'ESV', '["Teaching", "Study", "Observance", "Lord", "Laws", "Law"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'Philippians 2:20-21', 'ESV', '["Show Genuine Concern", "One Else Like", "Jesus Christ", "Everyone Looks", "Welfare", "Interests"]');
+    VALUES ('f181480e-9288-4cb2-a728-2e2f63a25105', '77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'Philippians 2:20-21', 'ESV', '["Show Genuine Concern", "One Else Like", "Jesus Christ", "Everyone Looks", "Welfare", "Interests"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'Colossians 1:29', 'ESV', '["Strenuously Contend", "Powerfully Works", "Energy Christ", "End"]');
+    VALUES ('2b33c245-fc8c-4109-ac11-31bead29f675', '77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'Colossians 1:29', 'ESV', '["Strenuously Contend", "Powerfully Works", "Energy Christ", "End"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'Proverbs 27:23', 'ESV', '["Give Careful Attention", "Sure", "Know", "Herds", "Flocks", "Condition"]');
+    VALUES ('212f0385-325b-43f5-a868-d2288b0bfed6', '77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'Proverbs 27:23', 'ESV', '["Give Careful Attention", "Sure", "Know", "Herds", "Flocks", "Condition"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('77aeb691-8a15-4d3a-89db-df2da3ec7b81', '2 Timothy 4:2', 'ESV', '["Great Patience", "Encourage \u2014", "Careful Instruction", "Word", "Season", "Rebuke"]');
+    VALUES ('d42c7e33-a597-40b7-b3b8-fa4bc375fc10', '77aeb691-8a15-4d3a-89db-df2da3ec7b81', '2 Timothy 4:2', 'ESV', '["Great Patience", "Encourage \u2014", "Careful Instruction", "Word", "Season", "Rebuke"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'Luke 14:26', 'ESV', '["Sisters \u2014 Yes", "Life \u2014", "Person Cannot", "Hate Father", "Anyone Comes", "Wife"]');
+    VALUES ('57cdc36c-d967-4980-aa69-c305b97f3a18', '77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'Luke 14:26', 'ESV', '["Sisters \u2014 Yes", "Life \u2014", "Person Cannot", "Hate Father", "Anyone Comes", "Wife"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'Luke 14:27', 'ESV', '["Whoever", "Follow", "Disciple", "Cross", "Carry", "Cannot"]');
+    VALUES ('aee886c7-65ea-40e7-8994-e1463c275d4e', '77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'Luke 14:27', 'ESV', '["Whoever", "Follow", "Disciple", "Cross", "Carry", "Cannot"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'Luke 14:33', 'ESV', '["Way", "Give", "Everything", "Disciples", "Cannot"]');
+    VALUES ('7e8dce6e-952d-4092-9aa6-e9090df47eec', '77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'Luke 14:33', 'ESV', '["Way", "Give", "Everything", "Disciples", "Cannot"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'John 8:31-32', 'ESV', '["Jesus Said", "Free ", "Truth", "Teaching", "Set", "Really"]');
+    VALUES ('b2e07064-4b9e-4183-82c7-97935fe30a93', '77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'John 8:31-32', 'ESV', '["Jesus Said", "Free ", "Truth", "Teaching", "Set", "Really"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'John 15:8', 'ESV', '["Bear Much Fruit", "Showing", "Glory", "Father", "Disciples"]');
+    VALUES ('ae686a6e-8af0-47b9-a375-bba50bbf6d57', '77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'John 15:8', 'ESV', '["Bear Much Fruit", "Showing", "Glory", "Father", "Disciples"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'John 13:34-35', 'ESV', '["Love One Another", "New Command", "Loved", "Know", "Give", "Everyone"]');
+    VALUES ('67fbd597-b867-46f5-bb2f-5631f792694c', '77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'John 13:34-35', 'ESV', '["Love One Another", "New Command", "Loved", "Know", "Give", "Everyone"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'Philippians 3:10-11', 'ESV', '["Becoming Like", "Want", "Sufferings", "Somehow", "Resurrection", "Power"]');
+    VALUES ('651d7e5d-6924-4f18-b76e-f9629fa8eb99', '77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'Philippians 3:10-11', 'ESV', '["Becoming Like", "Want", "Sufferings", "Somehow", "Resurrection", "Power"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'Acts 20:24', 'ESV', '["Life Worth Nothing", "Lord Jesus", "Good News", "Testifying", "Task", "Race"]');
+    VALUES ('acaeae3a-b7a8-4f74-abeb-44344dd1a0fa', '77aeb691-8a15-4d3a-89db-df2da3ec7b81', 'Acts 20:24', 'ESV', '["Life Worth Nothing", "Lord Jesus", "Good News", "Testifying", "Task", "Race"]');
 -- Pack: Sufferings Pack
     INSERT INTO verse_packs (id, title, identifier, description, is_public)
     VALUES ('f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', 'Sufferings Pack', 'Sufferings-Pack', 'Sufferings Pack', true)
     ;
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', 'Luke 6:22-23', 'ESV', '["People Hate", "Ancestors Treated", "Son", "Reward", "Rejoice", "Reject"]');
+    VALUES ('48de1b47-df6d-4cdc-870c-7dda0f66c522', 'f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', 'Luke 6:22-23', 'ESV', '["People Hate", "Ancestors Treated", "Son", "Reward", "Rejoice", "Reject"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', '1 Peter 2:20-21', 'ESV', '["Christ Suffered", "Wrong", "Suffer", "Steps", "Receive", "Leaving"]');
+    VALUES ('0a1eab5e-05d2-4c83-98ee-8b17844e9001', 'f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', '1 Peter 2:20-21', 'ESV', '["Christ Suffered", "Wrong", "Suffer", "Steps", "Receive", "Leaving"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', 'John 15:18-19', 'ESV', '["Would Love", "World Hates", "World", "Mind", "Keep", "Hated"]');
+    VALUES ('3c4a9028-dd4a-4169-a4ab-27a4024a942f', 'f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', 'John 15:18-19', 'ESV', '["Would Love", "World Hates", "World", "Mind", "Keep", "Hated"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', 'Hebrews 12:6', 'ESV', '["Son ", "Lord Disciplines", "Chastens Everyone", "One", "Loves", "Accepts"]');
+    VALUES ('d285ff76-3d17-434e-9a9d-39df8d94f7bc', 'f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', 'Hebrews 12:6', 'ESV', '["Son ", "Lord Disciplines", "Chastens Everyone", "One", "Loves", "Accepts"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', 'John 15:2', 'ESV', '["Every Branch", "Bear Fruit", "Fruit", "Prunes", "Fruitful", "Even"]');
+    VALUES ('22c037ac-d55e-4d56-b0df-bf87141c1cdf', 'f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', 'John 15:2', 'ESV', '["Every Branch", "Bear Fruit", "Fruit", "Prunes", "Fruitful", "Even"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', '1 Peter 1:6-7', 'ESV', '["Suffer Grief", "Proven Genuineness", "Jesus Christ", "Greatly Rejoice", "Greater Worth", "Faith \u2014"]');
+    VALUES ('a370f41e-6b58-4dc6-be1d-d3dac7dce1eb', 'f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', '1 Peter 1:6-7', 'ESV', '["Suffer Grief", "Proven Genuineness", "Jesus Christ", "Greatly Rejoice", "Greater Worth", "Faith \u2014"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', '2 Thessalonians 1:4-5', 'ESV', '["Counted Worthy", "Among God", "God", "Trials", "Therefore", "Suffering"]');
+    VALUES ('0d174ee3-8a1f-4f1f-abf8-c9968d0428ef', 'f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', '2 Thessalonians 1:4-5', 'ESV', '["Counted Worthy", "Among God", "God", "Trials", "Therefore", "Suffering"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', 'Hebrews 11:25 ', 'ESV', '["Mistreated Along", "God Rather", "Fleeting Pleasures", "Sin", "People", "Enjoy"]');
+    VALUES ('41ccaa1f-7799-4a1a-9014-49d4377e426a', 'f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', 'Hebrews 11:25 ', 'ESV', '["Mistreated Along", "God Rather", "Fleeting Pleasures", "Sin", "People", "Enjoy"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', 'Job 1:20-22 ', 'ESV', '["Taken Away", "Praised ", "Charging God", "Lord Gave", "Job Got", "Lord"]');
+    VALUES ('5ada26c4-461e-46ca-88d7-b8277664f9b4', 'f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', 'Job 1:20-22 ', 'ESV', '["Taken Away", "Praised ", "Charging God", "Lord Gave", "Job Got", "Lord"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', 'Acts 5:40-41', 'ESV', '["Suffering Disgrace", "Speech Persuaded", "Counted Worthy", "Apostles Left", "Apostles", "Speak"]');
+    VALUES ('12dfbce1-fb1e-42f2-9a1c-31e9fda4a0ad', 'f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', 'Acts 5:40-41', 'ESV', '["Suffering Disgrace", "Speech Persuaded", "Counted Worthy", "Apostles Left", "Apostles", "Speak"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', 'Acts 7:59-60', 'ESV', '["Stephen Prayed", "Spirit ", "Lord Jesus", "Fell Asleep", "Lord", "Fell"]');
+    VALUES ('6ddb99c4-d066-4d17-8edd-fb88e1c58dc8', 'f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', 'Acts 7:59-60', 'ESV', '["Stephen Prayed", "Spirit ", "Lord Jesus", "Fell Asleep", "Lord", "Fell"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', 'Romans 8:18', 'ESV', '["Worth Comparing", "Present Sufferings", "Revealed", "Glory", "Consider"]');
+    VALUES ('a71795ab-5ada-4c3e-be5c-6147b203987a', 'f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', 'Romans 8:18', 'ESV', '["Worth Comparing", "Present Sufferings", "Revealed", "Glory", "Consider"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', 'Hebrews 12:11', 'ESV', '["Discipline Seems Pleasant", "Trained", "Time", "Righteousness", "Produces", "Peace"]');
+    VALUES ('a558c5d4-e638-42d9-bfeb-f6ee58e394f4', 'f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', 'Hebrews 12:11', 'ESV', '["Discipline Seems Pleasant", "Trained", "Time", "Righteousness", "Produces", "Peace"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', '2 Corinthians 1:3-4', 'ESV', '["Lord Jesus Christ", "Comforts Us", "Troubles", "Trouble", "Receive", "Praise"]');
+    VALUES ('bedb64de-df0a-4b64-838b-3701829c652c', 'f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', '2 Corinthians 1:3-4', 'ESV', '["Lord Jesus Christ", "Comforts Us", "Troubles", "Trouble", "Receive", "Praise"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', 'Psalm 119:67,71', 'ESV', '["Went Astray", "Might Learn", "Word", "Obey", "Good", "Decrees"]');
+    VALUES ('6b27a533-cef3-4597-85c0-5c780187804e', 'f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', 'Psalm 119:67,71', 'ESV', '["Went Astray", "Might Learn", "Word", "Obey", "Good", "Decrees"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', '2 Corinthians 4:17', 'ESV', '["Momentary Troubles", "Far Outweighs", "Eternal Glory", "Light", "Achieving"]');
+    VALUES ('a7b0296a-e2b1-44bf-8a2b-79c0b527fd3a', 'f38fe0a6-be7b-4abc-9ed3-d571f4d28be7', '2 Corinthians 4:17', 'ESV', '["Momentary Troubles", "Far Outweighs", "Eternal Glory", "Light", "Achieving"]');
 -- Pack: The Pursuit of Holiness
     INSERT INTO verse_packs (id, title, identifier, description, is_public)
     VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'The Pursuit of Holiness', 'The-Pursuit-of-Holiness', 'The Pursuit of Holiness', true)
     ;
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', '1 Corinthians 6:19-20', 'ESV', '["Therefore Honor God", "Holy Spirit", "God", "Temples", "Received", "Price"]');
+    VALUES ('349991c5-20f7-4772-86b0-4f3eba514758', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', '1 Corinthians 6:19-20', 'ESV', '["Therefore Honor God", "Holy Spirit", "God", "Temples", "Received", "Price"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Titus 2:11-12', 'ESV', '["Worldly Passions", "Teaches Us", "Present Age", "Offers Salvation", "Live Self", "Godly Lives"]');
+    VALUES ('cc00d1b0-465a-4843-a42c-7c3507759512', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Titus 2:11-12', 'ESV', '["Worldly Passions", "Teaches Us", "Present Age", "Offers Salvation", "Live Self", "Godly Lives"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Genesis 39:8-9', 'ESV', '["Withheld Nothing", "Wicked Thing", "God ", "Charge ", "Wife", "Told"]');
+    VALUES ('c2527f58-f89e-485a-904f-7fbe6032d1e4', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Genesis 39:8-9', 'ESV', '["Withheld Nothing", "Wicked Thing", "God ", "Charge ", "Wife", "Told"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', '1 Thessalonians 4:3', 'ESV', '["Avoid Sexual Immorality", "Sanctified", "God"]');
+    VALUES ('25926f2f-1234-4218-ba47-039aeee55f57', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', '1 Thessalonians 4:3', 'ESV', '["Avoid Sexual Immorality", "Sanctified", "God"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Romans 8:13-14', 'ESV', '["Live According", "Live", "Spirit", "Put", "Misdeeds", "Led"]');
+    VALUES ('6fda21a9-575b-4b79-a41e-ae30cc3b6c9f', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Romans 8:13-14', 'ESV', '["Live According", "Live", "Spirit", "Put", "Misdeeds", "Led"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Galatians 6:7-8', 'ESV', '["Reap Eternal Life", "Reap Destruction", "Man Reaps", "God Cannot", "Whoever Sows", "Sows"]');
+    VALUES ('161a007b-d48b-41e3-8f04-a1987c60f565', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Galatians 6:7-8', 'ESV', '["Reap Eternal Life", "Reap Destruction", "Man Reaps", "God Cannot", "Whoever Sows", "Sows"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Psalm 24:3-6', 'ESV', '["Receive Blessing", "Pure Heart", "May Stand", "May Ascend", "Holy Place", "Clean Hands"]');
+    VALUES ('de1ce43b-32c6-4bc9-a344-8f2114ca1d5e', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Psalm 24:3-6', 'ESV', '["Receive Blessing", "Pure Heart", "May Stand", "May Ascend", "Holy Place", "Clean Hands"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Romans 12:1', 'ESV', '["Proper Worship", "Living Sacrifice", "God \u2014", "God", "View", "Urge"]');
+    VALUES ('34c0befc-15c5-46b6-808a-dc30da6ca444', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Romans 12:1', 'ESV', '["Proper Worship", "Living Sacrifice", "God \u2014", "God", "View", "Urge"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Philippians 3:8', 'ESV', '["May Gain Christ", "Knowing Christ Jesus", "Whose Sake", "Surpassing Worth", "Consider Everything", "Consider"]');
+    VALUES ('c44001ff-e074-46fd-b502-856666579127', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Philippians 3:8', 'ESV', '["May Gain Christ", "Knowing Christ Jesus", "Whose Sake", "Surpassing Worth", "Consider Everything", "Consider"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Ephesians 4:22-24', 'ESV', '["true Righteousness", "Old Self", "New Self", "Made New", "Like God", "Former Way"]');
+    VALUES ('35d1cf16-1904-4bf5-aeee-66d9329e408d', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Ephesians 4:22-24', 'ESV', '["true Righteousness", "Old Self", "New Self", "Made New", "Like God", "Former Way"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Romans 8:5-6', 'ESV', '["Minds Set", "Mind Governed", "Spirit Desires", "Live According", "Flesh Desires", "Spirit"]');
+    VALUES ('a4974186-92c4-4331-a8a5-8279b82a1fa9', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Romans 8:5-6', 'ESV', '["Minds Set", "Mind Governed", "Spirit Desires", "Live According", "Flesh Desires", "Spirit"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Genesis 4:7', 'ESV', '["Must Rule", "Sin", "Right", "Door", "Desires", "Crouching"]');
+    VALUES ('5585e3f8-ff57-4498-8543-5d81f6729f73', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Genesis 4:7', 'ESV', '["Must Rule", "Sin", "Right", "Door", "Desires", "Crouching"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Matthew 5:19', 'ESV', '["Sets Aside One", "Teaches Others Accordingly", "Whoever Practices", "Therefore Anyone", "Called Great", "Called Least"]');
+    VALUES ('15a5b4e4-945c-45c4-9997-8fa31ded0b42', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Matthew 5:19', 'ESV', '["Sets Aside One", "Teaches Others Accordingly", "Whoever Practices", "Therefore Anyone", "Called Great", "Called Least"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Hebrews 12:1', 'ESV', '["Let Us Throw", "Let Us Run", "Race Marked", "Great Cloud", "Easily Entangles", "Witnesses"]');
+    VALUES ('35a8f635-5b8a-4412-8eae-920d45f5c14e', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Hebrews 12:1', 'ESV', '["Let Us Throw", "Let Us Run", "Race Marked", "Great Cloud", "Easily Entangles", "Witnesses"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Psalm 51:10-13', 'ESV', '["Steadfast Spirit Within", "Willing Spirit", "Holy Spirit", "Turn Back", "Teach Transgressors", "Pure Heart"]');
+    VALUES ('87850f13-8800-4cdb-a9d2-5f2e4709fdcd', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Psalm 51:10-13', 'ESV', '["Steadfast Spirit Within", "Willing Spirit", "Holy Spirit", "Turn Back", "Teach Transgressors", "Pure Heart"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Isaiah 55:1-2', 'ESV', '["Milk Without Money", "Without Cost", "Spend Money", "Buy Wine", "Money", "Buy"]');
+    VALUES ('13ec9280-d22a-4290-abb7-18a5ce49501f', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Isaiah 55:1-2', 'ESV', '["Milk Without Money", "Without Cost", "Spend Money", "Buy Wine", "Money", "Buy"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', '1 John 2:15-16', 'ESV', '["Life \u2014 Comes", "World \u2014", "Anyone Loves", "World", "Pride", "Lust"]');
+    VALUES ('d36debb8-e520-4fdb-848f-4d561099b00a', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', '1 John 2:15-16', 'ESV', '["Life \u2014 Comes", "World \u2014", "Anyone Loves", "World", "Pride", "Lust"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'John 15:2', 'ESV', '["Every Branch", "Bear Fruit", "Fruit", "Prunes", "Fruitful", "Even"]');
+    VALUES ('56252d64-93f9-4678-a074-f558c6c71f45', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'John 15:2', 'ESV', '["Every Branch", "Bear Fruit", "Fruit", "Prunes", "Fruitful", "Even"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', '2 Timothy 2:20-21', 'ESV', '["Special Purposes", "Made Holy", "Large House", "Good Work", "Common Use", "Wood"]');
+    VALUES ('cf2766dc-0d8e-4381-bef8-41a59de7402e', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', '2 Timothy 2:20-21', 'ESV', '["Special Purposes", "Made Holy", "Large House", "Good Work", "Common Use", "Wood"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'John 17:19', 'ESV', '["Truly Sanctified", "Sanctify", "May"]');
+    VALUES ('87fb42c0-4fc4-4988-8cdb-5a1a1935f52b', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'John 17:19', 'ESV', '["Truly Sanctified", "Sanctify", "May"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'John 3:21', 'ESV', '["Whoever Lives", "Truth Comes", "Seen Plainly", "Sight", "May", "Light"]');
+    VALUES ('b9a4dbf4-a993-4103-8be3-9a0143f46b7f', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'John 3:21', 'ESV', '["Whoever Lives", "Truth Comes", "Seen Plainly", "Sight", "May", "Light"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Hebrews 13:4', 'ESV', '["Sexually Immoral", "Marriage", "Judge", "Honored", "God", "Adulterer"]');
+    VALUES ('231e717b-c6e8-4b5d-bf84-bdaf163b5d25', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Hebrews 13:4', 'ESV', '["Sexually Immoral", "Marriage", "Judge", "Honored", "God", "Adulterer"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Ephesians 5:29-33', 'ESV', '["Also Must Love", "Profound Mystery \u2014", "Wife Must Respect", "One Ever Hated", "Church \u2014", "Wife"]');
+    VALUES ('67e3a948-d3da-485a-9958-be2703926bac', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Ephesians 5:29-33', 'ESV', '["Also Must Love", "Profound Mystery \u2014", "Wife Must Respect", "One Ever Hated", "Church \u2014", "Wife"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Genesis 1:27', 'ESV', '["God Created Mankind", "God", "Created", "Male", "Image", "Female"]');
+    VALUES ('c159a1af-5601-469e-b3ef-ba88c0d65345', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Genesis 1:27', 'ESV', '["God Created Mankind", "God", "Created", "Male", "Image", "Female"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', '1 John 1:9', 'ESV', '["Purify Us", "Forgive Us", "Unrighteousness", "Sins", "Faithful", "Confess"]');
+    VALUES ('f387f8d1-857a-4773-a204-25226efad630', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', '1 John 1:9', 'ESV', '["Purify Us", "Forgive Us", "Unrighteousness", "Sins", "Faithful", "Confess"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Lamentations 3:22-23', 'ESV', '["New Every Morning", "Compassions Never Fail", "Great Love", "Great", "Lord", "Faithfulness"]');
+    VALUES ('f1d2a014-69b7-468f-b1fa-df41d54ea462', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Lamentations 3:22-23', 'ESV', '["New Every Morning", "Compassions Never Fail", "Great Love", "Great", "Lord", "Faithfulness"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Titus 2:11-12', 'ESV', '["Worldly Passions", "Teaches Us", "Present Age", "Offers Salvation", "Live Self", "Godly Lives"]');
+    VALUES ('90734071-6727-49e9-8a37-5c68ea06576f', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Titus 2:11-12', 'ESV', '["Worldly Passions", "Teaches Us", "Present Age", "Offers Salvation", "Live Self", "Godly Lives"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', '2 Corinthians 5:14-15', 'ESV', '["Love Compels Us", "One Died", "Longer Live", "Live", "Died", "Therefore"]');
+    VALUES ('300fdd86-54ca-4660-bcf5-6fb50739e5fc', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', '2 Corinthians 5:14-15', 'ESV', '["Love Compels Us", "One Died", "Longer Live", "Live", "Died", "Therefore"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Romans 8:13-14', 'ESV', '["Live According", "Live", "Spirit", "Put", "Misdeeds", "Led"]');
+    VALUES ('e8a621e7-308c-40cd-82dd-36cd105c3543', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Romans 8:13-14', 'ESV', '["Live According", "Live", "Spirit", "Put", "Misdeeds", "Led"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Galatians 5:16', 'ESV', '["Walk", "Spirit", "Say", "Gratify", "Flesh", "Desires"]');
+    VALUES ('d9005253-15fb-414a-9f85-a7890f5b5459', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Galatians 5:16', 'ESV', '["Walk", "Spirit", "Say", "Gratify", "Flesh", "Desires"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Hebrews 11:25-26', 'ESV', '["Regarded Disgrace", "Mistreated Along", "Looking Ahead", "Greater Value", "God Rather", "Fleeting Pleasures"]');
+    VALUES ('cadd73ad-97c5-42c0-9110-55cdc6f63d46', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Hebrews 11:25-26', 'ESV', '["Regarded Disgrace", "Mistreated Along", "Looking Ahead", "Greater Value", "God Rather", "Fleeting Pleasures"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Hebrews 12:2', 'ESV', '["Right Hand", "Joy Set", "Throne", "Shame", "Scorning", "Sat"]');
+    VALUES ('dfefff9e-3d3a-4506-be41-4066ba08977a', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Hebrews 12:2', 'ESV', '["Right Hand", "Joy Set", "Throne", "Shame", "Scorning", "Sat"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Proverbs 7:1-5', 'ESV', '["Wayward Woman", "Sister ", "Relative ", "Adulterous Woman", "Seductive Words", "Commands Within"]');
+    VALUES ('dc0d1767-da8d-463c-a016-a019340a3b73', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Proverbs 7:1-5', 'ESV', '["Wayward Woman", "Sister ", "Relative ", "Adulterous Woman", "Seductive Words", "Commands Within"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Psalm 119:9, 11', 'ESV', '["Young Person Stay", "Living According", "Word", "Sin", "Purity", "Path"]');
+    VALUES ('0a580dee-1b74-4847-86cc-deae1db248a2', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Psalm 119:9, 11', 'ESV', '["Young Person Stay", "Living According", "Word", "Sin", "Purity", "Path"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'John 15:7-8', 'ESV', '["Bear Much Fruit", "Ask Whatever", "Words Remain", "Remain", "Wish", "Showing"]');
+    VALUES ('7b4e6b29-6f25-42b6-b2d2-53bf7a1a7372', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'John 15:7-8', 'ESV', '["Bear Much Fruit", "Ask Whatever", "Words Remain", "Remain", "Wish", "Showing"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Psalm 55:22', 'ESV', '["Never Let", "Sustain", "Shaken", "Righteous", "Lord", "Cast"]');
+    VALUES ('2cbcfb84-5104-4b56-8e48-f8d0b827d7f7', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Psalm 55:22', 'ESV', '["Never Let", "Sustain", "Shaken", "Righteous", "Lord", "Cast"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Hebrews 3:13', 'ESV', '["Today ", "Sin", "None", "May", "Long", "Hardened"]');
+    VALUES ('19a659bc-cb23-44c5-822e-ab3dae133721', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Hebrews 3:13', 'ESV', '["Today ", "Sin", "None", "May", "Long", "Hardened"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', '2 Timothy 2:22', 'ESV', '["Pursue Righteousness", "Pure Heart", "Evil Desires", "Youth", "Peace", "Love"]');
+    VALUES ('8586b674-fc83-4660-b2e4-dc44d0b98a62', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', '2 Timothy 2:22', 'ESV', '["Pursue Righteousness", "Pure Heart", "Evil Desires", "Youth", "Peace", "Love"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', '2 Peter 1:3-4', 'ESV', '["Given Us Everything", "Given Us", "Called Us", "World Caused", "Precious Promises", "May Participate"]');
+    VALUES ('1fcab8c0-bbf3-4266-b37a-0178f4413f30', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', '2 Peter 1:3-4', 'ESV', '["Given Us Everything", "Given Us", "Called Us", "World Caused", "Precious Promises", "May Participate"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', '2 Corinthians 10:4-5', 'ESV', '["Every Pretension", "Divine Power", "Demolish Strongholds", "Demolish Arguments", "World", "Weapons"]');
+    VALUES ('bd33dc66-71e2-42b4-82b5-e256059826d5', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', '2 Corinthians 10:4-5', 'ESV', '["Every Pretension", "Divine Power", "Demolish Strongholds", "Demolish Arguments", "World", "Weapons"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Psalm 97:10', 'ESV', '["Lord Hate Evil", "Faithful Ones", "Wicked", "Love", "Lives", "Let"]');
+    VALUES ('72a91efe-caf2-4d4d-ae4b-b5f1ff1e079d', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Psalm 97:10', 'ESV', '["Lord Hate Evil", "Faithful Ones", "Wicked", "Love", "Lives", "Let"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Matthew 5:29', 'ESV', '["Right Eye Causes", "Lose One Part", "Whole Body", "Body", "Thrown", "Throw"]');
+    VALUES ('afdf9b8b-38df-4604-a095-aae874745b11', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Matthew 5:29', 'ESV', '["Right Eye Causes", "Lose One Part", "Whole Body", "Body", "Thrown", "Throw"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'John 5:44', 'ESV', '["One Another", "Believe Since", "Accept Glory", "Glory", "Seek", "God"]');
+    VALUES ('bad1f8d6-cc50-43e5-80a5-de6fc3597221', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'John 5:44', 'ESV', '["One Another", "Believe Since", "Accept Glory", "Glory", "Seek", "God"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Job 28:28', 'ESV', '["Understanding ", "Shun Evil", "Lord \u2014", "Human Race", "Wisdom", "Said"]');
+    VALUES ('6bc4744a-bebe-4b03-8751-1c9e5b4f6624', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Job 28:28', 'ESV', '["Understanding ", "Shun Evil", "Lord \u2014", "Human Race", "Wisdom", "Said"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', '1 John 2:1-2', 'ESV', '["Whole World", "Righteous One", "Dear Children", "Atoning Sacrifice", "Write", "Sins"]');
+    VALUES ('ff810753-08eb-4748-8401-b30c6264c32f', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', '1 John 2:1-2', 'ESV', '["Whole World", "Righteous One", "Dear Children", "Atoning Sacrifice", "Write", "Sins"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Micah 7:8', 'ESV', '["Though", "Sit", "Rise", "Lord", "Light", "Gloat"]');
+    VALUES ('4d8a21e7-ca81-46ed-bfbb-29ff497188e5', '2900b3a4-c0e6-4a8e-b109-bb41d487c3a4', 'Micah 7:8', 'ESV', '["Though", "Sit", "Rise", "Lord", "Light", "Gloat"]');
 -- Pack: Excuses Pack
     INSERT INTO verse_packs (id, title, identifier, description, is_public)
     VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'Excuses Pack', 'Excuses-Pack', 'Excuses Pack', true)
     ;
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', '1 John 1:10', 'ESV', '["Word", "Sinned", "Make", "Liar", "Claim"]');
+    VALUES ('dda8f13a-4d32-4d19-935c-6b1f39f7c779', '9061d86e-06aa-468c-a718-b76884afde73', '1 John 1:10', 'ESV', '["Word", "Sinned", "Make", "Liar", "Claim"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'Romans 3:10', 'ESV', '["One Righteous", "Even One", "Written"]');
+    VALUES ('b7dce0ce-ca18-4787-bcab-03d98e86b753', '9061d86e-06aa-468c-a718-b76884afde73', 'Romans 3:10', 'ESV', '["One Righteous", "Even One", "Written"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'Proverbs 14:12', 'ESV', '["Way", "Right", "Leads", "End", "Death", "Appears"]');
+    VALUES ('64ec84bc-a491-4474-a846-af8759d1ab51', '9061d86e-06aa-468c-a718-b76884afde73', 'Proverbs 14:12', 'ESV', '["Way", "Right", "Leads", "End", "Death", "Appears"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'Hebrews 10:31', 'ESV', '["Living God", "Dreadful Thing", "Hands", "Fall"]');
+    VALUES ('56f679a7-8ac5-41f3-9f33-5c710018f7f3', '9061d86e-06aa-468c-a718-b76884afde73', 'Hebrews 10:31', 'ESV', '["Living God", "Dreadful Thing", "Hands", "Fall"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'Mark 8:36', 'ESV', '["Yet Forfeit", "Whole World", "Soul", "Someone", "Good", "Gain"]');
+    VALUES ('de3c1e84-aa11-470b-9735-a51f6e030971', '9061d86e-06aa-468c-a718-b76884afde73', 'Mark 8:36', 'ESV', '["Yet Forfeit", "Whole World", "Soul", "Someone", "Good", "Gain"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'Matthew 6:33', 'ESV', '["Seek First", "Well", "Things", "Righteousness", "Kingdom", "Given"]');
+    VALUES ('f5825e8d-77a3-4b79-8e96-37ecbe96dc2b', '9061d86e-06aa-468c-a718-b76884afde73', 'Matthew 6:33', 'ESV', '["Seek First", "Well", "Things", "Righteousness", "Kingdom", "Given"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'Psalm 119:130', 'ESV', '["Words Gives Light", "Gives Understanding", "Unfolding", "Simple"]');
+    VALUES ('61e3835d-8632-4f84-8dbd-869cec37ddc5', '9061d86e-06aa-468c-a718-b76884afde73', 'Psalm 119:130', 'ESV', '["Words Gives Light", "Gives Understanding", "Unfolding", "Simple"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', '1 Corinthians 2:14', 'ESV', '["Person Without", "Cannot Understand", "Things", "Spirit", "God", "Foolishness"]');
+    VALUES ('02f307f4-41c3-494e-927b-42ba419a50c3', '9061d86e-06aa-468c-a718-b76884afde73', '1 Corinthians 2:14', 'ESV', '["Person Without", "Cannot Understand", "Things", "Spirit", "God", "Foolishness"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', '2 Corinthians 4:4', 'ESV', '["Cannot See", "Unbelievers", "Minds", "Light", "Image", "Gospel"]');
+    VALUES ('569e7e7f-6454-498a-a309-7e433602d5d8', '9061d86e-06aa-468c-a718-b76884afde73', '2 Corinthians 4:4', 'ESV', '["Cannot See", "Unbelievers", "Minds", "Light", "Image", "Gospel"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'John 3:19-20', 'ESV', '["Evil Hates", "Evil", "World", "Verdict", "Light", "Fear"]');
+    VALUES ('745b721b-be22-4861-a715-4310fb2431ec', '9061d86e-06aa-468c-a718-b76884afde73', 'John 3:19-20', 'ESV', '["Evil Hates", "Evil", "World", "Verdict", "Light", "Fear"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'Luke 5:32', 'ESV', '["Repentance ", "Sinners", "Righteous", "Come", "Call"]');
+    VALUES ('05901aa8-2e39-4853-8667-b7e733644bf0', '9061d86e-06aa-468c-a718-b76884afde73', 'Luke 5:32', 'ESV', '["Repentance ", "Sinners", "Righteous", "Come", "Call"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'Romans 4:4-5', 'ESV', '["Trusts God", "Works", "Work", "Wages", "Ungodly", "Righteousness"]');
+    VALUES ('7d80a36a-e4a6-48b5-804a-bcc2a3e2a656', '9061d86e-06aa-468c-a718-b76884afde73', 'Romans 4:4-5', 'ESV', '["Trusts God", "Works", "Work", "Wages", "Ungodly", "Righteousness"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'Luke 19:10', 'ESV', '["Man Came", "Lost ", "Son", "Seek", "Save"]');
+    VALUES ('a010a070-c118-4486-9f53-7fe2ec961880', '9061d86e-06aa-468c-a718-b76884afde73', 'Luke 19:10', 'ESV', '["Man Came", "Lost ", "Son", "Seek", "Save"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'Isaiah 1:18', 'ESV', '["Matter ,\\" Says", "Let Us Settle", "Like Wool", "Like Scarlet", "White", "Though"]');
+    VALUES ('71023a37-a765-4fa2-90c5-c839c781ffd5', '9061d86e-06aa-468c-a718-b76884afde73', 'Isaiah 1:18', 'ESV', '["Matter ,\\" Says", "Let Us Settle", "Like Wool", "Like Scarlet", "White", "Though"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'Proverbs 29:25', 'ESV', '["Whoever Trusts", "Kept Safe", "Snare", "Prove", "Man", "Lord"]');
+    VALUES ('4fa3f0c6-40cd-421f-bae2-e7c2a623bf73', '9061d86e-06aa-468c-a718-b76884afde73', 'Proverbs 29:25', 'ESV', '["Whoever Trusts", "Kept Safe", "Snare", "Prove", "Man", "Lord"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'Matthew 5:11-12', 'ESV', '["People Insult", "falsely Say", "Way", "Reward", "Rejoice", "Prophets"]');
+    VALUES ('2117e56f-9c26-4481-9ba7-959e6d8e58e8', '9061d86e-06aa-468c-a718-b76884afde73', 'Matthew 5:11-12', 'ESV', '["People Insult", "falsely Say", "Way", "Reward", "Rejoice", "Prophets"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', '2 Thessalonians 3:3', 'ESV', '["Evil One", "Strengthen", "Protect", "Lord", "Faithful"]');
+    VALUES ('6fd2fba0-be8f-4a95-9b7e-eaa4ca73604e', '9061d86e-06aa-468c-a718-b76884afde73', '2 Thessalonians 3:3', 'ESV', '["Evil One", "Strengthen", "Protect", "Lord", "Faithful"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', '1 Peter 1:5', 'ESV', '["Last Time", "Shielded", "Salvation", "Revealed", "Ready", "Power"]');
+    VALUES ('2e5aa078-3219-43df-8845-79c87bc66082', '9061d86e-06aa-468c-a718-b76884afde73', '1 Peter 1:5', 'ESV', '["Last Time", "Shielded", "Salvation", "Revealed", "Ready", "Power"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'Proverbs 27:1', 'ESV', '["Day May Bring", "Tomorrow", "Know", "Boast"]');
+    VALUES ('9f3f3eda-666d-473c-830e-212d3babaf53', '9061d86e-06aa-468c-a718-b76884afde73', 'Proverbs 27:1', 'ESV', '["Day May Bring", "Tomorrow", "Know", "Boast"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'Isaiah 55:6', 'ESV', '["Seek", "Near", "May", "Lord", "Found", "Call"]');
+    VALUES ('c6d5305e-69f5-444a-8601-ce016cd682bf', '9061d86e-06aa-468c-a718-b76884afde73', 'Isaiah 55:6', 'ESV', '["Seek", "Near", "May", "Lord", "Found", "Call"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'Ecclesiastes 11:9', 'ESV', '["Things God", "Eyes See", "Heart Give", "Heart", "Youth", "Young"]');
+    VALUES ('2e3afc1a-f927-4751-992a-21ecbba95c23', '9061d86e-06aa-468c-a718-b76884afde73', 'Ecclesiastes 11:9', 'ESV', '["Things God", "Eyes See", "Heart Give", "Heart", "Youth", "Young"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'Luke 12:19-20', 'ESV', '["Take Life Easy", "Merry ", "Many Years", "Grain Laid", "God Said", "Life"]');
+    VALUES ('aecd20c9-725a-4099-83c3-58b596fc310f', '9061d86e-06aa-468c-a718-b76884afde73', 'Luke 12:19-20', 'ESV', '["Take Life Easy", "Merry ", "Many Years", "Grain Laid", "God Said", "Life"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'Romans 14:12', 'ESV', '["God", "Give", "Account"]');
+    VALUES ('8dd3a409-a8f6-413a-8656-c667d066596c', '9061d86e-06aa-468c-a718-b76884afde73', 'Romans 14:12', 'ESV', '["God", "Give", "Account"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'Job 13:16', 'ESV', '["Turn", "Indeed", "Deliverance"]');
+    VALUES ('221175c4-9c33-42b4-93ca-363423ba1c37', '9061d86e-06aa-468c-a718-b76884afde73', 'Job 13:16', 'ESV', '["Turn", "Indeed", "Deliverance"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', '1 Corinthians 1:18', 'ESV', '["Saved", "Power", "Perishing", "Message", "God", "Foolishness"]');
+    VALUES ('a5d18397-1742-4af6-a898-684fce7d5f85', '9061d86e-06aa-468c-a718-b76884afde73', '1 Corinthians 1:18', 'ESV', '["Saved", "Power", "Perishing", "Message", "God", "Foolishness"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'Isaiah 55:8,9', 'ESV', '["Ways ,\\" Declares", "Ways Higher", "Ways", "Higher", "Thoughts", "Neither"]');
+    VALUES ('8acd223f-31b2-4d2e-b6bc-7f11b597f0c6', '9061d86e-06aa-468c-a718-b76884afde73', 'Isaiah 55:8,9', 'ESV', '["Ways ,\\" Declares", "Ways Higher", "Ways", "Higher", "Thoughts", "Neither"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'Romans 3:3', 'ESV', '["Unfaithfulness Nullify God", "Unfaithful", "Faithfulness"]');
+    VALUES ('f7a12370-f6fe-4305-bcf3-986f40e90529', '9061d86e-06aa-468c-a718-b76884afde73', 'Romans 3:3', 'ESV', '["Unfaithfulness Nullify God", "Unfaithful", "Faithfulness"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'John 5:44', 'ESV', '["One Another", "Believe Since", "Accept Glory", "Glory", "Seek", "God"]');
+    VALUES ('9b14c0dc-18b1-4be9-a590-6a07ea44f158', '9061d86e-06aa-468c-a718-b76884afde73', 'John 5:44', 'ESV', '["One Another", "Believe Since", "Accept Glory", "Glory", "Seek", "God"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'Isaiah 8:20', 'ESV', '["Speak According", "Consult God", "Word", "Warning", "Testimony", "Light"]');
+    VALUES ('ccbf7998-974c-472f-b965-24548b5039f3', '9061d86e-06aa-468c-a718-b76884afde73', 'Isaiah 8:20', 'ESV', '["Speak According", "Consult God", "Word", "Warning", "Testimony", "Light"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'Isaiah 43:11', 'ESV', '["Savior", "Lord", "Even", "Apart"]');
+    VALUES ('5b8616ec-7ed9-4651-ab25-9712cf20e05b', '9061d86e-06aa-468c-a718-b76884afde73', 'Isaiah 43:11', 'ESV', '["Savior", "Lord", "Even", "Apart"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'Matthew 25:41', 'ESV', '["Eternal Fire Prepared", "Say", "Left", "Devil", "Depart", "Cursed"]');
+    VALUES ('36c86656-c361-48b8-8c04-e99d53f03e08', '9061d86e-06aa-468c-a718-b76884afde73', 'Matthew 25:41', 'ESV', '["Eternal Fire Prepared", "Say", "Left", "Devil", "Depart", "Cursed"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'Matthew 7:13-14', 'ESV', '["Many Enter", "Narrow Gate", "Narrow", "Gate", "Enter", "Wide"]');
+    VALUES ('016cfde2-8179-4511-a06b-5254c2019262', '9061d86e-06aa-468c-a718-b76884afde73', 'Matthew 7:13-14', 'ESV', '["Many Enter", "Narrow Gate", "Narrow", "Gate", "Enter", "Wide"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'Psalm 14:1', 'ESV', '["God ", "Fool Says", "Vile", "One", "Heart", "Good"]');
+    VALUES ('350f970a-acac-4098-ad37-213b60353a66', '9061d86e-06aa-468c-a718-b76884afde73', 'Psalm 14:1', 'ESV', '["God ", "Fool Says", "Vile", "One", "Heart", "Good"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', 'Romans 1:20', 'ESV', '["Invisible Qualities \u2014", "Divine Nature \u2014", "World God", "Without Excuse", "Eternal Power", "Clearly Seen"]');
+    VALUES ('1a9ef02a-a5ad-4276-b9a3-b8cb5b163ec9', '9061d86e-06aa-468c-a718-b76884afde73', 'Romans 1:20', 'ESV', '["Invisible Qualities \u2014", "Divine Nature \u2014", "World God", "Without Excuse", "Eternal Power", "Clearly Seen"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', '2 Timothy 3:16', 'ESV', '["Useful", "Training", "Teaching", "Scripture", "Righteousness", "Rebuking"]');
+    VALUES ('d63c51c8-808d-4806-9f1c-ee7bb753a207', '9061d86e-06aa-468c-a718-b76884afde73', '2 Timothy 3:16', 'ESV', '["Useful", "Training", "Teaching", "Scripture", "Righteousness", "Rebuking"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('9061d86e-06aa-468c-a718-b76884afde73', '2 Peter 1:21', 'ESV', '["Prophecy Never", "Holy Spirit", "Carried Along", "Though Human", "Human", "Spoke"]');
+    VALUES ('d548acba-b4f4-43e9-a151-3f39a09280e6', '9061d86e-06aa-468c-a718-b76884afde73', '2 Peter 1:21', 'ESV', '["Prophecy Never", "Holy Spirit", "Carried Along", "Though Human", "Human", "Spoke"]');
 -- Pack: The Spirit-Filled Life
     INSERT INTO verse_packs (id, title, identifier, description, is_public)
     VALUES ('aa469747-8e4b-4451-9a53-77731c619316', 'The Spirit-Filled Life', 'The-Spirit-Filled-Life', 'The Spirit-Filled Life', true)
     ;
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', 'Isaiah 44:3', 'ESV', '["Thirsty Land", "Dry Ground", "Pour Water", "Pour", "Streams", "Spirit"]');
+    VALUES ('4653c560-f5d3-40ac-b96d-f3b18e588232', 'aa469747-8e4b-4451-9a53-77731c619316', 'Isaiah 44:3', 'ESV', '["Thirsty Land", "Dry Ground", "Pour Water", "Pour", "Streams", "Spirit"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', 'John 7:37-38', 'ESV', '["Whoever Believes", "Thirsty Come", "Loud Voice", "Living Water", "Let Anyone", "Jesus Stood"]');
+    VALUES ('20b7159f-5016-49d5-a892-a0ae7ccfb2bb', 'aa469747-8e4b-4451-9a53-77731c619316', 'John 7:37-38', 'ESV', '["Whoever Believes", "Thirsty Come", "Loud Voice", "Living Water", "Let Anyone", "Jesus Stood"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', '1 Corinthians 15:45', 'ESV', '["Last Adam", "Giving Spirit", "Written", "Living", "Life"]');
+    VALUES ('0c5c08fa-44bb-4d7f-84f0-8716855bc67d', 'aa469747-8e4b-4451-9a53-77731c619316', '1 Corinthians 15:45', 'ESV', '["Last Adam", "Giving Spirit", "Written", "Living", "Life"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', 'Job 33:4', 'ESV', '["Almighty Gives", "Spirit", "Made", "Life", "God", "Breath"]');
+    VALUES ('5aea81ec-5b05-4d4b-ac29-aa3cc10cf716', 'aa469747-8e4b-4451-9a53-77731c619316', 'Job 33:4', 'ESV', '["Almighty Gives", "Spirit", "Made", "Life", "God", "Breath"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', 'Romans 8:9', 'ESV', '["God Lives", "Spirit", "Realm", "Indeed", "However", "Flesh"]');
+    VALUES ('4e6e1c37-060e-4665-80ad-c28727b4ce48', 'aa469747-8e4b-4451-9a53-77731c619316', 'Romans 8:9', 'ESV', '["God Lives", "Spirit", "Realm", "Indeed", "However", "Flesh"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', 'Galatians 5:16', 'ESV', '["Walk", "Spirit", "Say", "Gratify", "Flesh", "Desires"]');
+    VALUES ('301e1b6a-98a5-4724-bf8f-0af89059e17b', 'aa469747-8e4b-4451-9a53-77731c619316', 'Galatians 5:16', 'ESV', '["Walk", "Spirit", "Say", "Gratify", "Flesh", "Desires"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', 'Ephesians 5:15-18', 'ESV', '["Live \u2014", "Get Drunk", "Every Opportunity", "Wise", "Wine", "Unwise"]');
+    VALUES ('14dfd575-30a5-48aa-8f4f-0121b4da72c2', 'aa469747-8e4b-4451-9a53-77731c619316', 'Ephesians 5:15-18', 'ESV', '["Live \u2014", "Get Drunk", "Every Opportunity", "Wise", "Wine", "Unwise"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', 'Ephesians 5:19-20', 'ESV', '["Always Giving Thanks", "Lord Jesus Christ", "One Another", "Make Music", "Lord", "Spirit"]');
+    VALUES ('ada37ef1-b9e1-4b63-8b50-3120168862fb', 'aa469747-8e4b-4451-9a53-77731c619316', 'Ephesians 5:19-20', 'ESV', '["Always Giving Thanks", "Lord Jesus Christ", "One Another", "Make Music", "Lord", "Spirit"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', 'Ezekiel 36:26-27', 'ESV', '["New Spirit", "New Heart", "Spirit", "Heart", "Stone", "Remove"]');
+    VALUES ('31d5ef77-b503-4af3-b5ca-51ba814e844e', 'aa469747-8e4b-4451-9a53-77731c619316', 'Ezekiel 36:26-27', 'ESV', '["New Spirit", "New Heart", "Spirit", "Heart", "Stone", "Remove"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', 'Romans 2:29', 'ESV', '["Written Code", "One Inwardly", "Spirit", "Praise", "Person", "People"]');
+    VALUES ('c61c9370-b93e-47f2-be6c-1a271666c173', 'aa469747-8e4b-4451-9a53-77731c619316', 'Romans 2:29', 'ESV', '["Written Code", "One Inwardly", "Spirit", "Praise", "Person", "People"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', 'Galatians 5:22-23', 'ESV', '["Things", "Spirit", "Self", "Peace", "Love", "Law"]');
+    VALUES ('edde4911-c2e2-4c64-a2b7-dbddb8c41345', 'aa469747-8e4b-4451-9a53-77731c619316', 'Galatians 5:22-23', 'ESV', '["Things", "Spirit", "Self", "Peace", "Love", "Law"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', '1 John 4:13', 'ESV', '["Given Us", "Spirit", "Live", "Know"]');
+    VALUES ('4617f4c1-34e6-4b81-a3bb-9187852e099e', 'aa469747-8e4b-4451-9a53-77731c619316', '1 John 4:13', 'ESV', '["Given Us", "Spirit", "Live", "Know"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', '1 Corinthians 6:17', 'ESV', '["Whoever", "United", "Spirit", "One", "Lord"]');
+    VALUES ('3ad4c82b-936b-4067-b85a-a0cc4808bdad', 'aa469747-8e4b-4451-9a53-77731c619316', '1 Corinthians 6:17', 'ESV', '["Whoever", "United", "Spirit", "One", "Lord"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', 'Ephesians 3:16-19', 'ESV', '["Surpasses Knowledge \u2014", "Christ May Dwell", "May Strengthen", "Holy People", "Glorious Riches", "May"]');
+    VALUES ('ef79c9cd-e17a-469b-b44d-baa4df8af710', 'aa469747-8e4b-4451-9a53-77731c619316', 'Ephesians 3:16-19', 'ESV', '["Surpasses Knowledge \u2014", "Christ May Dwell", "May Strengthen", "Holy People", "Glorious Riches", "May"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', 'Romans 5:5', 'ESV', '["Holy Spirit", "Put Us", "Shame", "Poured", "Love", "Hope"]');
+    VALUES ('bcc0eaba-ac45-4193-811f-f35303828ef7', 'aa469747-8e4b-4451-9a53-77731c619316', 'Romans 5:5', 'ESV', '["Holy Spirit", "Put Us", "Shame", "Poured", "Love", "Hope"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', 'John 14:23', 'ESV', '["Jesus Replied", "Teaching", "Obey", "Make", "Loves", "Love"]');
+    VALUES ('3bf316b5-48a6-43a3-8a3a-f1a6f81c663e', 'aa469747-8e4b-4451-9a53-77731c619316', 'John 14:23', 'ESV', '["Jesus Replied", "Teaching", "Obey", "Make", "Loves", "Love"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', 'Luke 15:31', 'ESV', '["Son ", "Father Said", "Everything", "Always"]');
+    VALUES ('94757b99-6666-47a2-b044-be81cf298452', 'aa469747-8e4b-4451-9a53-77731c619316', 'Luke 15:31', 'ESV', '["Son ", "Father Said", "Everything", "Always"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', '2 Thessalonians 2:13', 'ESV', '["Thank God", "Sisters Loved", "Sanctifying Work", "Ought Always", "God Chose", "Truth"]');
+    VALUES ('8bc375da-3df1-496b-ac80-5de33cbc4307', 'aa469747-8e4b-4451-9a53-77731c619316', '2 Thessalonians 2:13', 'ESV', '["Thank God", "Sisters Loved", "Sanctifying Work", "Ought Always", "God Chose", "Truth"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', '1 Corinthians 6:11', 'ESV', '["Lord Jesus Christ", "Washed", "Spirit", "Sanctified", "Name", "Justified"]');
+    VALUES ('3fc2436d-b6d9-4d87-bb7e-0cad31a45e6b', 'aa469747-8e4b-4451-9a53-77731c619316', '1 Corinthians 6:11', 'ESV', '["Lord Jesus Christ", "Washed", "Spirit", "Sanctified", "Name", "Justified"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', '2 Corinthians 3:17', 'ESV', '["Spirit", "Lord", "Freedom"]');
+    VALUES ('ee7d6bcc-1b3f-4092-ab64-c2696b7d7178', 'aa469747-8e4b-4451-9a53-77731c619316', '2 Corinthians 3:17', 'ESV', '["Spirit", "Lord", "Freedom"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', '2 Corinthians 3:18', 'ESV', '["Unveiled Faces Contemplate", "Increasing Glory", "Glory", "Transformed", "Spirit", "Lord"]');
+    VALUES ('873e76bb-a370-48a1-97dc-44829b0d74c0', 'aa469747-8e4b-4451-9a53-77731c619316', '2 Corinthians 3:18', 'ESV', '["Unveiled Faces Contemplate", "Increasing Glory", "Glory", "Transformed", "Spirit", "Lord"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', 'Titus 3:5-7', 'ESV', '["Might Become Heirs", "Us Generously", "Saved Us", "Righteous Things", "Jesus Christ", "Holy Spirit"]');
+    VALUES ('b4c333f9-e7d2-4db0-b19e-e54e4ec6ec34', 'aa469747-8e4b-4451-9a53-77731c619316', 'Titus 3:5-7', 'ESV', '["Might Become Heirs", "Us Generously", "Saved Us", "Righteous Things", "Jesus Christ", "Holy Spirit"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', '1 Corinthians 2:11-12', 'ESV', '["Freely Given Us", "May Understand", "Thoughts Except", "Spirit Within", "One Knows", "God Except"]');
+    VALUES ('42f2652a-a7c7-48f0-941f-c8e925805af8', 'aa469747-8e4b-4451-9a53-77731c619316', '1 Corinthians 2:11-12', 'ESV', '["Freely Given Us", "May Understand", "Thoughts Except", "Spirit Within", "One Knows", "God Except"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', '1 Corinthians 2:16', 'ESV', '["Mind", "Lord", "Known", "Instruct", "Christ"]');
+    VALUES ('2d82c36a-b862-4d61-b36b-3bd1144cf3f9', 'aa469747-8e4b-4451-9a53-77731c619316', '1 Corinthians 2:16', 'ESV', '["Mind", "Lord", "Known", "Instruct", "Christ"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', 'Acts 4:31', 'ESV', '["Holy Spirit", "God Boldly", "Word", "Spoke", "Shaken", "Prayed"]');
+    VALUES ('5602e7ba-f33a-4a42-8f48-5c405d597166', 'aa469747-8e4b-4451-9a53-77731c619316', 'Acts 4:31', 'ESV', '["Holy Spirit", "God Boldly", "Word", "Spoke", "Shaken", "Prayed"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', '1 John 4:4', 'ESV', '["Dear Children", "World", "Overcome", "One", "Greater", "God"]');
+    VALUES ('e60550ba-815b-4a93-92e4-810ec2db9e96', 'aa469747-8e4b-4451-9a53-77731c619316', '1 John 4:4', 'ESV', '["Dear Children", "World", "Overcome", "One", "Greater", "God"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', 'Galatians 4:6', 'ESV', '["God Sent", "Father ", "Spirit", "Sons", "Son", "Hearts"]');
+    VALUES ('c646d078-749d-4cac-bc63-84af27830e9e', 'aa469747-8e4b-4451-9a53-77731c619316', 'Galatians 4:6', 'ESV', '["God Sent", "Father ", "Spirit", "Sons", "Son", "Hearts"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', 'Romans 8:15-17', 'ESV', '["May Also Share", "Heirs \u2014 Heirs", "Father ", "Received Brought", "Heirs", "Share"]');
+    VALUES ('dced3a09-83e7-4b45-a290-9d5dbbc29152', 'aa469747-8e4b-4451-9a53-77731c619316', 'Romans 8:15-17', 'ESV', '["May Also Share", "Heirs \u2014 Heirs", "Father ", "Received Brought", "Heirs", "Share"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', '2 Corinthians 3:2-3', 'ESV', '["Living God", "Human Hearts", "Hearts", "Written", "Tablets", "Stone"]');
+    VALUES ('edb17a6a-813c-4d0a-8dd4-9d694fbc9cb3', 'aa469747-8e4b-4451-9a53-77731c619316', '2 Corinthians 3:2-3', 'ESV', '["Living God", "Human Hearts", "Hearts", "Written", "Tablets", "Stone"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', '2 Corinthians 3:4-6', 'ESV', '["New Covenant \u2014", "Spirit Gives Life", "Made Us Competent", "Competence Comes", "Claim Anything", "Letter Kills"]');
+    VALUES ('87214116-8bed-4db1-ace2-c76031e9abb0', 'aa469747-8e4b-4451-9a53-77731c619316', '2 Corinthians 3:4-6', 'ESV', '["New Covenant \u2014", "Spirit Gives Life", "Made Us Competent", "Competence Comes", "Claim Anything", "Letter Kills"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', 'Ephesians 4:30', 'ESV', '["Holy Spirit", "Sealed", "Redemption", "Grieve", "God", "Day"]');
+    VALUES ('28cc3596-fc01-4298-b9ef-a50dae7919b4', 'aa469747-8e4b-4451-9a53-77731c619316', 'Ephesians 4:30', 'ESV', '["Holy Spirit", "Sealed", "Redemption", "Grieve", "God", "Day"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', '1 Thessalonians 5:16-19', 'ESV', '["Rejoice Always", "Pray Continually", "Give Thanks", "Christ Jesus", "Spirit", "Quench"]');
+    VALUES ('c82c48b0-40b4-42e4-ab7a-e3d2afd0e41b', 'aa469747-8e4b-4451-9a53-77731c619316', '1 Thessalonians 5:16-19', 'ESV', '["Rejoice Always", "Pray Continually", "Give Thanks", "Christ Jesus", "Spirit", "Quench"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', 'Acts 7:51', 'ESV', '["Still Uncircumcised", "Necked People", "Holy Spirit", "Always Resist", "Stiff", "Like"]');
+    VALUES ('ef72c30a-5f92-4c0d-94d8-35848ec852d0', 'aa469747-8e4b-4451-9a53-77731c619316', 'Acts 7:51', 'ESV', '["Still Uncircumcised", "Necked People", "Holy Spirit", "Always Resist", "Stiff", "Like"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', 'James 4:4-5', 'ESV', '["World Means Enmity", "World Becomes", "Jealously Longs", "Adulterous People", "Therefore", "Spirit"]');
+    VALUES ('54d2d230-59fa-4f72-8fd5-bd7f8470763a', 'aa469747-8e4b-4451-9a53-77731c619316', 'James 4:4-5', 'ESV', '["World Means Enmity", "World Becomes", "Jealously Longs", "Adulterous People", "Therefore", "Spirit"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', 'Hebrews 3:7-8', 'ESV', '["Holy Spirit Says", "Wilderness", "Voice", "Today", "Time", "Testing"]');
+    VALUES ('edfd8867-9a96-474e-b781-9a368aff14ce', 'aa469747-8e4b-4451-9a53-77731c619316', 'Hebrews 3:7-8', 'ESV', '["Holy Spirit Says", "Wilderness", "Voice", "Today", "Time", "Testing"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', 'Galatians 5:25', 'ESV', '["Let Us Keep", "Step", "Spirit", "Since", "Live"]');
+    VALUES ('81029fdf-6824-45a8-bf11-942183e5fa2a', 'aa469747-8e4b-4451-9a53-77731c619316', 'Galatians 5:25', 'ESV', '["Let Us Keep", "Step", "Spirit", "Since", "Live"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', 'Romans 8:13-14', 'ESV', '["Live According", "Live", "Spirit", "Put", "Misdeeds", "Led"]');
+    VALUES ('77197e28-dce5-44c3-b111-a87b005e8b06', 'aa469747-8e4b-4451-9a53-77731c619316', 'Romans 8:13-14', 'ESV', '["Live According", "Live", "Spirit", "Put", "Misdeeds", "Led"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', '2 Corinthians 4:7-10', 'ESV', '["Always Carry Around", "Jesus May Also", "Surpassing Power", "Hard Pressed", "Every Side", "Jesus"]');
+    VALUES ('38d61a44-ea05-4d91-8214-79881242cade', 'aa469747-8e4b-4451-9a53-77731c619316', '2 Corinthians 4:7-10', 'ESV', '["Always Carry Around", "Jesus May Also", "Surpassing Power", "Hard Pressed", "Every Side", "Jesus"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', 'Psalm 51:10-12', 'ESV', '["Steadfast Spirit Within", "Willing Spirit", "Holy Spirit", "Pure Heart", "Take", "Sustain"]');
+    VALUES ('904b7673-6212-43f5-a9eb-a8cce37eb76a', 'aa469747-8e4b-4451-9a53-77731c619316', 'Psalm 51:10-12', 'ESV', '["Steadfast Spirit Within", "Willing Spirit", "Holy Spirit", "Pure Heart", "Take", "Sustain"]');
 INSERT INTO memory_verses (id, verse_pack_id, reference, version, tags)
-    VALUES ('aa469747-8e4b-4451-9a53-77731c619316', 'Ephesians 5:18-21', 'ESV', '["Always Giving Thanks", "Lord Jesus Christ", "One Another", "Make Music", "Get Drunk", "Lord"]');
+    VALUES ('cdb7c4eb-cbd6-4175-8e54-0d6ed4beda25', 'aa469747-8e4b-4451-9a53-77731c619316', 'Ephesians 5:18-21', 'ESV', '["Always Giving Thanks", "Lord Jesus Christ", "One Another", "Make Music", "Get Drunk", "Lord"]');
 -- Seed M'Cheyne Plan (from 000009_seed_mcheyne_plan.up.sql)
 -- M'Cheyne Reading Plan Seed
 INSERT INTO reading_plans (id, title, description, days, plan_type, created_at, updated_at) VALUES ('02fc167c-84bf-465d-9109-2076a9a138d5', 'M''Cheyne', 'Robert Murray M''Cheyne Reading Plan. Read through the New Testament and Psalms twice a year, and the rest of the Bible once.', 365, 'calendar', NOW(), NOW());
