@@ -149,7 +149,7 @@ func (s *memoryVerseService) GetVerses(ctx context.Context, packID uuid.UUID, us
 		WHERE mv.verse_pack_id = ?
 		ORDER BY mv.created_at ASC
 	`
-	rows, err := s.db.QueryContext(ctx, query, packID, userID)
+	rows, err := s.db.QueryContext(ctx, query, userID, userID, packID)
 	if err != nil {
 		return nil, err
 	}
@@ -310,14 +310,13 @@ func (s *memoryVerseService) UpdateVerse(ctx context.Context, verse *models.Memo
 
 	query := `
 		UPDATE memory_verses mv
-		SET reference = ?, title = ?, version = ?, tags = ?, updated_at = NOW()
-		FROM verse_packs vp
-		WHERE mv.verse_pack_id = vp.id
-		AND mv.id = ?
+		JOIN verse_packs vp ON mv.verse_pack_id = vp.id
+		SET mv.reference = ?, mv.title = ?, mv.version = ?, mv.tags = ?, mv.updated_at = NOW()
+		WHERE mv.id = ?
 		AND vp.user_id = ?
 	`
 	res, err := s.db.ExecContext(ctx, query,
-		verse.ID, verse.Reference, verse.Title, verse.Version, tagsJSON, userID,
+		verse.Reference, verse.Title, verse.Version, tagsJSON, verse.ID, userID,
 	)
 	if err != nil {
 		return err
@@ -331,10 +330,9 @@ func (s *memoryVerseService) UpdateVerse(ctx context.Context, verse *models.Memo
 
 func (s *memoryVerseService) DeleteVerse(ctx context.Context, verseID uuid.UUID, userID uuid.UUID) error {
 	query := `
-		DELETE FROM memory_verses mv
-		USING verse_packs vp
-		WHERE mv.verse_pack_id = vp.id
-		AND mv.id = ?
+		DELETE mv FROM memory_verses mv
+		JOIN verse_packs vp ON mv.verse_pack_id = vp.id
+		WHERE mv.id = ?
 		AND vp.user_id = ?
 	`
 	res, err := s.db.ExecContext(ctx, query, verseID, userID)
@@ -376,7 +374,8 @@ func (s *memoryVerseService) SearchVerses(ctx context.Context, userID uuid.UUID,
 		ORDER BY mv.reference ASC
 		LIMIT 20
 	`
-	rows, err := s.db.QueryContext(ctx, query, userID, "%"+queryStr+"%")
+	searchStr := "%" + queryStr + "%"
+	rows, err := s.db.QueryContext(ctx, query, userID, userID, userID, searchStr, searchStr, searchStr)
 	if err != nil {
 		return nil, err
 	}
