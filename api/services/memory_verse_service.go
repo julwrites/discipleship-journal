@@ -134,10 +134,10 @@ func (s *memoryVerseService) GetVerses(ctx context.Context, packID uuid.UUID, us
 			mv.verse_pack_id,
 			mv.reference,
 			mv.title,
-			COALESCE(uvp.version_override, u.settings->>'bible_version', mv.version) as effective_version,
+			COALESCE(uvp.version_override, u.settings->>'$.bible_version', mv.version) as effective_version,
 			CASE
 				WHEN uvp.version_override IS NOT NULL THEN 'override'
-				WHEN u.settings->>'bible_version' IS NOT NULL THEN 'user_default'
+				WHEN u.settings->>'$.bible_version' IS NOT NULL THEN 'user_default'
 				ELSE 'original'
 			END as version_source,
 			mv.tags,
@@ -355,10 +355,10 @@ func (s *memoryVerseService) SearchVerses(ctx context.Context, userID uuid.UUID,
 			mv.verse_pack_id,
 			mv.reference,
 			mv.title,
-			COALESCE(uvp.version_override, u.settings->>'bible_version', mv.version) as effective_version,
+			COALESCE(uvp.version_override, u.settings->>'$.bible_version', mv.version) as effective_version,
 			CASE
 				WHEN uvp.version_override IS NOT NULL THEN 'override'
-				WHEN u.settings->>'bible_version' IS NOT NULL THEN 'user_default'
+				WHEN u.settings->>'$.bible_version' IS NOT NULL THEN 'user_default'
 				ELSE 'original'
 			END as version_source,
 			mv.tags,

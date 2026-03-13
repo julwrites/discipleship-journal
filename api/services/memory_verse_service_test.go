@@ -105,7 +105,7 @@ func TestClonePack(t *testing.T) {
 	// We use a loose regex match for the complex query to avoid whitespace issues
 	// Match: SELECT ... FROM memory_verses mv LEFT JOIN user_verse_preferences ... LEFT JOIN users ... WHERE mv.verse_pack_id = ? ...
 	mock.ExpectQuery(`SELECT .* FROM memory_verses mv LEFT JOIN user_verse_preferences uvp .* LEFT JOIN users u .* WHERE mv.verse_pack_id = \? ORDER BY mv.created_at ASC`).
-		WithArgs(packID, userID).
+		WithArgs(userID, userID, packID).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "verse_pack_id", "reference", "title", "effective_version", "version_source", "tags", "created_at", "updated_at"}).
 			AddRow(uuid.New(), packID, "John 3:16", verseTitle, "ESV", "original", []byte(`["Love"]`), time.Now(), time.Now()))
 
@@ -187,7 +187,7 @@ func TestSearchVerses(t *testing.T) {
 	// Updated regex for SearchVerses with joins
 	// SELECT ... FROM memory_verses mv JOIN verse_packs vp ... LEFT JOIN user_verse_preferences ... LEFT JOIN users ... WHERE ...
 	mock.ExpectQuery(`SELECT .* FROM memory_verses mv JOIN verse_packs vp .* LEFT JOIN user_verse_preferences uvp .* LEFT JOIN users u .* WHERE .*`).
-		WithArgs(userID, "%"+query+"%").
+		WithArgs(userID, userID, userID, "%"+query+"%", "%"+query+"%", "%"+query+"%").
 		WillReturnRows(sqlmock.NewRows([]string{"id", "verse_pack_id", "reference", "title", "effective_version", "version_source", "tags", "pack_title", "created_at", "updated_at"}).
 			AddRow(verseID, packID, "John 3:16", verseTitle, "ESV", "original", []byte(`["Love"]`), packTitle, time.Now(), time.Now()))
 
@@ -243,7 +243,7 @@ func TestDeleteVerse(t *testing.T) {
 	verseID := uuid.New()
 
 	t.Run("success", func(t *testing.T) {
-		mock.ExpectExec("DELETE FROM memory_verses mv USING verse_packs vp").
+		mock.ExpectExec("DELETE mv FROM memory_verses mv JOIN verse_packs vp").
 			WithArgs(verseID, userID).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
@@ -252,7 +252,7 @@ func TestDeleteVerse(t *testing.T) {
 	})
 
 	t.Run("not found", func(t *testing.T) {
-		mock.ExpectExec("DELETE FROM memory_verses mv USING verse_packs vp").
+		mock.ExpectExec("DELETE mv FROM memory_verses mv JOIN verse_packs vp").
 			WithArgs(verseID, userID).
 			WillReturnResult(sqlmock.NewResult(1, 0))
 
@@ -283,8 +283,8 @@ func TestUpdateVerse(t *testing.T) {
 	tagsJSON, _ := json.Marshal(verse.Tags)
 
 	t.Run("success", func(t *testing.T) {
-		mock.ExpectExec("UPDATE memory_verses mv SET").
-			WithArgs(verseID, verse.Reference, verse.Title, verse.Version, tagsJSON, userID).
+		mock.ExpectExec("UPDATE memory_verses mv JOIN verse_packs vp").
+			WithArgs(verse.Reference, verse.Title, verse.Version, tagsJSON, verseID, userID).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		err := service.UpdateVerse(context.Background(), verse, userID)
@@ -292,8 +292,8 @@ func TestUpdateVerse(t *testing.T) {
 	})
 
 	t.Run("not found", func(t *testing.T) {
-		mock.ExpectExec("UPDATE memory_verses mv SET").
-			WithArgs(verseID, verse.Reference, verse.Title, verse.Version, tagsJSON, userID).
+		mock.ExpectExec("UPDATE memory_verses mv JOIN verse_packs vp").
+			WithArgs(verse.Reference, verse.Title, verse.Version, tagsJSON, verseID, userID).
 			WillReturnResult(sqlmock.NewResult(1, 0))
 
 		err := service.UpdateVerse(context.Background(), verse, userID)
