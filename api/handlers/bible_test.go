@@ -86,6 +86,25 @@ func TestBibleHandler_GetBiblePassage(t *testing.T) {
 		assert.Equal(t, "For God so loved the world...", resp["text"])
 	})
 
+	t.Run("Success-Disjoint", func(t *testing.T) {
+		mockClient := new(MockBibleAIClient)
+		handler := NewBibleHandler(mockClient)
+
+		mockClient.On("GetPassage", mock.Anything, "John 1:1,14", "ESV").Return(map[string]interface{}{
+			"text": "In the beginning... And the Word became flesh...",
+		}, nil)
+
+		req, _ := http.NewRequest("GET", "/api/bible/passage?ref=John%201:1,14&version=ESV", nil)
+		rr := httptest.NewRecorder()
+
+		handler.GetBiblePassage(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		var resp map[string]interface{}
+		_ = json.Unmarshal(rr.Body.Bytes(), &resp)
+		assert.Equal(t, "In the beginning... And the Word became flesh...", resp["text"])
+	})
+
 	t.Run("MissingRef", func(t *testing.T) {
 		mockClient := new(MockBibleAIClient)
 		handler := NewBibleHandler(mockClient)
