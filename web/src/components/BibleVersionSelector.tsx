@@ -55,12 +55,13 @@ export function BibleVersionSelector({ value, onChange, placeholder = "Select ve
     const getVersionCode = (v: any) => {
         // Priority order: value (from real API), id, abbreviation, code, version, name
         // We prefer fields that don't contain spaces as they are likely identifiers
-        const fields = [v.value, v.id, v.abbreviation, v.code, v.version, v.name];
-        for (const field of fields) {
-            if (field && typeof field === 'string' && !field.includes(' ')) {
-                return field;
-            }
-        }
+        if (v.value && typeof v.value === 'string' && !v.value.includes(' ')) return v.value;
+        if (v.id && typeof v.id === 'string' && !v.id.includes(' ')) return v.id;
+        if (v.abbreviation && typeof v.abbreviation === 'string' && !v.abbreviation.includes(' ')) return v.abbreviation;
+        if (v.code && typeof v.code === 'string' && !v.code.includes(' ')) return v.code;
+        if (v.version && typeof v.version === 'string' && !v.version.includes(' ')) return v.version;
+        if (v.name && typeof v.name === 'string' && !v.name.includes(' ')) return v.name;
+
         return v.value || v.abbreviation || v.code || v.id || v.version || v.name;
     };
 
