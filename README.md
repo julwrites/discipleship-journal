@@ -40,7 +40,6 @@ For detailed setup instructions, see:
 See `web/README.md` for frontend-specific instructions.
 
 ## Documentation
-- **Tasks & Status**: `docs/tasks/`
 - **Features**: `docs/features/`
 - **Architecture**: `docs/architecture/`
 - **Testing**: `docs/testing/`
