@@ -79,6 +79,7 @@ func TestBibleVersionService_SyncVersions(t *testing.T) {
 		fmt.Fprintln(w, `
 			<select name="version" class="search-dropdown">
 				<option value="ESV">English Standard Version</option>
+				<option value="NIV">New International Version</option>
 			</select>
 		`)
 	}))
@@ -97,10 +98,11 @@ func TestBibleVersionService_SyncVersions(t *testing.T) {
 
 	// Expect transaction
 	mockDB.ExpectBegin()
-	// Expect insert
+	// Expect batch insert
+	// "ESV" comes before "NIV" alphabetically, so that should be the order in batch
 	mockDB.ExpectExec("INSERT INTO bible_versions").
-		WithArgs("English Standard Version", "ESV").
-		WillReturnResult(sqlmock.NewResult(1, 1))
+		WithArgs("English Standard Version", "ESV", "New International Version", "NIV").
+		WillReturnResult(sqlmock.NewResult(1, 2))
 	// Expect commit
 	mockDB.ExpectCommit()
 

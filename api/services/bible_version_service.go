@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -121,20 +122,36 @@ func (s *bibleVersionService) SyncVersions(ctx context.Context) error {
 		_ = tx.Rollback()
 	}()
 
-	// We'll prepare a statement or just loop exec. Loop exec is fine for < 1000 items.
-	// We use ON CONFLICT to update existing entries or insert new ones.
-	query := `
+	if len(versions) == 0 {
+		return tx.Commit()
+	}
+
+	// We'll batch the inserts for efficiency.
+	// We use ON DUPLICATE KEY UPDATE to update existing entries or insert new ones.
+	// To ensure deterministic query generation, we sort abbreviations.
+	var abbreviations []string
+	for abbr := range versions {
+		abbreviations = append(abbreviations, abbr)
+	}
+	sort.Strings(abbreviations)
+
+	valueStrings := make([]string, 0, len(abbreviations))
+	valueArgs := make([]interface{}, 0, len(abbreviations)*2)
+	for _, abbr := range abbreviations {
+		valueStrings = append(valueStrings, "(?, ?, NOW())")
+		valueArgs = append(valueArgs, versions[abbr], abbr)
+	}
+
+	query := fmt.Sprintf(`
 		INSERT INTO bible_versions (name, abbreviation, updated_at)
-		VALUES (?, ?, NOW())
+		VALUES %s
 		ON DUPLICATE KEY UPDATE
 		name = VALUES(name), updated_at = NOW();
-	`
+	`, strings.Join(valueStrings, ", "))
 
-	for abbr, name := range versions {
-		_, err := tx.ExecContext(ctx, query, name, abbr)
-		if err != nil {
-			return fmt.Errorf("failed to upsert version %s: %w", abbr, err)
-		}
+	_, err = tx.ExecContext(ctx, query, valueArgs...)
+	if err != nil {
+		return fmt.Errorf("failed to batch upsert versions: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {
