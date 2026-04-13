@@ -59,7 +59,7 @@ export function NoteCard({ note, onDelete, onShare, onAskAI }: NoteCardProps) {
                     e.stopPropagation();
                     onAskAI(note);
                 }}
-                title="Ask AI"
+                title="Ask AI" aria-label="Ask AI"
             >
                 <Sparkles className="w-4 h-4" />
             </Button>
@@ -72,7 +72,7 @@ export function NoteCard({ note, onDelete, onShare, onAskAI }: NoteCardProps) {
                     e.stopPropagation();
                     onShare(note);
                 }}
-                title="Share"
+                title="Share" aria-label="Share note"
             >
                 <Share2 className="w-4 h-4" />
             </Button>
@@ -85,7 +85,7 @@ export function NoteCard({ note, onDelete, onShare, onAskAI }: NoteCardProps) {
                     e.stopPropagation();
                     onDelete(note);
                 }}
-                title="Delete"
+                title="Delete" aria-label="Delete note"
             >
                 <Trash2 className="w-4 h-4" />
             </Button>
