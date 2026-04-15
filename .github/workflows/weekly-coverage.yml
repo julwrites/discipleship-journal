@@ -38,10 +38,11 @@ jobs:
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
-        if: failure()
+        if: always()
         with:
           name: backend-coverage
           path: api/coverage.txt
+          retention-days: 1
 
   frontend:
     runs-on: ubuntu-latest
@@ -65,7 +66,8 @@ jobs:
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
-        if: failure()
+        if: always()
         with:
           name: frontend-coverage
           path: web/coverage/coverage-summary.json
+          retention-days: 1
