@@ -18,8 +18,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: 'stable'
-          cache: true
-          cache-dependency-path: api/go.sum
+          cache: false
 
       - name: Install dependencies
         run: go mod tidy
@@ -45,7 +44,7 @@ jobs:
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
-        if: always()
+        if: failure()
         with:
           name: backend-coverage
           path: api/coverage.txt
@@ -63,8 +62,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: web/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -77,7 +74,7 @@ jobs:
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
-        if: always()
+        if: failure()
         with:
           name: frontend-coverage
           path: web/coverage/coverage-summary.json
@@ -99,8 +96,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: web/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -124,7 +119,7 @@ jobs:
         with:
           name: playwright-report
           path: web/playwright-report/
-          retention-days: 30
+          retention-days: 1
 
   coverage-report:
     runs-on: ubuntu-latest
