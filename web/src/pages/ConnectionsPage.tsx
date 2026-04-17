@@ -132,7 +132,7 @@ export default function ConnectionsPage() {
     return (
         <div className="p-8 max-w-4xl mx-auto space-y-6">
             <div className="flex items-center gap-3">
-                <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+                <Button variant="ghost" size="icon" onClick={() => navigate("/")} aria-label="Go back">
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <h1 className="text-3xl font-bold">Connections</h1>
