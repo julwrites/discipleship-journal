@@ -320,7 +320,7 @@ export default function TemplateEditor() {
                                         />
                                     </div>
                                 </div>
-                                <Button variant="ghost" size="icon" className="text-destructive mt-6" onClick={() => removeField(idx)}>
+                                <Button variant="ghost" size="icon" className="text-destructive mt-6" onClick={() => removeField(idx)} aria-label="Remove field">
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
                             </div>

@@ -466,7 +466,7 @@ export default function GroupsPage() {
                                                                 <span className="text-xs bg-muted px-1 rounded">{m.role}</span>
                                                             </div>
                                                             {g.role === 'admin' && m.role !== 'admin' && (
-                                                                <Button size="icon" variant="ghost" className="text-destructive h-8 w-8" onClick={() => removeMember(g.id, m.user_id)}>
+                                                                <Button size="icon" variant="ghost" className="text-destructive h-8 w-8" onClick={() => removeMember(g.id, m.user_id)} aria-label="Remove member">
                                                                     <Trash2 size={16} />
                                                                 </Button>
                                                             )}
