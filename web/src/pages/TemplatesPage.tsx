@@ -69,7 +69,7 @@ export default function TemplatesPage() {
             <div>
                 <div className="flex justify-between items-center mb-2">
                     <div className="flex items-center gap-3">
-                        <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+                        <Button variant="ghost" size="icon" onClick={() => navigate("/")} aria-label="Go back">
                             <ArrowLeft className="h-5 w-5" />
                         </Button>
                         <h1 className="text-3xl font-bold">Templates</h1>
@@ -170,10 +170,10 @@ function TemplateCard({ template, isOwner, onDelete, onClone, onUse, onEdit }: {
                 </div>
                 {isOwner && (
                     <div className="flex gap-2">
-                        <Button variant="ghost" size="icon" onClick={onEdit}>
+                        <Button variant="ghost" size="icon" onClick={onEdit} aria-label="Edit template">
                             <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="text-destructive" onClick={onDelete}>
+                        <Button variant="ghost" size="icon" className="text-destructive" onClick={onDelete} aria-label="Delete template">
                             <Trash2 className="h-4 w-4" />
                         </Button>
                     </div>

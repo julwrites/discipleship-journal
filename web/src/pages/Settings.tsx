@@ -46,7 +46,7 @@ export default function Settings() {
     <div className="p-4 md:p-8 max-w-2xl mx-auto space-y-8">
       <div>
         <div className="flex items-center gap-3 mb-2">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/")} aria-label="Go back">
                 <ArrowLeft className="h-5 w-5" />
             </Button>
             <h1 className="text-3xl font-bold">Settings</h1>

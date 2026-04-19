@@ -20,7 +20,7 @@ export default function MemoryVersesPage() {
         <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6">
             <div>
                 <div className="flex items-center gap-3 mb-2">
-                    <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+                    <Button variant="ghost" size="icon" onClick={() => navigate("/")} aria-label="Go back">
                         <ArrowLeft className="h-5 w-5" />
                     </Button>
                     <h1 className="text-3xl font-bold">Scripture Memory</h1>
@@ -502,7 +502,7 @@ export function VersePackDetail() {
                                 </DialogContent>
                             </Dialog>
 
-                            <Button variant="destructive" size="icon" onClick={handleDeletePack}>
+                            <Button variant="destructive" size="icon" onClick={handleDeletePack} aria-label="Delete pack">
                                 <Trash2 className="h-4 w-4" />
                             </Button>
                         </>
@@ -660,7 +660,7 @@ export function VersePackDetail() {
                                 </div>
                             </div>
                             <div className="flex gap-2">
-                                <Button variant="ghost" size="icon" onClick={(e) => openEdit(e, verse)}>
+                                <Button variant="ghost" size="icon" onClick={(e) => openEdit(e, verse)} aria-label="Edit verse">
                                     <Pencil className="h-4 w-4" />
                                 </Button>
                                 {isMyPack && (
@@ -672,6 +672,7 @@ export function VersePackDetail() {
                                             if(verse.id) handleDeleteVerse(verse.id);
                                         }}
                                         className="text-destructive"
+                                        aria-label="Delete verse"
                                     >
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
