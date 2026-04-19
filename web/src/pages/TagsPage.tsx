@@ -98,7 +98,7 @@ export default function TagsPage() {
             <div>
                 <div className="flex justify-between items-center mb-2">
                     <div className="flex items-center gap-3">
-                        <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+                        <Button variant="ghost" size="icon" onClick={() => navigate("/")} aria-label="Go back">
                             <ArrowLeft className="h-5 w-5" />
                         </Button>
                         <h1 className="text-3xl font-bold">Tags</h1>
