@@ -85,7 +85,7 @@ jobs:
           region: ${{ env.GCP_REGION }}
           flags: '--service-account=${{ secrets.GCP_SERVICE_ACCOUNT }} --allow-unauthenticated'
           env_vars: |
-            APP_ENV=production
+            APP_ENV=staging
             GOOGLE_CLOUD_PROJECT=${{ env.GCP_PROJECT_ID }}
             FIREBASE_PROJECT_ID=${{ secrets.STG_FIREBASE_PROJECT_ID }}
             # Application secrets (STG_DJ_DB_*) are loaded from Google Secret Manager at runtime

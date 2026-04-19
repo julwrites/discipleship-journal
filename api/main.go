@@ -68,7 +68,7 @@ func main() {
 
 	// Setup Logger
 	var logger *slog.Logger
-	if os.Getenv("APP_ENV") == "production" {
+	if os.Getenv("APP_ENV") == "production" || os.Getenv("APP_ENV") == "staging" {
 		logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	} else {
 		logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
@@ -158,8 +158,8 @@ func main() {
 		logger.Error("Database connection failed", "error", err)
 		// Don't exit immediately - let the server start and health check will fail
 		// This allows Cloud Run to properly start the container
-		if os.Getenv("APP_ENV") == "production" {
-			logger.Warn("Database connection failed in production, but continuing to start server")
+		if os.Getenv("APP_ENV") == "production" || os.Getenv("APP_ENV") == "staging" {
+			logger.Warn("Database connection failed in deployed environment, but continuing to start server")
 		}
 	} else {
 		dbConnected = true
