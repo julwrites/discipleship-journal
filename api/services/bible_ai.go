@@ -320,6 +320,12 @@ func (c *RealBibleAIClient) GetPassage(
 	}
 
 	verseText := html.UnescapeString(result.Verse)
+	// DEBUG: log raw verse text for diagnosing missing verses
+	slog.Debug("GetPassage raw verse text from bibleaiapi",
+		"reference", reference,
+		"version", version,
+		"verse_text", verseText,
+	)
 	finalRef := reference // Default to user input
 
 	// Parse reference from text if possible
@@ -331,6 +337,10 @@ func (c *RealBibleAIClient) GetPassage(
 		finalRef = matches[1]
 		// version := matches[2] // We could use this too
 		verseText = matches[3]
+		slog.Debug("GetPassage parsed verse reference from text",
+			"ref", finalRef,
+			"text_preview", verseText[:min(200, len(verseText))],
+		)
 	}
 
 	return map[string]interface{}{
