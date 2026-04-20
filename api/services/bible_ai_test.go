@@ -85,6 +85,16 @@ func TestCleanHTML(t *testing.T) {
 			input:    "<ul><li><br></li><li>Item</li></ul>",
 			expected: "<ul><li>Item</li></ul>",
 		},
+		{
+			name:     "Stray br before block elements",
+			input:    "</p> <br/><p><span><sup>5 </sup>But if our unrighteousness</span></p>",
+			expected: "</p><p><span><sup>5 </sup>But if our unrighteousness</span></p>",
+		},
+		{
+			name:     "Loose br before block elements",
+			input:    "Some text <br/><p>New Paragraph</p>",
+			expected: "Some text <p>New Paragraph</p>",
+		},
 	}
 
 	for _, tt := range tests {
