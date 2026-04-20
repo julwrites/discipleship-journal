@@ -482,3 +482,24 @@ func TestBibleAIClient_StreamChatCompletion_ImmediateError(t *testing.T) {
 		// might close
 	}
 }
+
+func TestBibleAIClient_GetPassage_Romans3(t *testing.T) {
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintln(w, `{"verse": "Romans 3 (ESV) Then what advantage has the Jew? Or what is the value of circumcision?\n2 Much in every way. To begin with, the Jews were entrusted with the oracles of God.\n3 What if some were unfaithful? Does their faithlessness nullify the faithfulness of God?"}`)
+	}
+	server := httptest.NewServer(http.HandlerFunc(handler))
+	defer server.Close()
+
+	client := NewRealBibleAIClient(server.URL, "key", "")
+	ctx := context.Background()
+
+	res, err := client.GetPassage(ctx, "Romans 3", "ESV")
+	assert.NoError(t, err)
+	assert.Equal(t, "Romans 3", res["reference"])
+	assert.Equal(t, "ESV", res["version"])
+
+	// Check if all verses are retained with their newlines intact
+	expectedText := "Then what advantage has the Jew? Or what is the value of circumcision?\n2 Much in every way. To begin with, the Jews were entrusted with the oracles of God.\n3 What if some were unfaithful? Does their faithlessness nullify the faithfulness of God?"
+	assert.Equal(t, expectedText, res["text"])
+}
