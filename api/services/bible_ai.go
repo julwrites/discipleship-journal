@@ -694,7 +694,7 @@ var (
 	)
 	// verseReferenceRegex extracts Ref, Version, Text from "Ref (Ver) Text" format.
 	// Uses (?s) to allow matching newlines in the text.
-	verseReferenceRegex = regexp.MustCompile(`(?s)^([\w\s]+\d+:\d+(?:-\d+)?)\s+\(([^)]+)\)\s+(.*)$`)
+	verseReferenceRegex = regexp.MustCompile(`(?s)^([\w\s]+\d+(?::\d+(?:-\d+)?)?)\s+\(([^)]+)\)\s+(.*)$`)
 )
 
 func cleanHTML(input string) string {
