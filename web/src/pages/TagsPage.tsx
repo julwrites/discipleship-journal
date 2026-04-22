@@ -165,9 +165,10 @@ export default function TagsPage() {
                                         setTagToDelete(tag);
                                         setDeleteConfirmOpen(true);
                                     }}
+                                    aria-label={`Delete tag ${tag.name}`}
                                 >
                                     <Trash2 className="h-4 w-4" />
-                                    <span className="sr-only">Delete</span>
+                                    <span className="sr-only">Delete {tag.name}</span>
                                 </Button>
                             </Card>
                         ))

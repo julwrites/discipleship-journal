@@ -1,0 +1,3 @@
+## 2024-05-15 - Context-Aware ARIA Labels for List Items
+**Learning:** Generic `aria-label` attributes (e.g., "Delete") or generic `<span className="sr-only">Delete</span>` elements on icon-only buttons within iterated lists (like tags or note cards) create ambiguity for screen reader users, making it unclear *which* specific item the button acts upon when multiple are present on the page.
+**Action:** Always make `aria-label`s and visually hidden screen reader text context-aware when used inside list items or cards by interpolating identifying information (e.g., `aria-label={`Delete ${item.title}`}`).
