@@ -60,6 +60,7 @@ export function NoteCard({ note, onDelete, onShare, onAskAI }: NoteCardProps) {
                     onAskAI(note);
                 }}
                 title="Ask AI"
+                aria-label={`Ask AI about ${note.title || "Untitled Note"}`}
             >
                 <Sparkles className="w-4 h-4" />
             </Button>
@@ -73,6 +74,7 @@ export function NoteCard({ note, onDelete, onShare, onAskAI }: NoteCardProps) {
                     onShare(note);
                 }}
                 title="Share"
+                aria-label={`Share ${note.title || "Untitled Note"}`}
             >
                 <Share2 className="w-4 h-4" />
             </Button>
@@ -86,6 +88,7 @@ export function NoteCard({ note, onDelete, onShare, onAskAI }: NoteCardProps) {
                     onDelete(note);
                 }}
                 title="Delete"
+                aria-label={`Delete ${note.title || "Untitled Note"}`}
             >
                 <Trash2 className="w-4 h-4" />
             </Button>
