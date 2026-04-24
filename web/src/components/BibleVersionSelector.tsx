@@ -37,7 +37,7 @@ export function BibleVersionSelector({ value, onChange, placeholder = "Select ve
         setLoading(true);
         try {
             const res = await getBibleVersions({ name: q, limit: 20 });
-            setVersions(res.data || []);
+            setVersions(res?.data || []);
         } catch (error) {
             console.error("Failed to load versions", error);
         } finally {

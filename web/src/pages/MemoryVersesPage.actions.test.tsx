@@ -22,6 +22,7 @@ vi.mock('@/services/api', () => ({
     deleteMemoryVerse: vi.fn(),
     createVerseInPack: vi.fn(),
     getBiblePassage: vi.fn(),
+    getBibleVersions: vi.fn(),
     removeVersePreference: vi.fn(),
     clonePack: vi.fn(),
     deletePack: vi.fn(),
