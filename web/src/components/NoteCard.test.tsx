@@ -62,6 +62,19 @@ describe('NoteCard', () => {
         expect(mockNavigate).toHaveBeenCalledWith('/notes/1');
     });
 
+    it('navigates on Space key', () => {
+        render(
+             <MemoryRouter>
+                <NoteCard note={mockNote} {...mockHandlers} />
+            </MemoryRouter>
+        );
+
+        const card = screen.getByRole('link');
+        fireEvent.keyDown(card, { key: ' ', code: 'Space' });
+
+        expect(mockNavigate).toHaveBeenCalledWith('/notes/1');
+    });
+
     it('navigates on Enter key', () => {
         render(
              <MemoryRouter>
@@ -95,5 +108,93 @@ describe('NoteCard', () => {
 
         fireEvent.click(askAIButton);
         expect(mockHandlers.onAskAI).toHaveBeenCalledWith(mockNote);
+    });
+
+    it('has correct aria-labels for action buttons', () => {
+        render(
+             <MemoryRouter>
+                <NoteCard note={mockNote} {...mockHandlers} />
+            </MemoryRouter>
+        );
+
+        const deleteButton = screen.getByTitle('Delete');
+        const shareButton = screen.getByTitle('Share');
+        const askAIButton = screen.getByTitle('Ask AI');
+
+        expect(deleteButton).toHaveAttribute('aria-label', `Delete ${mockNote.title}`);
+        expect(shareButton).toHaveAttribute('aria-label', `Share ${mockNote.title}`);
+        expect(askAIButton).toHaveAttribute('aria-label', `Ask AI about ${mockNote.title}`);
+    });
+
+    it('uses fallback text for aria-labels when title is missing', () => {
+        const noteWithoutTitle = { ...mockNote, title: '' } as unknown as Note;
+        render(
+             <MemoryRouter>
+                <NoteCard note={noteWithoutTitle} {...mockHandlers} />
+            </MemoryRouter>
+        );
+
+        const deleteButton = screen.getByTitle('Delete');
+        const shareButton = screen.getByTitle('Share');
+        const askAIButton = screen.getByTitle('Ask AI');
+
+        expect(deleteButton).toHaveAttribute('aria-label', 'Delete Untitled Note');
+        expect(shareButton).toHaveAttribute('aria-label', 'Share Untitled Note');
+        expect(askAIButton).toHaveAttribute('aria-label', 'Ask AI about Untitled Note');
+    });
+
+    it('renders tags when available', () => {
+        render(
+             <MemoryRouter>
+                <NoteCard note={mockNote} {...mockHandlers} />
+            </MemoryRouter>
+        );
+
+        expect(screen.getByText('Faith')).toBeInTheDocument();
+        expect(screen.getByText('Prayer')).toBeInTheDocument();
+    });
+
+    it('does not render tags if empty or undefined', () => {
+        const noteWithoutTags = { ...mockNote, tags: [] };
+        const { rerender, unmount } = render(
+             <MemoryRouter>
+                <NoteCard note={noteWithoutTags} {...mockHandlers} />
+            </MemoryRouter>
+        );
+
+        expect(screen.queryByText('Faith')).not.toBeInTheDocument();
+        unmount();
+
+        const noteUndefinedTags = { ...mockNote, tags: undefined };
+        render(
+             <MemoryRouter>
+                <NoteCard note={noteUndefinedTags} {...mockHandlers} />
+            </MemoryRouter>
+        );
+        expect(screen.queryByText('Faith')).not.toBeInTheDocument();
+    });
+
+    it('renders with fallback title when title is empty', () => {
+        const noteWithoutTitle = { ...mockNote, title: '' };
+        render(
+             <MemoryRouter>
+                <NoteCard note={noteWithoutTitle} {...mockHandlers} />
+            </MemoryRouter>
+        );
+
+        expect(screen.getByText('Untitled Note')).toBeInTheDocument();
+    });
+
+    it('ignores non-Enter/Space keys', () => {
+        render(
+             <MemoryRouter>
+                <NoteCard note={mockNote} {...mockHandlers} />
+            </MemoryRouter>
+        );
+
+        const card = screen.getByRole('link');
+        fireEvent.keyDown(card, { key: 'a', code: 'KeyA' });
+
+        expect(mockNavigate).not.toHaveBeenCalled();
     });
 });
