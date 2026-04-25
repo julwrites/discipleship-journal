@@ -156,7 +156,7 @@ describe('NoteCard', () => {
 
     it('does not render tags if empty or undefined', () => {
         const noteWithoutTags = { ...mockNote, tags: [] };
-        const { rerender, unmount } = render(
+        const { unmount } = render(
              <MemoryRouter>
                 <NoteCard note={noteWithoutTags} {...mockHandlers} />
             </MemoryRouter>
