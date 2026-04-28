@@ -1,0 +1,5 @@
+🎨 Palette: Add context-aware ARIA labels to NoteCard icon buttons & fix CI
+
+- Adds context-aware `aria-label` attributes to the Ask AI, Share, and Delete buttons in the `NoteCard` component using the note title to improve accessibility.
+- Fixes CI workflow by upgrading Node.js from 20 to 22 (as Node 20 is deprecated in GitHub Actions).
+- Updates CI workflow to use `pnpm` instead of `npm` for installing dependencies and running scripts in the frontend and E2E jobs, aligning with the project's requirement to strictly use `pnpm`.
