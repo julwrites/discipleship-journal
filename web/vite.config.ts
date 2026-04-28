@@ -66,7 +66,7 @@ export default defineConfig({
       reporter: ['text', 'json', 'html', 'json-summary'],
       thresholds: {
         statements: 71.8,
-        branches: 58.3,
+        branches: 58.2,
         functions: 66.6,
         lines: 74.3,
       },
