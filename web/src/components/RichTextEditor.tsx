@@ -78,27 +78,27 @@ export default function RichTextEditor({
         <div className="flex flex-col h-full border rounded-lg overflow-hidden">
             {editable && (
                 <div className="bg-muted border-b p-2 flex gap-1 flex-wrap">
-                    <Button variant={editor.isActive('bold') ? "secondary" : "ghost"} size="sm" onClick={toggleBold} title="Bold">
+                    <Button variant={editor.isActive('bold') ? "secondary" : "ghost"} size="sm" onClick={toggleBold} title="Bold" aria-label="Bold">
                         <Bold className="w-4 h-4" />
                     </Button>
-                    <Button variant={editor.isActive('italic') ? "secondary" : "ghost"} size="sm" onClick={toggleItalic} title="Italic">
+                    <Button variant={editor.isActive('italic') ? "secondary" : "ghost"} size="sm" onClick={toggleItalic} title="Italic" aria-label="Italic">
                         <Italic className="w-4 h-4" />
                     </Button>
                     <div className="w-px h-6 bg-border mx-1" />
-                    <Button variant={editor.isActive('heading', { level: 1 }) ? "secondary" : "ghost"} size="sm" onClick={toggleHeading1} title="Heading 1">
+                    <Button variant={editor.isActive('heading', { level: 1 }) ? "secondary" : "ghost"} size="sm" onClick={toggleHeading1} title="Heading 1" aria-label="Heading 1">
                         <Heading1 className="w-4 h-4" />
                     </Button>
-                    <Button variant={editor.isActive('heading', { level: 2 }) ? "secondary" : "ghost"} size="sm" onClick={toggleHeading2} title="Heading 2">
+                    <Button variant={editor.isActive('heading', { level: 2 }) ? "secondary" : "ghost"} size="sm" onClick={toggleHeading2} title="Heading 2" aria-label="Heading 2">
                         <Heading2 className="w-4 h-4" />
                     </Button>
                     <div className="w-px h-6 bg-border mx-1" />
-                    <Button variant={editor.isActive('bulletList') ? "secondary" : "ghost"} size="sm" onClick={toggleBulletList} title="Bullet List">
+                    <Button variant={editor.isActive('bulletList') ? "secondary" : "ghost"} size="sm" onClick={toggleBulletList} title="Bullet List" aria-label="Bullet List">
                         <List className="w-4 h-4" />
                     </Button>
-                    <Button variant={editor.isActive('orderedList') ? "secondary" : "ghost"} size="sm" onClick={toggleOrderedList} title="Ordered List">
+                    <Button variant={editor.isActive('orderedList') ? "secondary" : "ghost"} size="sm" onClick={toggleOrderedList} title="Ordered List" aria-label="Ordered List">
                         <ListOrdered className="w-4 h-4" />
                     </Button>
-                    <Button variant={editor.isActive('blockquote') ? "secondary" : "ghost"} size="sm" onClick={toggleBlockquote} title="Quote">
+                    <Button variant={editor.isActive('blockquote') ? "secondary" : "ghost"} size="sm" onClick={toggleBlockquote} title="Quote" aria-label="Quote">
                         <Quote className="w-4 h-4" />
                     </Button>
                     <div className="w-px h-6 bg-border mx-1" />
@@ -107,10 +107,10 @@ export default function RichTextEditor({
                     <ImagePopover editor={editor} />
 
                     <div className="flex-1" />
-                    <Button variant="ghost" size="sm" onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo">
+                    <Button variant="ghost" size="sm" onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo" aria-label="Undo">
                         <Undo className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Redo">
+                    <Button variant="ghost" size="sm" onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Redo" aria-label="Redo">
                         <Redo className="w-4 h-4" />
                     </Button>
                 </div>
@@ -193,7 +193,7 @@ function LinkPopover({ editor }: { editor: Editor }) {
     return (
         <Popover open={open} onOpenChange={onOpenChange}>
             <PopoverTrigger asChild>
-                <Button variant={editor.isActive('link') ? "secondary" : "ghost"} size="sm" title="Link">
+                <Button variant={editor.isActive('link') ? "secondary" : "ghost"} size="sm" title="Link" aria-label="Link">
                     <LinkIcon className="w-4 h-4" />
                 </Button>
             </PopoverTrigger>
@@ -243,7 +243,7 @@ function ImagePopover({ editor }: { editor: Editor }) {
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
-                <Button variant={editor.isActive('image') ? "secondary" : "ghost"} size="sm" title="Image">
+                <Button variant={editor.isActive('image') ? "secondary" : "ghost"} size="sm" title="Image" aria-label="Image">
                     <ImageIcon className="w-4 h-4" />
                 </Button>
             </PopoverTrigger>

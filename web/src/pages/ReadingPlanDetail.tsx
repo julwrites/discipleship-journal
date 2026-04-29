@@ -236,6 +236,7 @@ export default function ReadingPlanDetail() {
                                             size="icon"
                                             onClick={() => handleCreateNote(day)}
                                             title="Create Note"
+                                            aria-label="Create Note"
                                         >
                                             <StickyNote className="h-4 w-4" />
                                         </Button>
@@ -246,6 +247,7 @@ export default function ReadingPlanDetail() {
                                                 onClick={() => handleMarkComplete(day.day_number)}
                                                 className="text-green-600 dark:text-green-400 hover:text-destructive hover:bg-destructive/10"
                                                 title="Unmark"
+                                                aria-label="Unmark"
                                             >
                                                 <CheckCircle className="h-6 w-6" />
                                             </Button>
