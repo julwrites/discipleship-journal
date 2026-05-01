@@ -71,9 +71,7 @@ func main() {
 	if os.Getenv("APP_ENV") == "production" || os.Getenv("APP_ENV") == "staging" {
 		logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	} else {
-		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-			Level: slog.LevelDebug,
-		}))
+		logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 	}
 	slog.SetDefault(logger)
 

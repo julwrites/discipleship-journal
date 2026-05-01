@@ -8,6 +8,7 @@ import (
 	"discipleship_journal_api/services"
 )
 
+
 type BibleHandler struct {
 	Client services.BibleAIClient
 }
@@ -46,6 +47,7 @@ func (h *BibleHandler) GetBiblePassage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+
 	if err := json.NewEncoder(w).Encode(result); err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 	}
