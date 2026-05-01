@@ -313,7 +313,7 @@ export default function Dashboard() {
         <h1 className="text-2xl font-bold">My Journal</h1>
         <div className="flex gap-2">
           <Link to="/connections">
-            <Button variant="ghost" size="icon" title="Connections">
+            <Button variant="ghost" size="icon" title="Connections" aria-label="Connections">
               <Users className="w-5 h-5" />
             </Button>
           </Link>
@@ -321,7 +321,7 @@ export default function Dashboard() {
           {/* Resources Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" title="Resources">
+              <Button variant="ghost" size="icon" title="Resources" aria-label="Resources">
                 <BookOpen className="w-5 h-5" />
               </Button>
             </DropdownMenuTrigger>
@@ -354,7 +354,7 @@ export default function Dashboard() {
           {/* User Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" title="User Menu">
+              <Button variant="ghost" size="icon" title="User Menu" aria-label="User Menu">
                 <UserIcon className="w-5 h-5" />
               </Button>
             </DropdownMenuTrigger>
@@ -384,7 +384,7 @@ export default function Dashboard() {
 
         <Popover>
             <PopoverTrigger asChild>
-                <Button variant="outline" size="icon" title="Filter & Sort">
+                <Button variant="outline" size="icon" title="Filter & Sort" aria-label="Filter & Sort">
                     <Filter className="w-4 h-4" />
                 </Button>
             </PopoverTrigger>
@@ -528,12 +528,12 @@ export default function Dashboard() {
 
       <div className="fixed bottom-8 right-8 flex flex-col gap-4">
         <Link to="/chat">
-            <Button className="w-14 h-14 rounded-full shadow-lg" size="icon" variant="secondary" title="Ask AI">
+            <Button className="w-14 h-14 rounded-full shadow-lg" size="icon" variant="secondary" title="Ask AI" aria-label="Ask AI">
                 🤖
             </Button>
         </Link>
         <Link to="/notes/new">
-            <Button className="w-14 h-14 rounded-full shadow-lg text-2xl" size="icon" title="New Note">
+            <Button className="w-14 h-14 rounded-full shadow-lg text-2xl" size="icon" title="New Note" aria-label="New Note">
                 +
             </Button>
         </Link>

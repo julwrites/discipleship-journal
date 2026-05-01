@@ -68,7 +68,7 @@ func main() {
 
 	// Setup Logger
 	var logger *slog.Logger
-	if os.Getenv("APP_ENV") == "production" {
+	if os.Getenv("APP_ENV") == "production" || os.Getenv("APP_ENV") == "staging" {
 		logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	} else {
 		logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
@@ -129,7 +129,7 @@ func main() {
 	}
 
 	// Load individual database components
-	dbSecrets := []string{"DB_USERNAME", "DB_PASSWORD", "DB_NAME", "DB_HOST", "DB_PORT", "CLOUD_SQL_INSTANCE"}
+	dbSecrets := []string{"DB_USERNAME", "DB_PASSWORD", "DB_NAME", "DB_HOST", "DB_PORT"}
 	for _, secret := range dbSecrets {
 		value := loadSecret(secret)
 		if value != "" {
@@ -158,8 +158,8 @@ func main() {
 		logger.Error("Database connection failed", "error", err)
 		// Don't exit immediately - let the server start and health check will fail
 		// This allows Cloud Run to properly start the container
-		if os.Getenv("APP_ENV") == "production" {
-			logger.Warn("Database connection failed in production, but continuing to start server")
+		if os.Getenv("APP_ENV") == "production" || os.Getenv("APP_ENV") == "staging" {
+			logger.Warn("Database connection failed in deployed environment, but continuing to start server")
 		}
 	} else {
 		dbConnected = true
@@ -226,16 +226,9 @@ func main() {
 	var bibleAIClient services.BibleAIClient
 
 	// Load Bible API secrets from Secret Manager or environment variables
-	var bibleAPIURL, bibleAPIKey, llmSystemPrompts string
-	if secretLoader != nil {
-		bibleAPIURL, _ = secretLoader.LoadSecret(context.Background(), "BIBLE_API_URL")
-		bibleAPIKey, _ = secretLoader.LoadSecret(context.Background(), "BIBLE_API_KEY")
-		llmSystemPrompts, _ = secretLoader.LoadSecret(context.Background(), "LLM_SYSTEM_PROMPTS")
-	} else {
-		bibleAPIURL = os.Getenv("BIBLE_API_URL")
-		bibleAPIKey = os.Getenv("BIBLE_API_KEY")
-		llmSystemPrompts = os.Getenv("LLM_SYSTEM_PROMPTS")
-	}
+	bibleAPIURL := loadSecret("BIBLE_API_URL")
+	bibleAPIKey := loadSecret("BIBLE_API_KEY")
+	llmSystemPrompts := loadSecret("LLM_SYSTEM_PROMPTS")
 
 	if bibleAPIURL != "" && bibleAPIKey != "" {
 		bibleAIClient = services.NewRealBibleAIClient(bibleAPIURL, bibleAPIKey, llmSystemPrompts)

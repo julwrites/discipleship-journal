@@ -78,7 +78,7 @@ export function BiblePassageDialog({ reference, isOpen, onClose, defaultVersion 
               </div>
             </div>
           ) : (
-            <div className="prose dark:prose-invert text-sm leading-relaxed whitespace-pre-wrap">
+            <div className="prose dark:prose-invert text-sm leading-relaxed">
               <div dangerouslySetInnerHTML={{ __html: passageText }} />
             </div>
           )}

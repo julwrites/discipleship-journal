@@ -33,3 +33,7 @@ test-results/
 # Go binaries
 */discipleship_journal_api
 *.log
+
+.agents/
+__pycache__/
+*.pyc
