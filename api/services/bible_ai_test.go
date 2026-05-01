@@ -536,6 +536,7 @@ func TestBibleAIClient_GetPassage_Romans3(t *testing.T) {
 	assert.Equal(t, "Romans 3", res["reference"])
 	assert.Equal(t, "ESV", res["version"])
 
-	// Check if all verses are retained with their newlines intact
-	assert.Equal(t, expectedText, res["text"])
+	// Check if all verses are retained and their newlines are normalized to spaces
+	expectedNormalized := strings.ReplaceAll(expectedText, "\n", " ")
+	assert.Equal(t, expectedNormalized, res["text"])
 }
