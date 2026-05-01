@@ -44,9 +44,6 @@ describe('NoteCard', () => {
         expect(screen.getByText('Test Note')).toBeInTheDocument();
         expect(screen.getByText('Faith')).toBeInTheDocument();
         expect(screen.getByText('Prayer')).toBeInTheDocument();
-        // Date formatting might depend on locale, but let's check basic presence
-        // 1/1/2023 or similar
-        // expect(screen.getByText(/2023/)).toBeInTheDocument();
     });
 
     it('navigates to note detail on card click', () => {
@@ -62,7 +59,7 @@ describe('NoteCard', () => {
         expect(mockNavigate).toHaveBeenCalledWith('/notes/1');
     });
 
-    it('navigates on Enter key', () => {
+    it('navigates on Enter key and Space key', () => {
         render(
              <MemoryRouter>
                 <NoteCard note={mockNote} {...mockHandlers} />
@@ -70,9 +67,53 @@ describe('NoteCard', () => {
         );
 
         const card = screen.getByRole('link');
-        fireEvent.keyDown(card, { key: 'Enter', code: 'Enter' });
 
+        fireEvent.keyDown(card, { key: 'Enter', code: 'Enter' });
         expect(mockNavigate).toHaveBeenCalledWith('/notes/1');
+
+        fireEvent.keyDown(card, { key: ' ', code: 'Space' });
+        expect(mockNavigate).toHaveBeenCalledTimes(2);
+    });
+
+    it('ignores other key presses', () => {
+        render(
+             <MemoryRouter>
+                <NoteCard note={mockNote} {...mockHandlers} />
+            </MemoryRouter>
+        );
+
+        const card = screen.getByRole('link');
+        fireEvent.keyDown(card, { key: 'A', code: 'KeyA' });
+
+        expect(mockNavigate).not.toHaveBeenCalled();
+    });
+
+    it('renders untitled note if title is missing', () => {
+        render(
+            <MemoryRouter>
+                <NoteCard note={{...mockNote, title: ''}} {...mockHandlers} />
+            </MemoryRouter>
+        );
+
+        expect(screen.getByText('Untitled Note')).toBeInTheDocument();
+    });
+
+    it('renders correctly without tags', () => {
+         render(
+            <MemoryRouter>
+                <NoteCard note={{...mockNote, tags: undefined}} {...mockHandlers} />
+            </MemoryRouter>
+        );
+         expect(screen.queryByText('Faith')).not.toBeInTheDocument();
+    });
+
+    it('renders empty tag list correctly', () => {
+         render(
+            <MemoryRouter>
+                <NoteCard note={{...mockNote, tags: []}} {...mockHandlers} />
+            </MemoryRouter>
+        );
+         expect(screen.queryByText('Faith')).not.toBeInTheDocument();
     });
 
     it('triggers actions without navigation', () => {
@@ -88,7 +129,7 @@ describe('NoteCard', () => {
 
         fireEvent.click(deleteButton);
         expect(mockHandlers.onDelete).toHaveBeenCalledWith(mockNote);
-        expect(mockNavigate).not.toHaveBeenCalled(); // Should assume test isolation or clear mocks
+        expect(mockNavigate).not.toHaveBeenCalled();
 
         fireEvent.click(shareButton);
         expect(mockHandlers.onShare).toHaveBeenCalledWith(mockNote);

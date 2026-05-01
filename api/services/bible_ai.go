@@ -676,9 +676,16 @@ var (
 	listWhitespaceRegex = regexp.MustCompile(
 		`(?i)(</?ul[^>]*>|</?ol[^>]*>|</?li[^>]*>)\s+(</?ul[^>]*>|</?ol[^>]*>|</?li[^>]*>)`,
 	)
+	//nolint:lll // Regex is long
+	orphanBrRegex = regexp.MustCompile(
+		`(?i)(</(?:p|h[1-6]|ul|ol|li|blockquote|div)[^>]*>)\s*<br\s*/?>\s*(<(?:p|h[1-6]|ul|ol|li|blockquote|div)[^>]*>)`,
+	)
+	looseBrRegex = regexp.MustCompile(
+		`(?i)<br\s*/?>\s*(<(?:p|h[1-6]|ul|ol|li|blockquote|div)[^>]*>)`,
+	)
 	// verseReferenceRegex extracts Ref, Version, Text from "Ref (Ver) Text" format.
 	// Uses (?s) to allow matching newlines in the text.
-	verseReferenceRegex = regexp.MustCompile(`(?s)^([\w\s]+\d+:\d+(?:-\d+)?)\s+\(([^)]+)\)\s+(.*)$`)
+	verseReferenceRegex = regexp.MustCompile(`(?s)^([\w\s]+\d+(?::\d+(?:-\d+)?)?)\s+\(([^)]+)\)\s+(.*)$`)
 )
 
 func cleanHTML(input string) string {
@@ -690,6 +697,11 @@ func cleanHTML(input string) string {
 
 	// Remove empty list items
 	s = emptyLiRegex.ReplaceAllString(s, "")
+
+	// Remove stray <br/> elements before block elements which confuse block editors
+	// like TipTap and cause missing text
+	s = orphanBrRegex.ReplaceAllString(s, "${1}${2}")
+	s = looseBrRegex.ReplaceAllString(s, "${1}")
 
 	// Remove whitespace between list tags
 	// Loop to handle consecutive matches (e.g., </li> <li> <li>)
