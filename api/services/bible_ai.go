@@ -321,6 +321,10 @@ func (c *RealBibleAIClient) GetPassage(
 
 	verseText := html.UnescapeString(result.Verse)
 
+	// Defensively clean HTML to strip problematic <br/> tags that cause rendering issues
+	// This ensures robustness even if the downstream BibleAIAPI hasn't been updated yet.
+	verseText = cleanHTML(verseText)
+
 	finalRef := reference // Default to user input
 
 	// Parse reference from text if possible
